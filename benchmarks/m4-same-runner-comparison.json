@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-08-13T09:45:21Z",
+  "runtime": {
+    "node": "v22.23.1",
+    "platform": "linux",
+    "runner": "ubuntu-24.04"
+  },
+  "baseline": {
+    "ref": "main",
+    "sha": "fe4b91c6eee3342d0df578c13e5542817f9d97a4"
+  },
+  "candidate": {
+    "ref": "agent/m4-dp-foundation",
+    "sha": "8429f822810324056e0661f8b35c0236930b4eab"
+  },
+  "note": "M3 main and M4 were checked out, built, and benchmarked sequentially on the same GitHub Actions runner. Timing deltas are single-run comparisons; recommendation and utility equivalence are the correctness gate.",
+  "results": [
+    {"label":"optimizer_default_cold","m3Ms":1329.627,"m4Ms":1276.033,"changePct":-4.0,"actionEqual":true,"utilityDelta":7.276e-11},
+    {"label":"optimizer_default_warm","m3Ms":61.727,"m4Ms":76.187,"changePct":23.4,"actionEqual":true,"utilityDelta":7.276e-11},
+    {"label":"optimizer_quality_heavy_cold","m3Ms":1489.052,"m4Ms":1447.474,"changePct":-2.8,"actionEqual":true,"utilityDelta":-3.638e-11},
+    {"label":"optimizer_quality_heavy_warm","m3Ms":72.419,"m4Ms":65.422,"changePct":-9.7,"actionEqual":true,"utilityDelta":-3.638e-11},
+    {"label":"optimizer_stat_heavy_cold","m3Ms":1357.344,"m4Ms":1347.989,"changePct":-0.7,"actionEqual":true,"utilityDelta":-1.819e-10},
+    {"label":"optimizer_stat_heavy_warm","m3Ms":59.983,"m4Ms":56.924,"changePct":-5.1,"actionEqual":true,"utilityDelta":-1.819e-10},
+    {"label":"optimizer_global_quality_cold","m3Ms":1244.589,"m4Ms":1232.177,"changePct":-1.0,"actionEqual":true,"utilityDelta":-3.638e-11},
+    {"label":"optimizer_global_quality_warm","m3Ms":65.467,"m4Ms":54.991,"changePct":-16.0,"actionEqual":true,"utilityDelta":-3.638e-11},
+    {"label":"optimizer_trait_heavy_cold","m3Ms":1211.095,"m4Ms":1186.007,"changePct":-2.1,"actionEqual":true,"utilityDelta":-1.019e-10},
+    {"label":"optimizer_trait_heavy_warm","m3Ms":47.454,"m4Ms":51.403,"changePct":8.3,"actionEqual":true,"utilityDelta":-1.019e-10},
+    {"label":"optimizer_target_55k_cold","m3Ms":5358.766,"m4Ms":5362.912,"changePct":0.1,"actionEqual":true,"utilityDelta":1.998e-15},
+    {"label":"optimizer_target_55k_warm","m3Ms":59.483,"m4Ms":42.894,"changePct":-27.9,"actionEqual":true,"utilityDelta":1.998e-15}
+  ]
+}

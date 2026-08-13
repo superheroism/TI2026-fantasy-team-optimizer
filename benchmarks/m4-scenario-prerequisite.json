@@ -1,0 +1,299 @@
+{
+  "generatedAt": "2026-08-13T09:43:04.162Z",
+  "results": [
+    {
+      "kind": "optimizer_scale",
+      "objective": "expected_score",
+      "iterations": 48,
+      "ms": 1332.375618,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 60560.497614831875,
+      "rawScenarios": {
+        "requests": 31760,
+        "cacheHits": 31712,
+        "cacheMisses": 48,
+        "generations": 48,
+        "generatedIterations": 2304,
+        "generatedStatValues": 483840,
+        "generationMs": 149.51249899999996,
+        "sampleRescores": 48,
+        "meanRescores": 31712,
+        "rescoredIterations": 1524480,
+        "rescoreMs": 232.7477329999996
+      }
+    },
+    {
+      "kind": "optimizer_scale",
+      "objective": "expected_score",
+      "iterations": 96,
+      "ms": 1420.2319739999998,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 60481.877299936605,
+      "rawScenarios": {
+        "requests": 31760,
+        "cacheHits": 31712,
+        "cacheMisses": 48,
+        "generations": 48,
+        "generatedIterations": 4608,
+        "generatedStatValues": 967680,
+        "generationMs": 191.2441150000002,
+        "sampleRescores": 48,
+        "meanRescores": 31712,
+        "rescoredIterations": 3048960,
+        "rescoreMs": 406.6838020000091
+      }
+    },
+    {
+      "kind": "optimizer_scale",
+      "objective": "expected_score",
+      "iterations": 192,
+      "ms": 1959.17103,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 60041.118774858,
+      "rawScenarios": {
+        "requests": 31760,
+        "cacheHits": 31712,
+        "cacheMisses": 48,
+        "generations": 48,
+        "generatedIterations": 9216,
+        "generatedStatValues": 1935360,
+        "generationMs": 351.15601700000025,
+        "sampleRescores": 48,
+        "meanRescores": 31712,
+        "rescoredIterations": 6097920,
+        "rescoreMs": 795.1399190000211
+      }
+    },
+    {
+      "kind": "optimizer_scale",
+      "objective": "expected_score",
+      "iterations": 384,
+      "ms": 3157.451486,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 60259.77459362031,
+      "rawScenarios": {
+        "requests": 31760,
+        "cacheHits": 31712,
+        "cacheMisses": 48,
+        "generations": 48,
+        "generatedIterations": 18432,
+        "generatedStatValues": 3870720,
+        "generationMs": 707.4250589999992,
+        "sampleRescores": 48,
+        "meanRescores": 31712,
+        "rescoredIterations": 12195840,
+        "rescoreMs": 1604.3390090000366
+      }
+    },
+    {
+      "kind": "optimizer_scale",
+      "objective": "target_probability",
+      "iterations": 48,
+      "ms": 5364.666611999999,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 0.8660000786833985,
+      "rawScenarios": {
+        "requests": 32640,
+        "cacheHits": 32592,
+        "cacheMisses": 48,
+        "generations": 48,
+        "generatedIterations": 2304,
+        "generatedStatValues": 483840,
+        "generationMs": 103.51214700000219,
+        "sampleRescores": 31712,
+        "meanRescores": 928,
+        "rescoredIterations": 1566720,
+        "rescoreMs": 223.3073179999792
+      }
+    },
+    {
+      "kind": "optimizer_scale",
+      "objective": "target_probability",
+      "iterations": 96,
+      "ms": 9927.228009999999,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 0.8514466006233755,
+      "rawScenarios": {
+        "requests": 32640,
+        "cacheHits": 32592,
+        "cacheMisses": 48,
+        "generations": 48,
+        "generatedIterations": 4608,
+        "generatedStatValues": 967680,
+        "generationMs": 180.3393259999939,
+        "sampleRescores": 31712,
+        "meanRescores": 928,
+        "rescoredIterations": 3133440,
+        "rescoreMs": 422.5575900001313
+      }
+    },
+    {
+      "kind": "optimizer_scale",
+      "objective": "target_probability",
+      "iterations": 192,
+      "ms": 25172.872205,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 0.8267284489979289,
+      "rawScenarios": {
+        "requests": 32640,
+        "cacheHits": 32592,
+        "cacheMisses": 48,
+        "generations": 48,
+        "generatedIterations": 9216,
+        "generatedStatValues": 1935360,
+        "generationMs": 356.07809000000634,
+        "sampleRescores": 31712,
+        "meanRescores": 928,
+        "rescoredIterations": 6266880,
+        "rescoreMs": 840.7168399991788
+      }
+    },
+    {
+      "kind": "optimizer_scale",
+      "objective": "target_probability",
+      "iterations": 384,
+      "ms": 48781.888955,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 0.833528249243624,
+      "rawScenarios": {
+        "requests": 32640,
+        "cacheHits": 32592,
+        "cacheMisses": 48,
+        "generations": 48,
+        "generatedIterations": 18432,
+        "generatedStatValues": 3870720,
+        "generationMs": 702.5326010000063,
+        "sampleRescores": 31712,
+        "meanRescores": 928,
+        "rescoredIterations": 12533760,
+        "rescoreMs": 1707.2553599993844
+      }
+    },
+    {
+      "kind": "board_change_reuse",
+      "objective": "expected_score",
+      "change": "stat",
+      "iterations": 192,
+      "ms": 0.9544480000040494,
+      "utility": 51016.57561968935,
+      "rawScenarios": {
+        "requests": 16,
+        "cacheHits": 16,
+        "cacheMisses": 0,
+        "generations": 0,
+        "generatedIterations": 0,
+        "generatedStatValues": 0,
+        "generationMs": 0,
+        "sampleRescores": 0,
+        "meanRescores": 16,
+        "rescoredIterations": 3072,
+        "rescoreMs": 0.4924359999859007
+      }
+    },
+    {
+      "kind": "board_change_reuse",
+      "objective": "expected_score",
+      "change": "quality",
+      "iterations": 192,
+      "ms": 0.9435780000058003,
+      "utility": 53410.08282644475,
+      "rawScenarios": {
+        "requests": 16,
+        "cacheHits": 16,
+        "cacheMisses": 0,
+        "generations": 0,
+        "generatedIterations": 0,
+        "generatedStatValues": 0,
+        "generationMs": 0,
+        "sampleRescores": 0,
+        "meanRescores": 16,
+        "rescoredIterations": 3072,
+        "rescoreMs": 0.5015129999810597
+      }
+    },
+    {
+      "kind": "board_change_reuse",
+      "objective": "expected_score",
+      "change": "trait",
+      "iterations": 192,
+      "ms": 0.9856049999943934,
+      "utility": 51837.657961818324,
+      "rawScenarios": {
+        "requests": 16,
+        "cacheHits": 16,
+        "cacheMisses": 0,
+        "generations": 0,
+        "generatedIterations": 0,
+        "generatedStatValues": 0,
+        "generationMs": 0,
+        "sampleRescores": 0,
+        "meanRescores": 16,
+        "rescoredIterations": 3072,
+        "rescoreMs": 0.5432540000037989
+      }
+    },
+    {
+      "kind": "board_change_reuse",
+      "objective": "target_probability",
+      "change": "stat",
+      "iterations": 192,
+      "ms": 2.668660000010277,
+      "utility": 0.13541666666666666,
+      "rawScenarios": {
+        "requests": 16,
+        "cacheHits": 16,
+        "cacheMisses": 0,
+        "generations": 0,
+        "generatedIterations": 0,
+        "generatedStatValues": 0,
+        "generationMs": 0,
+        "sampleRescores": 16,
+        "meanRescores": 0,
+        "rescoredIterations": 3072,
+        "rescoreMs": 0.55916000000434
+      }
+    },
+    {
+      "kind": "board_change_reuse",
+      "objective": "target_probability",
+      "change": "quality",
+      "iterations": 192,
+      "ms": 5.513617999997223,
+      "utility": 0.2916666666666667,
+      "rawScenarios": {
+        "requests": 16,
+        "cacheHits": 16,
+        "cacheMisses": 0,
+        "generations": 0,
+        "generatedIterations": 0,
+        "generatedStatValues": 0,
+        "generationMs": 0,
+        "sampleRescores": 16,
+        "meanRescores": 0,
+        "rescoredIterations": 3072,
+        "rescoreMs": 0.5131540000293171
+      }
+    },
+    {
+      "kind": "board_change_reuse",
+      "objective": "target_probability",
+      "change": "trait",
+      "iterations": 192,
+      "ms": 3.738712000005762,
+      "utility": 0.19270833333333334,
+      "rawScenarios": {
+        "requests": 16,
+        "cacheHits": 16,
+        "cacheMisses": 0,
+        "generations": 0,
+        "generatedIterations": 0,
+        "generatedStatValues": 0,
+        "generationMs": 0,
+        "sampleRescores": 16,
+        "meanRescores": 0,
+        "rescoredIterations": 3072,
+        "rescoreMs": 0.5534639999677893
+      }
+    }
+  ]
+}
