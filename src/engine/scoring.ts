@@ -6,6 +6,7 @@ import { cholesky, cholesky3, correlatedUniformsPrepared, normalCdf, SeededRando
 import { mean, percentile, prepareQuantiles, quantileValuePrepared } from './distributions.js';
 import { recommendTitle, titlePrefixBoostPct } from './title.js';
 import { evaluateBanner } from '../domain/bannerEvaluator.js';
+import { bannerMechanicsKey } from './bannerMechanics.js';
 
 const ROLES: Role[] = ['core','mid','support'];
 const sampleCache = new WeakMap<DataBundle, Map<string, number[]>>();
@@ -247,7 +248,7 @@ export function rankTeamsForRole(role:Role,board:BoardState,data:DataBundle,iter
   // Team choice does not change a banner's underlying team-by-team role distributions. Excluding
   // selectedTeam lets the Likely Results comparison remain cached and instantly re-highlight when
   // the user switches teams without changing stats/tiers/traits/series.
-  const key=JSON.stringify({role,b:{role:banner.role,emblems:banner.emblems,expectedSeries:banner.expectedSeries},n:iterations});
+  const key=`${role}|${bannerMechanicsKey(banner)}|${iterations}`;
   const cached=cache.get(key);if(cached)return cached;
   const rows=data.players.filter(p=>p.role===role&&profileSupportsBanner(p,board[role]))
     .map((p,i)=>scoreProfile(p,board[role],data,iterations,10_007*(i+1)))
@@ -291,7 +292,7 @@ function buildEvaluation(
 
 export function rolePrefixFrontier(role:Role,banner:BannerState,data:DataBundle,iterations=data.simulation.optimizerIterations):RolePrefixFrontierEntry[]{
   let cache=frontierCache.get(data);if(!cache){cache=new Map();frontierCache.set(data,cache);}
-  const key=JSON.stringify({role,b:banner,n:iterations});const prior=cache.get(key);if(prior)return prior;
+  const key=`${role}|${bannerMechanicsKey(banner)}|${iterations}`;;const prior=cache.get(key);if(prior)return prior;
   const profiles=data.players.filter(p=>p.role===role&&profileSupportsBanner(p,banner));
   const ranked=profiles.map((p,i)=>({playerId:p.id,name:p.name,team:p.team,attachedPlayers:p.attachedPlayers,expected:simulateRoleTeamExpected(p,banner,data,iterations,10_007*(i+1)),samples:[]} satisfies PlayerScore));
   const out:RolePrefixFrontierEntry[]=[];
