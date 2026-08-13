@@ -1,37 +1,65 @@
-import type { ActionEvaluation, BoardEvaluation, DataBundle, DecisionAction, OptimizerState, RecommendationResult, Role } from '../domain/types.js';
+import type { ActionEvaluation, BoardEvaluation, DataBundle, DecisionAction, OfferedOperation, OptimizerState, RecommendationResult, Role } from '../domain/types.js';
 import { evaluateBoard, evaluateBoardExpectedFast } from './scoring.js';
 import { evaluateBoardTarget, evaluateBoardTargetProbabilityFast } from './targetProbability.js';
 import { enumerateEngineOperation } from './compactTransitions.js';
 import type { EngineTransition } from './compactTransitions.js';
 import { boardAdapterContext, boardToEngineState, engineStateToBoard } from './stateEncoding.js';
 import type { BoardStateID, EngineState } from './stateEncoding.js';
-import { ACTION_CATALOG, allUniformMenus, TOTAL_UNIFORM_MENUS } from '../data/actionCatalog.js';
-const ROLES: Role[] = ['core','mid','support'];
+import { ACTION_CATALOG, TOTAL_UNIFORM_MENUS } from '../data/actionCatalog.js';
+import { MenuModel } from './menuModel.js';
+import type { MenuOperatorDiagnostics } from './menuModel.js';
+import { FiniteHorizonValueFunction } from './valueFunction.js';
+import type { ValueActionPhase, ValueFunctionDiagnostics } from './valueFunction.js';
+
+const ROLES: readonly Role[] = ['core','mid','support'];
 
 export interface OptimizerEngineDiagnostics {
-  readonly descriptiveBoardMaterializations: number;
-  readonly expectedScalarStates: number;
-  readonly targetScalarStates: number;
+  readonly descriptiveBoardMaterializations:number;
+  readonly expectedScalarStates:number;
+  readonly targetScalarStates:number;
+  readonly terminalScoringCalls:number;
+  readonly targetedActionCacheHits:number;
+  readonly targetedActionCacheMisses:number;
+  readonly transitionDistributionCacheHits:number;
+  readonly transitionDistributionCacheMisses:number;
+  readonly transitionEvaluationsByDepth:Readonly<Record<string,number>>;
+  readonly valueFunction:ValueFunctionDiagnostics;
+  readonly menuOperator:MenuOperatorDiagnostics;
 }
 
-let lastEngineDiagnostics:OptimizerEngineDiagnostics={descriptiveBoardMaterializations:0,expectedScalarStates:0,targetScalarStates:0};
-export function getLastOptimizerEngineDiagnostics():OptimizerEngineDiagnostics { return {...lastEngineDiagnostics}; }
-
-function utility(evaluation: BoardEvaluation, state: OptimizerState): number {
-  return state.objective === 'target_probability' ? (evaluation.targetProbability ?? 0) : evaluation.expected;
+const EMPTY_VALUE_DIAGNOSTICS:ValueFunctionDiagnostics={
+  terminalCacheHits:0,terminalCacheMisses:0,vCacheHits:0,vCacheMisses:0,qCacheHits:0,qCacheMisses:0,
+  actionCacheHits:0,actionCacheMisses:0,uniqueStatesByDepth:{},actionEvaluationsByDepth:{},elapsedMs:0,
+};
+const EMPTY_MENU_DIAGNOSTICS:MenuOperatorDiagnostics={calls:0,uniformCalls:0,overrideCalls:0,explicitMenusScanned:0,operatorMs:0};
+let lastEngineDiagnostics:OptimizerEngineDiagnostics={
+  descriptiveBoardMaterializations:0,expectedScalarStates:0,targetScalarStates:0,terminalScoringCalls:0,
+  targetedActionCacheHits:0,targetedActionCacheMisses:0,transitionDistributionCacheHits:0,transitionDistributionCacheMisses:0,
+  transitionEvaluationsByDepth:{},valueFunction:EMPTY_VALUE_DIAGNOSTICS,menuOperator:EMPTY_MENU_DIAGNOSTICS,
+};
+export function getLastOptimizerEngineDiagnostics():OptimizerEngineDiagnostics {
+  return {
+    ...lastEngineDiagnostics,
+    transitionEvaluationsByDepth:{...lastEngineDiagnostics.transitionEvaluationsByDepth},
+    valueFunction:{
+      ...lastEngineDiagnostics.valueFunction,
+      uniqueStatesByDepth:{...lastEngineDiagnostics.valueFunction.uniqueStatesByDepth},
+      actionEvaluationsByDepth:{...lastEngineDiagnostics.valueFunction.actionEvaluationsByDepth},
+    },
+    menuOperator:{...lastEngineDiagnostics.menuOperator},
+  };
 }
-export function formatAction(action: DecisionAction, state?: OptimizerState): string {
-  if (action.kind === 'stop') return 'Best Current Setup';
-  if (action.kind === 'menu_reroll') return 'Reroll operation menu';
-  const label = state?.menu.find(o => o.id === action.operationId)?.label ?? action.operationId;
+
+function utility(evaluation:BoardEvaluation,state:OptimizerState):number {
+  return state.objective==='target_probability'?(evaluation.targetProbability??0):evaluation.expected;
+}
+
+export function formatAction(action:DecisionAction,state?:OptimizerState):string {
+  if(action.kind==='stop')return 'Best Current Setup';
+  if(action.kind==='menu_reroll')return 'Reroll operation menu';
+  const label=state?.menu.find(o=>o.id===action.operationId)?.label??action.operationId;
   return `${action.banner.toUpperCase()} → ${label}`;
 }
-/**
- * V1 exact transition rules are complete for all 20 actions. To keep browser
- * runtime bounded, continuation is evaluated to a maximum of one fresh menu after
- * the current spend (a two-token decision horizon). The UI labels this cap whenever
- * more tokens remain.
- */
 
 function weightedQuantile(points:{value:number;probability:number}[],q:number):number|undefined{
   const clean=points.filter(x=>Number.isFinite(x.value)&&x.probability>0).sort((a,b)=>a.value-b.value);
@@ -40,6 +68,8 @@ function weightedQuantile(points:{value:number;probability:number}[],q:number):n
   for(const x of clean){cumulative+=x.probability;if(cumulative>=target)return x.value;}
   return clean.at(-1)?.value;
 }
+
+/** Deterministic probability-strata compression retained from the pre-DP two-step policy. */
 function stratifiedTransitions(outcomes:readonly EngineTransition[],maxStrata:number):EngineTransition[]{
   if(maxStrata<=0||outcomes.length<=maxStrata)return [...outcomes];
   const total=outcomes.reduce((s,x)=>s+x.probability,0);if(total<=0)return [];
@@ -56,9 +86,18 @@ function stratifiedTransitions(outcomes:readonly EngineTransition[],maxStrata:nu
   return [...grouped.values()];
 }
 
-export function recommendNextAction(state: OptimizerState, data: DataBundle, uniformStatFallback=true): RecommendationResult {
-  const menuSamples=data.menuSamples?.filter(m=>m.length===3)??allUniformMenus();
-  const usingOverrideMenus=Boolean(data.menuSamples?.length);
+interface TargetedContinuation {
+  readonly value:number;
+  readonly utilityOutcomes:readonly {value:number;probability:number}[];
+}
+
+/**
+ * M4 finite-horizon policy. Production remains explicitly capped at two modeled
+ * token spends; the reusable V/Q architecture is introduced without starting M5.
+ */
+export function recommendNextAction(state:OptimizerState,data:DataBundle,uniformStatFallback=true):RecommendationResult {
+  const overrideMenus=data.menuSamples?.filter(menu=>menu.length===3);
+  const menuModel=new MenuModel(overrideMenus?.length?overrideMenus:undefined);
   const horizon=Math.max(1,Math.min(state.tokensRemaining,data.simulation.maxLookaheadTokens??2,2));
   const continuationStrata=Math.max(1,data.simulation.continuationOutcomeStrata??8);
   const continuationEntryStrata=Math.max(1,data.simulation.continuationEntryStrata??12);
@@ -74,81 +113,169 @@ export function recommendNextAction(state: OptimizerState, data: DataBundle, uni
 
   const scalarMemo=new Map<BoardStateID,number>();
   const targetMemo=new Map<BoardStateID,number>();
-  const freshMenuMemo=new Map<BoardStateID,Map<number,number>>();
-
+  let terminalScoringCalls=0;
   const expectedScalar=(engine:EngineState):number=>{
     const prior=scalarMemo.get(engine.id);if(prior!==undefined)return prior;
+    terminalScoringCalls++;
     const value=evaluateBoardExpectedFast(boardFor(engine),data,data.simulation.optimizerIterations);scalarMemo.set(engine.id,value);return value;
   };
   const targetScalar=(engine:EngineState):number=>{
     const prior=targetMemo.get(engine.id);if(prior!==undefined)return prior;
+    terminalScoringCalls++;
     const value=evaluateBoardTargetProbabilityFast(boardFor(engine),data,state.targetScore??0,data.simulation.optimizerIterations);targetMemo.set(engine.id,value);return value;
   };
   const searchUtility=(engine:EngineState):number=>state.objective==='expected_score'?expectedScalar(engine):targetScalar(engine);
 
-  const terminalActionUtility=(engine:EngineState,tokensRemaining:number,operationId:string):number=>{
-    const op=ACTION_CATALOG.find(x=>x.id===operationId);if(!op)return -Infinity;
-    let best=-Infinity;
-    for(const role of ROLES){
-      const outcomes=stratifiedTransitions(enumerateEngineOperation(engine,role,op,uniformStatFallback),continuationStrata);if(!outcomes.length)continue;
-      let ev=0;for(const outcome of outcomes)ev+=outcome.probability*searchUtility(outcome.nextState);best=Math.max(best,ev);
+  const transitionMemo=new Map<string,readonly EngineTransition[]>();
+  let transitionDistributionCacheHits=0,transitionDistributionCacheMisses=0;
+  const transitionsFor=(engine:EngineState,role:Role,operation:OfferedOperation):readonly EngineTransition[]=>{
+    const key=`${engine.id}|${role}|${operation.id}`;
+    const prior=transitionMemo.get(key);if(prior){transitionDistributionCacheHits++;return prior;}
+    transitionDistributionCacheMisses++;
+    const outcomes=enumerateEngineOperation(engine,role,operation,uniformStatFallback);
+    transitionMemo.set(key,outcomes);return outcomes;
+  };
+
+  const targetedMemo=new Map<string,TargetedContinuation>();
+  let targetedActionCacheHits=0,targetedActionCacheMisses=0;
+  const transitionEvaluationsByDepth=new Map<number,number>();
+  let valueFunction:FiniteHorizonValueFunction<EngineState,OfferedOperation,OptimizerState['menu']>;
+
+  const targetedContinuation=(
+    engine:EngineState,
+    operation:OfferedOperation,
+    role:Role,
+    tokensRemaining:number,
+    phase:ValueActionPhase,
+  ):TargetedContinuation=>{
+    const key=`${engine.id}|${tokensRemaining}|${phase}|${operation.id}|${role}`;
+    const prior=targetedMemo.get(key);if(prior){targetedActionCacheHits++;return prior;}
+    targetedActionCacheMisses++;
+    transitionEvaluationsByDepth.set(tokensRemaining,(transitionEvaluationsByDepth.get(tokensRemaining)??0)+1);
+    const exact=transitionsFor(engine,role,operation);
+    if(!exact.length){const empty={value:-Infinity,utilityOutcomes:[]};targetedMemo.set(key,empty);return empty;}
+
+    // Preserve M3 fidelity asymmetry exactly:
+    // - visible one-step actions: complete distribution;
+    // - visible first-step continuation: continuationEntryStrata;
+    // - actions reached through a fresh menu: continuationOutcomeStrata.
+    const modeled=phase==='fresh_menu'
+      ?stratifiedTransitions(exact,continuationStrata)
+      :(tokensRemaining>1?stratifiedTransitions(exact,continuationEntryStrata):[...exact]);
+    let value=0;
+    const utilityOutcomes:{value:number;probability:number}[]=[];
+    for(const outcome of modeled){
+      const continuation=valueFunction.V(outcome.nextState,tokensRemaining-1);
+      value+=outcome.probability*continuation;
+      utilityOutcomes.push({value:continuation,probability:outcome.probability});
     }
-    void tokensRemaining;
-    return best;
+    const result={value,utilityOutcomes};targetedMemo.set(key,result);return result;
   };
 
-  const expectedFreshMenuTerminalUtility=(engine:EngineState,tokensRemaining:number):number=>{
-    let byTokens=freshMenuMemo.get(engine.id);if(!byTokens){byTokens=new Map();freshMenuMemo.set(engine.id,byTokens);}
-    const prior=byTokens.get(tokensRemaining);if(prior!==undefined)return prior;
-    const stop=searchUtility(engine);if(tokensRemaining<=0){byTokens.set(tokensRemaining,stop);return stop;}
-    const values=new Map<string,number>();for(const op of ACTION_CATALOG)values.set(op.id,terminalActionUtility(engine,tokensRemaining,op.id));
-    let sum=0;for(const menu of menuSamples){let best=stop;for(const op of menu)best=Math.max(best,values.get(op.id)??-Infinity);sum+=best;}
-    const result=sum/Math.max(menuSamples.length,1);byTokens.set(tokensRemaining,result);return result;
-  };
+  valueFunction=new FiniteHorizonValueFunction({
+    stateId:(engine:EngineState)=>engine.id,
+    operationId:(operation:OfferedOperation)=>operation.id,
+    allOperations:ACTION_CATALOG,
+    menuOperations:(menu:OptimizerState['menu'])=>menu,
+    menuId:(menu:OptimizerState['menu'])=>menu.map(operation=>operation.id).sort().join(','),
+    terminalUtility:searchUtility,
+    actionValue:(engine,operation,tokensRemaining,phase)=>{
+      let best=-Infinity;
+      for(const role of ROLES)best=Math.max(best,targetedContinuation(engine,operation,role,tokensRemaining,phase).value);
+      return best;
+    },
+    freshMenuExpectedUtility:(_engine,_tokensRemaining,baseline,operationValues)=>
+      menuModel.expectedFreshMenuUtility(operationValues,baseline),
+  });
 
-  const continuationUtility=(engine:EngineState,tokensRemaining:number):number=>{
-    const immediate=searchUtility(engine);if(horizon<2||tokensRemaining<=0)return immediate;return expectedFreshMenuTerminalUtility(engine,tokensRemaining);
-  };
-
+  terminalScoringCalls++;
   const current=state.objective==='target_probability'
-    ? evaluateBoardTarget(state.board,state.username,data,state.targetScore??0,data.simulation.optimizerIterations)
-    : evaluateBoard(state.board,state.username,data,state.targetScore);
+    ?evaluateBoardTarget(state.board,state.username,data,state.targetScore??0,data.simulation.optimizerIterations)
+    :evaluateBoard(state.board,state.username,data,state.targetScore);
   const stopUtility=utility(current,state);
-  // Seed scalar current value with the fully evaluated value to ensure identical stop reference.
+  // Seed both the objective scalar and V/Q terminal memo with the full current evaluation.
   if(state.objective==='expected_score')scalarMemo.set(initialEngine.id,current.expected);
   else if(current.targetProbability!==undefined)targetMemo.set(initialEngine.id,current.targetProbability);
+  valueFunction.seedTerminalUtility(initialEngine,stopUtility);
 
-  const rows:ActionEvaluation[]=[{action:{kind:'stop'},expectedFinalUtility:stopUtility,expectedFinalScore:current.expected,tokensAfter:state.tokensRemaining,assetAtRisk:'none',confidence:current.confidence,status:'evaluated',note:'Preserves the board; free team-by-role selection is re-optimized.'}];
+  const rows:ActionEvaluation[]=[{
+    action:{kind:'stop'},expectedFinalUtility:stopUtility,expectedFinalScore:current.expected,
+    tokensAfter:state.tokensRemaining,assetAtRisk:'none',confidence:current.confidence,status:'evaluated',
+    note:'Preserves the board; free team-by-role selection is re-optimized.',
+  }];
+
   if(state.tokensRemaining>0){
-    for(const op of state.menu){
+    for(const operation of state.menu){
       for(const role of ROLES){
-        const outcomes=enumerateEngineOperation(initialEngine,role,op,uniformStatFallback);if(!outcomes.length)continue;
-        let scoreEv=0,utilEv=0,pImprove=0,worst=Infinity;
-        // Immediate metrics use the complete known transition distribution.
+        const outcomes=transitionsFor(initialEngine,role,operation);if(!outcomes.length)continue;
+        let scoreEv=0,pImprove=0,worst=Infinity;
+        // User-visible immediate metrics remain full-distribution calculations.
         for(const outcome of outcomes){
-          const immediateExpected=expectedScalar(outcome.nextState), immediateUtility=state.objective==='expected_score'?immediateExpected:targetScalar(outcome.nextState);
-          scoreEv+=outcome.probability*immediateExpected;if(immediateUtility>stopUtility)pImprove+=outcome.probability;worst=Math.min(worst,immediateExpected);
+          const immediateExpected=expectedScalar(outcome.nextState);
+          const immediateUtility=state.objective==='expected_score'?immediateExpected:targetScalar(outcome.nextState);
+          scoreEv+=outcome.probability*immediateExpected;
+          if(immediateUtility>stopUtility)pImprove+=outcome.probability;
+          worst=Math.min(worst,immediateExpected);
         }
-        // Only the expensive second-step continuation integral is deterministically compressed.
-        // The displayed reroll-outcome interval is taken from this same weighted continuation distribution,
-        // keeping the range internally consistent with expectedFinalUtility without adding another search pass.
-        const continuationOutcomes=horizon>1&&state.tokensRemaining>1?stratifiedTransitions(outcomes,continuationEntryStrata):[...outcomes];
-        const utilityOutcomes:{value:number;probability:number}[]=[];
-        for(const outcome of continuationOutcomes){const value=continuationUtility(outcome.nextState,state.tokensRemaining-1);utilEv+=outcome.probability*value;utilityOutcomes.push({value,probability:outcome.probability});}
-        const p10=weightedQuantile(utilityOutcomes,.10),median=weightedQuantile(utilityOutcomes,.50),p90=weightedQuantile(utilityOutcomes,.90);
-        const row:ActionEvaluation={action:{kind:'board_action',operationId:op.id,banner:role},expectedFinalUtility:utilEv,expectedFinalScore:scoreEv,pImprove,tokensAfter:state.tokensRemaining-1,assetAtRisk:`${role} banner`,confidence:current.confidence,status:'evaluated'};
-        if(p10!==undefined)row.outcomeP10Utility=p10;if(median!==undefined)row.outcomeMedianUtility=median;if(p90!==undefined)row.outcomeP90Utility=p90;
-        if(Number.isFinite(worst))row.downside=worst-current.expected;if(state.tokensRemaining>horizon)row.note=`Decision lookahead capped at ${horizon} tokens for browser performance.`;else if(horizon>1)row.note=`Two-step continuation uses deterministic probability stratification (${continuationEntryStrata} entry / ${continuationStrata} future-outcome strata max).`;rows.push(row);
+
+        const continuation=targetedContinuation(initialEngine,operation,role,horizon,'current_menu');
+        const points=[...continuation.utilityOutcomes];
+        const p10=weightedQuantile(points,.10),median=weightedQuantile(points,.50),p90=weightedQuantile(points,.90);
+        const row:ActionEvaluation={
+          action:{kind:'board_action',operationId:operation.id,banner:role},
+          expectedFinalUtility:continuation.value,expectedFinalScore:scoreEv,pImprove,
+          tokensAfter:state.tokensRemaining-1,assetAtRisk:`${role} banner`,confidence:current.confidence,status:'evaluated',
+        };
+        if(p10!==undefined)row.outcomeP10Utility=p10;
+        if(median!==undefined)row.outcomeMedianUtility=median;
+        if(p90!==undefined)row.outcomeP90Utility=p90;
+        if(Number.isFinite(worst))row.downside=worst-current.expected;
+        if(state.tokensRemaining>horizon)row.note=`Decision lookahead capped at ${horizon} tokens for browser performance.`;
+        else if(horizon>1)row.note=`Two-step continuation uses deterministic probability stratification (${continuationEntryStrata} entry / ${continuationStrata} future-outcome strata max).`;
+        rows.push(row);
       }
     }
+
     const nextTokens=state.tokensRemaining-1;
-    if(nextTokens===0)rows.push({action:{kind:'menu_reroll'},expectedFinalUtility:stopUtility,expectedFinalScore:current.expected,tokensAfter:0,assetAtRisk:'last token; board preserved',confidence:current.confidence,status:'evaluated',note:'Fresh menu cannot be acted on with 0 tokens remaining.'});
-    else{
-      const ev=expectedFreshMenuTerminalUtility(initialEngine,nextTokens);
-      rows.push({action:{kind:'menu_reroll'},expectedFinalUtility:ev,expectedFinalScore:current.expected,tokensAfter:nextTokens,assetAtRisk:'1 token; board preserved',confidence:current.confidence,status:'evaluated',note:`Fresh menu is a uniform draw of 3 distinct actions from 20 (${TOTAL_UNIFORM_MENUS.toLocaleString()} equally likely menus).`});
+    if(nextTokens===0){
+      rows.push({
+        action:{kind:'menu_reroll'},expectedFinalUtility:stopUtility,expectedFinalScore:current.expected,tokensAfter:0,
+        assetAtRisk:'last token; board preserved',confidence:current.confidence,status:'evaluated',
+        note:'Fresh menu cannot be acted on with 0 tokens remaining.',
+      });
+    } else {
+      // M4 production is still a two-spend model, so a current menu reroll leaves
+      // exactly one modeled spend regardless of any larger real token balance.
+      const ev=valueFunction.V(initialEngine,1);
+      rows.push({
+        action:{kind:'menu_reroll'},expectedFinalUtility:ev,expectedFinalScore:current.expected,tokensAfter:nextTokens,
+        assetAtRisk:'1 token; board preserved',confidence:current.confidence,status:'evaluated',
+        note:menuModel.mode==='known_uniform'
+          ?`Fresh menu is a uniform draw of 3 distinct actions from 20; expectation uses the exact combinatorial operator equivalent to ${TOTAL_UNIFORM_MENUS.toLocaleString()} menus.`
+          :`Fresh-menu expectation uses ${overrideMenus?.length??0} supplied menu samples.`,
+      });
     }
   }
+
+  // Exercise/cache the canonical current-menu Q object. The ranked rows remain
+  // descriptive because they retain per-target immediate metrics and quantiles.
+  if(state.tokensRemaining>0)valueFunction.Q(initialEngine,state.menu,horizon);
+
   const ranking=rows.sort((a,b)=>b.expectedFinalUtility-a.expectedFinalUtility);
-  lastEngineDiagnostics={descriptiveBoardMaterializations,expectedScalarStates:scalarMemo.size,targetScalarStates:targetMemo.size};
-  return {current,ranking,recommendation:ranking[0]!,futureMenuMode:usingOverrideMenus?'override_samples':'known_uniform'};
+  const transitionDepthRecord:Record<string,number>={};
+  for(const [depth,count] of transitionEvaluationsByDepth)transitionDepthRecord[String(depth)]=count;
+  lastEngineDiagnostics={
+    descriptiveBoardMaterializations,
+    expectedScalarStates:scalarMemo.size,
+    targetScalarStates:targetMemo.size,
+    terminalScoringCalls,
+    targetedActionCacheHits,
+    targetedActionCacheMisses,
+    transitionDistributionCacheHits,
+    transitionDistributionCacheMisses,
+    transitionEvaluationsByDepth:transitionDepthRecord,
+    valueFunction:valueFunction.getDiagnostics(),
+    menuOperator:menuModel.getDiagnostics(),
+  };
+  return {current,ranking,recommendation:ranking[0]!,futureMenuMode:menuModel.mode};
 }
