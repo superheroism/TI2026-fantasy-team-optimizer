@@ -139,6 +139,30 @@ The expected-score recommendation was unchanged from `t=2` to `t=3` for all five
 
 **Decision:** production remains at two modeled token spends. See `M5_FOUR_TOKEN_EXPERIMENT.md` for full state-growth diagnostics and the recommended M5B cache-pressure package.
 
+## M5B exact cache and scoring optimizations
+
+M5B attacks the two largest avoidable costs identified by the M5A profile without changing the value function, transition fidelity, menu model, objective, or production horizon.
+
+First, fresh-menu recursion no longer retains whole-board targeted-continuation and transition-distribution caches that had essentially no reuse. Second, expected-score terminal evaluation now operates from role-local compact banner IDs and reuses the same role/prefix frontiers without materializing a full descriptive `BoardState` for every terminal state. A final micro-pass keeps action memoization for current-menu calls but bypasses one-use fresh-menu `A(B,a,t)` values.
+
+A same-runner M5A-versus-M5B comparison produced:
+
+| Default expected score | M5A | M5B | Change |
+|---|---:|---:|---:|
+| t=2 cold | 1.324 s | 1.247 s | -5.8% |
+| t=2 warm | 61.5 ms | 41.8 ms | -32.1% |
+| t=2 heap growth | 43.3 MB | 18.1 MB | -58.1% |
+| t=3 cold | 22.848 s | 17.586 s | -23.0% |
+| t=3 warm | 6.218 s | 2.314 s | -62.8% |
+| t=3 heap growth | 1.669 GB | 318.8 MB | -80.9% |
+| t=3 max RSS | 1.758 GB | 418 MB | -76.2% |
+
+Default t=3 still reaches exactly 415,223 terminal states. The optimization changes representation and retention, not the reachable frontier. Descriptive board materializations fall from 415,222 to zero for expected-score search; retained targeted-continuation and run-scoped transition-distribution entries fall from roughly 397k/394k to 9/9. The final fresh-action micro-pass reduces retained generic action entries from 132,223 to 3 and cuts another ~5.8% of heap growth on its paired run, but does not improve cold time materially.
+
+The recommendation and utility remain identical. The first complete M5B pass still exceeded the 60-second ceiling at t=4, and the final cache micro-pass showed no cold-runtime improvement at t=3. Production therefore remains at two modeled token spends.
+
+Raw data are stored in `benchmarks/m5b-exact-optimizations.json` and `benchmarks/m5b-fresh-action-cache.json`; full interpretation is in `M5B_EXACT_OPTIMIZATIONS.md`.
+
 ## Why the search is faster than the histogram
 
 The full selected-board distribution is rebuilt at presentation quality when the optimizer runs. Team-role comparisons are cached by banner mechanics, so selecting a different already-simulated team can reuse those samples.
@@ -152,7 +176,7 @@ The action search is cheaper because it:
 5. preserves deterministic probability stratification only in continuation branches;
 6. carries compact canonical board/banner IDs through transition/search;
 7. caches compact transition distributions;
-8. memoizes terminal utility, action continuation, `V(B,t)`, and `Q(B,M,t)`;
+8. memoizes terminal utility, reusable current-menu action continuation, `V(B,t)`, and `Q(B,M,t)`, while bypassing one-use fresh-menu action values;
 9. computes uniform fresh-menu expectation analytically instead of scanning 1,140 menus.
 
 The uniform future-menu distribution is still modeled **exactly**; M4 changes the calculation, not the probability model. Explicit `data.menuSamples` overrides continue to be evaluated as supplied.
@@ -161,7 +185,7 @@ The uniform future-menu distribution is still modeled **exactly**; M4 changes th
 
 Target-probability mode optimizes free roster/title selection for the target probability itself. The same finite-horizon value-function machinery is used for both objectives; expected score is not used as an intermediate objective in target mode.
 
-The production decision horizon remains capped at two token spends. M5A measured deeper current-fidelity search and found realistic four-token search outside the current runtime/memory envelope. Do not proceed to eight tokens until the four-token frontier is made tractable and any later approximation is explicitly validated.
+The production decision horizon remains capped at two token spends. M5A measured deeper current-fidelity search and found realistic four-token search outside the runtime/memory envelope; M5B substantially reduced exact cache and allocation overhead but did not make t=4 tractable. Do not proceed to eight tokens until the four-token frontier is made tractable and any later approximation is explicitly validated.
 
 ## Interpretation
 
