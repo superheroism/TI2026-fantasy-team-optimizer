@@ -1,3 +1,4 @@
+import type { ActionWideningPolicy } from './actionWidening.js';
 import type { ContinuationFidelityPolicy } from './continuationFidelity.js';
 import type { MenuOperatorDiagnostics } from './menuModel.js';
 import type { ValueFunctionDiagnostics } from './valueFunction.js';
@@ -6,6 +7,8 @@ export interface OptimizerSearchOptions {
   readonly modeledHorizonOverride?:number;
   /** Engineering-only M5C continuation policy. Ignored unless the modeled horizon exceeds two tokens. */
   readonly experimentalContinuationFidelity?:ContinuationFidelityPolicy;
+  /** Engineering-only M5D operation widening policy. Ignored unless the modeled horizon exceeds two tokens. */
+  readonly experimentalActionWidening?:ActionWideningPolicy;
 }
 
 export interface OptimizerEngineDiagnostics {
@@ -35,6 +38,7 @@ export interface OptimizerEngineDiagnostics {
   readonly transitionOutcomesBeforeCompressionByDepth:Readonly<Record<string,number>>;
   readonly transitionOutcomesAfterCompressionByDepth:Readonly<Record<string,number>>;
   readonly continuationFidelity:import('./continuationFidelity.js').ContinuationFidelityReport;
+  readonly actionWidening:import('./actionWidening.js').ActionWideningReport;
   readonly valueFunction:ValueFunctionDiagnostics;
   readonly menuOperator:MenuOperatorDiagnostics;
 }
