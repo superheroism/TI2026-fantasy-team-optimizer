@@ -10,7 +10,8 @@
     "verify:generated": "node scripts/verify-generated.mjs --check-committed",
     "test": "npm run build && node --test tests/*.test.mjs",
     "test:ci": "npm run typecheck && npm run verify:generated && node --test tests/*.test.mjs",
-    "benchmark": "npm run build && node scripts/benchmark.mjs"
+    "benchmark": "npm run build && node scripts/benchmark.mjs",
+    "benchmark:m5": "npm run build && node scripts/benchmark-m5-four-token.mjs"
   },
   "devDependencies": {
     "typescript": "5.8.3"
