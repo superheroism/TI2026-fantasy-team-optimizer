@@ -13,7 +13,6 @@ export type { OptimizerEngineDiagnostics, OptimizerSearchOptions } from './optim
 let lastDiagnostics:OptimizerEngineDiagnostics|undefined;
 
 function zeroDiagnostics():OptimizerEngineDiagnostics {
-  const rankSummary={samples:0,pRank1:0,pRankLe3:0,pRankLe5:0,pRankLe8:0,pRankLe12:0};
   return {
     modeledHorizon:0,descriptiveBoardMaterializations:0,descriptiveBoardCacheEntries:0,
     expectedScalarStates:0,targetScalarStates:0,terminalScoringCalls:0,
@@ -24,7 +23,6 @@ function zeroDiagnostics():OptimizerEngineDiagnostics {
     transitionDistributionEntries:0,transitionEvaluationsByDepth:{},transitionOutcomesBeforeCompressionByDepth:{},transitionOutcomesAfterCompressionByDepth:{},
     continuationFidelity:{id:'current',description:'',freshMenuOutcomeStrataByDepth:[],baseFreshMenuOutcomeStrata:0,rootContinuationEntryStrata:0},
     actionWidening:{enabled:false,policyId:'none',description:'Action widening disabled.',deepOperationCapsByDepth:[],byDepth:[],freshMenuStatesWidened:0,legalOperationEvaluations:0,shallowOperationEvaluations:0,recursivelyDeepenedOperationEvaluations:0,operationEvaluationsAvoided:0,wideningAvoidanceRate:0},
-    proxyRankDiagnostics:{sampleLimitPerDepth:0,observations:[],overall:rankSummary,byDepth:{}},
     valueFunction:{terminalCacheHits:0,terminalCacheMisses:0,vCalls:0,vCacheHits:0,vCacheMisses:0,qCalls:0,qCacheHits:0,qCacheMisses:0,
       actionCalls:0,actionCacheHits:0,actionCacheMisses:0,actionCacheBypasses:0,uniqueStatesByDepth:{},uniqueQStatesByDepth:{},uniqueActionStatesByDepth:{},
       vCallsByDepth:{},vCacheHitsByDepth:{},vCacheMissesByDepth:{},qCallsByDepth:{},qCacheHitsByDepth:{},qCacheMissesByDepth:{},
@@ -34,7 +32,9 @@ function zeroDiagnostics():OptimizerEngineDiagnostics {
   };
 }
 
-export function getLastOptimizerEngineDiagnostics():OptimizerEngineDiagnostics {return structuredClone(lastDiagnostics??zeroDiagnostics());}
+export function getLastOptimizerEngineDiagnostics():OptimizerEngineDiagnostics {
+  return structuredClone(lastDiagnostics??zeroDiagnostics());
+}
 
 export function recommendNextAction(
   state:OptimizerState,
@@ -43,52 +43,93 @@ export function recommendNextAction(
   searchOptions:OptimizerSearchOptions={},
 ):RecommendationResult {
   const productionHorizon=Math.max(1,Math.min(data.simulation.maxLookaheadTokens??2,2));
-  const requestedHorizon=searchOptions.modeledHorizonOverride===undefined?productionHorizon:Math.max(1,Math.floor(searchOptions.modeledHorizonOverride));
+  const requestedHorizon=searchOptions.modeledHorizonOverride===undefined
+    ?productionHorizon
+    :Math.max(1,Math.floor(searchOptions.modeledHorizonOverride));
   const horizon=Math.max(1,Math.min(state.tokensRemaining,requestedHorizon));
   const continuationStrata=Math.max(1,data.simulation.continuationOutcomeStrata??8);
   const continuationEntryStrata=Math.max(1,data.simulation.continuationEntryStrata??12);
   const overrideMenus=data.menuSamples?.filter(menu=>menu.length===3);
+
   const terminal=createTerminalSearchRuntime(state,data);
   const experimentalFidelity=horizon>2&&searchOptions.experimentalContinuationFidelity
     ?{modeledHorizon:horizon,policy:searchOptions.experimentalContinuationFidelity}
     :undefined;
-  const enableWideningEngineering=horizon>2&&(!!searchOptions.experimentalActionWidening||!!searchOptions.experimentalActionWideningProxyDiagnostics);
-  const experimentalWidening=enableWideningEngineering?{
-    modeledHorizon:horizon,
-    policy:searchOptions.experimentalActionWidening,
-    collectProxyRankDiagnostics:!!searchOptions.experimentalActionWideningProxyDiagnostics,
-    proxyRankSampleLimitPerDepth:searchOptions.experimentalActionWideningProxySampleLimitPerDepth,
-  }:undefined;
+  const experimentalWidening=horizon>2&&searchOptions.experimentalActionWidening
+    ?{modeledHorizon:horizon,policy:searchOptions.experimentalActionWidening}
+    :undefined;
   const continuation=createContinuationRuntime(state,data,terminal,uniformStatFallback,experimentalFidelity,experimentalWidening);
   const {valueFunction,menuModel}=continuation;
   const initialEngine=terminal.initialEngine;
+
   const current=state.objective==='target_probability'
     ?evaluateBoardTarget(state.board,state.username,data,state.targetScore??0,data.simulation.optimizerIterations)
     :evaluateBoard(state.board,state.username,data,state.targetScore);
   const stopUtility=state.objective==='target_probability'?(current.targetProbability??0):current.expected;
-  terminal.seedCurrent(current);valueFunction.seedTerminalUtility(initialEngine,stopUtility);
-  const rows:ActionEvaluation[]=[{action:{kind:'stop'},expectedFinalUtility:stopUtility,expectedFinalScore:current.expected,tokensAfter:state.tokensRemaining,assetAtRisk:'none',confidence:current.confidence,status:'evaluated',note:'Preserves the board; free team-by-role selection is re-optimized.'}];
+  terminal.seedCurrent(current);
+  valueFunction.seedTerminalUtility(initialEngine,stopUtility);
+
+  const rows:ActionEvaluation[]=[{
+    action:{kind:'stop'},expectedFinalUtility:stopUtility,expectedFinalScore:current.expected,
+    tokensAfter:state.tokensRemaining,assetAtRisk:'none',confidence:current.confidence,status:'evaluated',
+    note:'Preserves the board; free team-by-role selection is re-optimized.',
+  }];
+
   if(state.tokensRemaining>0){
     for(const operation of state.menu){
       for(const role of OPTIMIZER_ROLES){
         const outcomes=continuation.transitionsFor(initialEngine,role,operation);if(!outcomes.length)continue;
         let scoreEv=0,pImprove=0,worst=Infinity;
-        for(const outcome of outcomes){const immediateExpected=terminal.expectedScalar(outcome.nextState);const immediateUtility=state.objective==='expected_score'?immediateExpected:terminal.targetScalar(outcome.nextState);scoreEv+=outcome.probability*immediateExpected;if(immediateUtility>stopUtility)pImprove+=outcome.probability;worst=Math.min(worst,immediateExpected);}
+        for(const outcome of outcomes){
+          const immediateExpected=terminal.expectedScalar(outcome.nextState);
+          const immediateUtility=state.objective==='expected_score'?immediateExpected:terminal.targetScalar(outcome.nextState);
+          scoreEv+=outcome.probability*immediateExpected;
+          if(immediateUtility>stopUtility)pImprove+=outcome.probability;
+          worst=Math.min(worst,immediateExpected);
+        }
+
         const modeled=continuation.targetedContinuation(initialEngine,operation,role,horizon,'current_menu');
-        const points=[...modeled.utilityOutcomes],p10=weightedQuantile(points,.10),median=weightedQuantile(points,.50),p90=weightedQuantile(points,.90);
-        const row:ActionEvaluation={action:{kind:'board_action',operationId:operation.id,banner:role},expectedFinalUtility:modeled.value,expectedFinalScore:scoreEv,pImprove,tokensAfter:state.tokensRemaining-1,assetAtRisk:`${role} banner`,confidence:current.confidence,status:'evaluated'};
-        if(p10!==undefined)row.outcomeP10Utility=p10;if(median!==undefined)row.outcomeMedianUtility=median;if(p90!==undefined)row.outcomeP90Utility=p90;if(Number.isFinite(worst))row.downside=worst-current.expected;
-        if(state.tokensRemaining>horizon)row.note=`Decision lookahead capped at ${horizon} tokens for browser performance.`;else if(horizon>1)row.note=`${horizon}-token continuation uses deterministic probability stratification (${continuationEntryStrata} entry / ${continuationStrata} fresh-menu strata max).`;
+        const points=[...modeled.utilityOutcomes];
+        const p10=weightedQuantile(points,.10),median=weightedQuantile(points,.50),p90=weightedQuantile(points,.90);
+        const row:ActionEvaluation={
+          action:{kind:'board_action',operationId:operation.id,banner:role},
+          expectedFinalUtility:modeled.value,expectedFinalScore:scoreEv,pImprove,
+          tokensAfter:state.tokensRemaining-1,assetAtRisk:`${role} banner`,confidence:current.confidence,status:'evaluated',
+        };
+        if(p10!==undefined)row.outcomeP10Utility=p10;
+        if(median!==undefined)row.outcomeMedianUtility=median;
+        if(p90!==undefined)row.outcomeP90Utility=p90;
+        if(Number.isFinite(worst))row.downside=worst-current.expected;
+        if(state.tokensRemaining>horizon)row.note=`Decision lookahead capped at ${horizon} tokens for browser performance.`;
+        else if(horizon>1)row.note=`${horizon}-token continuation uses deterministic probability stratification (${continuationEntryStrata} entry / ${continuationStrata} fresh-menu strata max).`;
         rows.push(row);
       }
     }
+
     const nextTokens=state.tokensRemaining-1;
-    if(nextTokens===0){rows.push({action:{kind:'menu_reroll'},expectedFinalUtility:stopUtility,expectedFinalScore:current.expected,tokensAfter:0,assetAtRisk:'last token; board preserved',confidence:current.confidence,status:'evaluated',note:'Fresh menu cannot be acted on with 0 tokens remaining.'});}
-    else{const ev=valueFunction.V(initialEngine,Math.max(0,horizon-1));rows.push({action:{kind:'menu_reroll'},expectedFinalUtility:ev,expectedFinalScore:current.expected,tokensAfter:nextTokens,assetAtRisk:'1 token; board preserved',confidence:current.confidence,status:'evaluated',note:menuModel.mode==='known_uniform'?`Fresh menu is a uniform draw of 3 distinct actions from 20; expectation uses the exact combinatorial operator equivalent to ${TOTAL_UNIFORM_MENUS.toLocaleString()} menus.`:`Fresh-menu expectation uses ${overrideMenus?.length??0} supplied menu samples.`});}
+    if(nextTokens===0){
+      rows.push({action:{kind:'menu_reroll'},expectedFinalUtility:stopUtility,expectedFinalScore:current.expected,tokensAfter:0,
+        assetAtRisk:'last token; board preserved',confidence:current.confidence,status:'evaluated',
+        note:'Fresh menu cannot be acted on with 0 tokens remaining.'});
+    }else{
+      const ev=valueFunction.V(initialEngine,Math.max(0,horizon-1));
+      rows.push({action:{kind:'menu_reroll'},expectedFinalUtility:ev,expectedFinalScore:current.expected,tokensAfter:nextTokens,
+        assetAtRisk:'1 token; board preserved',confidence:current.confidence,status:'evaluated',
+        note:menuModel.mode==='known_uniform'
+          ?`Fresh menu is a uniform draw of 3 distinct actions from 20; expectation uses the exact combinatorial operator equivalent to ${TOTAL_UNIFORM_MENUS.toLocaleString()} menus.`
+          :`Fresh-menu expectation uses ${overrideMenus?.length??0} supplied menu samples.`});
+    }
   }
+
   if(state.tokensRemaining>0)valueFunction.Q(initialEngine,state.menu,horizon);
   const ranking=rows.sort((a,b)=>b.expectedFinalUtility-a.expectedFinalUtility);
   const terminalDiagnostics=terminal.diagnostics(),continuationDiagnostics=continuation.diagnostics();
-  lastDiagnostics={modeledHorizon:horizon,...terminalDiagnostics,terminalScoringCalls:terminalDiagnostics.terminalScoringCalls+1,...continuationDiagnostics,valueFunction:valueFunction.getDiagnostics(),menuOperator:menuModel.getDiagnostics()};
+  lastDiagnostics={
+    modeledHorizon:horizon,
+    ...terminalDiagnostics,
+    terminalScoringCalls:terminalDiagnostics.terminalScoringCalls+1,
+    ...continuationDiagnostics,
+    valueFunction:valueFunction.getDiagnostics(),menuOperator:menuModel.getDiagnostics(),
+  };
   return {current,ranking,recommendation:ranking[0]!,futureMenuMode:menuModel.mode};
 }
