@@ -24,3 +24,12 @@ jobs:
 
       - name: Typecheck, verify generated output, and test
         run: npm run test:ci
+
+      - name: Capture generated output for M5B
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5b-generated
+          path: |
+            build/js/engine
+            docs/js/engine
