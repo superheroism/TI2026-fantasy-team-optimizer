@@ -16,9 +16,9 @@ function zeroDiagnostics() {
         transitionDistributionCacheHits: 0, transitionDistributionCacheMisses: 0, transitionDistributionCacheBypasses: 0,
         transitionDistributionEntries: 0, transitionEvaluationsByDepth: {},
         valueFunction: { terminalCacheHits: 0, terminalCacheMisses: 0, vCalls: 0, vCacheHits: 0, vCacheMisses: 0, qCalls: 0, qCacheHits: 0, qCacheMisses: 0,
-            actionCalls: 0, actionCacheHits: 0, actionCacheMisses: 0, uniqueStatesByDepth: {}, uniqueQStatesByDepth: {}, uniqueActionStatesByDepth: {},
+            actionCalls: 0, actionCacheHits: 0, actionCacheMisses: 0, actionCacheBypasses: 0, uniqueStatesByDepth: {}, uniqueQStatesByDepth: {}, uniqueActionStatesByDepth: {},
             vCallsByDepth: {}, vCacheHitsByDepth: {}, vCacheMissesByDepth: {}, qCallsByDepth: {}, qCacheHitsByDepth: {}, qCacheMissesByDepth: {},
-            actionCallsByDepth: {}, actionCacheHitsByDepth: {}, actionCacheMissesByDepth: {}, actionEvaluationsByDepth: {},
+            actionCallsByDepth: {}, actionCacheHitsByDepth: {}, actionCacheMissesByDepth: {}, actionCacheBypassesByDepth: {}, actionEvaluationsByDepth: {},
             terminalEntries: 0, vEntries: 0, qEntries: 0, actionEntries: 0, elapsedMs: 0 },
         menuOperator: { calls: 0, uniformCalls: 0, overrideCalls: 0, explicitMenusScanned: 0, operatorMs: 0 },
     };
