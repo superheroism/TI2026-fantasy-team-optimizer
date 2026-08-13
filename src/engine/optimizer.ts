@@ -13,41 +13,88 @@ import type { ValueActionPhase, ValueFunctionDiagnostics } from './valueFunction
 
 const ROLES: readonly Role[] = ['core','mid','support'];
 
+/**
+ * Search-only overrides for bounded engineering experiments. Normal application
+ * calls omit this object and remain capped at the M4 production horizon of two.
+ */
+export interface OptimizerSearchOptions {
+  readonly modeledHorizonOverride?:number;
+}
+
 export interface OptimizerEngineDiagnostics {
+  readonly modeledHorizon:number;
   readonly descriptiveBoardMaterializations:number;
+  readonly descriptiveBoardCacheEntries:number;
   readonly expectedScalarStates:number;
   readonly targetScalarStates:number;
   readonly terminalScoringCalls:number;
   readonly targetedActionCacheHits:number;
   readonly targetedActionCacheMisses:number;
+  readonly targetedActionEntries:number;
+  readonly targetedActionRequestsByDepth:Readonly<Record<string,number>>;
+  readonly targetedActionCacheHitsByDepth:Readonly<Record<string,number>>;
+  readonly targetedActionCacheMissesByDepth:Readonly<Record<string,number>>;
   readonly transitionDistributionCacheHits:number;
   readonly transitionDistributionCacheMisses:number;
+  readonly transitionDistributionEntries:number;
   readonly transitionEvaluationsByDepth:Readonly<Record<string,number>>;
   readonly valueFunction:ValueFunctionDiagnostics;
   readonly menuOperator:MenuOperatorDiagnostics;
 }
 
 const EMPTY_VALUE_DIAGNOSTICS:ValueFunctionDiagnostics={
-  terminalCacheHits:0,terminalCacheMisses:0,vCacheHits:0,vCacheMisses:0,qCacheHits:0,qCacheMisses:0,
-  actionCacheHits:0,actionCacheMisses:0,uniqueStatesByDepth:{},actionEvaluationsByDepth:{},elapsedMs:0,
+  terminalCacheHits:0,terminalCacheMisses:0,
+  vCalls:0,vCacheHits:0,vCacheMisses:0,qCalls:0,qCacheHits:0,qCacheMisses:0,
+  actionCalls:0,actionCacheHits:0,actionCacheMisses:0,
+  uniqueStatesByDepth:{},uniqueQStatesByDepth:{},uniqueActionStatesByDepth:{},
+  vCallsByDepth:{},vCacheHitsByDepth:{},vCacheMissesByDepth:{},
+  qCallsByDepth:{},qCacheHitsByDepth:{},qCacheMissesByDepth:{},
+  actionCallsByDepth:{},actionCacheHitsByDepth:{},actionCacheMissesByDepth:{},actionEvaluationsByDepth:{},
+  terminalEntries:0,vEntries:0,qEntries:0,actionEntries:0,elapsedMs:0,
 };
 const EMPTY_MENU_DIAGNOSTICS:MenuOperatorDiagnostics={calls:0,uniformCalls:0,overrideCalls:0,explicitMenusScanned:0,operatorMs:0};
 let lastEngineDiagnostics:OptimizerEngineDiagnostics={
-  descriptiveBoardMaterializations:0,expectedScalarStates:0,targetScalarStates:0,terminalScoringCalls:0,
-  targetedActionCacheHits:0,targetedActionCacheMisses:0,transitionDistributionCacheHits:0,transitionDistributionCacheMisses:0,
+  modeledHorizon:0,descriptiveBoardMaterializations:0,descriptiveBoardCacheEntries:0,
+  expectedScalarStates:0,targetScalarStates:0,terminalScoringCalls:0,
+  targetedActionCacheHits:0,targetedActionCacheMisses:0,targetedActionEntries:0,
+  targetedActionRequestsByDepth:{},targetedActionCacheHitsByDepth:{},targetedActionCacheMissesByDepth:{},
+  transitionDistributionCacheHits:0,transitionDistributionCacheMisses:0,transitionDistributionEntries:0,
   transitionEvaluationsByDepth:{},valueFunction:EMPTY_VALUE_DIAGNOSTICS,menuOperator:EMPTY_MENU_DIAGNOSTICS,
 };
 export function getLastOptimizerEngineDiagnostics():OptimizerEngineDiagnostics {
   return {
     ...lastEngineDiagnostics,
     transitionEvaluationsByDepth:{...lastEngineDiagnostics.transitionEvaluationsByDepth},
+    targetedActionRequestsByDepth:{...lastEngineDiagnostics.targetedActionRequestsByDepth},
+    targetedActionCacheHitsByDepth:{...lastEngineDiagnostics.targetedActionCacheHitsByDepth},
+    targetedActionCacheMissesByDepth:{...lastEngineDiagnostics.targetedActionCacheMissesByDepth},
     valueFunction:{
       ...lastEngineDiagnostics.valueFunction,
       uniqueStatesByDepth:{...lastEngineDiagnostics.valueFunction.uniqueStatesByDepth},
+      uniqueQStatesByDepth:{...lastEngineDiagnostics.valueFunction.uniqueQStatesByDepth},
+      uniqueActionStatesByDepth:{...lastEngineDiagnostics.valueFunction.uniqueActionStatesByDepth},
+      vCallsByDepth:{...lastEngineDiagnostics.valueFunction.vCallsByDepth},
+      vCacheHitsByDepth:{...lastEngineDiagnostics.valueFunction.vCacheHitsByDepth},
+      vCacheMissesByDepth:{...lastEngineDiagnostics.valueFunction.vCacheMissesByDepth},
+      qCallsByDepth:{...lastEngineDiagnostics.valueFunction.qCallsByDepth},
+      qCacheHitsByDepth:{...lastEngineDiagnostics.valueFunction.qCacheHitsByDepth},
+      qCacheMissesByDepth:{...lastEngineDiagnostics.valueFunction.qCacheMissesByDepth},
+      actionCallsByDepth:{...lastEngineDiagnostics.valueFunction.actionCallsByDepth},
+      actionCacheHitsByDepth:{...lastEngineDiagnostics.valueFunction.actionCacheHitsByDepth},
+      actionCacheMissesByDepth:{...lastEngineDiagnostics.valueFunction.actionCacheMissesByDepth},
       actionEvaluationsByDepth:{...lastEngineDiagnostics.valueFunction.actionEvaluationsByDepth},
     },
     menuOperator:{...lastEngineDiagnostics.menuOperator},
   };
+}
+
+function incrementDepth(map:Map<number,number>,depth:number):void {
+  map.set(depth,(map.get(depth)??0)+1);
+}
+function depthRecord(map:ReadonlyMap<number,number>):Record<string,number> {
+  const result:Record<string,number>={};
+  for(const [depth,count] of map)result[String(depth)]=count;
+  return result;
 }
 
 function utility(evaluation:BoardEvaluation,state:OptimizerState):number {
@@ -92,13 +139,23 @@ interface TargetedContinuation {
 }
 
 /**
- * M4 finite-horizon policy. Production remains explicitly capped at two modeled
- * token spends; the reusable V/Q architecture is introduced without starting M5.
+ * M4 value-function semantics with an opt-in experimental horizon override.
+ * Production calls remain capped at two modeled token spends; M5A benchmarks
+ * can exercise the same V/Q architecture at deeper finite horizons.
  */
-export function recommendNextAction(state:OptimizerState,data:DataBundle,uniformStatFallback=true):RecommendationResult {
+export function recommendNextAction(
+  state:OptimizerState,
+  data:DataBundle,
+  uniformStatFallback=true,
+  searchOptions:OptimizerSearchOptions={},
+):RecommendationResult {
   const overrideMenus=data.menuSamples?.filter(menu=>menu.length===3);
   const menuModel=new MenuModel(overrideMenus?.length?overrideMenus:undefined);
-  const horizon=Math.max(1,Math.min(state.tokensRemaining,data.simulation.maxLookaheadTokens??2,2));
+  const productionHorizon=Math.max(1,Math.min(data.simulation.maxLookaheadTokens??2,2));
+  const requestedHorizon=searchOptions.modeledHorizonOverride===undefined
+    ?productionHorizon
+    :Math.max(1,Math.floor(searchOptions.modeledHorizonOverride));
+  const horizon=Math.max(1,Math.min(state.tokensRemaining,requestedHorizon));
   const continuationStrata=Math.max(1,data.simulation.continuationOutcomeStrata??8);
   const continuationEntryStrata=Math.max(1,data.simulation.continuationEntryStrata??12);
 
@@ -138,6 +195,9 @@ export function recommendNextAction(state:OptimizerState,data:DataBundle,uniform
 
   const targetedMemo=new Map<string,TargetedContinuation>();
   let targetedActionCacheHits=0,targetedActionCacheMisses=0;
+  const targetedActionRequestsByDepth=new Map<number,number>();
+  const targetedActionCacheHitsByDepth=new Map<number,number>();
+  const targetedActionCacheMissesByDepth=new Map<number,number>();
   const transitionEvaluationsByDepth=new Map<number,number>();
   let valueFunction:FiniteHorizonValueFunction<EngineState,OfferedOperation,OptimizerState['menu']>;
 
@@ -148,17 +208,19 @@ export function recommendNextAction(state:OptimizerState,data:DataBundle,uniform
     tokensRemaining:number,
     phase:ValueActionPhase,
   ):TargetedContinuation=>{
+    incrementDepth(targetedActionRequestsByDepth,tokensRemaining);
     const key=`${engine.id}|${tokensRemaining}|${phase}|${operation.id}|${role}`;
-    const prior=targetedMemo.get(key);if(prior){targetedActionCacheHits++;return prior;}
-    targetedActionCacheMisses++;
-    transitionEvaluationsByDepth.set(tokensRemaining,(transitionEvaluationsByDepth.get(tokensRemaining)??0)+1);
+    const prior=targetedMemo.get(key);
+    if(prior){targetedActionCacheHits++;incrementDepth(targetedActionCacheHitsByDepth,tokensRemaining);return prior;}
+    targetedActionCacheMisses++;incrementDepth(targetedActionCacheMissesByDepth,tokensRemaining);
+    incrementDepth(transitionEvaluationsByDepth,tokensRemaining);
     const exact=transitionsFor(engine,role,operation);
     if(!exact.length){const empty={value:-Infinity,utilityOutcomes:[]};targetedMemo.set(key,empty);return empty;}
 
-    // Preserve M3 fidelity asymmetry exactly:
-    // - visible one-step actions: complete distribution;
-    // - visible first-step continuation: continuationEntryStrata;
-    // - actions reached through a fresh menu: continuationOutcomeStrata.
+    // Preserve M4 fidelity asymmetry exactly at every recursive depth:
+    // - visible immediate metrics: complete distribution (below);
+    // - first visible action entering continuation: continuationEntryStrata;
+    // - actions reached through any fresh menu: continuationOutcomeStrata.
     const modeled=phase==='fresh_menu'
       ?stratifiedTransitions(exact,continuationStrata)
       :(tokensRemaining>1?stratifiedTransitions(exact,continuationEntryStrata):[...exact]);
@@ -231,7 +293,7 @@ export function recommendNextAction(state:OptimizerState,data:DataBundle,uniform
         if(p90!==undefined)row.outcomeP90Utility=p90;
         if(Number.isFinite(worst))row.downside=worst-current.expected;
         if(state.tokensRemaining>horizon)row.note=`Decision lookahead capped at ${horizon} tokens for browser performance.`;
-        else if(horizon>1)row.note=`Two-step continuation uses deterministic probability stratification (${continuationEntryStrata} entry / ${continuationStrata} future-outcome strata max).`;
+        else if(horizon>1)row.note=`${horizon}-token continuation uses deterministic probability stratification (${continuationEntryStrata} entry / ${continuationStrata} fresh-menu strata max).`;
         rows.push(row);
       }
     }
@@ -244,9 +306,10 @@ export function recommendNextAction(state:OptimizerState,data:DataBundle,uniform
         note:'Fresh menu cannot be acted on with 0 tokens remaining.',
       });
     } else {
-      // M4 production is still a two-spend model, so a current menu reroll leaves
-      // exactly one modeled spend regardless of any larger real token balance.
-      const ev=valueFunction.V(initialEngine,1);
+      // A current-menu reroll consumes exactly one modeled spend. In production
+      // horizon=2 this is the M4 V(B,1) path; experimental h=3/4 naturally uses
+      // V(B,2/3) without changing the value-function semantics.
+      const ev=valueFunction.V(initialEngine,Math.max(0,horizon-1));
       rows.push({
         action:{kind:'menu_reroll'},expectedFinalUtility:ev,expectedFinalScore:current.expected,tokensAfter:nextTokens,
         assetAtRisk:'1 token; board preserved',confidence:current.confidence,status:'evaluated',
@@ -262,18 +325,23 @@ export function recommendNextAction(state:OptimizerState,data:DataBundle,uniform
   if(state.tokensRemaining>0)valueFunction.Q(initialEngine,state.menu,horizon);
 
   const ranking=rows.sort((a,b)=>b.expectedFinalUtility-a.expectedFinalUtility);
-  const transitionDepthRecord:Record<string,number>={};
-  for(const [depth,count] of transitionEvaluationsByDepth)transitionDepthRecord[String(depth)]=count;
   lastEngineDiagnostics={
+    modeledHorizon:horizon,
     descriptiveBoardMaterializations,
+    descriptiveBoardCacheEntries:boardMemo.size,
     expectedScalarStates:scalarMemo.size,
     targetScalarStates:targetMemo.size,
     terminalScoringCalls,
     targetedActionCacheHits,
     targetedActionCacheMisses,
+    targetedActionEntries:targetedMemo.size,
+    targetedActionRequestsByDepth:depthRecord(targetedActionRequestsByDepth),
+    targetedActionCacheHitsByDepth:depthRecord(targetedActionCacheHitsByDepth),
+    targetedActionCacheMissesByDepth:depthRecord(targetedActionCacheMissesByDepth),
     transitionDistributionCacheHits,
     transitionDistributionCacheMisses,
-    transitionEvaluationsByDepth:transitionDepthRecord,
+    transitionDistributionEntries:transitionMemo.size,
+    transitionEvaluationsByDepth:depthRecord(transitionEvaluationsByDepth),
     valueFunction:valueFunction.getDiagnostics(),
     menuOperator:menuModel.getDiagnostics(),
   };
