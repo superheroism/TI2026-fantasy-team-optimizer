@@ -1,8 +1,11 @@
 import { evaluateBoard, evaluateBoardExpectedFast } from './scoring.js';
 import { evaluateBoardTarget, evaluateBoardTargetProbabilityFast } from './targetProbability.js';
-import { enumerateOperation } from './transitions.js';
+import { enumerateEngineOperation } from './compactTransitions.js';
+import { boardAdapterContext, boardToEngineState, engineStateToBoard } from './stateEncoding.js';
 import { ACTION_CATALOG, allUniformMenus, TOTAL_UNIFORM_MENUS } from '../data/actionCatalog.js';
 const ROLES = ['core', 'mid', 'support'];
+let lastEngineDiagnostics = { descriptiveBoardMaterializations: 0, expectedScalarStates: 0, targetScalarStates: 0 };
+export function getLastOptimizerEngineDiagnostics() { return { ...lastEngineDiagnostics }; }
 function utility(evaluation, state) {
     return state.objective === 'target_probability' ? (evaluation.targetProbability ?? 0) : evaluation.expected;
 }
@@ -15,7 +18,7 @@ export function formatAction(action, state) {
     return `${action.banner.toUpperCase()} → ${label}`;
 }
 /**
- * V1 exact transition rules are now complete for all 20 actions. To keep browser
+ * V1 exact transition rules are complete for all 20 actions. To keep browser
  * runtime bounded, continuation is evaluated to a maximum of one fresh menu after
  * the current spend (a two-token decision horizon). The UI labels this cap whenever
  * more tokens remain.
@@ -36,7 +39,7 @@ function weightedQuantile(points, q) {
 }
 function stratifiedTransitions(outcomes, maxStrata) {
     if (maxStrata <= 0 || outcomes.length <= maxStrata)
-        return outcomes;
+        return [...outcomes];
     const total = outcomes.reduce((s, x) => s + x.probability, 0);
     if (total <= 0)
         return [];
@@ -50,14 +53,11 @@ function stratifiedTransitions(outcomes, maxStrata) {
             index++;
         }
         const chosen = normalized[index];
-        const item = { board: chosen.board, probability: 1 / maxStrata };
-        if (chosen.note)
-            item.note = chosen.note;
-        selected.push(item);
+        selected.push({ ...chosen, probability: 1 / maxStrata });
     }
     const grouped = new Map();
     for (const x of selected) {
-        const key = JSON.stringify(x.board), prior = grouped.get(key);
+        const key = x.nextState.id, prior = grouped.get(key);
         if (prior)
             prior.probability += x.probability;
         else
@@ -71,71 +71,73 @@ export function recommendNextAction(state, data, uniformStatFallback = true) {
     const horizon = Math.max(1, Math.min(state.tokensRemaining, data.simulation.maxLookaheadTokens ?? 2, 2));
     const continuationStrata = Math.max(1, data.simulation.continuationOutcomeStrata ?? 8);
     const continuationEntryStrata = Math.max(1, data.simulation.continuationEntryStrata ?? 12);
-    const fullEvalMemo = new Map();
-    const scalarMemo = new Map();
-    const freshMenuMemo = new Map();
-    const evaluateFull = (s) => {
-        const key = JSON.stringify({ b: s.board, u: s.username, o: s.objective, x: s.targetScore ?? null });
-        const prior = fullEvalMemo.get(key);
+    const context = boardAdapterContext(state.board);
+    const initialEngine = boardToEngineState(state.board);
+    const boardMemo = new Map([[initialEngine.id, state.board]]);
+    let descriptiveBoardMaterializations = 0;
+    const boardFor = (engine) => {
+        const prior = boardMemo.get(engine.id);
         if (prior)
             return prior;
-        const value = s.objective === 'target_probability'
-            ? evaluateBoardTarget(s.board, s.username, data, s.targetScore ?? 0, data.simulation.optimizerIterations)
-            : evaluateBoard(s.board, s.username, data, s.targetScore);
-        fullEvalMemo.set(key, value);
-        return value;
+        const board = engineStateToBoard(engine, context);
+        boardMemo.set(engine.id, board);
+        descriptiveBoardMaterializations++;
+        return board;
     };
-    const expectedScalar = (s) => {
-        const key = JSON.stringify(s.board);
-        const prior = scalarMemo.get(key);
-        if (prior !== undefined)
-            return prior;
-        const value = evaluateBoardExpectedFast(s.board, data, data.simulation.optimizerIterations);
-        scalarMemo.set(key, value);
-        return value;
-    };
+    const scalarMemo = new Map();
     const targetMemo = new Map();
-    const targetScalar = (s) => {
-        const target = s.targetScore ?? 0, key = JSON.stringify({ b: s.board, x: target });
-        const prior = targetMemo.get(key);
+    const freshMenuMemo = new Map();
+    const expectedScalar = (engine) => {
+        const prior = scalarMemo.get(engine.id);
         if (prior !== undefined)
             return prior;
-        const value = evaluateBoardTargetProbabilityFast(s.board, data, target, data.simulation.optimizerIterations);
-        targetMemo.set(key, value);
+        const value = evaluateBoardExpectedFast(boardFor(engine), data, data.simulation.optimizerIterations);
+        scalarMemo.set(engine.id, value);
         return value;
     };
-    const searchUtility = (s) => s.objective === 'expected_score' ? expectedScalar(s) : targetScalar(s);
-    const terminalActionUtility = (s, operationId) => {
+    const targetScalar = (engine) => {
+        const prior = targetMemo.get(engine.id);
+        if (prior !== undefined)
+            return prior;
+        const value = evaluateBoardTargetProbabilityFast(boardFor(engine), data, state.targetScore ?? 0, data.simulation.optimizerIterations);
+        targetMemo.set(engine.id, value);
+        return value;
+    };
+    const searchUtility = (engine) => state.objective === 'expected_score' ? expectedScalar(engine) : targetScalar(engine);
+    const terminalActionUtility = (engine, tokensRemaining, operationId) => {
         const op = ACTION_CATALOG.find(x => x.id === operationId);
         if (!op)
             return -Infinity;
         let best = -Infinity;
         for (const role of ROLES) {
-            const outcomes = stratifiedTransitions(enumerateOperation(s.board, role, op, uniformStatFallback), continuationStrata);
+            const outcomes = stratifiedTransitions(enumerateEngineOperation(engine, role, op, uniformStatFallback), continuationStrata);
             if (!outcomes.length)
                 continue;
             let ev = 0;
-            for (const outcome of outcomes) {
-                const next = { ...s, board: outcome.board, tokensRemaining: Math.max(0, s.tokensRemaining - 1) };
-                ev += outcome.probability * searchUtility(next);
-            }
+            for (const outcome of outcomes)
+                ev += outcome.probability * searchUtility(outcome.nextState);
             best = Math.max(best, ev);
         }
+        void tokensRemaining;
         return best;
     };
-    const expectedFreshMenuTerminalUtility = (s) => {
-        const key = JSON.stringify({ b: s.board, t: s.tokensRemaining, u: s.username, o: s.objective, x: s.targetScore ?? null });
-        const prior = freshMenuMemo.get(key);
+    const expectedFreshMenuTerminalUtility = (engine, tokensRemaining) => {
+        let byTokens = freshMenuMemo.get(engine.id);
+        if (!byTokens) {
+            byTokens = new Map();
+            freshMenuMemo.set(engine.id, byTokens);
+        }
+        const prior = byTokens.get(tokensRemaining);
         if (prior !== undefined)
             return prior;
-        const stop = searchUtility(s);
-        if (s.tokensRemaining <= 0) {
-            freshMenuMemo.set(key, stop);
+        const stop = searchUtility(engine);
+        if (tokensRemaining <= 0) {
+            byTokens.set(tokensRemaining, stop);
             return stop;
         }
         const values = new Map();
         for (const op of ACTION_CATALOG)
-            values.set(op.id, terminalActionUtility(s, op.id));
+            values.set(op.id, terminalActionUtility(engine, tokensRemaining, op.id));
         let sum = 0;
         for (const menu of menuSamples) {
             let best = stop;
@@ -144,31 +146,35 @@ export function recommendNextAction(state, data, uniformStatFallback = true) {
             sum += best;
         }
         const result = sum / Math.max(menuSamples.length, 1);
-        freshMenuMemo.set(key, result);
+        byTokens.set(tokensRemaining, result);
         return result;
     };
-    const continuationUtility = (next) => {
-        const immediate = searchUtility(next);
-        if (horizon < 2 || next.tokensRemaining <= 0)
+    const continuationUtility = (engine, tokensRemaining) => {
+        const immediate = searchUtility(engine);
+        if (horizon < 2 || tokensRemaining <= 0)
             return immediate;
-        return expectedFreshMenuTerminalUtility(next);
+        return expectedFreshMenuTerminalUtility(engine, tokensRemaining);
     };
-    const current = evaluateFull(state), stopUtility = utility(current, state);
+    const current = state.objective === 'target_probability'
+        ? evaluateBoardTarget(state.board, state.username, data, state.targetScore ?? 0, data.simulation.optimizerIterations)
+        : evaluateBoard(state.board, state.username, data, state.targetScore);
+    const stopUtility = utility(current, state);
     // Seed scalar current value with the fully evaluated value to ensure identical stop reference.
     if (state.objective === 'expected_score')
-        scalarMemo.set(JSON.stringify(state.board), current.expected);
+        scalarMemo.set(initialEngine.id, current.expected);
+    else if (current.targetProbability !== undefined)
+        targetMemo.set(initialEngine.id, current.targetProbability);
     const rows = [{ action: { kind: 'stop' }, expectedFinalUtility: stopUtility, expectedFinalScore: current.expected, tokensAfter: state.tokensRemaining, assetAtRisk: 'none', confidence: current.confidence, status: 'evaluated', note: 'Preserves the board; free team-by-role selection is re-optimized.' }];
     if (state.tokensRemaining > 0) {
         for (const op of state.menu) {
             for (const role of ROLES) {
-                const outcomes = enumerateOperation(state.board, role, op, uniformStatFallback);
+                const outcomes = enumerateEngineOperation(initialEngine, role, op, uniformStatFallback);
                 if (!outcomes.length)
                     continue;
                 let scoreEv = 0, utilEv = 0, pImprove = 0, worst = Infinity;
                 // Immediate metrics use the complete known transition distribution.
                 for (const outcome of outcomes) {
-                    const next = { ...state, board: outcome.board, tokensRemaining: state.tokensRemaining - 1 };
-                    const immediateExpected = expectedScalar(next), immediateUtility = state.objective === 'expected_score' ? immediateExpected : targetScalar(next);
+                    const immediateExpected = expectedScalar(outcome.nextState), immediateUtility = state.objective === 'expected_score' ? immediateExpected : targetScalar(outcome.nextState);
                     scoreEv += outcome.probability * immediateExpected;
                     if (immediateUtility > stopUtility)
                         pImprove += outcome.probability;
@@ -177,11 +183,10 @@ export function recommendNextAction(state, data, uniformStatFallback = true) {
                 // Only the expensive second-step continuation integral is deterministically compressed.
                 // The displayed reroll-outcome interval is taken from this same weighted continuation distribution,
                 // keeping the range internally consistent with expectedFinalUtility without adding another search pass.
-                const continuationOutcomes = horizon > 1 && state.tokensRemaining > 1 ? stratifiedTransitions(outcomes, continuationEntryStrata) : outcomes;
+                const continuationOutcomes = horizon > 1 && state.tokensRemaining > 1 ? stratifiedTransitions(outcomes, continuationEntryStrata) : [...outcomes];
                 const utilityOutcomes = [];
                 for (const outcome of continuationOutcomes) {
-                    const next = { ...state, board: outcome.board, tokensRemaining: state.tokensRemaining - 1 };
-                    const value = continuationUtility(next);
+                    const value = continuationUtility(outcome.nextState, state.tokensRemaining - 1);
                     utilEv += outcome.probability * value;
                     utilityOutcomes.push({ value, probability: outcome.probability });
                 }
@@ -206,12 +211,12 @@ export function recommendNextAction(state, data, uniformStatFallback = true) {
         if (nextTokens === 0)
             rows.push({ action: { kind: 'menu_reroll' }, expectedFinalUtility: stopUtility, expectedFinalScore: current.expected, tokensAfter: 0, assetAtRisk: 'last token; board preserved', confidence: current.confidence, status: 'evaluated', note: 'Fresh menu cannot be acted on with 0 tokens remaining.' });
         else {
-            const rerollState = { ...state, tokensRemaining: nextTokens };
-            const ev = expectedFreshMenuTerminalUtility(rerollState);
+            const ev = expectedFreshMenuTerminalUtility(initialEngine, nextTokens);
             rows.push({ action: { kind: 'menu_reroll' }, expectedFinalUtility: ev, expectedFinalScore: current.expected, tokensAfter: nextTokens, assetAtRisk: '1 token; board preserved', confidence: current.confidence, status: 'evaluated', note: `Fresh menu is a uniform draw of 3 distinct actions from 20 (${TOTAL_UNIFORM_MENUS.toLocaleString()} equally likely menus).` });
         }
     }
     const ranking = rows.sort((a, b) => b.expectedFinalUtility - a.expectedFinalUtility);
+    lastEngineDiagnostics = { descriptiveBoardMaterializations, expectedScalarStates: scalarMemo.size, targetScalarStates: targetMemo.size };
     return { current, ranking, recommendation: ranking[0], futureMenuMode: usingOverrideMenus ? 'override_samples' : 'known_uniform' };
 }
 //# sourceMappingURL=optimizer.js.map

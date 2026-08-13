@@ -1,0 +1,303 @@
+{
+  "generatedAt": "2026-08-13T08:48:39.492Z",
+  "runtime": {
+    "node": "v22.23.2",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "simulation": {
+    "iterations": 20000,
+    "rankingIterations": 6000,
+    "optimizerIterations": 48,
+    "maxLookaheadTokens": 2
+  },
+  "results": [
+    {
+      "label": "transitions_reference",
+      "ms": 4.08802,
+      "workUnits": 60,
+      "workUnitLabel": "operation-role calls",
+      "outcomeBoards": 362,
+      "allocationProxy": "362 descriptive BoardState outcomes (recursive clones not counted)"
+    },
+    {
+      "label": "transitions_compact_cold",
+      "ms": 3.286748000000003,
+      "workUnits": 60,
+      "workUnitLabel": "operation-role calls",
+      "outcomes": 362,
+      "transitionDiagnostics": {
+        "cacheHits": 0,
+        "cacheMisses": 60,
+        "uniqueTransitionCalculations": 60,
+        "outcomesBeforeAggregation": 362,
+        "outcomesAfterAggregation": 362,
+        "transitionGenerationMs": 2.4222580000000065
+      },
+      "allocationProxy": "0 descriptive BoardState allocations inside transition enumeration"
+    },
+    {
+      "label": "transitions_compact_warm",
+      "ms": 28.506928000000002,
+      "workUnits": 15000,
+      "workUnitLabel": "operation-role calls",
+      "outcomes": 90500,
+      "transitionDiagnostics": {
+        "cacheHits": 15000,
+        "cacheMisses": 0,
+        "uniqueTransitionCalculations": 0,
+        "outcomesBeforeAggregation": 0,
+        "outcomesAfterAggregation": 0,
+        "transitionGenerationMs": 0
+      },
+      "allocationProxy": "0 descriptive BoardState allocations inside transition enumeration"
+    },
+    {
+      "label": "selected_20k",
+      "ms": 272.08808700000003,
+      "workUnits": 20000,
+      "workUnitLabel": "board-scenarios",
+      "expected": 51970.554549679626
+    },
+    {
+      "label": "core_comparison_6k",
+      "ms": 348.889201,
+      "workUnits": 96000,
+      "workUnitLabel": "team-scenarios",
+      "bestTeam": "LGD Gaming (Yuma + Wisper)"
+    },
+    {
+      "label": "team_switch_cached",
+      "ms": 0.04477800000006482,
+      "selectedTeam": "OG"
+    },
+    {
+      "label": "optimizer_default_cold",
+      "ms": 1079.988501,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 60560.4976148318,
+      "transitionDiagnostics": {
+        "cacheHits": 1889,
+        "cacheMisses": 1000,
+        "uniqueTransitionCalculations": 1000,
+        "outcomesBeforeAggregation": 6216,
+        "outcomesAfterAggregation": 6215,
+        "transitionGenerationMs": 8.958930999994777
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 6562,
+        "expectedScalarStates": 6563,
+        "targetScalarStates": 0
+      }
+    },
+    {
+      "label": "optimizer_default_warm",
+      "ms": 50.64219600000001,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 60560.4976148318,
+      "transitionDiagnostics": {
+        "cacheHits": 2889,
+        "cacheMisses": 0,
+        "uniqueTransitionCalculations": 0,
+        "outcomesBeforeAggregation": 0,
+        "outcomesAfterAggregation": 0,
+        "transitionGenerationMs": 0
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 6562,
+        "expectedScalarStates": 6563,
+        "targetScalarStates": 0
+      }
+    },
+    {
+      "label": "optimizer_quality_heavy_cold",
+      "ms": 1195.167183,
+      "action": "MID → Randomly increase two Qualities and reduce one",
+      "utility": 61867.567498956465,
+      "transitionDiagnostics": {
+        "cacheHits": 2729,
+        "cacheMisses": 1420,
+        "uniqueTransitionCalculations": 1420,
+        "outcomesBeforeAggregation": 8792,
+        "outcomesAfterAggregation": 8788,
+        "transitionGenerationMs": 10.703859000007697
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 9305,
+        "expectedScalarStates": 9306,
+        "targetScalarStates": 0
+      }
+    },
+    {
+      "label": "optimizer_quality_heavy_warm",
+      "ms": 54.538031000000046,
+      "action": "MID → Randomly increase two Qualities and reduce one",
+      "utility": 61867.567498956465,
+      "transitionDiagnostics": {
+        "cacheHits": 4149,
+        "cacheMisses": 0,
+        "uniqueTransitionCalculations": 0,
+        "outcomesBeforeAggregation": 0,
+        "outcomesAfterAggregation": 0,
+        "transitionGenerationMs": 0
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 9305,
+        "expectedScalarStates": 9306,
+        "targetScalarStates": 0
+      }
+    },
+    {
+      "label": "optimizer_stat_heavy_cold",
+      "ms": 1096.4359879999997,
+      "action": "Reroll operation menu",
+      "utility": 55159.68659772912,
+      "transitionDiagnostics": {
+        "cacheHits": 1969,
+        "cacheMisses": 1040,
+        "uniqueTransitionCalculations": 1040,
+        "outcomesBeforeAggregation": 6300,
+        "outcomesAfterAggregation": 6300,
+        "transitionGenerationMs": 7.095163999999841
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 7273,
+        "expectedScalarStates": 7274,
+        "targetScalarStates": 0
+      }
+    },
+    {
+      "label": "optimizer_stat_heavy_warm",
+      "ms": 48.73016100000041,
+      "action": "Reroll operation menu",
+      "utility": 55159.68659772912,
+      "transitionDiagnostics": {
+        "cacheHits": 3009,
+        "cacheMisses": 0,
+        "uniqueTransitionCalculations": 0,
+        "outcomesBeforeAggregation": 0,
+        "outcomesAfterAggregation": 0,
+        "transitionGenerationMs": 0
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 7273,
+        "expectedScalarStates": 7274,
+        "targetScalarStates": 0
+      }
+    },
+    {
+      "label": "optimizer_global_quality_cold",
+      "ms": 1020.7924440000006,
+      "action": "MID → Randomly increase two Qualities and reduce one",
+      "utility": 61867.567498956465,
+      "transitionDiagnostics": {
+        "cacheHits": 2409,
+        "cacheMisses": 1260,
+        "uniqueTransitionCalculations": 1260,
+        "outcomesBeforeAggregation": 7647,
+        "outcomesAfterAggregation": 7644,
+        "transitionGenerationMs": 7.424753000005694
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 7963,
+        "expectedScalarStates": 7964,
+        "targetScalarStates": 0
+      }
+    },
+    {
+      "label": "optimizer_global_quality_warm",
+      "ms": 51.89204100000006,
+      "action": "MID → Randomly increase two Qualities and reduce one",
+      "utility": 61867.567498956465,
+      "transitionDiagnostics": {
+        "cacheHits": 3669,
+        "cacheMisses": 0,
+        "uniqueTransitionCalculations": 0,
+        "outcomesBeforeAggregation": 0,
+        "outcomesAfterAggregation": 0,
+        "transitionGenerationMs": 0
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 7963,
+        "expectedScalarStates": 7964,
+        "targetScalarStates": 0
+      }
+    },
+    {
+      "label": "optimizer_trait_heavy_cold",
+      "ms": 994.4638679999998,
+      "action": "SUPPORT → Reroll Trait for Blue Emblems",
+      "utility": 56404.228451304254,
+      "transitionDiagnostics": {
+        "cacheHits": 1769,
+        "cacheMisses": 940,
+        "uniqueTransitionCalculations": 940,
+        "outcomesBeforeAggregation": 5722,
+        "outcomesAfterAggregation": 5722,
+        "transitionGenerationMs": 5.88327300000492
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 6383,
+        "expectedScalarStates": 6384,
+        "targetScalarStates": 0
+      }
+    },
+    {
+      "label": "optimizer_trait_heavy_warm",
+      "ms": 38.421150999999554,
+      "action": "SUPPORT → Reroll Trait for Blue Emblems",
+      "utility": 56404.228451304254,
+      "transitionDiagnostics": {
+        "cacheHits": 2709,
+        "cacheMisses": 0,
+        "uniqueTransitionCalculations": 0,
+        "outcomesBeforeAggregation": 0,
+        "outcomesAfterAggregation": 0,
+        "transitionGenerationMs": 0
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 6383,
+        "expectedScalarStates": 6384,
+        "targetScalarStates": 0
+      }
+    },
+    {
+      "label": "optimizer_target_55k_cold",
+      "ms": 4726.505313000001,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 0.8660000786833965,
+      "transitionDiagnostics": {
+        "cacheHits": 1889,
+        "cacheMisses": 1000,
+        "uniqueTransitionCalculations": 1000,
+        "outcomesBeforeAggregation": 6216,
+        "outcomesAfterAggregation": 6215,
+        "transitionGenerationMs": 6.706705000041438
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 6562,
+        "expectedScalarStates": 55,
+        "targetScalarStates": 6563
+      }
+    },
+    {
+      "label": "optimizer_target_55k_warm",
+      "ms": 51.54731199999878,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 0.8660000786833965,
+      "transitionDiagnostics": {
+        "cacheHits": 2889,
+        "cacheMisses": 0,
+        "uniqueTransitionCalculations": 0,
+        "outcomesBeforeAggregation": 0,
+        "outcomesAfterAggregation": 0,
+        "transitionGenerationMs": 0
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 6562,
+        "expectedScalarStates": 55,
+        "targetScalarStates": 6563
+      }
+    }
+  ]
+}

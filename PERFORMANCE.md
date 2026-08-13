@@ -33,7 +33,7 @@ These are build-environment timings, not browser guarantees. Hardware, browser, 
 
 The same baseline is frozen in machine-readable form at `benchmarks/m1-prechange-baseline.json`.
 
-## M1 benchmark protocol
+## Benchmark protocol
 
 Run the human-readable benchmark:
 
@@ -44,10 +44,30 @@ npm run benchmark
 Write a machine-readable report:
 
 ```text
-npm run benchmark -- --json=m1-benchmark.json
+npm run benchmark -- --json=benchmark.json
 ```
 
-M1 reports both cold and warm optimizer calls and adds throughput context for the selected-board and team-comparison workloads. It does **not** set CI performance thresholds because shared-runner timing variance would create a noisy gate. Later milestones should compare benchmark reports on consistent hardware before accepting a performance-sensitive change.
+The benchmark reports cold and warm optimizer calls and throughput context for selected-board and team-comparison workloads. M3 additionally reports transition reference/cold/warm throughput, transition-cache diagnostics, and a descriptive-board allocation proxy. CI does **not** enforce timing thresholds because shared-runner variance would create a noisy gate; compare before/after reports from the same machine/runtime.
+
+## M3 compact-transition benchmark
+
+`benchmarks/m3-precompact-baseline.json` and `benchmarks/m3-postcompact-benchmark.json` were produced sequentially on the same Node 22 GitHub runner around the compact-transition change.
+
+| Workload | Before | After | Change |
+|---|---:|---:|---:|
+| Cold transition suite, 60 operation-role calls | 4.09 ms | 3.29 ms | -19.6% |
+| Default optimizer cold | 1,253 ms | 1,080 ms | -13.8% |
+| Quality-heavy optimizer cold | 1,357 ms | 1,195 ms | -12.0% |
+| Stat-heavy optimizer cold | 1,210 ms | 1,096 ms | -9.4% |
+| Global-quality optimizer cold | 1,164 ms | 1,021 ms | -12.3% |
+| Trait-heavy optimizer cold | 1,069 ms | 994 ms | -7.0% |
+| Target-55k optimizer cold | 4,962 ms | 4,727 ms | -4.8% |
+
+Recommendations and utilities were identical in every established optimizer case. The compact warm transition cache served 15,000 operation-role calls in 28.5 ms with 15,000 hits, zero misses, and zero new transition calculations.
+
+The transition allocation proxy changed from 362 descriptive final `BoardState` outcomes for the reference suite (not counting its recursive intermediate board clones) to **zero descriptive `BoardState` allocations inside compact transition enumeration**. The optimizer separately counts descriptive boards materialized at the scoring boundary, so this should not be read as zero allocation for the entire optimizer.
+
+Warm whole-optimizer timings improved much more than cold timings, but they combine compact transition-cache reuse with pre-existing scoring caches and therefore are not transition-only speedups.
 
 ## Why the search is faster than the histogram
 
@@ -60,13 +80,14 @@ The action search is cheaper because it:
 3. uses a specialized best-two-games / best-series scoring path;
 4. caches per-role and title-prefix frontiers;
 5. fully enumerates immediate action outcomes;
-6. applies deterministic stratification only to the second-step continuation calculation.
+6. applies deterministic stratification only to the second-step continuation calculation;
+7. carries compact canonical board/banner IDs through transition/search and caches banner transition distributions.
 
 The future menu distribution itself is not sampled down: all 1,140 menus remain in the continuation model.
 
 ## M1 semantic note
 
-Target-probability mode now optimizes free roster/title selection for the target probability itself. This is intentionally a correctness-first change; its runtime should be measured against the frozen pre-M1 target-probability baseline before later performance work. M3/M4 are the planned milestones for structural target-search and DP speedups.
+Target-probability mode optimizes free roster/title selection for the target probability itself. This remains a correctness-first path and is materially more expensive than expected-score search. M3 reduces state/transition overhead without changing that target-search semantics.
 
 ## Interpretation
 
