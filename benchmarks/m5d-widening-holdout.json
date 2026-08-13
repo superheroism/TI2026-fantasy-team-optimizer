@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-08-13T20:30:00Z",
+  "package": "M5D progressive action widening",
+  "status": "not_executed",
+  "outcome": "B",
+  "productionHorizon": 2,
+  "measurementCommit": "3c36ee7f2eeb8634d32a23a20bd9dd4babbac397",
+  "fixtureDefinition": "benchmarks/m5d-holdout-fixtures.json",
+  "seed": 20260813,
+  "fixtureCount": 8,
+  "frozenBeforeCalibration": true,
+  "selectedPolicy": null,
+  "runs": [],
+  "comparisons": [],
+  "combinedTwentyCaseGatePassed": false,
+  "blocker": "No M5D policy passed an executed calibration gate, so the frozen holdout was not inspected for policy selection and was not run. This preserves the holdout from post-hoc tuning."
+}
