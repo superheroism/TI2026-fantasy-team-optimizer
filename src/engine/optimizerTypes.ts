@@ -1,4 +1,4 @@
-import type { ActionWideningPolicy, ProxyRankDiagnostics } from './actionWidening.js';
+import type { ActionWideningPolicy } from './actionWidening.js';
 import type { ContinuationFidelityPolicy } from './continuationFidelity.js';
 import type { MenuOperatorDiagnostics } from './menuModel.js';
 import type { ValueFunctionDiagnostics } from './valueFunction.js';
@@ -9,9 +9,6 @@ export interface OptimizerSearchOptions {
   readonly experimentalContinuationFidelity?:ContinuationFidelityPolicy;
   /** Engineering-only M5D operation widening policy. Ignored unless the modeled horizon exceeds two tokens. */
   readonly experimentalActionWidening?:ActionWideningPolicy;
-  /** Untimed engineering diagnostic only. Ignored unless the modeled horizon exceeds two tokens. */
-  readonly experimentalActionWideningProxyDiagnostics?:boolean;
-  readonly experimentalActionWideningProxySampleLimitPerDepth?:number;
 }
 
 export interface OptimizerEngineDiagnostics {
@@ -42,7 +39,6 @@ export interface OptimizerEngineDiagnostics {
   readonly transitionOutcomesAfterCompressionByDepth:Readonly<Record<string,number>>;
   readonly continuationFidelity:import('./continuationFidelity.js').ContinuationFidelityReport;
   readonly actionWidening:import('./actionWidening.js').ActionWideningReport;
-  readonly proxyRankDiagnostics:ProxyRankDiagnostics;
   readonly valueFunction:ValueFunctionDiagnostics;
   readonly menuOperator:MenuOperatorDiagnostics;
 }
