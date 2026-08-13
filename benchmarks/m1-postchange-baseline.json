@@ -1,0 +1,107 @@
+{
+  "generatedAt": "2026-08-13T05:48:16.185Z",
+  "runtime": {
+    "node": "v24.13.1",
+    "platform": "win32",
+    "arch": "x64"
+  },
+  "simulation": {
+    "iterations": 20000,
+    "rankingIterations": 6000,
+    "optimizerIterations": 48,
+    "maxLookaheadTokens": 2
+  },
+  "results": [
+    {
+      "label": "selected_20k",
+      "ms": 184.53230000000002,
+      "workUnits": 20000,
+      "workUnitLabel": "board-scenarios",
+      "expected": 51970.554549679626
+    },
+    {
+      "label": "core_comparison_6k",
+      "ms": 265.3629,
+      "workUnits": 96000,
+      "workUnitLabel": "team-scenarios",
+      "bestTeam": "LGD Gaming (Yuma + Wisper)"
+    },
+    {
+      "label": "team_switch_cached",
+      "ms": 0.0283999999999196,
+      "selectedTeam": "OG"
+    },
+    {
+      "label": "optimizer_default_cold",
+      "ms": 788.278,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 60560.4976148318
+    },
+    {
+      "label": "optimizer_default_warm",
+      "ms": 158.9601,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 60560.4976148318
+    },
+    {
+      "label": "optimizer_quality_heavy_cold",
+      "ms": 960.5736999999999,
+      "action": "MID → Randomly increase two Qualities and reduce one",
+      "utility": 61867.567498956465
+    },
+    {
+      "label": "optimizer_quality_heavy_warm",
+      "ms": 222.29520000000002,
+      "action": "MID → Randomly increase two Qualities and reduce one",
+      "utility": 61867.567498956465
+    },
+    {
+      "label": "optimizer_stat_heavy_cold",
+      "ms": 849.7159000000001,
+      "action": "Reroll operation menu",
+      "utility": 55159.68659772912
+    },
+    {
+      "label": "optimizer_stat_heavy_warm",
+      "ms": 162.92449999999963,
+      "action": "Reroll operation menu",
+      "utility": 55159.68659772912
+    },
+    {
+      "label": "optimizer_global_quality_cold",
+      "ms": 827.8351000000002,
+      "action": "MID → Randomly increase two Qualities and reduce one",
+      "utility": 61867.567498956465
+    },
+    {
+      "label": "optimizer_global_quality_warm",
+      "ms": 191.01220000000012,
+      "action": "MID → Randomly increase two Qualities and reduce one",
+      "utility": 61867.567498956465
+    },
+    {
+      "label": "optimizer_trait_heavy_cold",
+      "ms": 754.0877,
+      "action": "SUPPORT → Reroll Trait for Blue Emblems",
+      "utility": 56404.228451304254
+    },
+    {
+      "label": "optimizer_trait_heavy_warm",
+      "ms": 140.95020000000022,
+      "action": "SUPPORT → Reroll Trait for Blue Emblems",
+      "utility": 56404.228451304254
+    },
+    {
+      "label": "optimizer_target_55k_cold",
+      "ms": 3721.2991999999995,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 0.8660000786833965
+    },
+    {
+      "label": "optimizer_target_55k_warm",
+      "ms": 153.95410000000084,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 0.8660000786833965
+    }
+  ]
+}

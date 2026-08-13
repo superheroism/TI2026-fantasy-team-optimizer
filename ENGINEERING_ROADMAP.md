@@ -1,0 +1,494 @@
+# TI2026 Fantasy Optimizer — Engineering Roadmap
+
+**Status:** Frozen reference plan  
+**Date:** 2026-08-12  
+**Purpose:** Build toward a faster, more stable, cleaner optimizer whose search policy can evolve from the current bounded lookahead to finite-horizon dynamic programming without sacrificing correctness or maintainability.
+
+## Engineering principles
+
+1. **One authoritative implementation.** `src/`, `site/`, and `data/` are source inputs. Compiled/deployment trees are generated artifacts and must be reproducible from those inputs.
+2. **Correctness before throughput.** Performance changes must preserve a regression baseline and the selected optimization objective.
+3. **Separate concerns.** Search should not encode Dota mechanics; scoring should not encode search; UI should not encode either.
+4. **Compact state before deep search.** Do not build deep DP around nested mutable objects or JSON serialization.
+5. **Reuse stochastic work.** Competing board states should consume the same latent scenarios wherever possible.
+6. **Exact where cheap, approximate where valuable.** Use exact transition/menu mathematics when available; spend Monte Carlo budget on uncertainty that can change the decision.
+7. **Parallelize late.** Establish a pure engine boundary before adding workers or other concurrency.
+8. **Keep every milestone shippable.** Each phase should leave the current application usable and measurable.
+
+---
+
+## Target architecture
+
+```text
+UI
+ │
+ └── Optimizer API / Worker
+       │
+       ├── Search / Policy
+       │     ├── Dynamic-programming value function
+       │     ├── Menu model
+       │     └── Utility objective
+       │
+       ├── Transition Model
+       │     └── P(next board | board, operation, target)
+       │
+       ├── Scoring Engine
+       │     ├── Scenario generator
+       │     ├── Role scorer
+       │     ├── Roster/title optimizer
+       │     └── Score/target utility
+       │
+       ├── Rules
+       │     └── legality + traits + quality mechanics
+       │
+       └── Data Model
+             ├── statistical model
+             ├── rosters
+             └── ruleset/version
+```
+
+Core architectural rule:
+
+> **Search knows nothing about Dota mechanics, scoring knows nothing about search, and the UI knows neither.**
+
+---
+
+# Phase 0 — Freeze and measure the current system
+
+Before restructuring, establish a trustworthy baseline.
+
+### Work
+
+- Define canonical source inputs.
+- Create deterministic golden/regression cases for:
+  - current board score;
+  - roster selection;
+  - operation legality and transitions;
+  - menu reroll;
+  - known recommendations;
+  - expected-score objective;
+  - target-probability objective.
+- Make stochastic regression tests deterministic.
+- Expand benchmarking beyond one elapsed-time number:
+  - scoring throughput;
+  - cold/warm optimizer latency;
+  - selected-board simulation throughput;
+  - team-ranking throughput;
+  - objective and recommended action.
+- Preserve historical benchmark results for comparison.
+
+### Exit criterion
+
+```text
+correctness >= baseline
+performance known relative to baseline
+```
+
+---
+
+# Phase 1 — Make the repository reproducible
+
+**Goal:** one program and one source of truth.
+
+### Source authority
+
+```text
+src/        canonical TypeScript application source
+data/       canonical model/rules data
+site/       canonical static HTML/CSS
+scripts/    build/verification tooling
+tests/      regression and integration tests
+
+build/      generated compiler output
+docs/       generated GitHub Pages output
+```
+
+### Work
+
+- Make builds deterministic and cross-platform where practical.
+- Verify generated `build/` and `docs/` trees against canonical inputs.
+- Add CI: typecheck → generated-artifact verification → tests.
+- Pin direct build dependencies.
+- Prevent hand-edited generated JavaScript from silently diverging from TypeScript.
+- Fix target-probability semantics so free roster/title selection optimizes the selected target objective rather than expected score first.
+- Preserve existing GitHub Pages behavior during the migration.
+
+### Exit criterion
+
+Deleting and rebuilding generated artifacts produces the same deployed program, and target-probability mode actually maximizes target probability.
+
+---
+
+# Phase 2 — Establish clean engine boundaries
+
+Refactor concepts without materially changing the current search algorithm.
+
+### Ruleset
+Owns legal stat pools, duplicate rules, traits, tier effects, operation definitions, and token mechanics.
+
+### TransitionModel
+
+```text
+transitions(board, action)
+→ [{ nextState, probability }, ...]
+```
+
+No scoring logic.
+
+### ScoringModel
+
+```text
+score(board, objective/context)
+→ utility / distribution
+```
+
+No reroll/search logic.
+
+### MenuModel
+
+```text
+P(menu)
+```
+
+The current uniform 3-of-20 mechanism becomes one implementation rather than an optimizer assumption.
+
+### Policy / Search
+Consumes state, transition probabilities, menu probabilities, utility, and tokens remaining.
+
+### Exit criterion
+The current bounded-lookahead optimizer produces equivalent decisions through these interfaces.
+
+---
+
+# Phase 3 — Canonicalize and compact state
+
+Replace nested-object identity and repeated `JSON.stringify` keys with compact immutable engine state.
+
+### Direction
+
+Each emblem is encoded from its variable state:
+
+```text
+stat × quality × trait
+```
+
+Immutable slot properties such as color/position are implicit in slot identity.
+
+A board becomes conceptually:
+
+```text
+CoreStateID
+MidStateID
+SupportStateID
+```
+
+### Separate representations
+
+- **UI state:** descriptive objects optimized for rendering/editing.
+- **Engine state:** compact canonical IDs optimized for equality, hashing, transitions, and memoization.
+- **Adapters:** explicit conversions between them.
+
+### Precompute where possible
+
+```text
+emblem state → derived multiplier
+banner state → trait effects
+banner state + operation → next-state distribution
+```
+
+### Expected payoff
+
+- cheaper equality/hashing;
+- far fewer allocations;
+- structural sharing;
+- small memoization keys;
+- much cheaper transition generation;
+- practical foundation for DP.
+
+### Exit criterion
+Search primarily operates on canonical state IDs rather than serialized board objects.
+
+---
+
+# Phase 4 — Rebuild simulation around reusable scenarios
+
+Make expensive stochastic generation independent of hypothetical board changes.
+
+### Target flow
+
+```text
+seed
+ ↓
+latent correlated tournament/game scenarios
+ ↓
+team/stat raw realizations
+ ↓
+cached scenario bank
+```
+
+Board evaluation then becomes closer to:
+
+```text
+scenario values
+× emblem multipliers/traits
+→ retained-game logic
+→ role score
+```
+
+A quality/trait reroll should not regenerate player performance.
+
+### Additional work
+
+- typed arrays in hot paths;
+- allocation-free inner loops;
+- one sort for multiple quantiles;
+- streaming accumulation of means/exceedance counts;
+- keep full sample arrays only where downstream logic needs them;
+- distinct search-fidelity and presentation-fidelity simulation budgets.
+
+### Exit criterion
+Increasing optimizer scenario count is substantially cheaper, and competing actions are evaluated on reusable common scenarios.
+
+---
+
+# Phase 5 — Replace future-menu enumeration with a menu operator
+
+Under the current uniform 3-without-replacement menu rule, do not enumerate all 1,140 menus after action continuation values are known.
+
+Given values for the 20 operation types, sort the values and compute the probability that each rank is the best operation appearing in a uniformly drawn three-operation menu. This yields the exact expected best-menu value with a small combinatorial weighted sum.
+
+Preserve an abstract `MenuModel` so empirical/non-uniform menu generation can use another implementation.
+
+### Exit criterion
+Uniform fresh-menu expectation no longer requires scanning 1,140 explicit menus.
+
+---
+
+# Phase 6 — Introduce the value function
+
+Define two related finite-horizon values.
+
+```text
+V(B, t)
+```
+
+Expected final utility from board `B` with `t` tokens before seeing a fresh menu.
+
+```text
+Q(B, M, t)
+```
+
+Expected final utility after seeing current menu `M`.
+
+For a board-changing action:
+
+```text
+A(B, action, t)
+  = Σ P(B' | B, action) × V(B', t-1)
+```
+
+Stop:
+
+```text
+S(B) = utility(B)
+```
+
+Menu reroll:
+
+```text
+R(B,t) = V(B,t-1)
+```
+
+Current-menu decision:
+
+```text
+Q(B,M,t)
+  = max(
+      S(B),
+      R(B,t),
+      A(B,a1,t),
+      A(B,a2,t),
+      A(B,a3,t)
+    )
+```
+
+Fresh-menu value:
+
+```text
+V(B,t) = E_M[Q(B,M,t)]
+```
+
+`V(B,t)` becomes the principal memoized DP object.
+
+---
+
+# Phase 7 — Make deep DP tractable
+
+Do not jump directly to exact 30-token search.
+
+### Fidelity by horizon
+
+```text
+t = 0       exact terminal utility
+t = 1–2     exact / near-exact
+t = 3–4     high fidelity
+t = 5–10    reduced scenario / transition fidelity
+t > 10      approximate continuation value where needed
+```
+
+### Techniques
+
+- memoized `V(B,t)`;
+- transposition tables;
+- dominance pruning;
+- probability truncation for negligible outcomes;
+- progressive widening;
+- adaptive simulation budgets;
+- interpolation/approximation for structurally similar distant states;
+- banner-level factorization and reuse of unchanged-role evaluations.
+
+### Milestone progression
+
+```text
+2-token horizon
+→ 4
+→ 8
+→ practical full remaining-token horizon
+```
+
+Validate policy stability at each increase.
+
+---
+
+# Phase 8 — Add adaptive precision
+
+Do not spend equal simulation budget on obviously separated actions and near-ties.
+
+### Sequential refinement
+
+1. Evaluate all candidates cheaply.
+2. Remove obvious losers.
+3. Increase simulation fidelity for close candidates.
+4. Stop when confidence separates them or the compute budget is exhausted.
+
+This improves decision quality per millisecond and supports explicit low-confidence reporting when the top actions remain effectively tied.
+
+---
+
+# Phase 9 — Move optimization into Web Workers
+
+Only after the engine API is clean and sufficiently pure.
+
+```text
+UI
+ ↕ messages
+Worker
+ └── optimizer engine
+```
+
+Immediate benefit: no browser-main-thread blocking.
+
+Later, parallelize scenario generation/evaluation batches before attempting to parallelize the DP search tree itself.
+
+---
+
+# Phase 10 — Clean the product/application layer
+
+After the engine boundary stabilizes, decompose UI/application responsibilities.
+
+Suggested lightweight vanilla-TypeScript structure:
+
+```text
+ui/
+  state
+  controls
+  boardView
+  actionView
+  plots
+  persistence
+  optimizerClient
+```
+
+Avoid introducing a framework unless UI complexity independently justifies it.
+
+Add/complete:
+
+- linting and formatting;
+- import-boundary rules;
+- dead-code detection;
+- versioned data schemas;
+- cache observability;
+- bounded/LRU caches where evidence supports them;
+- explicit model/ruleset compatibility checks.
+
+---
+
+# Engineering milestones
+
+| Milestone | Major result | Expected performance effect | Risk |
+|---|---|---:|---|
+| **M1 — Trustworthy Build** | One source authority, reproducibility, regression tests, objective correctness, baseline benchmarks | Neutral | Low |
+| **M2 — Clean Engine** | Rules / scoring / transitions / search separated | Neutral–small gain | Low |
+| **M3 — Fast State Engine** | Compact states, cached transitions, reusable simulations | Large gain | Medium |
+| **M4 — DP Foundation** | Exact menu operator + memoized value function | Large gain | Medium |
+| **M5 — Deep Search** | Adaptive finite-horizon DP | Major model improvement | Medium–high |
+| **M6 — Production Polish** | Workers, adaptive precision, UI cleanup, tooling | Large UX/throughput gain | Low–medium |
+
+Dependency:
+
+```text
+M1
+ ↓
+M2
+ ↓
+M3
+ ↓
+M4
+ ↓
+M5
+ ↓
+M6
+```
+
+## Explicit sequencing decisions
+
+- **Do not build DP before compact state.** Deep memoization over nested objects/JSON keys would fossilize the wrong state representation.
+- **Do not add workers before the engine boundary is clean.** Concurrency would amplify coupling rather than solve it.
+- **Do not globally raise simulation counts before scenario reuse/adaptive precision.** First reduce the marginal cost of information.
+- **Do not remove deployment artifacts until deployment is explicitly migrated.** During M1 they remain generated, verified compatibility artifacts.
+
+---
+
+# M1 frozen scope
+
+M1 is intentionally limited to making the existing optimizer trustworthy and measurable.
+
+### Included
+
+- Canonical-source policy (`src/`, `site/`, `data/`).
+- Cross-platform deterministic build path.
+- Generated-output verification.
+- CI for typecheck, reproducibility, and tests.
+- Pinned direct TypeScript version.
+- Regression tests for target-probability semantics and deterministic behavior.
+- Target-probability roster/title correction.
+- More informative benchmark output and machine-readable baseline option.
+
+### Deferred
+
+- Compact state IDs.
+- Rules/Search/Transition interface redesign.
+- Future-menu combinatorial operator.
+- DP/value-function implementation.
+- Web Workers.
+- Broad UI-module refactor.
+- Cache redesign/instrumentation requiring engine changes.
+
+### M1 success definition
+
+1. The TypeScript source tree is the authoritative implementation.
+2. A clean generated build matches the committed/generated deployment tree.
+3. CI detects source/generated drift.
+4. Existing tests remain green.
+5. Target-probability mode jointly chooses the free roster/title that maximizes `P(score >= target)`.
+6. Benchmarks produce repeatable cold/warm measurements suitable for later M2–M6 comparisons.

@@ -1,0 +1,23 @@
+{
+  "baseline": "pre-M1 documented working build",
+  "capturedFrom": "PERFORMANCE.md on 2026-08-12",
+  "notes": "Build-environment representative cold-cache medians; not browser guarantees.",
+  "configuration": {
+    "selectedBoardSimulations": 20000,
+    "teamComparisonSimulationsPerTeam": 6000,
+    "optimizerScenarios": 48,
+    "maxLookaheadTokenSpends": 2,
+    "continuationEntryStrataMax": 12,
+    "continuationFutureOutcomeStrataMax": 8,
+    "uniformFutureMenus": 1140
+  },
+  "medianSeconds": {
+    "selectedSetup20k": 0.26,
+    "coreComparison6kPerTeam": 0.36,
+    "defaultTwoStepMenu": 1.13,
+    "qualityHeavyMenu": 1.35,
+    "statHeavyMenu": 1.18,
+    "traitHeavyMenu": 1.06,
+    "targetProbabilityObjective": 1.26
+  }
+}
