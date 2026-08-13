@@ -1,0 +1,12 @@
+{
+  "package": "M5D",
+  "status": "not_executed",
+  "outcome": "B",
+  "productionHorizon": 2,
+  "requestedHorizon": 4,
+  "timeoutMsPerCase": 60000,
+  "selectedPolicy": null,
+  "runs": [],
+  "allFiveCompleteUnderCeiling": false,
+  "reasonNotRun": "The t=4 gate requires a policy that first passes M5D calibration and holdout. No executed calibration result was available, so t=4 was not entered."
+}
