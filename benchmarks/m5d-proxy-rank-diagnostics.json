@@ -1,0 +1,12 @@
+{
+  "generatedAt": "2026-08-13T20:30:00Z",
+  "package": "M5D progressive action widening",
+  "status": "not_executed",
+  "productionHorizon": 2,
+  "measurementCommit": "3c36ee7f2eeb8634d32a23a20bd9dd4babbac397",
+  "requestedOracle": "current-fidelity t=3",
+  "timedComparison": false,
+  "observations": [],
+  "summary": null,
+  "blocker": "The execution environment could not materialize the large immutable statistical-model blob into the local benchmark runtime, while repository-side temporary calibration workflow writes were restricted. No proxy-rank statistics were inferred or fabricated."
+}
