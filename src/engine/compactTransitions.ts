@@ -289,7 +289,8 @@ function calculateBannerOperation(role:Role,banner:BannerStateID,op:OfferedOpera
   if(op.kind==='quality_reroll')return enumerateQualityReroll(role,banner,op);
   if(op.kind==='trait_reroll')return enumerateTraitReroll(role,banner,op);
   if(op.kind==='quality_increase')return enumerateQualityIncrease(banner,op);
-  return enumerateQualityRedistribution(banner,op);
+  if(op.kind==='quality_redistribution')return enumerateQualityRedistribution(banner,op);
+  return [];
 }
 
 export function enumerateCompactBannerOperation(
