@@ -1,0 +1,922 @@
+{
+  "generatedAt": "2026-08-13T09:41:24.596Z",
+  "runtime": {
+    "node": "v22.23.1",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "simulation": {
+    "iterations": 20000,
+    "rankingIterations": 6000,
+    "optimizerIterations": 48,
+    "maxLookaheadTokens": 2
+  },
+  "results": [
+    {
+      "label": "menu_explicit_1140",
+      "ms": 475.685982,
+      "workUnits": 5700000,
+      "workUnitLabel": "menus scanned",
+      "value": 54252.794244951445
+    },
+    {
+      "label": "menu_analytic_exact",
+      "ms": 13.75640999999996,
+      "workUnits": 5000,
+      "workUnitLabel": "operators",
+      "value": 54252.794244951496,
+      "speedupVsExplicit": 34.579223939967,
+      "absoluteDifference": 5.093170329928398e-11
+    },
+    {
+      "label": "transitions_reference",
+      "ms": 5.660961999999927,
+      "workUnits": 60,
+      "workUnitLabel": "operation-role calls",
+      "outcomeBoards": 362,
+      "allocationProxy": "362 descriptive BoardState outcomes (recursive clones not counted)"
+    },
+    {
+      "label": "transitions_compact_cold",
+      "ms": 4.24078899999995,
+      "workUnits": 60,
+      "workUnitLabel": "operation-role calls",
+      "outcomes": 362,
+      "transitionDiagnostics": {
+        "cacheHits": 0,
+        "cacheMisses": 60,
+        "uniqueTransitionCalculations": 60,
+        "outcomesBeforeAggregation": 362,
+        "outcomesAfterAggregation": 362,
+        "transitionGenerationMs": 3.094355000000405
+      },
+      "allocationProxy": "0 descriptive BoardState allocations inside transition enumeration"
+    },
+    {
+      "label": "transitions_compact_warm",
+      "ms": 43.78045400000008,
+      "workUnits": 15000,
+      "workUnitLabel": "operation-role calls",
+      "outcomes": 90500,
+      "transitionDiagnostics": {
+        "cacheHits": 15000,
+        "cacheMisses": 0,
+        "uniqueTransitionCalculations": 0,
+        "outcomesBeforeAggregation": 0,
+        "outcomesAfterAggregation": 0,
+        "transitionGenerationMs": 0
+      },
+      "allocationProxy": "0 descriptive BoardState allocations inside transition enumeration"
+    },
+    {
+      "label": "selected_20k",
+      "ms": 362.18460000000005,
+      "workUnits": 20000,
+      "workUnitLabel": "board-scenarios",
+      "expected": 51970.554549679626,
+      "rawScenarioDiagnostics": {
+        "requests": 0,
+        "cacheHits": 0,
+        "cacheMisses": 0,
+        "generations": 0,
+        "generatedIterations": 0,
+        "generatedStatValues": 0,
+        "generationMs": 0,
+        "sampleRescores": 0,
+        "meanRescores": 0,
+        "rescoredIterations": 0,
+        "rescoreMs": 0
+      }
+    },
+    {
+      "label": "core_comparison_6k",
+      "ms": 431.2887380000001,
+      "workUnits": 96000,
+      "workUnitLabel": "team-scenarios",
+      "bestTeam": "LGD Gaming (Yuma + Wisper)",
+      "rawScenarioDiagnostics": {
+        "requests": 0,
+        "cacheHits": 0,
+        "cacheMisses": 0,
+        "generations": 0,
+        "generatedIterations": 0,
+        "generatedStatValues": 0,
+        "generationMs": 0,
+        "sampleRescores": 0,
+        "meanRescores": 0,
+        "rescoredIterations": 0,
+        "rescoreMs": 0
+      }
+    },
+    {
+      "label": "team_switch_cached",
+      "ms": 0.07848600000011174,
+      "selectedTeam": "OG",
+      "rawScenarioDiagnostics": {
+        "requests": 0,
+        "cacheHits": 0,
+        "cacheMisses": 0,
+        "generations": 0,
+        "generatedIterations": 0,
+        "generatedStatValues": 0,
+        "generationMs": 0,
+        "sampleRescores": 0,
+        "meanRescores": 0,
+        "rescoredIterations": 0,
+        "rescoreMs": 0
+      }
+    },
+    {
+      "label": "optimizer_default_cold",
+      "ms": 1436.492231,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 60560.497614831875,
+      "transitionDiagnostics": {
+        "cacheHits": 1880,
+        "cacheMisses": 1000,
+        "uniqueTransitionCalculations": 1000,
+        "outcomesBeforeAggregation": 6216,
+        "outcomesAfterAggregation": 6215,
+        "transitionGenerationMs": 10.783164999996188
+      },
+      "rawScenarioDiagnostics": {
+        "requests": 31760,
+        "cacheHits": 31712,
+        "cacheMisses": 48,
+        "generations": 48,
+        "generatedIterations": 2304,
+        "generatedStatValues": 483840,
+        "generationMs": 171.57048600000167,
+        "sampleRescores": 48,
+        "meanRescores": 31712,
+        "rescoredIterations": 1524480,
+        "rescoreMs": 239.92521600003897
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 6562,
+        "expectedScalarStates": 6563,
+        "targetScalarStates": 0,
+        "terminalScoringCalls": 6563,
+        "targetedActionCacheHits": 7,
+        "targetedActionCacheMisses": 2889,
+        "transitionDistributionCacheHits": 18,
+        "transitionDistributionCacheMisses": 2880,
+        "transitionEvaluationsByDepth": {
+          "1": 2880,
+          "2": 9
+        },
+        "valueFunction": {
+          "terminalCacheHits": 5776,
+          "terminalCacheMisses": 6562,
+          "vCacheHits": 1,
+          "vCacheMisses": 48,
+          "qCacheHits": 0,
+          "qCacheMisses": 1,
+          "actionCacheHits": 0,
+          "actionCacheMisses": 963,
+          "uniqueStatesByDepth": {
+            "1": 48
+          },
+          "actionEvaluationsByDepth": {
+            "1": 960,
+            "2": 3
+          },
+          "elapsedMs": 1435.5892820000001
+        },
+        "menuOperator": {
+          "calls": 48,
+          "uniformCalls": 48,
+          "overrideCalls": 0,
+          "explicitMenusScanned": 0,
+          "operatorMs": 0.44381900000053065
+        }
+      }
+    },
+    {
+      "label": "optimizer_default_warm",
+      "ms": 75.86481000000003,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 60560.497614831875,
+      "transitionDiagnostics": {
+        "cacheHits": 2880,
+        "cacheMisses": 0,
+        "uniqueTransitionCalculations": 0,
+        "outcomesBeforeAggregation": 0,
+        "outcomesAfterAggregation": 0,
+        "transitionGenerationMs": 0
+      },
+      "rawScenarioDiagnostics": {
+        "requests": 0,
+        "cacheHits": 0,
+        "cacheMisses": 0,
+        "generations": 0,
+        "generatedIterations": 0,
+        "generatedStatValues": 0,
+        "generationMs": 0,
+        "sampleRescores": 0,
+        "meanRescores": 0,
+        "rescoredIterations": 0,
+        "rescoreMs": 0
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 6562,
+        "expectedScalarStates": 6563,
+        "targetScalarStates": 0,
+        "terminalScoringCalls": 6563,
+        "targetedActionCacheHits": 7,
+        "targetedActionCacheMisses": 2889,
+        "transitionDistributionCacheHits": 18,
+        "transitionDistributionCacheMisses": 2880,
+        "transitionEvaluationsByDepth": {
+          "1": 2880,
+          "2": 9
+        },
+        "valueFunction": {
+          "terminalCacheHits": 5776,
+          "terminalCacheMisses": 6562,
+          "vCacheHits": 1,
+          "vCacheMisses": 48,
+          "qCacheHits": 0,
+          "qCacheMisses": 1,
+          "actionCacheHits": 0,
+          "actionCacheMisses": 963,
+          "uniqueStatesByDepth": {
+            "1": 48
+          },
+          "actionEvaluationsByDepth": {
+            "1": 960,
+            "2": 3
+          },
+          "elapsedMs": 75.78760600000032
+        },
+        "menuOperator": {
+          "calls": 48,
+          "uniformCalls": 48,
+          "overrideCalls": 0,
+          "explicitMenusScanned": 0,
+          "operatorMs": 0.21749299999919458
+        }
+      }
+    },
+    {
+      "label": "optimizer_quality_heavy_cold",
+      "ms": 1525.0379829999997,
+      "action": "MID → Randomly increase two Qualities and reduce one",
+      "utility": 61867.56749895643,
+      "transitionDiagnostics": {
+        "cacheHits": 2720,
+        "cacheMisses": 1420,
+        "uniqueTransitionCalculations": 1420,
+        "outcomesBeforeAggregation": 8792,
+        "outcomesAfterAggregation": 8788,
+        "transitionGenerationMs": 12.693205999985366
+      },
+      "rawScenarioDiagnostics": {
+        "requests": 39536,
+        "cacheHits": 39488,
+        "cacheMisses": 48,
+        "generations": 48,
+        "generatedIterations": 2304,
+        "generatedStatValues": 483840,
+        "generationMs": 100.59961400000111,
+        "sampleRescores": 48,
+        "meanRescores": 39488,
+        "rescoredIterations": 1897728,
+        "rescoreMs": 267.1900630000364
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 9305,
+        "expectedScalarStates": 9306,
+        "targetScalarStates": 0,
+        "terminalScoringCalls": 9306,
+        "targetedActionCacheHits": 7,
+        "targetedActionCacheMisses": 4149,
+        "transitionDistributionCacheHits": 18,
+        "transitionDistributionCacheMisses": 4140,
+        "transitionEvaluationsByDepth": {
+          "1": 4140,
+          "2": 9
+        },
+        "valueFunction": {
+          "terminalCacheHits": 8355,
+          "terminalCacheMisses": 9305,
+          "vCacheHits": 1,
+          "vCacheMisses": 69,
+          "qCacheHits": 0,
+          "qCacheMisses": 1,
+          "actionCacheHits": 0,
+          "actionCacheMisses": 1383,
+          "uniqueStatesByDepth": {
+            "1": 69
+          },
+          "actionEvaluationsByDepth": {
+            "1": 1380,
+            "2": 3
+          },
+          "elapsedMs": 1524.9839319999996
+        },
+        "menuOperator": {
+          "calls": 69,
+          "uniformCalls": 69,
+          "overrideCalls": 0,
+          "explicitMenusScanned": 0,
+          "operatorMs": 0.5629659999995056
+        }
+      }
+    },
+    {
+      "label": "optimizer_quality_heavy_warm",
+      "ms": 66.2074160000002,
+      "action": "MID → Randomly increase two Qualities and reduce one",
+      "utility": 61867.56749895643,
+      "transitionDiagnostics": {
+        "cacheHits": 4140,
+        "cacheMisses": 0,
+        "uniqueTransitionCalculations": 0,
+        "outcomesBeforeAggregation": 0,
+        "outcomesAfterAggregation": 0,
+        "transitionGenerationMs": 0
+      },
+      "rawScenarioDiagnostics": {
+        "requests": 0,
+        "cacheHits": 0,
+        "cacheMisses": 0,
+        "generations": 0,
+        "generatedIterations": 0,
+        "generatedStatValues": 0,
+        "generationMs": 0,
+        "sampleRescores": 0,
+        "meanRescores": 0,
+        "rescoredIterations": 0,
+        "rescoreMs": 0
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 9305,
+        "expectedScalarStates": 9306,
+        "targetScalarStates": 0,
+        "terminalScoringCalls": 9306,
+        "targetedActionCacheHits": 7,
+        "targetedActionCacheMisses": 4149,
+        "transitionDistributionCacheHits": 18,
+        "transitionDistributionCacheMisses": 4140,
+        "transitionEvaluationsByDepth": {
+          "1": 4140,
+          "2": 9
+        },
+        "valueFunction": {
+          "terminalCacheHits": 8355,
+          "terminalCacheMisses": 9305,
+          "vCacheHits": 1,
+          "vCacheMisses": 69,
+          "qCacheHits": 0,
+          "qCacheMisses": 1,
+          "actionCacheHits": 0,
+          "actionCacheMisses": 1383,
+          "uniqueStatesByDepth": {
+            "1": 69
+          },
+          "actionEvaluationsByDepth": {
+            "1": 1380,
+            "2": 3
+          },
+          "elapsedMs": 66.1773890000004
+        },
+        "menuOperator": {
+          "calls": 69,
+          "uniformCalls": 69,
+          "overrideCalls": 0,
+          "explicitMenusScanned": 0,
+          "operatorMs": 0.21171699999831617
+        }
+      }
+    },
+    {
+      "label": "optimizer_stat_heavy_cold",
+      "ms": 1347.3192070000005,
+      "action": "Reroll operation menu",
+      "utility": 55159.68659772894,
+      "transitionDiagnostics": {
+        "cacheHits": 1960,
+        "cacheMisses": 1040,
+        "uniqueTransitionCalculations": 1040,
+        "outcomesBeforeAggregation": 6300,
+        "outcomesAfterAggregation": 6300,
+        "transitionGenerationMs": 8.221841000030508
+      },
+      "rawScenarioDiagnostics": {
+        "requests": 38032,
+        "cacheHits": 37984,
+        "cacheMisses": 48,
+        "generations": 48,
+        "generatedIterations": 2304,
+        "generatedStatValues": 483840,
+        "generationMs": 98.56189899999936,
+        "sampleRescores": 48,
+        "meanRescores": 37984,
+        "rescoredIterations": 1825536,
+        "rescoreMs": 234.3184829998845
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 7273,
+        "expectedScalarStates": 7274,
+        "targetScalarStates": 0,
+        "terminalScoringCalls": 7274,
+        "targetedActionCacheHits": 7,
+        "targetedActionCacheMisses": 3009,
+        "transitionDistributionCacheHits": 18,
+        "transitionDistributionCacheMisses": 3000,
+        "transitionEvaluationsByDepth": {
+          "1": 3000,
+          "2": 9
+        },
+        "valueFunction": {
+          "terminalCacheHits": 5579,
+          "terminalCacheMisses": 7272,
+          "vCacheHits": 1,
+          "vCacheMisses": 50,
+          "qCacheHits": 0,
+          "qCacheMisses": 1,
+          "actionCacheHits": 0,
+          "actionCacheMisses": 1003,
+          "uniqueStatesByDepth": {
+            "1": 50
+          },
+          "actionEvaluationsByDepth": {
+            "1": 1000,
+            "2": 3
+          },
+          "elapsedMs": 1347.2859160000007
+        },
+        "menuOperator": {
+          "calls": 50,
+          "uniformCalls": 50,
+          "overrideCalls": 0,
+          "explicitMenusScanned": 0,
+          "operatorMs": 0.32230900000286056
+        }
+      }
+    },
+    {
+      "label": "optimizer_stat_heavy_warm",
+      "ms": 55.61400700000013,
+      "action": "Reroll operation menu",
+      "utility": 55159.68659772894,
+      "transitionDiagnostics": {
+        "cacheHits": 3000,
+        "cacheMisses": 0,
+        "uniqueTransitionCalculations": 0,
+        "outcomesBeforeAggregation": 0,
+        "outcomesAfterAggregation": 0,
+        "transitionGenerationMs": 0
+      },
+      "rawScenarioDiagnostics": {
+        "requests": 0,
+        "cacheHits": 0,
+        "cacheMisses": 0,
+        "generations": 0,
+        "generatedIterations": 0,
+        "generatedStatValues": 0,
+        "generationMs": 0,
+        "sampleRescores": 0,
+        "meanRescores": 0,
+        "rescoredIterations": 0,
+        "rescoreMs": 0
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 7273,
+        "expectedScalarStates": 7274,
+        "targetScalarStates": 0,
+        "terminalScoringCalls": 7274,
+        "targetedActionCacheHits": 7,
+        "targetedActionCacheMisses": 3009,
+        "transitionDistributionCacheHits": 18,
+        "transitionDistributionCacheMisses": 3000,
+        "transitionEvaluationsByDepth": {
+          "1": 3000,
+          "2": 9
+        },
+        "valueFunction": {
+          "terminalCacheHits": 5579,
+          "terminalCacheMisses": 7272,
+          "vCacheHits": 1,
+          "vCacheMisses": 50,
+          "qCacheHits": 0,
+          "qCacheMisses": 1,
+          "actionCacheHits": 0,
+          "actionCacheMisses": 1003,
+          "uniqueStatesByDepth": {
+            "1": 50
+          },
+          "actionEvaluationsByDepth": {
+            "1": 1000,
+            "2": 3
+          },
+          "elapsedMs": 55.57597699999951
+        },
+        "menuOperator": {
+          "calls": 50,
+          "uniformCalls": 50,
+          "overrideCalls": 0,
+          "explicitMenusScanned": 0,
+          "operatorMs": 0.1867180000008375
+        }
+      }
+    },
+    {
+      "label": "optimizer_global_quality_cold",
+      "ms": 1227.7810850000005,
+      "action": "MID → Randomly increase two Qualities and reduce one",
+      "utility": 61867.56749895643,
+      "transitionDiagnostics": {
+        "cacheHits": 2400,
+        "cacheMisses": 1260,
+        "uniqueTransitionCalculations": 1260,
+        "outcomesBeforeAggregation": 7647,
+        "outcomesAfterAggregation": 7644,
+        "transitionGenerationMs": 8.720817000000352
+      },
+      "rawScenarioDiagnostics": {
+        "requests": 33936,
+        "cacheHits": 33888,
+        "cacheMisses": 48,
+        "generations": 48,
+        "generatedIterations": 2304,
+        "generatedStatValues": 483840,
+        "generationMs": 101.0303649999978,
+        "sampleRescores": 48,
+        "meanRescores": 33888,
+        "rescoredIterations": 1628928,
+        "rescoreMs": 214.81623599999693
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 7963,
+        "expectedScalarStates": 7964,
+        "targetScalarStates": 0,
+        "terminalScoringCalls": 7964,
+        "targetedActionCacheHits": 9,
+        "targetedActionCacheMisses": 3669,
+        "transitionDistributionCacheHits": 18,
+        "transitionDistributionCacheMisses": 3660,
+        "transitionEvaluationsByDepth": {
+          "1": 3660,
+          "2": 9
+        },
+        "valueFunction": {
+          "terminalCacheHits": 7631,
+          "terminalCacheMisses": 7963,
+          "vCacheHits": 7,
+          "vCacheMisses": 61,
+          "qCacheHits": 0,
+          "qCacheMisses": 1,
+          "actionCacheHits": 0,
+          "actionCacheMisses": 1223,
+          "uniqueStatesByDepth": {
+            "1": 61
+          },
+          "actionEvaluationsByDepth": {
+            "1": 1220,
+            "2": 3
+          },
+          "elapsedMs": 1227.74615
+        },
+        "menuOperator": {
+          "calls": 61,
+          "uniformCalls": 61,
+          "overrideCalls": 0,
+          "explicitMenusScanned": 0,
+          "operatorMs": 0.36373599999569706
+        }
+      }
+    },
+    {
+      "label": "optimizer_global_quality_warm",
+      "ms": 55.54176499999994,
+      "action": "MID → Randomly increase two Qualities and reduce one",
+      "utility": 61867.56749895643,
+      "transitionDiagnostics": {
+        "cacheHits": 3660,
+        "cacheMisses": 0,
+        "uniqueTransitionCalculations": 0,
+        "outcomesBeforeAggregation": 0,
+        "outcomesAfterAggregation": 0,
+        "transitionGenerationMs": 0
+      },
+      "rawScenarioDiagnostics": {
+        "requests": 0,
+        "cacheHits": 0,
+        "cacheMisses": 0,
+        "generations": 0,
+        "generatedIterations": 0,
+        "generatedStatValues": 0,
+        "generationMs": 0,
+        "sampleRescores": 0,
+        "meanRescores": 0,
+        "rescoredIterations": 0,
+        "rescoreMs": 0
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 7963,
+        "expectedScalarStates": 7964,
+        "targetScalarStates": 0,
+        "terminalScoringCalls": 7964,
+        "targetedActionCacheHits": 9,
+        "targetedActionCacheMisses": 3669,
+        "transitionDistributionCacheHits": 18,
+        "transitionDistributionCacheMisses": 3660,
+        "transitionEvaluationsByDepth": {
+          "1": 3660,
+          "2": 9
+        },
+        "valueFunction": {
+          "terminalCacheHits": 7631,
+          "terminalCacheMisses": 7963,
+          "vCacheHits": 7,
+          "vCacheMisses": 61,
+          "qCacheHits": 0,
+          "qCacheMisses": 1,
+          "actionCacheHits": 0,
+          "actionCacheMisses": 1223,
+          "uniqueStatesByDepth": {
+            "1": 61
+          },
+          "actionEvaluationsByDepth": {
+            "1": 1220,
+            "2": 3
+          },
+          "elapsedMs": 55.49635099999978
+        },
+        "menuOperator": {
+          "calls": 61,
+          "uniformCalls": 61,
+          "overrideCalls": 0,
+          "explicitMenusScanned": 0,
+          "operatorMs": 0.2047470000006797
+        }
+      }
+    },
+    {
+      "label": "optimizer_trait_heavy_cold",
+      "ms": 1168.1163040000001,
+      "action": "SUPPORT → Reroll Trait for Blue Emblems",
+      "utility": 56404.22845130415,
+      "transitionDiagnostics": {
+        "cacheHits": 1760,
+        "cacheMisses": 940,
+        "uniqueTransitionCalculations": 940,
+        "outcomesBeforeAggregation": 5722,
+        "outcomesAfterAggregation": 5722,
+        "transitionGenerationMs": 6.8222229999792035
+      },
+      "rawScenarioDiagnostics": {
+        "requests": 32976,
+        "cacheHits": 32928,
+        "cacheMisses": 48,
+        "generations": 48,
+        "generatedIterations": 2304,
+        "generatedStatValues": 483840,
+        "generationMs": 94.87487400000464,
+        "sampleRescores": 48,
+        "meanRescores": 32928,
+        "rescoredIterations": 1582848,
+        "rescoreMs": 204.5172809999449
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 6383,
+        "expectedScalarStates": 6384,
+        "targetScalarStates": 0,
+        "terminalScoringCalls": 6384,
+        "targetedActionCacheHits": 7,
+        "targetedActionCacheMisses": 2709,
+        "transitionDistributionCacheHits": 18,
+        "transitionDistributionCacheMisses": 2700,
+        "transitionEvaluationsByDepth": {
+          "1": 2700,
+          "2": 9
+        },
+        "valueFunction": {
+          "terminalCacheHits": 5183,
+          "terminalCacheMisses": 6383,
+          "vCacheHits": 1,
+          "vCacheMisses": 45,
+          "qCacheHits": 0,
+          "qCacheMisses": 1,
+          "actionCacheHits": 0,
+          "actionCacheMisses": 903,
+          "uniqueStatesByDepth": {
+            "1": 45
+          },
+          "actionEvaluationsByDepth": {
+            "1": 900,
+            "2": 3
+          },
+          "elapsedMs": 1168.0748460000004
+        },
+        "menuOperator": {
+          "calls": 45,
+          "uniformCalls": 45,
+          "overrideCalls": 0,
+          "explicitMenusScanned": 0,
+          "operatorMs": 0.3307459999978164
+        }
+      }
+    },
+    {
+      "label": "optimizer_trait_heavy_warm",
+      "ms": 42.70951100000093,
+      "action": "SUPPORT → Reroll Trait for Blue Emblems",
+      "utility": 56404.22845130415,
+      "transitionDiagnostics": {
+        "cacheHits": 2700,
+        "cacheMisses": 0,
+        "uniqueTransitionCalculations": 0,
+        "outcomesBeforeAggregation": 0,
+        "outcomesAfterAggregation": 0,
+        "transitionGenerationMs": 0
+      },
+      "rawScenarioDiagnostics": {
+        "requests": 0,
+        "cacheHits": 0,
+        "cacheMisses": 0,
+        "generations": 0,
+        "generatedIterations": 0,
+        "generatedStatValues": 0,
+        "generationMs": 0,
+        "sampleRescores": 0,
+        "meanRescores": 0,
+        "rescoredIterations": 0,
+        "rescoreMs": 0
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 6383,
+        "expectedScalarStates": 6384,
+        "targetScalarStates": 0,
+        "terminalScoringCalls": 6384,
+        "targetedActionCacheHits": 7,
+        "targetedActionCacheMisses": 2709,
+        "transitionDistributionCacheHits": 18,
+        "transitionDistributionCacheMisses": 2700,
+        "transitionEvaluationsByDepth": {
+          "1": 2700,
+          "2": 9
+        },
+        "valueFunction": {
+          "terminalCacheHits": 5183,
+          "terminalCacheMisses": 6383,
+          "vCacheHits": 1,
+          "vCacheMisses": 45,
+          "qCacheHits": 0,
+          "qCacheMisses": 1,
+          "actionCacheHits": 0,
+          "actionCacheMisses": 903,
+          "uniqueStatesByDepth": {
+            "1": 45
+          },
+          "actionEvaluationsByDepth": {
+            "1": 900,
+            "2": 3
+          },
+          "elapsedMs": 42.651465999999346
+        },
+        "menuOperator": {
+          "calls": 45,
+          "uniformCalls": 45,
+          "overrideCalls": 0,
+          "explicitMenusScanned": 0,
+          "operatorMs": 0.1374809999961144
+        }
+      }
+    },
+    {
+      "label": "optimizer_target_55k_cold",
+      "ms": 5525.490731,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 0.8660000786833985,
+      "transitionDiagnostics": {
+        "cacheHits": 1880,
+        "cacheMisses": 1000,
+        "uniqueTransitionCalculations": 1000,
+        "outcomesBeforeAggregation": 6216,
+        "outcomesAfterAggregation": 6215,
+        "transitionGenerationMs": 11.603740999995352
+      },
+      "rawScenarioDiagnostics": {
+        "requests": 32640,
+        "cacheHits": 32592,
+        "cacheMisses": 48,
+        "generations": 48,
+        "generatedIterations": 2304,
+        "generatedStatValues": 483840,
+        "generationMs": 92.42023400001199,
+        "sampleRescores": 31712,
+        "meanRescores": 928,
+        "rescoredIterations": 1566720,
+        "rescoreMs": 226.2225930003042
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 6562,
+        "expectedScalarStates": 55,
+        "targetScalarStates": 6563,
+        "terminalScoringCalls": 6618,
+        "targetedActionCacheHits": 7,
+        "targetedActionCacheMisses": 2889,
+        "transitionDistributionCacheHits": 18,
+        "transitionDistributionCacheMisses": 2880,
+        "transitionEvaluationsByDepth": {
+          "1": 2880,
+          "2": 9
+        },
+        "valueFunction": {
+          "terminalCacheHits": 5776,
+          "terminalCacheMisses": 6562,
+          "vCacheHits": 1,
+          "vCacheMisses": 48,
+          "qCacheHits": 0,
+          "qCacheMisses": 1,
+          "actionCacheHits": 0,
+          "actionCacheMisses": 963,
+          "uniqueStatesByDepth": {
+            "1": 48
+          },
+          "actionEvaluationsByDepth": {
+            "1": 960,
+            "2": 3
+          },
+          "elapsedMs": 5525.4244
+        },
+        "menuOperator": {
+          "calls": 48,
+          "uniformCalls": 48,
+          "overrideCalls": 0,
+          "explicitMenusScanned": 0,
+          "operatorMs": 0.37240500000552856
+        }
+      }
+    },
+    {
+      "label": "optimizer_target_55k_warm",
+      "ms": 52.46359499999926,
+      "action": "CORE → Reroll Quality for Red Emblems",
+      "utility": 0.8660000786833985,
+      "transitionDiagnostics": {
+        "cacheHits": 2880,
+        "cacheMisses": 0,
+        "uniqueTransitionCalculations": 0,
+        "outcomesBeforeAggregation": 0,
+        "outcomesAfterAggregation": 0,
+        "transitionGenerationMs": 0
+      },
+      "rawScenarioDiagnostics": {
+        "requests": 0,
+        "cacheHits": 0,
+        "cacheMisses": 0,
+        "generations": 0,
+        "generatedIterations": 0,
+        "generatedStatValues": 0,
+        "generationMs": 0,
+        "sampleRescores": 0,
+        "meanRescores": 0,
+        "rescoredIterations": 0,
+        "rescoreMs": 0
+      },
+      "engineDiagnostics": {
+        "descriptiveBoardMaterializations": 6562,
+        "expectedScalarStates": 55,
+        "targetScalarStates": 6563,
+        "terminalScoringCalls": 6618,
+        "targetedActionCacheHits": 7,
+        "targetedActionCacheMisses": 2889,
+        "transitionDistributionCacheHits": 18,
+        "transitionDistributionCacheMisses": 2880,
+        "transitionEvaluationsByDepth": {
+          "1": 2880,
+          "2": 9
+        },
+        "valueFunction": {
+          "terminalCacheHits": 5776,
+          "terminalCacheMisses": 6562,
+          "vCacheHits": 1,
+          "vCacheMisses": 48,
+          "qCacheHits": 0,
+          "qCacheMisses": 1,
+          "actionCacheHits": 0,
+          "actionCacheMisses": 963,
+          "uniqueStatesByDepth": {
+            "1": 48
+          },
+          "actionEvaluationsByDepth": {
+            "1": 960,
+            "2": 3
+          },
+          "elapsedMs": 52.368798000001334
+        },
+        "menuOperator": {
+          "calls": 48,
+          "uniformCalls": 48,
+          "overrideCalls": 0,
+          "explicitMenusScanned": 0,
+          "operatorMs": 0.2687909999931435
+        }
+      }
+    }
+  ]
+}
