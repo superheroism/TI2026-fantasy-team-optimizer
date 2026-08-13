@@ -1,8 +1,11 @@
+import type { ContinuationFidelityPolicy } from './continuationFidelity.js';
 import type { MenuOperatorDiagnostics } from './menuModel.js';
 import type { ValueFunctionDiagnostics } from './valueFunction.js';
 
 export interface OptimizerSearchOptions {
   readonly modeledHorizonOverride?:number;
+  /** Engineering-only M5C continuation policy. Ignored unless the modeled horizon exceeds two tokens. */
+  readonly experimentalContinuationFidelity?:ContinuationFidelityPolicy;
 }
 
 export interface OptimizerEngineDiagnostics {
@@ -29,6 +32,9 @@ export interface OptimizerEngineDiagnostics {
   readonly transitionDistributionCacheBypasses:number;
   readonly transitionDistributionEntries:number;
   readonly transitionEvaluationsByDepth:Readonly<Record<string,number>>;
+  readonly transitionOutcomesBeforeCompressionByDepth:Readonly<Record<string,number>>;
+  readonly transitionOutcomesAfterCompressionByDepth:Readonly<Record<string,number>>;
+  readonly continuationFidelity:import('./continuationFidelity.js').ContinuationFidelityReport;
   readonly valueFunction:ValueFunctionDiagnostics;
   readonly menuOperator:MenuOperatorDiagnostics;
 }

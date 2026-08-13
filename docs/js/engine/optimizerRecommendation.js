@@ -14,7 +14,8 @@ function zeroDiagnostics() {
         targetedActionCacheHits: 0, targetedActionCacheMisses: 0, targetedActionCacheBypasses: 0, targetedActionEntries: 0,
         targetedActionRequestsByDepth: {}, targetedActionCacheHitsByDepth: {}, targetedActionCacheMissesByDepth: {}, targetedActionCacheBypassesByDepth: {},
         transitionDistributionCacheHits: 0, transitionDistributionCacheMisses: 0, transitionDistributionCacheBypasses: 0,
-        transitionDistributionEntries: 0, transitionEvaluationsByDepth: {},
+        transitionDistributionEntries: 0, transitionEvaluationsByDepth: {}, transitionOutcomesBeforeCompressionByDepth: {}, transitionOutcomesAfterCompressionByDepth: {},
+        continuationFidelity: { id: 'current', description: '', freshMenuOutcomeStrataByDepth: [], baseFreshMenuOutcomeStrata: 0, rootContinuationEntryStrata: 0 },
         valueFunction: { terminalCacheHits: 0, terminalCacheMisses: 0, vCalls: 0, vCacheHits: 0, vCacheMisses: 0, qCalls: 0, qCacheHits: 0, qCacheMisses: 0,
             actionCalls: 0, actionCacheHits: 0, actionCacheMisses: 0, actionCacheBypasses: 0, uniqueStatesByDepth: {}, uniqueQStatesByDepth: {}, uniqueActionStatesByDepth: {},
             vCallsByDepth: {}, vCacheHitsByDepth: {}, vCacheMissesByDepth: {}, qCallsByDepth: {}, qCacheHitsByDepth: {}, qCacheMissesByDepth: {},
@@ -36,7 +37,10 @@ export function recommendNextAction(state, data, uniformStatFallback = true, sea
     const continuationEntryStrata = Math.max(1, data.simulation.continuationEntryStrata ?? 12);
     const overrideMenus = data.menuSamples?.filter(menu => menu.length === 3);
     const terminal = createTerminalSearchRuntime(state, data);
-    const continuation = createContinuationRuntime(state, data, terminal, uniformStatFallback);
+    const experimentalFidelity = horizon > 2 && searchOptions.experimentalContinuationFidelity
+        ? { modeledHorizon: horizon, policy: searchOptions.experimentalContinuationFidelity }
+        : undefined;
+    const continuation = createContinuationRuntime(state, data, terminal, uniformStatFallback, experimentalFidelity);
     const { valueFunction, menuModel } = continuation;
     const initialEngine = terminal.initialEngine;
     const current = state.objective === 'target_probability'

@@ -190,3 +190,21 @@ The production decision horizon remains capped at two token spends. M5A measured
 ## Interpretation
 
 The runtime approximation affects continuation fidelity, not the legal action set or immediate reroll probabilities. If two actions are nearly tied, the displayed confidence should reflect that sensitivity rather than implying false precision.
+
+## M5C calibrated depth-aware continuation
+
+M5C tests search-only compression of **future fresh-menu transition outcomes** while preserving the root decision boundary, exact menu probabilities, Dota mechanics, and production `t=2` policy. The approximation is an explicit per-call engineering option and is structurally ignored at `t<=2`.
+
+| Schedule | t=3 top-action agreement | Max oracle regret | Mean Kendall τ | Median runtime / current |
+|---|---:|---:|---:|---:|
+| High (8→6→4) | 12/12 | 0 | 0.969 | 1.194× |
+| Medium (6→4→2) | 11/12 | 408.9 | 0.962 | 0.959× |
+| Aggressive (4→2→1) | 12/12 | 0 | 0.957 | 0.579× |
+
+The medium reversal occurs on a small-margin reachable state; aggressive returns to the oracle winner, so approximation error is not monotonic in retained-strata count. On the default fixture, aggressive reduced cold `t=3` runtime from 19.12 s to 10.77 s, heap growth from 349.5 MB to 197.3 MB, and max RSS from about 434 MB to 296 MB while preserving the winner.
+
+Only aggressive advanced to `t=4`. It still timed out on **all five** established expected-score workloads under the unchanged 60-second per-case ceiling. Timed-out workers do not return trustworthy end-of-run memory snapshots, so `t=4` memory is intentionally reported as unavailable rather than inferred.
+
+**Decision:** M5C is Outcome B. Continuation-outcome compression alone does not make four-token search tractable. Production remains at two modeled token spends. The recommended next bounded technique is **progressive widening of distant fresh-menu action evaluation**, because the aggressive schedule already reduces deepest transition outcomes to one stratum; the remaining target is action/state frontier breadth rather than additional outcome compression.
+
+Raw reports: `benchmarks/m5c-depth-calibration.json` and `benchmarks/m5c-four-token-benchmark.json`. Full interpretation: `M5C_DEPTH_AWARE_CONTINUATION.md`.
