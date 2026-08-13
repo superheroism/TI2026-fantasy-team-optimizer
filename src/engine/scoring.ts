@@ -29,7 +29,38 @@ const frontierCache=new WeakMap<DataBundle,Map<string,RolePrefixFrontierEntry[]>
 const expectedSampleCache=new WeakMap<DataBundle,Map<string,number>>();
 const sampleFrontierCache=new WeakMap<DataBundle,Map<string,RolePrefixFrontierEntry[]>>();
 
-
+export interface RawScenarioDiagnostics {
+  readonly requests:number;
+  readonly cacheHits:number;
+  readonly cacheMisses:number;
+  readonly generations:number;
+  readonly generatedIterations:number;
+  readonly generatedStatValues:number;
+  readonly generationMs:number;
+  readonly sampleRescores:number;
+  readonly meanRescores:number;
+  readonly rescoredIterations:number;
+  readonly rescoreMs:number;
+}
+interface MutableRawScenarioDiagnostics {
+  requests:number;
+  cacheHits:number;
+  cacheMisses:number;
+  generations:number;
+  generatedIterations:number;
+  generatedStatValues:number;
+  generationMs:number;
+  sampleRescores:number;
+  meanRescores:number;
+  rescoredIterations:number;
+  rescoreMs:number;
+}
+function newRawScenarioDiagnostics():MutableRawScenarioDiagnostics {
+  return {requests:0,cacheHits:0,cacheMisses:0,generations:0,generatedIterations:0,generatedStatValues:0,generationMs:0,sampleRescores:0,meanRescores:0,rescoredIterations:0,rescoreMs:0};
+}
+let rawScenarioDiagnostics=newRawScenarioDiagnostics();
+export function resetRawScenarioDiagnostics():void { rawScenarioDiagnostics=newRawScenarioDiagnostics(); }
+export function getRawScenarioDiagnostics():RawScenarioDiagnostics { return {...rawScenarioDiagnostics}; }
 
 function hashString(value:string):number {
   let h=2166136261;
@@ -75,17 +106,19 @@ function effectiveGames(profile:PlayerProfile,banner:BannerState):number|undefin
   return values.length?Math.min(...values):undefined;
 }
 
-
 function fullRoleGaussianCorrelation(role:Role,data:DataBundle):number[][]{
   const model=data.roleCorrelations[role];
   return model.stats.map((_,i)=>model.stats.map((__,j)=>i===j?1:spearmanToGaussian(model.spearman[i]?.[j]??0)));
 }
 
 function rawRoleScenario(profile:PlayerProfile,banner:BannerState,data:DataBundle,iterations:number,seedOffset:number):RawRoleScenario{
+  rawScenarioDiagnostics.requests++;
   let cache=rawScenarioCache.get(data);if(!cache){cache=new Map();rawScenarioCache.set(data,cache);}
   const model=data.roleCorrelations[banner.role],stats=model.stats;
   const key=JSON.stringify({p:profile.id,r:banner.role,n:iterations,s:banner.expectedSeries,z:data.simulation.seed+seedOffset,g:data.simulation.scoring.thirdGameProbability});
-  const prior=cache.get(key);if(prior)return prior;
+  const prior=cache.get(key);if(prior){rawScenarioDiagnostics.cacheHits++;return prior;}
+  rawScenarioDiagnostics.cacheMisses++;
+  const start=performance.now();
   const statCount=stats.length,statIndex=new Map(stats.map((x,i)=>[x,i] as const));
   const totalGames=iterations*banner.expectedSeries*3;
   const values=new Float64Array(totalGames*statCount),third=new Uint8Array(iterations*banner.expectedSeries);
@@ -108,10 +141,18 @@ function rawRoleScenario(profile:PlayerProfile,banner:BannerState,data:DataBundl
       }
     }
   }
-  const out={stats,statIndex,values,third,iterations,series:banner.expectedSeries,statCount};cache.set(key,out);return out;
+  const out={stats,statIndex,values,third,iterations,series:banner.expectedSeries,statCount};cache.set(key,out);
+  rawScenarioDiagnostics.generations++;
+  rawScenarioDiagnostics.generatedIterations+=iterations;
+  rawScenarioDiagnostics.generatedStatValues+=values.length;
+  rawScenarioDiagnostics.generationMs+=performance.now()-start;
+  return out;
 }
 
 function scoreFromRawScenario(scenario:RawRoleScenario,banner:BannerState,mult:[number,number,number]):number[]{
+  const start=performance.now();
+  rawScenarioDiagnostics.sampleRescores++;
+  rawScenarioDiagnostics.rescoredIterations+=scenario.iterations;
   const indices=banner.emblems.map(e=>scenario.statIndex.get(e.stat)??-1) as [number,number,number];
   if(indices.some(i=>i<0))throw new Error(`Role scenario is missing one or more selected stats.`);
   const out=new Array<number>(scenario.iterations),{values,third,statCount}=scenario;
@@ -129,11 +170,14 @@ function scoreFromRawScenario(scenario:RawRoleScenario,banner:BannerState,mult:[
     }
     out[iter]=best;
   }
+  rawScenarioDiagnostics.rescoreMs+=performance.now()-start;
   return out;
 }
 
-
 function meanFromRawScenario(scenario:RawRoleScenario,banner:BannerState,mult:[number,number,number]):number{
+  const start=performance.now();
+  rawScenarioDiagnostics.meanRescores++;
+  rawScenarioDiagnostics.rescoredIterations+=scenario.iterations;
   const indices=banner.emblems.map(e=>scenario.statIndex.get(e.stat)??-1) as [number,number,number];
   if(indices.some(i=>i<0))throw new Error(`Role scenario is missing one or more selected stats.`);
   const {values,third,statCount}=scenario;let total=0;
@@ -150,6 +194,7 @@ function meanFromRawScenario(scenario:RawRoleScenario,banner:BannerState,mult:[n
     }
     total+=best;
   }
+  rawScenarioDiagnostics.rescoreMs+=performance.now()-start;
   return total/Math.max(scenario.iterations,1);
 }
 
@@ -289,7 +334,6 @@ function buildEvaluation(
   return result;
 }
 
-
 export function rolePrefixFrontier(role:Role,banner:BannerState,data:DataBundle,iterations=data.simulation.optimizerIterations):RolePrefixFrontierEntry[]{
   let cache=frontierCache.get(data);if(!cache){cache=new Map();frontierCache.set(data,cache);}
   const key=`${role}|${bannerMechanicsKey(banner)}|${iterations}`;;const prior=cache.get(key);if(prior)return prior;
@@ -303,7 +347,6 @@ export function rolePrefixFrontier(role:Role,banner:BannerState,data:DataBundle,
   }
   cache.set(key,out);return out;
 }
-
 
 /** Fast scalar evaluator for optimizer search. It is mathematically equivalent for expected-score
  * utility to full board evaluation, but composes cached per-role/per-prefix frontiers instead of
