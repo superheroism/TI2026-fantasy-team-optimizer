@@ -1,0 +1,79 @@
+{
+  "generatedAt": "2026-08-13T13:02:50.428Z",
+  "runtime": {
+    "node": "v22.23.1",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "semantics": {
+    "horizon": 4,
+    "fidelityId": "aggressive",
+    "freshMenuStrataByDepth": [
+      4,
+      2,
+      1
+    ],
+    "productionHorizon": 2,
+    "rootFidelityReduced": false,
+    "menuDistributionApproximate": false
+  },
+  "timeoutMs": 60000,
+  "runs": [
+    {
+      "fixture": "default",
+      "horizon": 4,
+      "fidelityId": "aggressive",
+      "status": "timeout",
+      "elapsedMs": 60080,
+      "timeoutMs": 60000,
+      "signal": "SIGTERM"
+    },
+    {
+      "fixture": "global-quality",
+      "horizon": 4,
+      "fidelityId": "aggressive",
+      "status": "timeout",
+      "elapsedMs": 60162,
+      "timeoutMs": 60000,
+      "signal": "SIGTERM"
+    },
+    {
+      "fixture": "quality-heavy",
+      "horizon": 4,
+      "fidelityId": "aggressive",
+      "status": "timeout",
+      "elapsedMs": 60119,
+      "timeoutMs": 60000,
+      "signal": "SIGTERM"
+    },
+    {
+      "fixture": "stat-heavy",
+      "horizon": 4,
+      "fidelityId": "aggressive",
+      "status": "timeout",
+      "elapsedMs": 60157,
+      "timeoutMs": 60000,
+      "signal": "SIGTERM"
+    },
+    {
+      "fixture": "trait-heavy",
+      "horizon": 4,
+      "fidelityId": "aggressive",
+      "status": "timeout",
+      "elapsedMs": 60152,
+      "timeoutMs": 60000,
+      "signal": "SIGTERM"
+    }
+  ],
+  "summary": {
+    "cases": 5,
+    "completed": 0,
+    "timeouts": 5,
+    "errors": 0,
+    "allComplete": false,
+    "medianRuntimeMs": null,
+    "maxRuntimeMs": null,
+    "medianHeapDelta": null,
+    "maxRssEnd": null
+  }
+}
