@@ -98,9 +98,12 @@ test('transposed stochastic states reuse V/action/terminal memo entries',()=>{
   const second=vf.V(0,2);
   const q1=vf.Q(0,['a','b','c'],2);
   const q2=vf.Q(0,['a','b','c'],2);
+  const a1=vf.A(0,'a',1,'current_menu');
+  const a2=vf.A(0,'a',1,'current_menu');
   const after=vf.getDiagnostics();
   assert.equal(first,second);
   assert.equal(q1,q2);
+  assert.equal(a1,a2);
   assert.ok(after.vCacheHits>before.vCacheHits);
   assert.ok(after.qCacheHits>=1);
   assert.ok(after.actionCacheHits>0);
