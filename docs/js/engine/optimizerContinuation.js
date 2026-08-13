@@ -4,28 +4,18 @@ import { MenuModel } from './menuModel.js';
 import { FiniteHorizonValueFunction } from './valueFunction.js';
 import { depthRecord, incrementDepth, OPTIMIZER_ROLES, stratifiedTransitions } from './optimizerHelpers.js';
 import { CONTINUATION_FIDELITY_PRESETS, continuationFidelityReport, resolveFreshMenuOutcomeStrata, } from './continuationFidelity.js';
-let experimentalFidelity;
-/** Engineering-only M5C hook. Normal application callers never set this. */
-export function setExperimentalContinuationFidelity(config) {
-    if (!config || config.modeledHorizon <= 2) {
-        experimentalFidelity = undefined;
-        return;
-    }
-    experimentalFidelity = { modeledHorizon: Math.max(3, Math.floor(config.modeledHorizon)), policy: config.policy };
-}
-export function getExperimentalContinuationFidelity() {
-    return experimentalFidelity ? { modeledHorizon: experimentalFidelity.modeledHorizon, policy: { ...experimentalFidelity.policy, freshMenuOutcomeStrataByDepth: [...experimentalFidelity.policy.freshMenuOutcomeStrataByDepth] } } : undefined;
-}
 export { CONTINUATION_FIDELITY_PRESETS } from './continuationFidelity.js';
 function addDepthTotal(map, depth, amount) {
     map.set(depth, (map.get(depth) ?? 0) + amount);
 }
-export function createContinuationRuntime(state, data, terminal, uniformStatFallback) {
+export function createContinuationRuntime(state, data, terminal, uniformStatFallback, experimentalFidelity) {
     const overrideMenus = data.menuSamples?.filter(menu => menu.length === 3);
     const menuModel = new MenuModel(overrideMenus?.length ? overrideMenus : undefined);
     const continuationStrata = Math.max(1, data.simulation.continuationOutcomeStrata ?? 8);
     const continuationEntryStrata = Math.max(1, data.simulation.continuationEntryStrata ?? 12);
-    const configured = experimentalFidelity;
+    const configured = experimentalFidelity && experimentalFidelity.modeledHorizon > 2
+        ? { modeledHorizon: Math.max(3, Math.floor(experimentalFidelity.modeledHorizon)), policy: experimentalFidelity.policy }
+        : undefined;
     const fidelityPolicy = configured?.policy ?? CONTINUATION_FIDELITY_PRESETS.current;
     const fidelity = continuationFidelityReport(fidelityPolicy, continuationStrata, continuationEntryStrata);
     const transitionMemo = new Map();
