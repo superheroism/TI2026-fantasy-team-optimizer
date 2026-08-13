@@ -6,7 +6,8 @@ import { ACTION_CATALOG } from '../docs/js/data/actionCatalog.js';
 import { convertStatisticalModel } from '../docs/js/data/statisticalModel.js';
 import { defaultBoard } from '../docs/js/data/defaultState.js';
 import { enumerateEngineOperation } from '../docs/js/engine/compactTransitions.js';
-import { createEngineExpectedScorer, evaluateBoardExpectedFast } from '../docs/js/engine/scoring.js';
+import { createEngineExpectedScorer } from '../docs/js/engine/engineExpectedScoring.js';
+import { evaluateBoardExpectedFast } from '../docs/js/engine/scoring.js';
 import {
   boardAdapterContext,
   boardToEngineState,
