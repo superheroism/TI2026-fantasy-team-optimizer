@@ -5,63 +5,26 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - run: npm install --no-audit --no-fund
-      - name: Benchmark pre-pass t3
-        run: node --expose-gc scripts/benchmark-m5-case.mjs default 3 > /tmp/m5b-pre.json
-      - name: Narrow fresh-menu action memoization
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          def once(text,old,new,label):
-              if text.count(old)!=1: raise RuntimeError(f'{label}: {text.count(old)} matches')
-              return text.replace(old,new,1)
-          p=Path('src/engine/valueFunction.ts'); s=p.read_text()
-          s=once(s,'  readonly actionCacheMisses:number;\n','  readonly actionCacheMisses:number;\n  readonly actionCacheBypasses:number;\n','diag field')
-          s=once(s,'  readonly actionCacheMissesByDepth:Readonly<Record<string,number>>;\n','  readonly actionCacheMissesByDepth:Readonly<Record<string,number>>;\n  readonly actionCacheBypassesByDepth:Readonly<Record<string,number>>;\n','diag depth field')
-          s=once(s,'  actionCacheMisses:number;\n','  actionCacheMisses:number;\n  actionCacheBypasses:number;\n','mutable field')
-          s=once(s,'  private readonly actionCacheMissesByDepth=new Map<number,number>();\n','  private readonly actionCacheMissesByDepth=new Map<number,number>();\n  private readonly actionCacheBypassesByDepth=new Map<number,number>();\n','depth map')
-          s=once(s,'    actionCalls:0,actionCacheHits:0,actionCacheMisses:0,\n','    actionCalls:0,actionCacheHits:0,actionCacheMisses:0,actionCacheBypasses:0,\n','init')
-          old='''    const prior=this.actionMemo.get(key);\n    if(prior!==undefined){this.diagnostics.actionCacheHits++;bump(this.actionCacheHitsByDepth,t);return prior;}\n    this.diagnostics.actionCacheMisses++;bump(this.actionCacheMissesByDepth,t);bump(this.actionEvaluationsByDepth,t);\n    const value=this.model.actionValue(\n      state,\n      operation,\n      t,\n      phase,\n      nextState=>this.V(nextState,t-1),\n    );\n    this.actionMemo.set(key,value);\n    return value;\n'''
-          new='''    // Fresh-menu A values are consumed exactly once inside a memoized V expansion.\n    // Retain action memoization only for externally/current-menu-addressable A calls.\n    const cacheable=phase==='current_menu';\n    if(cacheable){\n      const prior=this.actionMemo.get(key);\n      if(prior!==undefined){this.diagnostics.actionCacheHits++;bump(this.actionCacheHitsByDepth,t);return prior;}\n      this.diagnostics.actionCacheMisses++;bump(this.actionCacheMissesByDepth,t);\n    }else{\n      this.diagnostics.actionCacheBypasses++;bump(this.actionCacheBypassesByDepth,t);\n    }\n    bump(this.actionEvaluationsByDepth,t);\n    const value=this.model.actionValue(\n      state,\n      operation,\n      t,\n      phase,\n      nextState=>this.V(nextState,t-1),\n    );\n    if(cacheable)this.actionMemo.set(key,value);\n    return value;\n'''
-          s=once(s,old,new,'A body')
-          s=once(s,'      actionCacheMissesByDepth:toRecord(this.actionCacheMissesByDepth),\n','      actionCacheMissesByDepth:toRecord(this.actionCacheMissesByDepth),\n      actionCacheBypassesByDepth:toRecord(this.actionCacheBypassesByDepth),\n','get diag depth')
-          p.write_text(s)
-
-          p=Path('src/engine/optimizerRecommendation.ts'); s=p.read_text()
-          s=once(s,'      actionCalls:0,actionCacheHits:0,actionCacheMisses:0,uniqueStatesByDepth:{},uniqueQStatesByDepth:{},uniqueActionStatesByDepth:{},\n','      actionCalls:0,actionCacheHits:0,actionCacheMisses:0,actionCacheBypasses:0,uniqueStatesByDepth:{},uniqueQStatesByDepth:{},uniqueActionStatesByDepth:{},\n','zero diag')
-          s=once(s,'      actionCallsByDepth:{},actionCacheHitsByDepth:{},actionCacheMissesByDepth:{},actionEvaluationsByDepth:{},\n','      actionCallsByDepth:{},actionCacheHitsByDepth:{},actionCacheMissesByDepth:{},actionCacheBypassesByDepth:{},actionEvaluationsByDepth:{},\n','zero depth diag')
-          p.write_text(s)
-          PY
-      - name: Build and test
-        run: |
-          npm run typecheck
-          npm run build
-          npm run verify:generated
-          node --test tests/*.test.mjs
-      - name: Benchmark post-pass t3
-        run: node --expose-gc scripts/benchmark-m5-case.mjs default 3 > /tmp/m5b-post.json
-      - name: Persist pass
+      - name: Summarize fresh-action cache benchmark
         run: |
           python3 - <<'PY'
           import json
-          pre=json.load(open('/tmp/m5b-pre.json')); post=json.load(open('/tmp/m5b-post.json'))
-          json.dump({'stage':'fresh-menu action cache bypass','pre':pre,'post':post},open('benchmarks/m5b-fresh-action-cache.json','w'),indent=2)
-          with open('benchmarks/m5b-fresh-action-cache.json','a') as f:f.write('\n')
+          r=json.load(open('benchmarks/m5b-fresh-action-cache.json'))
+          def slim(x):
+              c=x['cold']; w=x['warm']; d=c['engineDiagnostics']; v=d['valueFunction']
+              return {
+                'coldMs':c['runtimeMs'],'warmMs':w['runtimeMs'],'recommendation':c['recommendation'],'utility':c['utility'],
+                'heapDelta':c['memory']['heapDelta'],'maxRssEnd':c['memory']['maxRssEnd'],
+                'actionEntries':v['actionEntries'],'actionHits':v['actionCacheHits'],'actionMisses':v['actionCacheMisses'],
+                'actionBypasses':v.get('actionCacheBypasses'),'terminalEntries':v['terminalEntries'],
+                'targetedEntries':d['targetedActionEntries'],'transitionEntries':d['transitionDistributionEntries'],
+              }
+          print('M5B_ACTION_CACHE='+json.dumps({'pre':slim(r['pre']),'post':slim(r['post'])},separators=(',',':')))
           PY
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add src/engine/valueFunction.ts src/engine/optimizerRecommendation.ts build docs benchmarks/m5b-fresh-action-cache.json
-          git commit -m "M5B: bypass one-use fresh-menu action memoization"
-          git push origin HEAD:agent/m5b-cache-scoring-optimization
