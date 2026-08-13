@@ -1,29 +1,26 @@
 import type { ActionEvaluation, BoardEvaluation, DataBundle, DecisionAction, OptimizerState, RecommendationResult, Role } from '../domain/types.js';
-import { evaluateBoard, evaluateBoardExpectedFast, evaluateBoardTargetProbabilityFast } from './scoring.js';
+import { evaluateBoard, evaluateBoardExpectedFast } from './scoring.js';
+import { evaluateBoardTarget, evaluateBoardTargetProbabilityFast } from './targetProbability.js';
 import { enumerateOperation } from './transitions.js';
 import type { BoardTransition } from './transitions.js';
 import { ACTION_CATALOG, allUniformMenus, TOTAL_UNIFORM_MENUS } from '../data/actionCatalog.js';
-
 const ROLES: Role[] = ['core','mid','support'];
 
 function utility(evaluation: BoardEvaluation, state: OptimizerState): number {
   return state.objective === 'target_probability' ? (evaluation.targetProbability ?? 0) : evaluation.expected;
 }
-
 export function formatAction(action: DecisionAction, state?: OptimizerState): string {
   if (action.kind === 'stop') return 'Best Current Setup';
   if (action.kind === 'menu_reroll') return 'Reroll operation menu';
   const label = state?.menu.find(o => o.id === action.operationId)?.label ?? action.operationId;
   return `${action.banner.toUpperCase()} → ${label}`;
 }
-
 /**
  * V1 exact transition rules are now complete for all 20 actions. To keep browser
  * runtime bounded, continuation is evaluated to a maximum of one fresh menu after
  * the current spend (a two-token decision horizon). The UI labels this cap whenever
  * more tokens remain.
  */
-
 
 function weightedQuantile(points:{value:number;probability:number}[],q:number):number|undefined{
   const clean=points.filter(x=>Number.isFinite(x.value)&&x.probability>0).sort((a,b)=>a.value-b.value);
@@ -32,7 +29,6 @@ function weightedQuantile(points:{value:number;probability:number}[],q:number):n
   for(const x of clean){cumulative+=x.probability;if(cumulative>=target)return x.value;}
   return clean.at(-1)?.value;
 }
-
 function stratifiedTransitions(outcomes:BoardTransition[],maxStrata:number):BoardTransition[]{
   if(maxStrata<=0||outcomes.length<=maxStrata)return outcomes;
   const total=outcomes.reduce((s,x)=>s+x.probability,0);if(total<=0)return [];
@@ -47,7 +43,6 @@ function stratifiedTransitions(outcomes:BoardTransition[],maxStrata:number):Boar
   for(const x of selected){const key=JSON.stringify(x.board),prior=grouped.get(key);if(prior)prior.probability+=x.probability;else grouped.set(key,{...x});}
   return [...grouped.values()];
 }
-
 export function recommendNextAction(state: OptimizerState, data: DataBundle, uniformStatFallback=true): RecommendationResult {
   const menuSamples=data.menuSamples?.filter(m=>m.length===3)??allUniformMenus();
   const usingOverrideMenus=Boolean(data.menuSamples?.length);
@@ -57,24 +52,23 @@ export function recommendNextAction(state: OptimizerState, data: DataBundle, uni
   const fullEvalMemo=new Map<string,BoardEvaluation>();
   const scalarMemo=new Map<string,number>();
   const freshMenuMemo=new Map<string,number>();
-
   const evaluateFull=(s:OptimizerState):BoardEvaluation=>{
-    const key=JSON.stringify({b:s.board,u:s.username,x:s.targetScore??null});const prior=fullEvalMemo.get(key);if(prior)return prior;
-    const value=evaluateBoard(s.board,s.username,data,s.targetScore);fullEvalMemo.set(key,value);return value;
+    const key=JSON.stringify({b:s.board,u:s.username,o:s.objective,x:s.targetScore??null});const prior=fullEvalMemo.get(key);if(prior)return prior;
+    const value=s.objective==='target_probability'
+      ? evaluateBoardTarget(s.board,s.username,data,s.targetScore??0,data.simulation.optimizerIterations)
+      : evaluateBoard(s.board,s.username,data,s.targetScore);
+    fullEvalMemo.set(key,value);return value;
   };
   const expectedScalar=(s:OptimizerState):number=>{
     const key=JSON.stringify(s.board);const prior=scalarMemo.get(key);if(prior!==undefined)return prior;
     const value=evaluateBoardExpectedFast(s.board,data,data.simulation.optimizerIterations);scalarMemo.set(key,value);return value;
   };
-  // Expected-score search can use the scalar composition exactly. Target-probability mode still
-  // requires full board samples and therefore follows the slower distribution path.
   const targetMemo=new Map<string,number>();
   const targetScalar=(s:OptimizerState):number=>{
     const target=s.targetScore??0,key=JSON.stringify({b:s.board,x:target});const prior=targetMemo.get(key);if(prior!==undefined)return prior;
     const value=evaluateBoardTargetProbabilityFast(s.board,data,target,data.simulation.optimizerIterations);targetMemo.set(key,value);return value;
   };
   const searchUtility=(s:OptimizerState):number=>s.objective==='expected_score'?expectedScalar(s):targetScalar(s);
-
   const terminalActionUtility=(s:OptimizerState,operationId:string):number=>{
     const op=ACTION_CATALOG.find(x=>x.id===operationId);if(!op)return -Infinity;
     let best=-Infinity;
@@ -84,7 +78,6 @@ export function recommendNextAction(state: OptimizerState, data: DataBundle, uni
     }
     return best;
   };
-
   const expectedFreshMenuTerminalUtility=(s:OptimizerState):number=>{
     const key=JSON.stringify({b:s.board,t:s.tokensRemaining,u:s.username,o:s.objective,x:s.targetScore??null});const prior=freshMenuMemo.get(key);if(prior!==undefined)return prior;
     const stop=searchUtility(s);if(s.tokensRemaining<=0){freshMenuMemo.set(key,stop);return stop;}
@@ -92,16 +85,13 @@ export function recommendNextAction(state: OptimizerState, data: DataBundle, uni
     let sum=0;for(const menu of menuSamples){let best=stop;for(const op of menu)best=Math.max(best,values.get(op.id)??-Infinity);sum+=best;}
     const result=sum/Math.max(menuSamples.length,1);freshMenuMemo.set(key,result);return result;
   };
-
   const continuationUtility=(next:OptimizerState):number=>{
     const immediate=searchUtility(next);if(horizon<2||next.tokensRemaining<=0)return immediate;return expectedFreshMenuTerminalUtility(next);
   };
-
-  const current=evaluateFull(state),stopUtility=state.objective==='expected_score'?current.expected:utility(current,state);
+  const current=evaluateFull(state),stopUtility=utility(current,state);
   // Seed scalar current value with the fully evaluated value to ensure identical stop reference.
   if(state.objective==='expected_score')scalarMemo.set(JSON.stringify(state.board),current.expected);
   const rows:ActionEvaluation[]=[{action:{kind:'stop'},expectedFinalUtility:stopUtility,expectedFinalScore:current.expected,tokensAfter:state.tokensRemaining,assetAtRisk:'none',confidence:current.confidence,status:'evaluated',note:'Preserves the board; free team-by-role selection is re-optimized.'}];
-
   if(state.tokensRemaining>0){
     for(const op of state.menu){
       for(const role of ROLES){

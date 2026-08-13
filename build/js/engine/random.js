@@ -46,13 +46,29 @@ export function cholesky3(matrix) {
     }
     return L;
 }
-export function correlatedUniforms(rng, correlation) {
-    const L = cholesky3(correlation);
-    const z = [rng.normal(), rng.normal(), rng.normal()];
-    const out = [0, 0, 0];
-    for (let i = 0; i < 3; i++) {
-        out[i] = (L[i]?.[0] ?? 0) * z[0] + (L[i]?.[1] ?? 0) * z[1] + (L[i]?.[2] ?? 0) * z[2];
+export function cholesky(matrix) {
+    const n = matrix.length, L = Array.from({ length: n }, () => new Array(n).fill(0));
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j <= i; j++) {
+            let sum = matrix[i]?.[j] ?? (i === j ? 1 : 0);
+            for (let k = 0; k < j; k++)
+                sum -= L[i][k] * L[j][k];
+            if (i === j)
+                L[i][j] = Math.sqrt(Math.max(sum, 1e-8));
+            else
+                L[i][j] = sum / Math.max(L[j][j], 1e-8);
+        }
     }
-    return [normalCdf(out[0]), normalCdf(out[1]), normalCdf(out[2])];
+    return L;
+}
+export function correlatedUniformsPrepared(rng, L) {
+    const z0 = rng.normal(), z1 = rng.normal(), z2 = rng.normal();
+    const x0 = (L[0]?.[0] ?? 0) * z0;
+    const x1 = (L[1]?.[0] ?? 0) * z0 + (L[1]?.[1] ?? 0) * z1;
+    const x2 = (L[2]?.[0] ?? 0) * z0 + (L[2]?.[1] ?? 0) * z1 + (L[2]?.[2] ?? 0) * z2;
+    return [normalCdf(x0), normalCdf(x1), normalCdf(x2)];
+}
+export function correlatedUniforms(rng, correlation) {
+    return correlatedUniformsPrepared(rng, cholesky3(correlation));
 }
 //# sourceMappingURL=random.js.map

@@ -1,4 +1,5 @@
-import { evaluateBoard, evaluateBoardExpectedFast, evaluateBoardTargetProbabilityFast } from './scoring.js';
+import { evaluateBoard, evaluateBoardExpectedFast } from './scoring.js';
+import { evaluateBoardTarget, evaluateBoardTargetProbabilityFast } from './targetProbability.js';
 import { enumerateOperation } from './transitions.js';
 import { ACTION_CATALOG, allUniformMenus, TOTAL_UNIFORM_MENUS } from '../data/actionCatalog.js';
 const ROLES = ['core', 'mid', 'support'];
@@ -74,11 +75,13 @@ export function recommendNextAction(state, data, uniformStatFallback = true) {
     const scalarMemo = new Map();
     const freshMenuMemo = new Map();
     const evaluateFull = (s) => {
-        const key = JSON.stringify({ b: s.board, u: s.username, x: s.targetScore ?? null });
+        const key = JSON.stringify({ b: s.board, u: s.username, o: s.objective, x: s.targetScore ?? null });
         const prior = fullEvalMemo.get(key);
         if (prior)
             return prior;
-        const value = evaluateBoard(s.board, s.username, data, s.targetScore);
+        const value = s.objective === 'target_probability'
+            ? evaluateBoardTarget(s.board, s.username, data, s.targetScore ?? 0, data.simulation.optimizerIterations)
+            : evaluateBoard(s.board, s.username, data, s.targetScore);
         fullEvalMemo.set(key, value);
         return value;
     };
@@ -91,8 +94,6 @@ export function recommendNextAction(state, data, uniformStatFallback = true) {
         scalarMemo.set(key, value);
         return value;
     };
-    // Expected-score search can use the scalar composition exactly. Target-probability mode still
-    // requires full board samples and therefore follows the slower distribution path.
     const targetMemo = new Map();
     const targetScalar = (s) => {
         const target = s.targetScore ?? 0, key = JSON.stringify({ b: s.board, x: target });
@@ -152,7 +153,7 @@ export function recommendNextAction(state, data, uniformStatFallback = true) {
             return immediate;
         return expectedFreshMenuTerminalUtility(next);
     };
-    const current = evaluateFull(state), stopUtility = state.objective === 'expected_score' ? current.expected : utility(current, state);
+    const current = evaluateFull(state), stopUtility = utility(current, state);
     // Seed scalar current value with the fully evaluated value to ensure identical stop reference.
     if (state.objective === 'expected_score')
         scalarMemo.set(JSON.stringify(state.board), current.expected);

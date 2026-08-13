@@ -1,16 +1,18 @@
 {
   "name": "dota2-fantasy-optimizer",
-  "version": "0.21.0",
+  "version": "0.14.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "clean": "rm -rf build docs && mkdir -p docs",
+    "clean": "node scripts/clean.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "node scripts/build.mjs",
+    "verify:generated": "node scripts/verify-generated.mjs --check-committed",
     "test": "npm run build && node --test tests/*.test.mjs",
+    "test:ci": "npm run typecheck && npm run verify:generated && node --test tests/*.test.mjs",
     "benchmark": "npm run build && node scripts/benchmark.mjs"
   },
   "devDependencies": {
-    "typescript": "^5.8.3"
+    "typescript": "5.8.3"
   }
 }

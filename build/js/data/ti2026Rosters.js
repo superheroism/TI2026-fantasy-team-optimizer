@@ -4,7 +4,7 @@ export const TI2026_ROSTERS = [
     { canonical: 'BoomBoys', aliases: ['BB', 'BB Team', 'BetBoom Team'], positions: ['Kiritych~', 'gpk~', 'MieRo`', 'Save-', 'Kataomi'] },
     { canonical: 'Team Falcons', aliases: ['Falcons'], positions: ['skiter', 'Malr1ne', 'ATF', 'Cr1t-', 'Sneyking'] },
     { canonical: 'Team Liquid', aliases: ['Liquid'], positions: ['m1CKe', 'Nisha', 'Ace', 'Boxi', 'tOfu'] },
-    { canonical: 'Iron Wing', aliases: ['1w', '1w Team', 'Tundra Esports'], positions: ['Pure', 'bzm', '33', 'Ari', 'Whitemon'] },
+    { canonical: 'Iron Wing', aliases: ['1w', '1w Team', 'Tundra Esports', 'Iron Wling'], positions: ['Pure', 'bzm', '33', 'Ari', 'Whitemon'] },
     { canonical: 'Xtreme Gaming', aliases: ['XG'], positions: ['Ame', 'NothingToSay', 'Xxs', 'fy', 'xNova'] },
     { canonical: 'Team Yandex', aliases: ['team y', 'Team Y', 'Yandex'], positions: ['watson', 'CHIRA_JUNIOR', 'DM', 'Saksa', 'Maladych'] },
     { canonical: 'Team Spirit', aliases: ['Spirit'], positions: ['Yatoro', 'Larl', 'Collapse', 'not me', 'rue'] },

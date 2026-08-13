@@ -1,11 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultBoard, defaultMenu } from '../docs/js/data/defaultState.js';
-import { demoData } from '../docs/js/data/demo.js';
+import { testData } from './test-data.mjs';
 import { recommendNextAction } from '../docs/js/engine/optimizer.js';
 
 test('menu reroll remains a legal one-token action with one token remaining',()=>{
-  const data={...demoData,simulation:{...demoData.simulation,iterations:10,optimizerIterations:10,rankingIterations:10,maxLookaheadTokens:1}};
+  const data = testData({
+  iterations: 10,
+  optimizerIterations: 10,
+  rankingIterations: 10,
+  maxLookaheadTokens: 1,
+});
   const result=recommendNextAction({board:structuredClone(defaultBoard),tokensRemaining:1,menu:structuredClone(defaultMenu),menuRerollAvailable:true,username:'Tester',objective:'expected_score'},data,true);
   const row=result.ranking.find(r=>r.action.kind==='menu_reroll');
   assert.ok(row);
@@ -15,7 +20,12 @@ test('menu reroll remains a legal one-token action with one token remaining',()=
 });
 
 test('visible stat, quality, and trait actions all have V1 transition models',()=>{
-  const data={...demoData,simulation:{...demoData.simulation,iterations:6,optimizerIterations:6,rankingIterations:6,maxLookaheadTokens:1}};
+  const data = testData({
+  iterations: 6,
+  optimizerIterations: 6,
+  rankingIterations: 6,
+  maxLookaheadTokens: 1,
+});
   const result=recommendNextAction({board:structuredClone(defaultBoard),tokensRemaining:1,menu:structuredClone(defaultMenu),menuRerollAvailable:true,username:'Tester',objective:'expected_score'},data,true);
   const boardRows=result.ranking.filter(r=>r.action.kind==='board_action');
   assert.ok(boardRows.length>0);
