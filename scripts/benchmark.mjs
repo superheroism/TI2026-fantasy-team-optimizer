@@ -3,9 +3,15 @@ import { performance } from 'node:perf_hooks';
 
 import { convertStatisticalModel } from '../docs/js/data/statisticalModel.js';
 import { defaultBoard } from '../docs/js/data/defaultState.js';
-import { ACTION_BY_ID, ACTION_CATALOG, cloneAction } from '../docs/js/data/actionCatalog.js';
+import { ACTION_BY_ID, ACTION_CATALOG, allUniformMenus, cloneAction } from '../docs/js/data/actionCatalog.js';
 import { recommendNextAction, formatAction, getLastOptimizerEngineDiagnostics } from '../docs/js/engine/optimizer.js';
-import { evaluateSelectedBoard, rankTeamsForRole } from '../docs/js/engine/scoring.js';
+import {
+  evaluateSelectedBoard,
+  getRawScenarioDiagnostics,
+  rankTeamsForRole,
+  resetRawScenarioDiagnostics,
+} from '../docs/js/engine/scoring.js';
+import { expectedExplicitMenuSamples, expectedUniformBestOfThree } from '../docs/js/engine/menuModel.js';
 import { enumerateOperation } from '../docs/js/engine/transitions.js';
 import {
   clearTransitionCache,
@@ -46,6 +52,40 @@ function print(row, detail = '') {
     : '';
   console.log(`${row.label.padEnd(28)} ${row.ms.toFixed(1).padStart(8)} ms${throughput}${detail ? `  ${detail}` : ''}`);
 }
+
+// Exact future-menu microbenchmark: keep this separate from whole-optimizer timing.
+const menuValues = ACTION_CATALOG.map((operation, index) => ({
+  id: operation.id,
+  value: 50_000 + Math.sin(index * 1.71) * 4_000 + index * 137,
+}));
+const menuBaseline = 51_500;
+const uniformMenus = allUniformMenus();
+const menuRounds = 5_000;
+const explicitMenu = timed(
+  'menu_explicit_1140',
+  () => {
+    let value = 0;
+    for (let round = 0; round < menuRounds; round++) value = expectedExplicitMenuSamples(menuValues, menuBaseline, uniformMenus);
+    return value;
+  },
+  { workUnits: menuRounds * uniformMenus.length, workUnitLabel: 'menus scanned' },
+);
+explicitMenu.row.value = explicitMenu.value;
+print(explicitMenu.row, `value ${explicitMenu.value.toFixed(6)}`);
+
+const analyticMenu = timed(
+  'menu_analytic_exact',
+  () => {
+    let value = 0;
+    for (let round = 0; round < menuRounds; round++) value = expectedUniformBestOfThree(menuValues, menuBaseline);
+    return value;
+  },
+  { workUnits: menuRounds, workUnitLabel: 'operators' },
+);
+analyticMenu.row.value = analyticMenu.value;
+analyticMenu.row.speedupVsExplicit = explicitMenu.row.ms / Math.max(analyticMenu.row.ms, 1e-9);
+analyticMenu.row.absoluteDifference = Math.abs(analyticMenu.value - explicitMenu.value);
+print(analyticMenu.row, `${analyticMenu.row.speedupVsExplicit.toFixed(1)}× vs explicit`);
 
 // Transition microbenchmark: reference BoardState cloning versus compact cold/warm generation.
 const engine = boardToEngineState(defaultBoard);
@@ -100,14 +140,17 @@ compactWarm.row.allocationProxy = '0 descriptive BoardState allocations inside t
 print(compactWarm.row, `${getTransitionDiagnostics().cacheHits.toLocaleString()} cache hits`);
 
 const selectedData = convertStatisticalModel(raw, titles);
+resetRawScenarioDiagnostics();
 const selected = timed(
   'selected_20k',
   () => evaluateSelectedBoard(structuredClone(defaultBoard), 'Benchmark', selectedData),
   { workUnits: selectedData.simulation.iterations, workUnitLabel: 'board-scenarios' },
 );
 selected.row.expected = selected.value.expected;
+selected.row.rawScenarioDiagnostics = getRawScenarioDiagnostics();
 print(selected.row, `EV ${selected.value.expected.toFixed(1)}`);
 
+resetRawScenarioDiagnostics();
 const compare = timed(
   'core_comparison_6k',
   () => rankTeamsForRole('core', structuredClone(defaultBoard), selectedData, selectedData.simulation.rankingIterations),
@@ -115,15 +158,18 @@ const compare = timed(
 compare.row.workUnits = selectedData.simulation.rankingIterations * compare.value.length;
 compare.row.workUnitLabel = 'team-scenarios';
 compare.row.bestTeam = compare.value[0]?.name ?? null;
+compare.row.rawScenarioDiagnostics = getRawScenarioDiagnostics();
 print(compare.row, `best ${compare.value[0]?.name ?? '—'}`);
 
 const switchedBoard = structuredClone(defaultBoard);
 switchedBoard.core.selectedTeam = compare.value[1]?.team ?? switchedBoard.core.selectedTeam;
+resetRawScenarioDiagnostics();
 const cachedSwitch = timed(
   'team_switch_cached',
   () => rankTeamsForRole('core', switchedBoard, selectedData, selectedData.simulation.rankingIterations),
 );
 cachedSwitch.row.selectedTeam = switchedBoard.core.selectedTeam;
+cachedSwitch.row.rawScenarioDiagnostics = getRawScenarioDiagnostics();
 print(cachedSwitch.row, `selected ${switchedBoard.core.selectedTeam}`);
 
 for (const [name, ids] of Object.entries(menus)) {
@@ -140,18 +186,22 @@ for (const [name, ids] of Object.entries(menus)) {
 
   clearTransitionCache();
   resetTransitionDiagnostics();
+  resetRawScenarioDiagnostics();
   const cold = timed(`optimizer_${name}_cold`, () => recommendNextAction(state, data, true));
   cold.row.action = formatAction(cold.value.recommendation.action, state);
   cold.row.utility = cold.value.recommendation.expectedFinalUtility;
   cold.row.transitionDiagnostics = getTransitionDiagnostics();
+  cold.row.rawScenarioDiagnostics = getRawScenarioDiagnostics();
   cold.row.engineDiagnostics = getLastOptimizerEngineDiagnostics();
   print(cold.row, cold.row.action);
 
   resetTransitionDiagnostics();
+  resetRawScenarioDiagnostics();
   const warm = timed(`optimizer_${name}_warm`, () => recommendNextAction(state, data, true));
   warm.row.action = formatAction(warm.value.recommendation.action, state);
   warm.row.utility = warm.value.recommendation.expectedFinalUtility;
   warm.row.transitionDiagnostics = getTransitionDiagnostics();
+  warm.row.rawScenarioDiagnostics = getRawScenarioDiagnostics();
   warm.row.engineDiagnostics = getLastOptimizerEngineDiagnostics();
   print(warm.row, warm.row.action);
 }
@@ -171,18 +221,22 @@ for (const [name, ids] of Object.entries(menus)) {
 
   clearTransitionCache();
   resetTransitionDiagnostics();
+  resetRawScenarioDiagnostics();
   const cold = timed('optimizer_target_55k_cold', () => recommendNextAction(state, data, true));
   cold.row.action = formatAction(cold.value.recommendation.action, state);
   cold.row.utility = cold.value.recommendation.expectedFinalUtility;
   cold.row.transitionDiagnostics = getTransitionDiagnostics();
+  cold.row.rawScenarioDiagnostics = getRawScenarioDiagnostics();
   cold.row.engineDiagnostics = getLastOptimizerEngineDiagnostics();
   print(cold.row, cold.row.action);
 
   resetTransitionDiagnostics();
+  resetRawScenarioDiagnostics();
   const warm = timed('optimizer_target_55k_warm', () => recommendNextAction(state, data, true));
   warm.row.action = formatAction(warm.value.recommendation.action, state);
   warm.row.utility = warm.value.recommendation.expectedFinalUtility;
   warm.row.transitionDiagnostics = getTransitionDiagnostics();
+  warm.row.rawScenarioDiagnostics = getRawScenarioDiagnostics();
   warm.row.engineDiagnostics = getLastOptimizerEngineDiagnostics();
   print(warm.row, warm.row.action);
 }
