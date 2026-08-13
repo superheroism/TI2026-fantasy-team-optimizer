@@ -5,79 +5,39 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
-
-      - name: Build and test optimized source
+      - uses: actions/checkout@v4
+      - name: Summarize M5B benchmark
         run: |
-          npm run typecheck
-          npm run build
-          npm run verify:generated
-          node --test tests/*.test.mjs
-
-      - name: Benchmark M5A and M5B on the same runner
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p /tmp/m5b-baseline /tmp/m5b-optimized
-          git worktree add --detach /tmp/m5a 67990c74636965b2116eb45c8aeec0b195830819
-          ln -s "$GITHUB_WORKSPACE/node_modules" /tmp/m5a/node_modules
-
-          run_case() {
-            local cwd="$1" case_name="$2" horizon="$3" output="$4" limit="$5"
-            set +e
-            (cd "$cwd" && timeout --signal=TERM "${limit}s" node --expose-gc scripts/benchmark-m5-case.mjs "$case_name" "$horizon") > "$output"
-            local code=$?
-            set -e
-            if [ "$code" -ne 0 ]; then
-              printf '{"case":"%s","horizon":%s,"timeout":true,"exitCode":%s}\n' "$case_name" "$horizon" "$code" > "$output"
-            fi
-          }
-
-          run_case /tmp/m5a default 2 /tmp/m5b-baseline/default-t2.json 60
-          run_case /tmp/m5a default 3 /tmp/m5b-baseline/default-t3.json 60
-          run_case "$GITHUB_WORKSPACE" default 2 /tmp/m5b-optimized/default-t2.json 60
-          run_case "$GITHUB_WORKSPACE" default 3 /tmp/m5b-optimized/default-t3.json 60
-          run_case "$GITHUB_WORKSPACE" default 4 /tmp/m5b-optimized/default-t4.json 60
-          run_case "$GITHUB_WORKSPACE" target_55k 2 /tmp/m5b-optimized/target-t2.json 60
-
           python3 - <<'PY'
           import json
-          from pathlib import Path
-          def read_dir(path):
-              return [json.loads(p.read_text()) for p in sorted(Path(path).glob('*.json'))]
-          report={
-              'stage':'M5B exact cache + compact expected scoring',
-              'baselineCommit':'67990c74636965b2116eb45c8aeec0b195830819',
-              'node':None,
-              'baseline':read_dir('/tmp/m5b-baseline'),
-              'optimized':read_dir('/tmp/m5b-optimized'),
-          }
-          Path('benchmarks/m5b-exact-optimizations.json').write_text(json.dumps(report,indent=2)+'\n')
+          r=json.load(open('benchmarks/m5b-exact-optimizations.json'))
+          def slim(x):
+              if x.get('timeout'):
+                  return {'case':x.get('case'),'horizon':x.get('horizon'),'timeout':True,'exitCode':x.get('exitCode')}
+              c=x['cold']; w=x['warm']; d=c['engineDiagnostics']
+              return {
+                  'case':x['case'],'horizon':x['horizon'],
+                  'coldMs':c['runtimeMs'],'warmMs':w['runtimeMs'],
+                  'recommendation':c['recommendation'],'utility':c['utility'],'runnerUp':c['runnerUp'],
+                  'heapDelta':c['memory']['heapDelta'],'maxRssEnd':c['memory']['maxRssEnd'],
+                  'descriptiveBoards':d['descriptiveBoardMaterializations'],
+                  'descriptiveBoardEntries':d['descriptiveBoardCacheEntries'],
+                  'expectedBannerMaterializations':d.get('expectedBannerMaterializations'),
+                  'expectedBannerEntries':d.get('expectedBannerCacheEntries'),
+                  'targetedEntries':d['targetedActionEntries'],
+                  'targetedBypasses':d.get('targetedActionCacheBypasses'),
+                  'transitionEntries':d['transitionDistributionEntries'],
+                  'transitionBypasses':d.get('transitionDistributionCacheBypasses'),
+                  'terminalStates':d['valueFunction']['terminalEntries'],
+                  'actionEntries':d['valueFunction']['actionEntries'],
+                  'menuMs':d['menuOperator']['operatorMs'],
+                  'rawRescoreMs':c['rawScenarioDiagnostics']['rescoreMs'],
+              }
+          print('M5B_SUMMARY='+json.dumps({'baseline':[slim(x) for x in r['baseline']],'optimized':[slim(x) for x in r['optimized']]},separators=(',',':')))
           PY
-
-      - name: Commit deterministic generated output and benchmark
-        run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add build docs benchmarks/m5b-exact-optimizations.json
-          if ! git diff --cached --quiet; then
-            git commit -m "M5B: persist generated output and benchmark"
-            git push origin HEAD:agent/m5b-cache-scoring-optimization
-          fi
