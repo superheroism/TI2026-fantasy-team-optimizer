@@ -1,11 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, statSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { convertStatisticalModel } from '../docs/js/data/statisticalModel.js';
 import { defaultBoard } from '../docs/js/data/defaultState.js';
 import { evaluateSelectedBoard } from '../docs/js/engine/scoring.js';
-const root=resolve(new URL('..',import.meta.url).pathname);
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const modelPath=resolve(root,'data/ti2026-statistical-model.json');
 const docsPath=resolve(root,'docs/data/ti2026-statistical-model.json');
 const titlePath=resolve(root,'data/ti2026-title-model.json');

@@ -15,15 +15,9 @@ The optimizer uses different simulation budgets for presentation and search. The
 | Second-step future outcomes | up to 8 strata per action/role |
 | Future menu distribution | all 1,140 three-action menus retained |
 
-## Benchmark
+## Frozen pre-M1 baseline
 
-Run:
-
-```text
-npm run benchmark
-```
-
-Representative cold-cache medians from the current working build:
+Representative cold-cache medians documented immediately before M1:
 
 | Workload | Median |
 |---|---:|
@@ -36,6 +30,24 @@ Representative cold-cache medians from the current working build:
 | Target-probability objective | ~1.26 s |
 
 These are build-environment timings, not browser guarantees. Hardware, browser, cache state, and the current menu can all change runtime.
+
+The same baseline is frozen in machine-readable form at `benchmarks/m1-prechange-baseline.json`.
+
+## M1 benchmark protocol
+
+Run the human-readable benchmark:
+
+```text
+npm run benchmark
+```
+
+Write a machine-readable report:
+
+```text
+npm run benchmark -- --json=m1-benchmark.json
+```
+
+M1 reports both cold and warm optimizer calls and adds throughput context for the selected-board and team-comparison workloads. It does **not** set CI performance thresholds because shared-runner timing variance would create a noisy gate. Later milestones should compare benchmark reports on consistent hardware before accepting a performance-sensitive change.
 
 ## Why the search is faster than the histogram
 
@@ -51,6 +63,10 @@ The action search is cheaper because it:
 6. applies deterministic stratification only to the second-step continuation calculation.
 
 The future menu distribution itself is not sampled down: all 1,140 menus remain in the continuation model.
+
+## M1 semantic note
+
+Target-probability mode now optimizes free roster/title selection for the target probability itself. This is intentionally a correctness-first change; its runtime should be measured against the frozen pre-M1 target-probability baseline before later performance work. M3/M4 are the planned milestones for structural target-search and DP speedups.
 
 ## Interpretation
 

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 
 const index=readFileSync(new URL('../site/index.html',import.meta.url),'utf8');
 const app=readFileSync(new URL('../src/ui/app.ts',import.meta.url),'utf8');
-const loader=readFileSync(new URL('../src/data/scriptsBits.ts',import.meta.url),'utf8');
+const loader=readFileSync(new URL('../src/data/statisticalModel.ts',import.meta.url),'utf8');
 
 test('public page omits modeling-boundary and affiliation footer copy',()=>{
   assert.equal(index.includes('V1 modeling boundary'),false);

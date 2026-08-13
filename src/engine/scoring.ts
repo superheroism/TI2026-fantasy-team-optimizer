@@ -304,38 +304,6 @@ export function rolePrefixFrontier(role:Role,banner:BannerState,data:DataBundle,
 }
 
 
-function rolePrefixSampleFrontier(role:Role,banner:BannerState,data:DataBundle,iterations:number):RolePrefixFrontierEntry[]{
-  let cache=sampleFrontierCache.get(data);if(!cache){cache=new Map();sampleFrontierCache.set(data,cache);}
-  const key=JSON.stringify({role,b:banner,n:iterations});const prior=cache.get(key);if(prior)return prior;
-  const board={core:banner,mid:banner,support:banner} as unknown as BoardState;
-  const ranked=rankTeamsForRole(role,board,data,iterations),out:RolePrefixFrontierEntry[]=[];
-  for(const prefix of data.titles.prefixes){
-    let best:PlayerScore|undefined,bestAdjusted=-Infinity,bestPct=0;
-    for(const row of ranked){const pct=titlePrefixBoostPct(data.titles,role,row.team,prefix.id),adjusted=row.expected*(1+pct/100);if(adjusted>bestAdjusted){best=row;bestAdjusted=adjusted;bestPct=pct;}}
-    if(best)out.push({prefixId:prefix.id,adjustedExpected:bestAdjusted,row:best,boostPct:bestPct});
-  }
-  cache.set(key,out);return out;
-}
-
-/** Fast probability evaluator matching the current V1 roster/title policy: roster and prefix are
- * selected by expected score, then the probability of exceeding the target is measured on that
- * selected joint sample. */
-export function evaluateBoardTargetProbabilityFast(board:BoardState,data:DataBundle,targetScore:number,iterations=data.simulation.optimizerIterations):number{
-  const frontiers={
-    core:rolePrefixSampleFrontier('core',board.core,data,iterations),
-    mid:rolePrefixSampleFrontier('mid',board.mid,data,iterations),
-    support:rolePrefixSampleFrontier('support',board.support,data,iterations),
-  };
-  let bestPrefix:string|undefined,bestExpected=-Infinity;
-  for(const prefix of data.titles.prefixes){let total=0,complete=true;for(const role of ROLES){const e=frontiers[role].find(x=>x.prefixId===prefix.id);if(!e){complete=false;break;}total+=e.adjustedExpected;}if(complete&&total>bestExpected){bestExpected=total;bestPrefix=prefix.id;}}
-  if(!bestPrefix)return 0;
-  const entries=ROLES.map(role=>frontiers[role].find(x=>x.prefixId===bestPrefix)).filter((x):x is RolePrefixFrontierEntry=>Boolean(x));
-  if(entries.length!==3)return 0;
-  let hits=0;
-  for(let i=0;i<iterations;i++){let total=0;for(const e of entries)total+=(e.row.samples[i]??e.row.expected)*(1+e.boostPct/100);if(total>=targetScore)hits++;}
-  return hits/Math.max(iterations,1);
-}
-
 /** Fast scalar evaluator for optimizer search. It is mathematically equivalent for expected-score
  * utility to full board evaluation, but composes cached per-role/per-prefix frontiers instead of
  * rebuilding roster/title/sample objects for every terminal board combination. */
