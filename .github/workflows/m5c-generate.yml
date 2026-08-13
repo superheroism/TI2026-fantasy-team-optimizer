@@ -1,4 +1,4 @@
-name: M5C Calibration
+name: M5C T4 Feasibility
 on:
   push:
     branches: [m5c-experiment]
@@ -6,11 +6,11 @@ permissions:
   contents: write
 jobs:
   fixture:
-    if: "!contains(github.event.head_commit.message, '[m5c results]')"
+    if: "!contains(github.event.head_commit.message, '[m5c t4 results]')"
     strategy:
       fail-fast: false
       matrix:
-        fixture: [default, quality-heavy, stat-heavy, trait-heavy, global-quality, reachable-core-stat, reachable-support-trait, reachable-mid-quality, reachable-global-quality, reachable-two-step-a, reachable-two-step-b, reachable-two-step-c]
+        fixture: [default, quality-heavy, stat-heavy, trait-heavy, global-quality]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,13 +22,13 @@ jobs:
       - run: npm run typecheck
       - run: npm run verify:generated
       - run: node --test tests/*.test.mjs
-      - run: node scripts/benchmark-m5c-fixture.mjs '${{ matrix.fixture }}' --json='m5c-${{ matrix.fixture }}.json'
+      - run: node scripts/benchmark-m5c-t4-fixture.mjs '${{ matrix.fixture }}' --json='m5c-t4-${{ matrix.fixture }}.json'
       - uses: actions/upload-artifact@v4
         with:
-          name: m5c-${{ matrix.fixture }}
-          path: m5c-${{ matrix.fixture }}.json
+          name: m5c-t4-${{ matrix.fixture }}
+          path: m5c-t4-${{ matrix.fixture }}.json
   aggregate:
-    if: "!contains(github.event.head_commit.message, '[m5c results]')"
+    if: "!contains(github.event.head_commit.message, '[m5c t4 results]')"
     needs: fixture
     runs-on: ubuntu-latest
     steps:
@@ -38,13 +38,13 @@ jobs:
           node-version: 22
       - uses: actions/download-artifact@v4
         with:
-          pattern: m5c-*
+          pattern: m5c-t4-*
           merge-multiple: true
-          path: m5c-results
-      - run: node scripts/aggregate-m5c-calibration.mjs m5c-results --json=benchmarks/m5c-depth-calibration.json
+          path: m5c-t4-results
+      - run: node scripts/aggregate-m5c-t4.mjs m5c-t4-results --json=benchmarks/m5c-four-token-benchmark.json
       - run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add benchmarks/m5c-depth-calibration.json
-          git commit -m 'M5C: record t3 calibration [m5c results]'
+          git add benchmarks/m5c-four-token-benchmark.json
+          git commit -m 'M5C: record t4 feasibility [m5c t4 results]'
           git push origin HEAD:m5c-experiment
