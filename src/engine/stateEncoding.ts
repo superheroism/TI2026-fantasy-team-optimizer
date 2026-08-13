@@ -38,6 +38,28 @@ function assertSlot(role:Role, position:0|1|2, emblem:EmblemState):void {
   if(emblem.color!==color) throw new Error(`Expected ${role} slot ${position} color ${color}, got ${emblem.color}.`);
 }
 
+export function encodeEmblemComponents(statIndex:number, qualityTier:QualityTier, traitIndex:number):EmblemStateID {
+  integerInRange(statIndex,0,STATS_PER_COLOR-1,'stat index');
+  integerInRange(qualityTier,1,QUALITY_COUNT,'quality tier');
+  integerInRange(traitIndex,0,TRAIT_COUNT-1,'trait index');
+  return ((statIndex*QUALITY_COUNT+(qualityTier-1))*TRAIT_COUNT)+traitIndex;
+}
+
+export function emblemStatIndex(id:EmblemStateID):number {
+  integerInRange(id,0,EMBLEM_STATE_COUNT-1,'emblem state ID');
+  return Math.floor(id/(TRAIT_COUNT*QUALITY_COUNT));
+}
+
+export function emblemQualityTier(id:EmblemStateID):QualityTier {
+  integerInRange(id,0,EMBLEM_STATE_COUNT-1,'emblem state ID');
+  return (Math.floor(id/TRAIT_COUNT)%QUALITY_COUNT+1) as QualityTier;
+}
+
+export function emblemTraitIndex(id:EmblemStateID):number {
+  integerInRange(id,0,EMBLEM_STATE_COUNT-1,'emblem state ID');
+  return id%TRAIT_COUNT;
+}
+
 export function encodeEmblemState(role:Role, position:0|1|2, emblem:EmblemState):EmblemStateID {
   assertSlot(role,position,emblem);
   const pool=LEGAL_STAT_POOLS[emblem.color];
@@ -46,23 +68,38 @@ export function encodeEmblemState(role:Role, position:0|1|2, emblem:EmblemState)
   const traitIndex=TRAIT_ORDER.indexOf(emblem.trait);
   if(traitIndex<0) throw new Error(`Unknown trait ${emblem.trait}.`);
   integerInRange(emblem.qualityTier,1,5,'qualityTier');
-  return ((statIndex*QUALITY_COUNT+(emblem.qualityTier-1))*TRAIT_COUNT)+traitIndex;
+  return encodeEmblemComponents(statIndex,emblem.qualityTier,traitIndex);
 }
 
 export function decodeEmblemState(role:Role, position:0|1|2, id:EmblemStateID):EmblemState {
-  integerInRange(id,0,EMBLEM_STATE_COUNT-1,'emblem state ID');
-  const traitIndex=id%TRAIT_COUNT;
-  const qualityIndex=Math.floor(id/TRAIT_COUNT)%QUALITY_COUNT;
-  const statIndex=Math.floor(id/(TRAIT_COUNT*QUALITY_COUNT));
+  const statIndex=emblemStatIndex(id);
+  const qualityTier=emblemQualityTier(id);
+  const traitIndex=emblemTraitIndex(id);
   const color=BANNER_COLORS[role][position];
   return {
     id:`${role}-${position}`,
     position,
     color,
     stat:LEGAL_STAT_POOLS[color][statIndex] as StatName,
-    qualityTier:(qualityIndex+1) as QualityTier,
+    qualityTier,
     trait:TRAIT_ORDER[traitIndex]!,
   };
+}
+
+export function decodeBannerEmblemIds(id:BannerStateID):readonly [EmblemStateID,EmblemStateID,EmblemStateID] {
+  integerInRange(id,0,BANNER_STATE_COUNT-1,'banner state ID');
+  let config=id;
+  const e0=config%EMBLEM_STATE_COUNT; config=Math.floor(config/EMBLEM_STATE_COUNT);
+  const e1=config%EMBLEM_STATE_COUNT; config=Math.floor(config/EMBLEM_STATE_COUNT);
+  const e2=config;
+  return [e0,e1,e2];
+}
+
+export function encodeBannerEmblemIds(e0:EmblemStateID,e1:EmblemStateID,e2:EmblemStateID):BannerStateID {
+  integerInRange(e0,0,EMBLEM_STATE_COUNT-1,'slot 0 emblem state ID');
+  integerInRange(e1,0,EMBLEM_STATE_COUNT-1,'slot 1 emblem state ID');
+  integerInRange(e2,0,EMBLEM_STATE_COUNT-1,'slot 2 emblem state ID');
+  return e0+EMBLEM_STATE_COUNT*(e1+EMBLEM_STATE_COUNT*e2);
 }
 
 /** Role-local ID containing only reroll-variable banner mechanics. */
@@ -70,15 +107,11 @@ export function encodeBannerState(banner:BannerState):BannerStateID {
   const e0=encodeEmblemState(banner.role,0,banner.emblems[0]);
   const e1=encodeEmblemState(banner.role,1,banner.emblems[1]);
   const e2=encodeEmblemState(banner.role,2,banner.emblems[2]);
-  return e0+EMBLEM_STATE_COUNT*(e1+EMBLEM_STATE_COUNT*e2);
+  return encodeBannerEmblemIds(e0,e1,e2);
 }
 
 export function decodeBannerState(role:Role, id:BannerStateID, context:BannerAdapterContext):BannerState {
-  integerInRange(id,0,BANNER_STATE_COUNT-1,'banner state ID');
-  let config=id;
-  const e0=config%EMBLEM_STATE_COUNT; config=Math.floor(config/EMBLEM_STATE_COUNT);
-  const e1=config%EMBLEM_STATE_COUNT; config=Math.floor(config/EMBLEM_STATE_COUNT);
-  const e2=config;
+  const [e0,e1,e2]=decodeBannerEmblemIds(id);
   return {
     role,
     selectedTeam:context.selectedTeam,
@@ -99,6 +132,14 @@ export function decodeBoardStateId(id:BoardStateID):readonly [BannerStateID,Bann
   const mid=Number(value%BOARD_RADIX); value/=BOARD_RADIX;
   const support=Number(value);
   return [core,mid,support];
+}
+
+export function replaceEngineBanner(state:EngineState,role:Role,banner:BannerStateID):EngineState {
+  integerInRange(banner,0,BANNER_STATE_COUNT-1,`${role} banner state ID`);
+  const core=role==='core'?banner:state.core;
+  const mid=role==='mid'?banner:state.mid;
+  const support=role==='support'?banner:state.support;
+  return {core,mid,support,id:encodeBoardStateIds(core,mid,support)};
 }
 
 export function boardAdapterContext(board:BoardState):BoardAdapterContext {
