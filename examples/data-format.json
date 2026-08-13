@@ -1,0 +1,32 @@
+{
+  "label": "Team-role distribution dataset",
+  "isDemo": false,
+  "players": [
+    {
+      "id": "core:Team Vision",
+      "name": "Team Vision (Satanic + Noticed)",
+      "team": "Team Vision",
+      "role": "core",
+      "attachedPlayers": ["Satanic", "Noticed"],
+      "statQuantiles": {
+        "Creep Score": [{"q":0.05,"value":600},{"q":0.5,"value":1000},{"q":0.95,"value":1500}],
+        "GPM": [{"q":0.05,"value":900},{"q":0.5,"value":1300},{"q":0.95,"value":1800}]
+      },
+      "effectiveGamesByStat": {"Creep Score": 42, "GPM": 42}
+    }
+  ],
+  "titles": {"prefixes": [], "suffixes": []},
+  "simulation": {
+    "iterations": 20000,
+    "optimizerIterations": 800,
+    "rankingIterations": 6000,
+    "seed": 20260811,
+    "maxLookaheadTokens": 2,
+    "scoring": {"retainedGamesPerSeries": 2, "retainedSeries": 1, "thirdGameProbability": 0.407}
+  },
+  "roleCorrelations": {
+    "core": {"stats":["Creep Score","GPM"],"spearman":[[1,0.3],[0.3,1]]},
+    "mid": {"stats":["Creep Score","Runes","Teamfight Participation"],"spearman":[[1,0.2,0.2],[0.2,1,0.2],[0.2,0.2,1]]},
+    "support": {"stats":["Watchers","Teamfight Participation","Wards Placed"],"spearman":[[1,0.2,0.2],[0.2,1,0.2],[0.2,0.2,1]]}
+  }
+}
