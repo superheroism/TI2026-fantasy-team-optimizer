@@ -48,7 +48,13 @@ Write a machine-readable report:
 npm run benchmark -- --json=benchmark.json
 ```
 
-The benchmark reports cold and warm optimizer calls and throughput context for selected-board and team-comparison workloads. M3 added transition reference/cold/warm throughput, transition-cache diagnostics, and a descriptive-board allocation proxy. M4 adds the exact-menu microbenchmark, raw-scenario reuse diagnostics, and V/Q/search diagnostics. CI does **not** enforce timing thresholds because shared-runner variance would create a noisy gate; compare before/after reports from the same machine/runtime.
+Run the bounded M5A horizon experiment:
+
+```text
+npm run benchmark:m5 -- --json=benchmarks/m5-four-token-experiment.json
+```
+
+The benchmark reports cold and warm optimizer calls and throughput context for selected-board and team-comparison workloads. M3 added transition reference/cold/warm throughput, transition-cache diagnostics, and a descriptive-board allocation proxy. M4 adds the exact-menu microbenchmark, raw-scenario reuse diagnostics, and V/Q/search diagnostics. M5A adds per-depth V/Q/action state growth, run-scoped cache growth, memory snapshots, and isolated `t=2/3/4` cases. CI does **not** enforce timing thresholds because shared-runner variance would create a noisy gate; compare before/after reports from the same machine/runtime.
 
 ## M3 compact-transition benchmark
 
@@ -97,6 +103,42 @@ The number of stochastic raw-role banks generated remains fixed at **48** at eve
 
 After warming the base board, isolated stat, quality, and trait changes at 192 scenarios each make 16 raw-scenario requests with **16 hits, zero misses, and zero new generations** for both objectives. This confirms that competing board states reuse the same underlying player-performance scenarios rather than regenerating them.
 
+## M5A four-token experiment
+
+M5A exposes the existing M4 V/Q architecture to an **engineering-only** finite-horizon override while leaving normal application calls capped at two modeled token spends. No horizon-dependent fidelity reduction or approximation was introduced.
+
+`benchmarks/m5-four-token-experiment.json` was produced on Node 22/Linux with a 60-second ceiling for each isolated realistic case.
+
+| Workload | t=2 cold | t=3 cold | t=4 |
+|---|---:|---:|---:|
+| Default | 1.57 s | 22.85 s | >60 s |
+| Quality-heavy | 1.66 s | 28.21 s | >60 s |
+| Stat-heavy | 1.59 s | 27.49 s | >60 s |
+| Trait-heavy | ~1.30 s | 23.31 s | >60 s |
+| Global-quality | ~1.43 s | 23.40 s | >60 s |
+| Target-55k | 5.53 s | >60 s | >60 s |
+
+Expected-score `t=3` was roughly **15–18×** slower cold than `t=2`. Every expected-score `t=4` case timed out, and target-probability timed out already at `t=3`.
+
+Default expected-score growth illustrates the limiting factor:
+
+| Metric | t=2 | t=3 |
+|---|---:|---:|
+| Terminal/scoring states | 6,563 | 415,223 |
+| Run-scoped transition distributions | 2,880 | 393,780 |
+| Action-value entries | 963 | 132,223 |
+| V calls | 12,338 | 1,689,749 |
+| Heap delta | ~35 MB | ~1.61 GB |
+| End RSS | ~137 MB | ~1.75 GB |
+
+Transposition reuse is meaningful: default `t=3` recorded 5,775 V hits, 1.27M terminal-memo hits, and ~90% reuse in the compact mechanics transition cache. It is not enough to contain the new frontier. The run-scoped targeted-continuation cache is particularly weak: only 7 hits against 396,669 misses/entries in the default `t=3` run.
+
+The menu layer remains negligible: 6,611 exact fresh-menu operator calls consumed only about 29 ms and scanned zero explicit 1,140-menu sets. Compact transition generation took about 155 ms. Raw-scenario generation remained fixed at 48 banks; mean rescoring grew to about 3.14 s. A fully warm default `t=3` call still took 5.84 s, confirming that state/action traversal, scoring-boundary materialization, and run-scoped cache pressure dominate after generation caches are warm.
+
+The expected-score recommendation was unchanged from `t=2` to `t=3` for all five tested menu classes. No deeper target-probability or realistic `t=4` policy claim is possible because those cases exceeded the execution ceiling.
+
+**Decision:** production remains at two modeled token spends. See `M5_FOUR_TOKEN_EXPERIMENT.md` for full state-growth diagnostics and the recommended M5B cache-pressure package.
+
 ## Why the search is faster than the histogram
 
 The full selected-board distribution is rebuilt at presentation quality when the optimizer runs. Team-role comparisons are cached by banner mechanics, so selecting a different already-simulated team can reuse those samples.
@@ -119,7 +161,7 @@ The uniform future-menu distribution is still modeled **exactly**; M4 changes th
 
 Target-probability mode optimizes free roster/title selection for the target probability itself. The same finite-horizon value-function machinery is used for both objectives; expected score is not used as an intermediate objective in target mode.
 
-The production decision horizon remains capped at two token spends. M5 owns deeper finite-horizon search and must validate state growth and policy stability before moving from 2 → 4 → 8 or toward the practical remaining-token horizon.
+The production decision horizon remains capped at two token spends. M5A measured deeper current-fidelity search and found realistic four-token search outside the current runtime/memory envelope. Do not proceed to eight tokens until the four-token frontier is made tractable and any later approximation is explicitly validated.
 
 ## Interpretation
 
