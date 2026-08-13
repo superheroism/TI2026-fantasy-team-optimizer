@@ -1,300 +1,100 @@
+import { bannerMechanicsKey, boardMechanicsKey } from './bannerMechanics.js';
 import { mean, percentile } from './distributions.js';
 import { rankTeamsForRole } from './scoring.js';
+import { choosePreparedTargetSearch, chooseTargetSearch, getTargetSearchDiagnostics, prepareTargetCandidates, resetTargetSearchDiagnostics, setTargetSearchDiagnosticsEnabled, } from './targetSearch.js';
 import { recommendTitle, titlePrefixBoostPct } from './title.js';
 const ROLES = ['core', 'mid', 'support'];
-const EPSILON = 1e-12;
+const ROLE_INDEX = { core: 0, mid: 1, support: 2 };
+function newAdapterDiagnostics() {
+    return {
+        boardCacheHits: 0,
+        boardCacheMisses: 0,
+        preparedRoleCacheHits: 0,
+        preparedRoleCacheMisses: 0,
+    };
+}
+let diagnosticsEnabled = false;
+let adapterDiagnostics = newAdapterDiagnostics();
+/** Enable/disable target benchmark diagnostics. Disabled by default in production. */
+export function setTargetDiagnosticsEnabled(enabled) {
+    diagnosticsEnabled = enabled;
+    setTargetSearchDiagnosticsEnabled(enabled);
+}
+/** Clear accumulated diagnostic counters without touching optimization caches. */
+export function resetTargetDiagnostics() {
+    adapterDiagnostics = newAdapterDiagnostics();
+    resetTargetSearchDiagnostics();
+}
+/** Return the legacy Dota-facing diagnostic shape used by the M2 benchmark. */
+export function getTargetDiagnostics() {
+    const search = getTargetSearchDiagnostics();
+    return {
+        ...adapterDiagnostics,
+        candidateSets: {
+            core: search.candidateSets[0],
+            mid: search.candidateSets[1],
+            support: search.candidateSets[2],
+        },
+        candidatesBeforePruning: {
+            core: search.candidatesBeforePruning[0],
+            mid: search.candidatesBeforePruning[1],
+            support: search.candidatesBeforePruning[2],
+        },
+        candidatesAfterPruning: {
+            core: search.candidatesAfterPruning[0],
+            mid: search.candidatesAfterPruning[1],
+            support: search.candidatesAfterPruning[2],
+        },
+        prefixesConsidered: search.searchesConsidered,
+        prefixBoundPruned: search.searchBoundPruned,
+        coreBranchesConsidered: search.firstBranchesConsidered,
+        coreBranchesPruned: search.firstBranchesPruned,
+        pairBranchesConsidered: search.pairBranchesConsidered,
+        pairBranchesPruned: search.pairBranchesPruned,
+        triplesConsidered: search.triplesConsidered,
+        triplesCompleted: search.triplesCompleted,
+        triplesEarlyTerminated: search.triplesEarlyTerminated,
+        scenarioChecks: search.scenarioChecks,
+        prefixScenarioChecks: search.searchScenarioChecks,
+        seedScenarioChecks: search.seedScenarioChecks,
+        coreScenarioChecks: search.firstScenarioChecks,
+        pairScenarioChecks: search.pairScenarioChecks,
+        tripleScenarioChecks: search.tripleScenarioChecks,
+        survivingPairSampleBuilds: search.survivingPairSampleBuilds,
+        candidatePreparationMs: search.candidatePreparationMs,
+        combinatorialSearchMs: search.combinatorialSearchMs,
+    };
+}
 const targetChoiceCache = new WeakMap();
 const preparedRoleCache = new WeakMap();
-function bannerMechanics(banner) {
+function searchCandidate(candidate) {
     return {
-        role: banner.role,
-        emblems: banner.emblems,
-        expectedSeries: banner.expectedSeries,
+        payload: candidate.row,
+        expected: candidate.row.expected,
+        samples: candidate.row.samples,
+        scale: 1 + candidate.boostPct / 100,
     };
 }
-function boardMechanics(board) {
+function rosterFromSelected(selected) {
     return {
-        core: bannerMechanics(board.core),
-        mid: bannerMechanics(board.mid),
-        support: bannerMechanics(board.support),
+        core: [selected[0]],
+        mid: [selected[1]],
+        support: [selected[2]],
     };
 }
-function adjustedExpected(candidate) {
-    return candidate.row.expected * (1 + candidate.boostPct / 100);
-}
-function prepareCandidate(candidate, iterations) {
-    const factor = 1 + candidate.boostPct / 100;
-    const samples = new Float64Array(iterations);
-    for (let i = 0; i < iterations; i++) {
-        samples[i] =
-            (candidate.row.samples[i] ?? candidate.row.expected) * factor;
-    }
-    return {
-        source: candidate,
-        expected: candidate.row.expected * factor,
-        samples,
-    };
-}
-/**
- * A dominates B when substituting A for B can never reduce total score in any
- * sampled scenario, and cannot worsen the expected-score tie-break.
- *
- * Such a B can never be part of an optimal target-probability roster.
- */
-function dominates(a, b) {
-    if (a.expected + EPSILON < b.expected)
-        return false;
-    let strictlyBetter = a.expected > b.expected + EPSILON;
-    for (let i = 0; i < a.samples.length; i++) {
-        if (a.samples[i] + EPSILON < b.samples[i])
-            return false;
-        if (a.samples[i] > b.samples[i] + EPSILON) {
-            strictlyBetter = true;
-        }
-    }
-    return strictlyBetter;
-}
-function pruneDominated(candidates) {
-    if (candidates.length < 2)
-        return candidates;
-    const keep = new Array(candidates.length).fill(true);
-    for (let i = 0; i < candidates.length; i++) {
-        if (!keep[i])
-            continue;
-        for (let j = 0; j < candidates.length; j++) {
-            if (i === j || !keep[i])
-                continue;
-            if (dominates(candidates[j], candidates[i])) {
-                keep[i] = false;
-            }
-        }
-    }
-    return candidates
-        .filter((_, i) => keep[i])
-        .sort((a, b) => b.expected - a.expected);
-}
-function prepareCandidates(candidates, iterations) {
-    return pruneDominated(candidates.map((candidate) => prepareCandidate(candidate, iterations)));
-}
-function pointwiseMaximum(candidates, iterations) {
-    const out = new Float64Array(iterations);
-    out.fill(-Infinity);
-    for (const candidate of candidates) {
-        for (let i = 0; i < iterations; i++) {
-            if (candidate.samples[i] > out[i]) {
-                out[i] = candidate.samples[i];
-            }
-        }
-    }
-    return out;
-}
-function maximumExpected(candidates) {
-    let best = -Infinity;
-    for (const candidate of candidates) {
-        if (candidate.expected > best)
-            best = candidate.expected;
-    }
-    return best;
-}
-function betterThan(hits, expected, bestHits, bestExpected) {
-    return (hits > bestHits
-        || (hits === bestHits
-            && expected > bestExpected + EPSILON));
-}
-function boundCanBeat(upperHits, upperExpected, bestHits, bestExpected) {
-    if (upperHits > bestHits)
-        return true;
-    if (upperHits < bestHits)
-        return false;
-    return upperExpected > bestExpected + EPSILON;
-}
-function countMaximumHits(a, b, c, targetScore) {
-    let hits = 0;
-    for (let i = 0; i < a.length; i++) {
-        if (a[i] + b[i] + c[i] >= targetScore) {
-            hits++;
-        }
-    }
-    return hits;
-}
-/**
- * Exact search over the supplied sampled distributions.
- *
- * The pruning bounds are optimistic componentwise maxima, so they can only
- * remove branches that provably cannot improve either:
- *
- *   1. target-hit count, or
- *   2. expected-score tie-break.
- *
- * Therefore this returns the same optimum as exhaustive enumeration.
- */
-function choosePreparedTargetRoster(candidates, targetScore, iterations, incumbentHits = -1, incumbentExpected = -Infinity) {
-    const n = Math.max(1, iterations);
-    const cores = candidates.core;
-    const mids = candidates.mid;
-    const supports = candidates.support;
-    if (!cores.length || !mids.length || !supports.length) {
-        return undefined;
-    }
-    const maxCoreSamples = pointwiseMaximum(cores, n);
-    const maxMidSamples = pointwiseMaximum(mids, n);
-    const maxSupportSamples = pointwiseMaximum(supports, n);
-    const maxCoreExpected = maximumExpected(cores);
-    const maxMidExpected = maximumExpected(mids);
-    const maxSupportExpected = maximumExpected(supports);
-    /*
-     * Prefix-wide optimistic bound. Each scenario is allowed to choose a
-     * different team here, which is impossible in the real problem and
-     * therefore safely optimistic.
-     */
-    const prefixUpperHits = countMaximumHits(maxCoreSamples, maxMidSamples, maxSupportSamples, targetScore);
-    const prefixUpperExpected = maxCoreExpected + maxMidExpected + maxSupportExpected;
-    if (!boundCanBeat(prefixUpperHits, prefixUpperExpected, incumbentHits, incumbentExpected)) {
-        return undefined;
-    }
-    let bestHits = incumbentHits;
-    let bestExpected = incumbentExpected;
-    let best;
-    /*
-     * Seed the incumbent with the highest-expected candidate from each role.
-     * This is cheap and makes subsequent branch bounds useful immediately.
-     */
-    {
-        const core = cores[0];
-        const mid = mids[0];
-        const support = supports[0];
-        let hits = 0;
-        for (let i = 0; i < n; i++) {
-            if (core.samples[i]
-                + mid.samples[i]
-                + support.samples[i]
-                >= targetScore) {
-                hits++;
-            }
-        }
-        const expected = core.expected + mid.expected + support.expected;
-        if (betterThan(hits, expected, bestHits, bestExpected)) {
-            bestHits = hits;
-            bestExpected = expected;
-            best = [core, mid, support];
-        }
-    }
-    for (const core of cores) {
-        /*
-         * Optimistic Core branch:
-         * allow the best Mid and Support independently in every scenario.
-         */
-        let coreUpperHits = 0;
-        for (let i = 0; i < n; i++) {
-            if (core.samples[i]
-                + maxMidSamples[i]
-                + maxSupportSamples[i]
-                >= targetScore) {
-                coreUpperHits++;
-            }
-        }
-        const coreUpperExpected = core.expected + maxMidExpected + maxSupportExpected;
-        if (!boundCanBeat(coreUpperHits, coreUpperExpected, bestHits, bestExpected)) {
-            continue;
-        }
-        for (const mid of mids) {
-            /*
-             * Optimistic Core+Mid branch:
-             * allow the best Support independently in every scenario.
-             */
-            let pairUpperHits = 0;
-            for (let i = 0; i < n; i++) {
-                if (core.samples[i]
-                    + mid.samples[i]
-                    + maxSupportSamples[i]
-                    >= targetScore) {
-                    pairUpperHits++;
-                }
-            }
-            const pairExpected = core.expected + mid.expected;
-            const pairUpperExpected = pairExpected + maxSupportExpected;
-            if (!boundCanBeat(pairUpperHits, pairUpperExpected, bestHits, bestExpected)) {
-                continue;
-            }
-            for (const support of supports) {
-                const expected = pairExpected + support.expected;
-                let hits = 0;
-                let abandoned = false;
-                for (let i = 0; i < n; i++) {
-                    if (core.samples[i]
-                        + mid.samples[i]
-                        + support.samples[i]
-                        >= targetScore) {
-                        hits++;
-                    }
-                    /*
-                     * Even if every remaining scenario succeeds, this candidate cannot
-                     * beat the incumbent. Stop evaluating it.
-                     */
-                    const remaining = n - i - 1;
-                    const maximumPossibleHits = hits + remaining;
-                    if (maximumPossibleHits < bestHits) {
-                        abandoned = true;
-                        break;
-                    }
-                    if (maximumPossibleHits === bestHits
-                        && expected <= bestExpected + EPSILON) {
-                        abandoned = true;
-                        break;
-                    }
-                }
-                if (abandoned)
-                    continue;
-                if (betterThan(hits, expected, bestHits, bestExpected)) {
-                    bestHits = hits;
-                    bestExpected = expected;
-                    best = [core, mid, support];
-                }
-            }
-        }
-    }
-    /*
-     * If an external incumbent beat every candidate in this prefix, there is
-     * intentionally no local result.
-     */
-    if (!best)
-        return undefined;
-    const samples = new Array(n);
-    for (let i = 0; i < n; i++) {
-        samples[i] =
-            best[0].samples[i]
-                + best[1].samples[i]
-                + best[2].samples[i];
-    }
-    return {
-        hits: bestHits,
-        probability: bestHits / n,
-        expected: bestExpected,
-        roster: {
-            core: [best[0].source.row],
-            mid: [best[1].source.row],
-            support: [best[2].source.row],
-        },
-        samples,
-    };
-}
-/**
- * Public helper retained for exact synthetic regression tests.
- */
+/** Public Dota-facing helper retained for exact synthetic regression tests. */
 export function chooseTargetRoster(candidates, targetScore, iterations) {
-    const n = Math.max(1, iterations);
-    const prepared = {
-        core: prepareCandidates(candidates.core, n),
-        mid: prepareCandidates(candidates.mid, n),
-        support: prepareCandidates(candidates.support, n),
-    };
-    const choice = choosePreparedTargetRoster(prepared, targetScore, n);
+    const choice = chooseTargetSearch([
+        candidates.core.map(searchCandidate),
+        candidates.mid.map(searchCandidate),
+        candidates.support.map(searchCandidate),
+    ], targetScore, iterations);
     if (!choice)
         return undefined;
     return {
         probability: choice.probability,
         expected: choice.expected,
-        roster: choice.roster,
+        roster: rosterFromSelected(choice.selected),
         samples: choice.samples,
     };
 }
@@ -305,23 +105,27 @@ function preparedRoleCandidates(role, board, data, prefixId, iterations) {
         preparedRoleCache.set(data, cache);
     }
     const banner = board[role];
-    const key = JSON.stringify({
-        role,
-        banner: bannerMechanics(banner),
-        prefixId: prefixId ?? null,
+    const key = JSON.stringify([
+        bannerMechanicsKey(banner),
+        prefixId ?? null,
         iterations,
-    });
+    ]);
     const prior = cache.get(key);
-    if (prior)
+    if (prior) {
+        if (diagnosticsEnabled)
+            adapterDiagnostics.preparedRoleCacheHits++;
         return prior;
+    }
+    if (diagnosticsEnabled)
+        adapterDiagnostics.preparedRoleCacheMisses++;
     const ranked = rankTeamsForRole(role, board, data, iterations);
-    const rawCandidates = ranked.map((row) => ({
+    const candidates = ranked.map((row) => searchCandidate({
         row,
         boostPct: prefixId === undefined
             ? 0
             : titlePrefixBoostPct(data.titles, role, row.team, prefixId),
     }));
-    const prepared = prepareCandidates(rawCandidates, iterations);
+    const prepared = prepareTargetCandidates(candidates, iterations, ROLE_INDEX[role]);
     cache.set(key, prepared);
     return prepared;
 }
@@ -331,33 +135,38 @@ function optimizeTargetBoard(board, data, targetScore, iterations) {
         cache = new Map();
         targetChoiceCache.set(data, cache);
     }
-    /*
-     * selectedTeam is deliberately excluded. Free roster optimization depends
-     * on banner mechanics, not the team currently highlighted in the UI.
-     */
-    const key = JSON.stringify({
-        board: boardMechanics(board),
+    const key = JSON.stringify([
+        boardMechanicsKey(board),
         targetScore,
         iterations,
-    });
+    ]);
     const cached = cache.get(key);
-    if (cached)
+    if (cached) {
+        if (diagnosticsEnabled)
+            adapterDiagnostics.boardCacheHits++;
         return cached;
+    }
+    if (diagnosticsEnabled)
+        adapterDiagnostics.boardCacheMisses++;
     const prefixIds = data.titles.prefixes.length
         ? data.titles.prefixes.map((prefix) => prefix.id)
         : [undefined];
     let best;
     for (const prefixId of prefixIds) {
-        const prepared = {
-            core: preparedRoleCandidates('core', board, data, prefixId, iterations),
-            mid: preparedRoleCandidates('mid', board, data, prefixId, iterations),
-            support: preparedRoleCandidates('support', board, data, prefixId, iterations),
-        };
-        const choice = choosePreparedTargetRoster(prepared, targetScore, iterations, best?.hits ?? -1, best?.expected ?? -Infinity);
+        const prepared = [
+            preparedRoleCandidates('core', board, data, prefixId, iterations),
+            preparedRoleCandidates('mid', board, data, prefixId, iterations),
+            preparedRoleCandidates('support', board, data, prefixId, iterations),
+        ];
+        const choice = choosePreparedTargetSearch(prepared, targetScore, iterations, best?.hits ?? -1, best?.expected ?? -Infinity);
         if (!choice)
             continue;
         best = {
-            ...choice,
+            hits: choice.hits,
+            probability: choice.probability,
+            expected: choice.expected,
+            roster: rosterFromSelected(choice.selected),
+            samples: choice.samples,
             ...(prefixId !== undefined ? { prefixId } : {}),
         };
     }
@@ -367,11 +176,11 @@ function optimizeTargetBoard(board, data, targetScore, iterations) {
 }
 /** Fast scalar target utility for optimizer search. */
 export function evaluateBoardTargetProbabilityFast(board, data, targetScore, iterations = data.simulation.optimizerIterations) {
-    return (optimizeTargetBoard(board, data, targetScore, iterations)?.probability ?? 0);
+    return optimizeTargetBoard(board, data, targetScore, iterations)?.probability ?? 0;
 }
 /**
- * Full terminal evaluation for target-probability mode.
- * Free roster and title prefix are selected by target probability itself.
+ * Full terminal evaluation for target-probability mode. Free roster and title
+ * prefix are selected by target probability itself.
  */
 export function evaluateBoardTarget(board, username, data, targetScore, iterations = data.simulation.optimizerIterations) {
     const choice = optimizeTargetBoard(board, data, targetScore, iterations);

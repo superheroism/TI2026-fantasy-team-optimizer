@@ -9,9 +9,9 @@ test('team comparison cache is independent of selectedTeam when banner mechanics
   const start=scoring.indexOf('export function rankTeamsForRole');
   const end=scoring.indexOf('function selectedProfile',start);
   const block=scoring.slice(start,end);
-  assert.match(block,/emblems:banner\.emblems/);
-  assert.match(block,/expectedSeries:banner\.expectedSeries/);
-  const keyLine=block.split('\n').find(line=>line.includes('const key=JSON.stringify'))??'';
+  const keyLine=block.split('\n').find(line=>line.includes('const key='))??'';
+
+  assert.match(keyLine,/bannerMechanicsKey\(banner\)/);
   assert.equal(keyLine.includes('selectedTeam'),false);
 });
 
