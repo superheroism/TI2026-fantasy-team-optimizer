@@ -8,6 +8,32 @@ import type { ValueActionPhase } from './valueFunction.js';
 import type { EngineState } from './stateEncoding.js';
 import type { TerminalSearchRuntime } from './optimizerTerminal.js';
 import { depthRecord, incrementDepth, OPTIMIZER_ROLES, stratifiedTransitions } from './optimizerHelpers.js';
+import {
+  CONTINUATION_FIDELITY_PRESETS,
+  continuationFidelityReport,
+  resolveFreshMenuOutcomeStrata,
+} from './continuationFidelity.js';
+import type { ContinuationFidelityPolicy, ContinuationFidelityReport } from './continuationFidelity.js';
+
+export interface ExperimentalContinuationFidelityConfig {
+  readonly modeledHorizon:number;
+  readonly policy:ContinuationFidelityPolicy;
+}
+
+let experimentalFidelity:ExperimentalContinuationFidelityConfig|undefined;
+
+/** Engineering-only M5C hook. Normal application callers never set this. */
+export function setExperimentalContinuationFidelity(config:ExperimentalContinuationFidelityConfig|undefined):void {
+  if(!config||config.modeledHorizon<=2){experimentalFidelity=undefined;return;}
+  experimentalFidelity={modeledHorizon:Math.max(3,Math.floor(config.modeledHorizon)),policy:config.policy};
+}
+
+export function getExperimentalContinuationFidelity():ExperimentalContinuationFidelityConfig|undefined {
+  return experimentalFidelity?{modeledHorizon:experimentalFidelity.modeledHorizon,policy:{...experimentalFidelity.policy,freshMenuOutcomeStrataByDepth:[...experimentalFidelity.policy.freshMenuOutcomeStrataByDepth]}}:undefined;
+}
+
+export { CONTINUATION_FIDELITY_PRESETS } from './continuationFidelity.js';
+export type { ContinuationFidelityPolicy, ContinuationFidelityReport } from './continuationFidelity.js';
 
 export interface TargetedContinuation {
   readonly value:number;
@@ -15,6 +41,7 @@ export interface TargetedContinuation {
 }
 
 export interface ContinuationDiagnostics {
+  readonly continuationFidelity:ContinuationFidelityReport;
   readonly targetedActionCacheHits:number;
   readonly targetedActionCacheMisses:number;
   readonly targetedActionCacheBypasses:number;
@@ -28,6 +55,8 @@ export interface ContinuationDiagnostics {
   readonly transitionDistributionCacheBypasses:number;
   readonly transitionDistributionEntries:number;
   readonly transitionEvaluationsByDepth:Readonly<Record<string,number>>;
+  readonly transitionOutcomesBeforeCompressionByDepth:Readonly<Record<string,number>>;
+  readonly transitionOutcomesAfterCompressionByDepth:Readonly<Record<string,number>>;
 }
 
 export interface ContinuationRuntime {
@@ -36,6 +65,10 @@ export interface ContinuationRuntime {
   transitionsFor(engine:EngineState,role:Role,operation:OfferedOperation):readonly EngineTransition[];
   targetedContinuation(engine:EngineState,operation:OfferedOperation,role:Role,tokensRemaining:number,phase:ValueActionPhase):TargetedContinuation;
   diagnostics():ContinuationDiagnostics;
+}
+
+function addDepthTotal(map:Map<number,number>,depth:number,amount:number):void {
+  map.set(depth,(map.get(depth)??0)+amount);
 }
 
 export function createContinuationRuntime(
@@ -48,6 +81,9 @@ export function createContinuationRuntime(
   const menuModel=new MenuModel(overrideMenus?.length?overrideMenus:undefined);
   const continuationStrata=Math.max(1,data.simulation.continuationOutcomeStrata??8);
   const continuationEntryStrata=Math.max(1,data.simulation.continuationEntryStrata??12);
+  const configured=experimentalFidelity;
+  const fidelityPolicy=configured?.policy??CONTINUATION_FIDELITY_PRESETS.current;
+  const fidelity=continuationFidelityReport(fidelityPolicy,continuationStrata,continuationEntryStrata);
 
   const transitionMemo=new Map<string,readonly EngineTransition[]>();
   let transitionDistributionCacheHits=0,transitionDistributionCacheMisses=0,transitionDistributionCacheBypasses=0;
@@ -65,13 +101,12 @@ export function createContinuationRuntime(
   };
   const transitionsFor=(engine:EngineState,role:Role,operation:OfferedOperation)=>transitionDistribution(engine,role,operation,true);
 
-  // FiniteHorizonValueFunction already memoizes fresh-menu action values. Retaining a second
-  // whole-board targeted cache produced ~397k entries for seven hits at default t=3.
   const targetedMemo=new Map<string,TargetedContinuation>();
   let targetedActionCacheHits=0,targetedActionCacheMisses=0,targetedActionCacheBypasses=0;
   const requestsByDepth=new Map<number,number>(),hitsByDepth=new Map<number,number>();
   const missesByDepth=new Map<number,number>(),bypassesByDepth=new Map<number,number>();
   const transitionEvaluationsByDepth=new Map<number,number>();
+  const outcomesBeforeByDepth=new Map<number,number>(),outcomesAfterByDepth=new Map<number,number>();
   let valueFunction:FiniteHorizonValueFunction<EngineState,OfferedOperation,OptimizerState['menu']>;
 
   const targetedContinuation=(
@@ -93,16 +128,18 @@ export function createContinuationRuntime(
       const empty={value:-Infinity,utilityOutcomes:[]};if(retain)targetedMemo.set(key,empty);return empty;
     }
 
+    const recursiveDepth=configured?Math.max(0,configured.modeledHorizon-tokensRemaining):0;
     const modeled=phase==='fresh_menu'
-      ?stratifiedTransitions(exact,continuationStrata)
+      ?stratifiedTransitions(exact,resolveFreshMenuOutcomeStrata(fidelityPolicy,recursiveDepth,continuationStrata))
       :(tokensRemaining>1?stratifiedTransitions(exact,continuationEntryStrata):[...exact]);
+    addDepthTotal(outcomesBeforeByDepth,recursiveDepth,exact.length);
+    addDepthTotal(outcomesAfterByDepth,recursiveDepth,modeled.length);
+
     let value=0;
     const utilityOutcomes:{value:number;probability:number}[]=[];
     for(const outcome of modeled){
       const continuation=valueFunction.V(outcome.nextState,tokensRemaining-1);
       value+=outcome.probability*continuation;
-      // Fresh-menu callers consume only the scalar value; current-menu callers need the
-      // distribution for visible P10/median/P90 metrics.
       if(retain)utilityOutcomes.push({value:continuation,probability:outcome.probability});
     }
     const result={value,utilityOutcomes};if(retain)targetedMemo.set(key,result);return result;
@@ -124,11 +161,14 @@ export function createContinuationRuntime(
   });
 
   const diagnostics=():ContinuationDiagnostics=>({
+    continuationFidelity:fidelity,
     targetedActionCacheHits,targetedActionCacheMisses,targetedActionCacheBypasses,targetedActionEntries:targetedMemo.size,
     targetedActionRequestsByDepth:depthRecord(requestsByDepth),targetedActionCacheHitsByDepth:depthRecord(hitsByDepth),
     targetedActionCacheMissesByDepth:depthRecord(missesByDepth),targetedActionCacheBypassesByDepth:depthRecord(bypassesByDepth),
     transitionDistributionCacheHits,transitionDistributionCacheMisses,transitionDistributionCacheBypasses,
     transitionDistributionEntries:transitionMemo.size,transitionEvaluationsByDepth:depthRecord(transitionEvaluationsByDepth),
+    transitionOutcomesBeforeCompressionByDepth:depthRecord(outcomesBeforeByDepth),
+    transitionOutcomesAfterCompressionByDepth:depthRecord(outcomesAfterByDepth),
   });
 
   return {valueFunction,menuModel,transitionsFor,targetedContinuation,diagnostics};
