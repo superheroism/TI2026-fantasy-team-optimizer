@@ -35,6 +35,7 @@ export interface ValueFunctionDiagnostics {
   readonly actionCalls:number;
   readonly actionCacheHits:number;
   readonly actionCacheMisses:number;
+  readonly actionCacheBypasses:number;
   /** Unique V state identities requested at each token depth, including t=0. */
   readonly uniqueStatesByDepth:Readonly<Record<string,number>>;
   readonly uniqueQStatesByDepth:Readonly<Record<string,number>>;
@@ -48,6 +49,7 @@ export interface ValueFunctionDiagnostics {
   readonly actionCallsByDepth:Readonly<Record<string,number>>;
   readonly actionCacheHitsByDepth:Readonly<Record<string,number>>;
   readonly actionCacheMissesByDepth:Readonly<Record<string,number>>;
+  readonly actionCacheBypassesByDepth:Readonly<Record<string,number>>;
   /** Retained M4 name: cache-miss action evaluations by token depth. */
   readonly actionEvaluationsByDepth:Readonly<Record<string,number>>;
   readonly terminalEntries:number;
@@ -69,6 +71,7 @@ interface MutableDiagnostics {
   actionCalls:number;
   actionCacheHits:number;
   actionCacheMisses:number;
+  actionCacheBypasses:number;
 }
 
 function cacheKey(id:ValueStateID,tokens:number,suffix=''):string {
@@ -113,12 +116,13 @@ export class FiniteHorizonValueFunction<State,Operation,Menu> {
   private readonly actionCallsByDepth=new Map<number,number>();
   private readonly actionCacheHitsByDepth=new Map<number,number>();
   private readonly actionCacheMissesByDepth=new Map<number,number>();
+  private readonly actionCacheBypassesByDepth=new Map<number,number>();
   private readonly actionEvaluationsByDepth=new Map<number,number>();
   private readonly diagnostics:MutableDiagnostics={
     terminalCacheHits:0,terminalCacheMisses:0,
     vCalls:0,vCacheHits:0,vCacheMisses:0,
     qCalls:0,qCacheHits:0,qCacheMisses:0,
-    actionCalls:0,actionCacheHits:0,actionCacheMisses:0,
+    actionCalls:0,actionCacheHits:0,actionCacheMisses:0,actionCacheBypasses:0,
   };
 
   constructor(private readonly model:FiniteHorizonValueModel<State,Operation,Menu>) {}
@@ -146,9 +150,17 @@ export class FiniteHorizonValueFunction<State,Operation,Menu> {
     const key=cacheKey(id,t,`|${phase}|${operationId}`);
     let states=this.actionStatesByDepth.get(t);if(!states){states=new Set();this.actionStatesByDepth.set(t,states);}states.add(key);
     if(t<=0)return -Infinity;
-    const prior=this.actionMemo.get(key);
-    if(prior!==undefined){this.diagnostics.actionCacheHits++;bump(this.actionCacheHitsByDepth,t);return prior;}
-    this.diagnostics.actionCacheMisses++;bump(this.actionCacheMissesByDepth,t);bump(this.actionEvaluationsByDepth,t);
+    // Fresh-menu A values are consumed exactly once inside a memoized V expansion.
+    // Retain action memoization only for externally/current-menu-addressable A calls.
+    const cacheable=phase==='current_menu';
+    if(cacheable){
+      const prior=this.actionMemo.get(key);
+      if(prior!==undefined){this.diagnostics.actionCacheHits++;bump(this.actionCacheHitsByDepth,t);return prior;}
+      this.diagnostics.actionCacheMisses++;bump(this.actionCacheMissesByDepth,t);
+    }else{
+      this.diagnostics.actionCacheBypasses++;bump(this.actionCacheBypassesByDepth,t);
+    }
+    bump(this.actionEvaluationsByDepth,t);
     const value=this.model.actionValue(
       state,
       operation,
@@ -156,7 +168,7 @@ export class FiniteHorizonValueFunction<State,Operation,Menu> {
       phase,
       nextState=>this.V(nextState,t-1),
     );
-    this.actionMemo.set(key,value);
+    if(cacheable)this.actionMemo.set(key,value);
     return value;
   }
 
@@ -224,6 +236,7 @@ export class FiniteHorizonValueFunction<State,Operation,Menu> {
       actionCallsByDepth:toRecord(this.actionCallsByDepth),
       actionCacheHitsByDepth:toRecord(this.actionCacheHitsByDepth),
       actionCacheMissesByDepth:toRecord(this.actionCacheMissesByDepth),
+      actionCacheBypassesByDepth:toRecord(this.actionCacheBypassesByDepth),
       actionEvaluationsByDepth:toRecord(this.actionEvaluationsByDepth),
       terminalEntries:this.terminalMemo.size,
       vEntries:this.vMemo.size,

@@ -39,12 +39,13 @@ export class FiniteHorizonValueFunction {
     actionCallsByDepth = new Map();
     actionCacheHitsByDepth = new Map();
     actionCacheMissesByDepth = new Map();
+    actionCacheBypassesByDepth = new Map();
     actionEvaluationsByDepth = new Map();
     diagnostics = {
         terminalCacheHits: 0, terminalCacheMisses: 0,
         vCalls: 0, vCacheHits: 0, vCacheMisses: 0,
         qCalls: 0, qCacheHits: 0, qCacheMisses: 0,
-        actionCalls: 0, actionCacheHits: 0, actionCacheMisses: 0,
+        actionCalls: 0, actionCacheHits: 0, actionCacheMisses: 0, actionCacheBypasses: 0,
     };
     constructor(model) {
         this.model = model;
@@ -80,17 +81,27 @@ export class FiniteHorizonValueFunction {
         states.add(key);
         if (t <= 0)
             return -Infinity;
-        const prior = this.actionMemo.get(key);
-        if (prior !== undefined) {
-            this.diagnostics.actionCacheHits++;
-            bump(this.actionCacheHitsByDepth, t);
-            return prior;
+        // Fresh-menu A values are consumed exactly once inside a memoized V expansion.
+        // Retain action memoization only for externally/current-menu-addressable A calls.
+        const cacheable = phase === 'current_menu';
+        if (cacheable) {
+            const prior = this.actionMemo.get(key);
+            if (prior !== undefined) {
+                this.diagnostics.actionCacheHits++;
+                bump(this.actionCacheHitsByDepth, t);
+                return prior;
+            }
+            this.diagnostics.actionCacheMisses++;
+            bump(this.actionCacheMissesByDepth, t);
         }
-        this.diagnostics.actionCacheMisses++;
-        bump(this.actionCacheMissesByDepth, t);
+        else {
+            this.diagnostics.actionCacheBypasses++;
+            bump(this.actionCacheBypassesByDepth, t);
+        }
         bump(this.actionEvaluationsByDepth, t);
         const value = this.model.actionValue(state, operation, t, phase, nextState => this.V(nextState, t - 1));
-        this.actionMemo.set(key, value);
+        if (cacheable)
+            this.actionMemo.set(key, value);
         return value;
     }
     /** V(B,t): value before observing a fresh menu. */
@@ -177,6 +188,7 @@ export class FiniteHorizonValueFunction {
             actionCallsByDepth: toRecord(this.actionCallsByDepth),
             actionCacheHitsByDepth: toRecord(this.actionCacheHitsByDepth),
             actionCacheMissesByDepth: toRecord(this.actionCacheMissesByDepth),
+            actionCacheBypassesByDepth: toRecord(this.actionCacheBypassesByDepth),
             actionEvaluationsByDepth: toRecord(this.actionEvaluationsByDepth),
             terminalEntries: this.terminalMemo.size,
             vEntries: this.vMemo.size,
