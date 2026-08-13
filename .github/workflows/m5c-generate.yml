@@ -1,16 +1,12 @@
-name: M5C T4 Feasibility
+name: M5C Regenerate
 on:
   push:
     branches: [m5c-experiment]
 permissions:
   contents: write
 jobs:
-  fixture:
-    if: "!contains(github.event.head_commit.message, '[m5c t4 results]')"
-    strategy:
-      fail-fast: false
-      matrix:
-        fixture: [default, quality-heavy, stat-heavy, trait-heavy, global-quality]
+  generate:
+    if: "!contains(github.event.head_commit.message, '[m5c generated]')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,31 +16,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
-      - run: npm run verify:generated
+      - run: npm run build
       - run: node --test tests/*.test.mjs
-      - run: node scripts/benchmark-m5c-t4-fixture.mjs '${{ matrix.fixture }}' --json='m5c-t4-${{ matrix.fixture }}.json'
-      - uses: actions/upload-artifact@v4
-        with:
-          name: m5c-t4-${{ matrix.fixture }}
-          path: m5c-t4-${{ matrix.fixture }}.json
-  aggregate:
-    if: "!contains(github.event.head_commit.message, '[m5c t4 results]')"
-    needs: fixture
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: m5c-t4-*
-          merge-multiple: true
-          path: m5c-t4-results
-      - run: node scripts/aggregate-m5c-t4.mjs m5c-t4-results --json=benchmarks/m5c-four-token-benchmark.json
       - run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add benchmarks/m5c-four-token-benchmark.json
-          git commit -m 'M5C: record t4 feasibility [m5c t4 results]'
+          git add build docs
+          git commit -m 'M5C: regenerate artifacts [m5c generated]'
           git push origin HEAD:m5c-experiment

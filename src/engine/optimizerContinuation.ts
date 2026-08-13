@@ -20,18 +20,6 @@ export interface ExperimentalContinuationFidelityConfig {
   readonly policy:ContinuationFidelityPolicy;
 }
 
-let experimentalFidelity:ExperimentalContinuationFidelityConfig|undefined;
-
-/** Engineering-only M5C hook. Normal application callers never set this. */
-export function setExperimentalContinuationFidelity(config:ExperimentalContinuationFidelityConfig|undefined):void {
-  if(!config||config.modeledHorizon<=2){experimentalFidelity=undefined;return;}
-  experimentalFidelity={modeledHorizon:Math.max(3,Math.floor(config.modeledHorizon)),policy:config.policy};
-}
-
-export function getExperimentalContinuationFidelity():ExperimentalContinuationFidelityConfig|undefined {
-  return experimentalFidelity?{modeledHorizon:experimentalFidelity.modeledHorizon,policy:{...experimentalFidelity.policy,freshMenuOutcomeStrataByDepth:[...experimentalFidelity.policy.freshMenuOutcomeStrataByDepth]}}:undefined;
-}
-
 export { CONTINUATION_FIDELITY_PRESETS } from './continuationFidelity.js';
 export type { ContinuationFidelityPolicy, ContinuationFidelityReport } from './continuationFidelity.js';
 
@@ -76,12 +64,15 @@ export function createContinuationRuntime(
   data:DataBundle,
   terminal:TerminalSearchRuntime,
   uniformStatFallback:boolean,
+  experimentalFidelity?:ExperimentalContinuationFidelityConfig,
 ):ContinuationRuntime {
   const overrideMenus=data.menuSamples?.filter(menu=>menu.length===3);
   const menuModel=new MenuModel(overrideMenus?.length?overrideMenus:undefined);
   const continuationStrata=Math.max(1,data.simulation.continuationOutcomeStrata??8);
   const continuationEntryStrata=Math.max(1,data.simulation.continuationEntryStrata??12);
-  const configured=experimentalFidelity;
+  const configured=experimentalFidelity&&experimentalFidelity.modeledHorizon>2
+    ?{modeledHorizon:Math.max(3,Math.floor(experimentalFidelity.modeledHorizon)),policy:experimentalFidelity.policy}
+    :undefined;
   const fidelityPolicy=configured?.policy??CONTINUATION_FIDELITY_PRESETS.current;
   const fidelity=continuationFidelityReport(fidelityPolicy,continuationStrata,continuationEntryStrata);
 

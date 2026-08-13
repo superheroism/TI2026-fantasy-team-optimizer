@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { defaultBoard, defaultMenu } from '../docs/js/data/defaultState.js';
+import { recommendNextAction } from '../docs/js/engine/optimizer.js';
 import { CONTINUATION_FIDELITY_PRESETS, continuationFidelityReport, resolveFreshMenuOutcomeStrata } from '../build/js/engine/continuationFidelity.js';
-import { getExperimentalContinuationFidelity, setExperimentalContinuationFidelity } from '../build/js/engine/optimizerContinuation.js';
+import { testData } from './test-data.mjs';
+
+function actionKey(action){return action.kind==='board_action'?`${action.kind}|${action.operationId}|${action.banner}`:action.kind;}
 
 test('M5C schedules are explicit, deterministic, and capped by configured fidelity',()=>{
   assert.equal(resolveFreshMenuOutcomeStrata(CONTINUATION_FIDELITY_PRESETS.current,3,8),8);
@@ -15,13 +19,13 @@ test('M5C schedules are explicit, deterministic, and capped by configured fideli
   assert.equal(resolveFreshMenuOutcomeStrata(CONTINUATION_FIDELITY_PRESETS.medium,2,3),3);
 });
 
-test('M5C experimental fidelity cannot alter t<=2 production semantics',()=>{
-  setExperimentalContinuationFidelity({modeledHorizon:2,policy:CONTINUATION_FIDELITY_PRESETS.aggressive});
-  assert.equal(getExperimentalContinuationFidelity(),undefined);
-  setExperimentalContinuationFidelity({modeledHorizon:3,policy:CONTINUATION_FIDELITY_PRESETS.medium});
-  assert.deepEqual(getExperimentalContinuationFidelity()?.policy.freshMenuOutcomeStrataByDepth,[6,4,2]);
-  setExperimentalContinuationFidelity(undefined);
-  assert.equal(getExperimentalContinuationFidelity(),undefined);
+test('M5C experimental policy is structurally ignored at t<=2',()=>{
+  const data=testData({optimizerIterations:4,rankingIterations:4,continuationEntryStrata:3,continuationOutcomeStrata:2,maxLookaheadTokens:2});
+  const state={board:structuredClone(defaultBoard),tokensRemaining:10,menu:structuredClone(defaultMenu),menuRerollAvailable:true,username:'M5C t2 isolation',objective:'expected_score'};
+  const oracle=recommendNextAction(state,data,true,{modeledHorizonOverride:2});
+  const experimental=recommendNextAction(state,data,true,{modeledHorizonOverride:2,experimentalContinuationFidelity:CONTINUATION_FIDELITY_PRESETS.aggressive});
+  assert.deepEqual(experimental.ranking.map(row=>actionKey(row.action)),oracle.ranking.map(row=>actionKey(row.action)));
+  assert.deepEqual(experimental.ranking.map(row=>row.expectedFinalUtility),oracle.ranking.map(row=>row.expectedFinalUtility));
 });
 
 test('M5C fidelity reports are serializable and preserve root-entry metadata',()=>{
