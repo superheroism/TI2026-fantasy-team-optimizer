@@ -1,0 +1,46 @@
+name: M5E CPU Profile
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - agent/m5e-terminal-composition
+    paths:
+      - .github/workflows/m5e-cpu-profile.yml
+      - benchmarks/m5e-profile-run-request.txt
+
+permissions:
+  contents: read
+
+jobs:
+  profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build optimized source
+        run: npm run build
+
+      - name: Run CPU-profiled stat-heavy t4
+        run: |
+          mkdir -p benchmarks/m5e-cpu-profile
+          node --cpu-prof --cpu-prof-dir=benchmarks/m5e-cpu-profile --cpu-prof-name=stat-heavy.cpuprofile --expose-gc scripts/benchmark-m5d-case.mjs stat-heavy 4 aggressive wide > benchmarks/m5e-cpu-profile/stat-heavy.json
+
+      - name: Upload CPU profile
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5e-cpu-profile-${{ github.run_id }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: benchmarks/m5e-cpu-profile
