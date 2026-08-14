@@ -51,6 +51,7 @@ interface TargetBoardChoice extends TargetRosterChoice {
 export interface TargetDiagnostics {
   boardCacheHits: number;
   boardCacheMisses: number;
+  boardCacheBypasses: number;
   preparedRoleCacheHits: number;
   preparedRoleCacheMisses: number;
   candidateSets: Record<Role, number>;
@@ -79,6 +80,7 @@ export interface TargetDiagnostics {
 interface AdapterDiagnostics {
   boardCacheHits: number;
   boardCacheMisses: number;
+  boardCacheBypasses: number;
   preparedRoleCacheHits: number;
   preparedRoleCacheMisses: number;
 }
@@ -87,6 +89,7 @@ function newAdapterDiagnostics(): AdapterDiagnostics {
   return {
     boardCacheHits: 0,
     boardCacheMisses: 0,
+    boardCacheBypasses: 0,
     preparedRoleCacheHits: 0,
     preparedRoleCacheMisses: 0,
   };
@@ -248,25 +251,33 @@ function optimizeTargetBoard(
   data: DataBundle,
   targetScore: number,
   iterations: number,
+  useBoardCache = true,
 ): TargetBoardChoice | undefined {
-  let cache = targetChoiceCache.get(data);
-  if (!cache) {
-    cache = new Map();
-    targetChoiceCache.set(data, cache);
-  }
+  let cache: Map<string, TargetBoardChoice> | undefined;
+  let key: string | undefined;
 
-  const key = JSON.stringify([
-    boardMechanicsKey(board),
-    targetScore,
-    iterations,
-  ]);
+  if (useBoardCache) {
+    cache = targetChoiceCache.get(data);
+    if (!cache) {
+      cache = new Map();
+      targetChoiceCache.set(data, cache);
+    }
 
-  const cached = cache.get(key);
-  if (cached) {
-    if (diagnosticsEnabled) adapterDiagnostics.boardCacheHits++;
-    return cached;
+    key = JSON.stringify([
+      boardMechanicsKey(board),
+      targetScore,
+      iterations,
+    ]);
+
+    const cached = cache.get(key);
+    if (cached) {
+      if (diagnosticsEnabled) adapterDiagnostics.boardCacheHits++;
+      return cached;
+    }
+    if (diagnosticsEnabled) adapterDiagnostics.boardCacheMisses++;
+  } else if (diagnosticsEnabled) {
+    adapterDiagnostics.boardCacheBypasses++;
   }
-  if (diagnosticsEnabled) adapterDiagnostics.boardCacheMisses++;
 
   const prefixIds: Array<string | undefined> = data.titles.prefixes.length
     ? data.titles.prefixes.map((prefix) => prefix.id)
@@ -300,18 +311,31 @@ function optimizeTargetBoard(
     };
   }
 
-  if (best) cache.set(key, best);
+  if (best && cache && key !== undefined) cache.set(key, best);
   return best;
 }
 
-/** Fast scalar target utility for optimizer search. */
+/** Fast scalar target utility for descriptive-board callers. */
 export function evaluateBoardTargetProbabilityFast(
   board: BoardState,
   data: DataBundle,
   targetScore: number,
   iterations = data.simulation.optimizerIterations,
 ): number {
-  return optimizeTargetBoard(board, data, targetScore, iterations)?.probability ?? 0;
+  return optimizeTargetBoard(board, data, targetScore, iterations, true)?.probability ?? 0;
+}
+
+/**
+ * Exact scalar target utility for callers that already own a canonical outer memo.
+ * Lower-level role/scenario caches remain active; only the redundant whole-board choice cache is bypassed.
+ */
+export function evaluateBoardTargetProbabilityFastUncached(
+  board: BoardState,
+  data: DataBundle,
+  targetScore: number,
+  iterations = data.simulation.optimizerIterations,
+): number {
+  return optimizeTargetBoard(board, data, targetScore, iterations, false)?.probability ?? 0;
 }
 
 /**
@@ -325,7 +349,7 @@ export function evaluateBoardTarget(
   targetScore: number,
   iterations = data.simulation.optimizerIterations,
 ): BoardEvaluation {
-  const choice = optimizeTargetBoard(board, data, targetScore, iterations);
+  const choice = optimizeTargetBoard(board, data, targetScore, iterations, true);
   if (!choice) {
     throw new Error(
       'No complete legal Core/Mid/Support roster is available for target-probability evaluation.',
