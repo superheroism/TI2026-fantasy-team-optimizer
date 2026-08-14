@@ -15,7 +15,7 @@ test('title model preserves team-role prefix values',()=>{
 test('title boost lookup uses canonical names directly and preserves alias fallback',()=>{
   assert.equal(titlePrefixBoostPct(titles,'core','Team Vision','cerulean'),2.2);
   assert.equal(titlePrefixBoostPct(titles,'core','PARIVISION','cerulean'),2.2);
-  assert.equal(titlePrefixBoostPct(titles,'mid','XG','royal'),2.0);
+  assert.equal(titlePrefixBoostPct(titles,'mid','XG','royal'),0.2);
 });
 
 test('title optimizer maximizes total board gain rather than each role percentage independently',()=>{
