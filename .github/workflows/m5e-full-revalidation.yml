@@ -1,0 +1,67 @@
+name: M5E Full M5D Revalidation
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - agent/m5e-terminal-composition
+    paths:
+      - .github/workflows/m5e-full-revalidation.yml
+      - benchmarks/m5e-full-run-request.txt
+
+permissions:
+  contents: read
+
+jobs:
+  revalidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build optimized source
+        run: npm run build
+
+      - name: Typecheck and test built output
+        run: |
+          npm run typecheck
+          node --test tests/*.test.mjs
+
+      - name: Run frozen M5D experiment
+        run: node scripts/benchmark-m5d.mjs
+
+      - name: Package generated outputs
+        if: always()
+        run: |
+          mkdir -p benchmarks/m5e-full-revalidation/generated/build/js/engine
+          mkdir -p benchmarks/m5e-full-revalidation/generated/docs/js/engine
+          cp build/js/engine/engineExpectedScoring.js benchmarks/m5e-full-revalidation/generated/build/js/engine/ || true
+          cp build/js/engine/engineExpectedScoring.js.map benchmarks/m5e-full-revalidation/generated/build/js/engine/ || true
+          cp build/js/engine/title.js benchmarks/m5e-full-revalidation/generated/build/js/engine/ || true
+          cp build/js/engine/title.js.map benchmarks/m5e-full-revalidation/generated/build/js/engine/ || true
+          cp docs/js/engine/engineExpectedScoring.js benchmarks/m5e-full-revalidation/generated/docs/js/engine/ || true
+          cp docs/js/engine/engineExpectedScoring.js.map benchmarks/m5e-full-revalidation/generated/docs/js/engine/ || true
+          cp docs/js/engine/title.js benchmarks/m5e-full-revalidation/generated/docs/js/engine/ || true
+          cp docs/js/engine/title.js.map benchmarks/m5e-full-revalidation/generated/docs/js/engine/ || true
+          cp benchmarks/m5d-proxy-rank-diagnostics.json benchmarks/m5e-full-revalidation/ || true
+          cp benchmarks/m5d-widening-calibration.json benchmarks/m5e-full-revalidation/ || true
+          cp benchmarks/m5d-widening-holdout.json benchmarks/m5e-full-revalidation/ || true
+          cp benchmarks/m5d-four-token-benchmark.json benchmarks/m5e-full-revalidation/ || true
+
+      - name: Upload full revalidation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5e-full-revalidation-${{ github.run_id }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: benchmarks/m5e-full-revalidation
