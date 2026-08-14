@@ -1,0 +1,46 @@
+name: M5D Benchmark
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - agent/m5d-progressive-action-widening
+    paths:
+      - .github/workflows/m5d-benchmark.yml
+      - benchmarks/m5d-run-request.txt
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run frozen M5D benchmark
+        run: npm run benchmark:m5d
+
+      - name: Upload M5D reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5d-results-${{ github.run_id }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            benchmarks/m5d-proxy-rank-diagnostics.json
+            benchmarks/m5d-widening-calibration.json
+            benchmarks/m5d-widening-holdout.json
+            benchmarks/m5d-four-token-benchmark.json
