@@ -12,6 +12,12 @@ test('title model preserves team-role prefix values',()=>{
   assert.equal(titlePrefixBoostPct(titles,'support','LGD Gaming','heroic'),3.7);
 });
 
+test('title boost lookup uses canonical names directly and preserves alias fallback',()=>{
+  assert.equal(titlePrefixBoostPct(titles,'core','Team Vision','cerulean'),2.2);
+  assert.equal(titlePrefixBoostPct(titles,'core','PARIVISION','cerulean'),2.2);
+  assert.equal(titlePrefixBoostPct(titles,'mid','XG','royal'),2.0);
+});
+
 test('title optimizer maximizes total board gain rather than each role percentage independently',()=>{
   const roster={
     core:[row('Team Vision',30000)],
