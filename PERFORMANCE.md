@@ -211,14 +211,38 @@ Raw reports: `benchmarks/m5c-depth-calibration.json` and `benchmarks/m5c-four-to
 
 ## M5D progressive action widening
 
-M5D implements deterministic progressive widening of **distant fresh-menu operation evaluation** while leaving the root/current visible menu exact. Every future operation identity still receives a value and remains in the exact uniform best-of-three menu operator; deferred legal operations retain their one-spend shallow value rather than being removed or replaced by stop.
+M5D adds deterministic progressive widening to **distant fresh-menu operation evaluation** while leaving the root/current visible menu exact. Every future operation identity retains a value and remains in the exact uniform best-of-three menu operator; operations outside the deepening cap keep their one-spend shallow value.
 
-The frozen engineering schedules are Wide `12→8→4`, Medium `8→5→3`, and Narrow `5→3→2`, with M5C aggressive outcome fidelity `4→2→1` fixed as the intended background policy. The option is per-call and structurally ignored at modeled horizons `t<=2`.
+The frozen candidates were Wide `12→8→4`, Medium `8→5→3`, and Narrow `5→3→2`, with M5C aggressive outcome fidelity `4→2→1` fixed in the background. The widest passing policy rule selected **Wide**.
 
-The implementation reached CI-green measurement lock `3c36ee7f2eeb8634d32a23a20bd9dd4babbac397`. Node 22 passed typecheck, committed generated-artifact verification, and the full regression suite, including delayed-upside/non-greedy coverage and complete expected-score/target-probability ranked-table equality at `t<=2` with widening supplied.
+Final frozen calibration and holdout results:
 
-The required isolated M5D calibration could not be executed in the available agent runtime without either substituting the repository's exact large statistical-model input or using a restricted temporary repository-side execution path. Neither compromise was accepted. Consequently no widening schedule is selected, the seed-`20260813` eight-case holdout remains protected from result-driven tuning, and no M5D policy advances to `t=4`.
+| Gate | Result |
+|---|---:|
+| Calibration top-action agreement | **12/12** |
+| Calibration max regret | **0** |
+| Wide median runtime / oracle | **0.471×** |
+| Wide median runtime / M5C aggressive | **0.756×** |
+| Combined calibration + holdout agreement | **19/20 (95%)** |
+| Combined max regret | **383.53** |
+| Mean normalized regret | **0.050** |
+| Disagreements with oracle gap >1,000 | **0** |
+| Proxy deep winner within shallow top 3 | **24/24** |
 
-**Decision:** M5D is an infrastructure-limited Outcome B, not a negative performance result. Production remains at two modeled token spends and M5C/M5D approximations remain disabled by default. The single next bounded step is to run the already-frozen M5D calibration package unchanged on a benchmark runner with complete repository-data access.
+The sole 20-case disagreement is a permitted near-tie on `holdout-05`; there is no stop/menu bias or disagreement-family concentration. All three M5C interaction sentinels preserve the oracle winner.
 
-Machine-readable status: `benchmarks/m5d-proxy-rank-diagnostics.json`, `benchmarks/m5d-widening-calibration.json`, `benchmarks/m5d-widening-holdout.json`, and `benchmarks/m5d-four-token-benchmark.json`. Full interpretation: `M5D_PROGRESSIVE_ACTION_WIDENING.md`.
+The first four-token run exposed an exact scoring hot spot rather than a widening-fidelity failure. Two semantics-preserving fixes—dense prefix-aligned terminal composition and a direct canonical-team title-boost lookup—reduced terminal scoring overhead while retaining compact-vs-descriptive scoring equivalence and alias behavior.
+
+The authoritative final `t=4` run completed all five required expected-score workloads below 60 seconds:
+
+| Workload | Wide `t=4` |
+|---|---:|
+| Default | **31.86 s** |
+| Quality-heavy | **36.87 s** |
+| Stat-heavy | **48.22 s** |
+| Trait-heavy | **29.35 s** |
+| Global-quality | **31.36 s** |
+
+**Decision: M5D Outcome A.** Four-token expected-score search is feasible under the frozen M5C-aggressive + M5D-Wide engineering policy. Production nevertheless remains capped at two modeled token spends, with both approximations disabled by default. The next bounded experiment is target-probability `t=3` feasibility; production depth should not change until that path is characterized.
+
+Raw evidence: `benchmarks/m5d-proxy-rank-diagnostics.json`, `benchmarks/m5d-widening-calibration.json`, `benchmarks/m5d-widening-holdout.json`, and `benchmarks/m5d-four-token-benchmark.json`. Full interpretation: `M5D_PROGRESSIVE_ACTION_WIDENING.md`.

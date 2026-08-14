@@ -1,12 +1,1200 @@
 {
-  "generatedAt": "2026-08-13T20:30:00Z",
+  "generatedAt": "2026-08-14T22:28:00.317Z",
   "package": "M5D progressive action widening",
-  "status": "not_executed",
-  "productionHorizon": 2,
-  "measurementCommit": "3c36ee7f2eeb8634d32a23a20bd9dd4babbac397",
-  "requestedOracle": "current-fidelity t=3",
-  "timedComparison": false,
-  "observations": [],
-  "summary": null,
-  "blocker": "The execution environment could not materialize the large immutable statistical-model blob into the local benchmark runtime, while repository-side temporary calibration workflow writes were restricted. No proxy-rank statistics were inferred or fabricated."
+  "status": "completed",
+  "engineMeasurementCommit": "3c36ee7f2eeb8634d32a23a20bd9dd4babbac397",
+  "runnerCommit": "bd715c935ffef1d97a54ab4e3d4c3cdd0a2e8758",
+  "runtime": {
+    "node": "v22.23.2",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "logicalCpus": 4,
+    "totalMemoryBytes": 16766414848
+  },
+  "sampling": "Deterministic legal compact-transition advances from each frozen calibration board; one sample per fixture at recursive depths 1 and 2. Diagnostic overhead is excluded from calibration timings.",
+  "currentFidelityOracleHorizon": 3,
+  "runs": [
+    {
+      "fixture": "default",
+      "stateId": "15394829123847042760",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "core",
+          "operationId": "green-stat-all",
+          "outcomeIndex": 0,
+          "outcomeCount": 5
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 2,
+      "fullDepthTopTwoGap": 391.5941331593858,
+      "shallowTopTwoGap": 314.47390424910554,
+      "status": "completed",
+      "elapsedMs": 1036
+    },
+    {
+      "fixture": "default",
+      "stateId": "15394829123853792760",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "core",
+          "operationId": "green-stat-all",
+          "outcomeIndex": 0,
+          "outcomeCount": 5
+        },
+        {
+          "role": "mid",
+          "operationId": "red-trait-all",
+          "outcomeIndex": 1,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "blue-quality-all",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 447.1557001655601,
+      "shallowTopTwoGap": 447.1557001655601,
+      "status": "completed",
+      "elapsedMs": 284
+    },
+    {
+      "fixture": "quality-heavy",
+      "stateId": "15394829123880789010",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "mid",
+          "operationId": "red-quality-all",
+          "outcomeIndex": 3,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "blue-quality-all",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 534.6948449223346,
+      "shallowTopTwoGap": 66.98261556430953,
+      "status": "completed",
+      "elapsedMs": 1036
+    },
+    {
+      "fixture": "quality-heavy",
+      "stateId": "15403372092630789010",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "mid",
+          "operationId": "red-quality-all",
+          "outcomeIndex": 3,
+          "outcomeCount": 4
+        },
+        {
+          "role": "support",
+          "operationId": "quality-increase-one",
+          "outcomeIndex": 2,
+          "outcomeCount": 6
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 2062.725705179597,
+      "shallowTopTwoGap": 2062.725705179597,
+      "status": "completed",
+      "elapsedMs": 300
+    },
+    {
+      "fixture": "stat-heavy",
+      "stateId": "16163719092597039010",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "support",
+          "operationId": "blue-trait-all",
+          "outcomeIndex": 6,
+          "outcomeCount": 16
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 514.2524482403533,
+      "shallowTopTwoGap": 97.77621917255601,
+      "status": "completed",
+      "elapsedMs": 1111
+    },
+    {
+      "fixture": "stat-heavy",
+      "stateId": "16163719092597039610",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "support",
+          "operationId": "blue-trait-all",
+          "outcomeIndex": 6,
+          "outcomeCount": 16
+        },
+        {
+          "role": "core",
+          "operationId": "green-trait-all",
+          "outcomeIndex": 3,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 1494.1142880530315,
+      "shallowTopTwoGap": 1494.1142880530315,
+      "status": "completed",
+      "elapsedMs": 292
+    },
+    {
+      "fixture": "trait-heavy",
+      "stateId": "15394829123847057760",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "core",
+          "operationId": "green-stat-first",
+          "outcomeIndex": 4,
+          "outcomeCount": 5
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 2,
+      "fullDepthTopTwoGap": 297.8441550414136,
+      "shallowTopTwoGap": 283.08563512024557,
+      "status": "completed",
+      "elapsedMs": 1061
+    },
+    {
+      "fixture": "trait-heavy",
+      "stateId": "15394829187128307760",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "core",
+          "operationId": "green-stat-first",
+          "outcomeIndex": 4,
+          "outcomeCount": 5
+        },
+        {
+          "role": "mid",
+          "operationId": "blue-stat-all",
+          "outcomeIndex": 4,
+          "outcomeCount": 5
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 338.2023472623696,
+      "shallowTopTwoGap": 338.2023472623696,
+      "status": "completed",
+      "elapsedMs": 291
+    },
+    {
+      "fixture": "global-quality",
+      "stateId": "15394829123813289010",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "mid",
+          "operationId": "red-quality-first",
+          "outcomeIndex": 0,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 1502.423774462979,
+      "shallowTopTwoGap": 1396.6169768679465,
+      "status": "completed",
+      "elapsedMs": 1053
+    },
+    {
+      "fixture": "global-quality",
+      "stateId": "14121983733188289010",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "mid",
+          "operationId": "red-quality-first",
+          "outcomeIndex": 0,
+          "outcomeCount": 4
+        },
+        {
+          "role": "support",
+          "operationId": "quality-redistribution",
+          "outcomeIndex": 17,
+          "outcomeCount": 24
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 1389.6294100032028,
+      "shallowTopTwoGap": 1389.6294100032028,
+      "status": "completed",
+      "elapsedMs": 306
+    },
+    {
+      "fixture": "reachable-core-stat",
+      "stateId": "15394874686346476560",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "support",
+          "operationId": "blue-trait-first",
+          "outcomeIndex": 3,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 986.1623499833804,
+      "shallowTopTwoGap": 669.2777311997488,
+      "status": "completed",
+      "elapsedMs": 1040
+    },
+    {
+      "fixture": "reachable-core-stat",
+      "stateId": "15394874686348726635",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "support",
+          "operationId": "blue-trait-first",
+          "outcomeIndex": 3,
+          "outcomeCount": 4
+        },
+        {
+          "role": "core",
+          "operationId": "red-stat-all",
+          "outcomeIndex": 20,
+          "outcomeCount": 21
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 1791.691339909812,
+      "shallowTopTwoGap": 1791.691339909812,
+      "status": "completed",
+      "elapsedMs": 295
+    },
+    {
+      "fixture": "reachable-support-trait",
+      "stateId": "15651163748847054010",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "core",
+          "operationId": "green-stat-last",
+          "outcomeIndex": 3,
+          "outcomeCount": 5
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 1223.9371263508656,
+      "shallowTopTwoGap": 1194.7597354222307,
+      "status": "completed",
+      "elapsedMs": 1061
+    },
+    {
+      "fixture": "reachable-support-trait",
+      "stateId": "15651163753909554010",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "core",
+          "operationId": "green-stat-last",
+          "outcomeIndex": 3,
+          "outcomeCount": 5
+        },
+        {
+          "role": "mid",
+          "operationId": "blue-quality-all",
+          "outcomeIndex": 3,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "red-quality-all",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 0,
+      "shallowTopTwoGap": 0,
+      "status": "completed",
+      "elapsedMs": 288
+    },
+    {
+      "fixture": "reachable-mid-quality",
+      "stateId": "15394829498455164010",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "mid",
+          "operationId": "red-quality-last",
+          "outcomeIndex": 1,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "red-quality-all",
+      "deepWinnerShallowRank": 2,
+      "fullDepthTopTwoGap": 3.551925532752648,
+      "shallowTopTwoGap": 428.7875164688303,
+      "status": "completed",
+      "elapsedMs": 1056
+    },
+    {
+      "fixture": "reachable-mid-quality",
+      "stateId": "15480259185955164010",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "mid",
+          "operationId": "red-quality-last",
+          "outcomeIndex": 1,
+          "outcomeCount": 4
+        },
+        {
+          "role": "support",
+          "operationId": "green-stat-all",
+          "outcomeIndex": 1,
+          "outcomeCount": 5
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "red-quality-all",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 421.090259246339,
+      "shallowTopTwoGap": 421.090259246339,
+      "status": "completed",
+      "elapsedMs": 293
+    },
+    {
+      "fixture": "reachable-global-quality",
+      "stateId": "15651118186347151510",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "support",
+          "operationId": "blue-trait-last",
+          "outcomeIndex": 0,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 1219.9624347293357,
+      "shallowTopTwoGap": 269.4061806652753,
+      "status": "completed",
+      "elapsedMs": 1032
+    },
+    {
+      "fixture": "reachable-global-quality",
+      "stateId": "15651118186346926520",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "support",
+          "operationId": "blue-trait-last",
+          "outcomeIndex": 0,
+          "outcomeCount": 4
+        },
+        {
+          "role": "core",
+          "operationId": "red-quality-all",
+          "outcomeIndex": 13,
+          "outcomeCount": 16
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 1021.8605486759479,
+      "shallowTopTwoGap": 1021.8605486759479,
+      "status": "completed",
+      "elapsedMs": 288
+    },
+    {
+      "fixture": "reachable-two-step-a",
+      "stateId": "15907441420724300285",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "core",
+          "operationId": "green-stat-random",
+          "outcomeIndex": 2,
+          "outcomeCount": 5
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 1278.6461801827463,
+      "shallowTopTwoGap": 2067.3241788997984,
+      "status": "completed",
+      "elapsedMs": 1028
+    },
+    {
+      "fixture": "reachable-two-step-a",
+      "stateId": "15907441421230550285",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "core",
+          "operationId": "green-stat-random",
+          "outcomeIndex": 2,
+          "outcomeCount": 5
+        },
+        {
+          "role": "mid",
+          "operationId": "blue-trait-all",
+          "outcomeIndex": 0,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 1459.836592851505,
+      "shallowTopTwoGap": 1459.836592851505,
+      "status": "completed",
+      "elapsedMs": 296
+    },
+    {
+      "fixture": "reachable-two-step-b",
+      "stateId": "15394829888284539010",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "mid",
+          "operationId": "red-quality-random",
+          "outcomeIndex": 2,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "blue-quality-all",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 38.84738059883239,
+      "shallowTopTwoGap": 376.74823938459303,
+      "status": "completed",
+      "elapsedMs": 1018
+    },
+    {
+      "fixture": "reachable-two-step-b",
+      "stateId": "15437544732034539010",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "mid",
+          "operationId": "red-quality-random",
+          "outcomeIndex": 2,
+          "outcomeCount": 4
+        },
+        {
+          "role": "support",
+          "operationId": "green-stat-first",
+          "outcomeIndex": 0,
+          "outcomeCount": 5
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "red-quality-all",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 424.41247036464483,
+      "shallowTopTwoGap": 424.41247036464483,
+      "status": "completed",
+      "elapsedMs": 290
+    },
+    {
+      "fixture": "reachable-two-step-c",
+      "stateId": "16163707701972040510",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "support",
+          "operationId": "blue-trait-random",
+          "outcomeIndex": 1,
+          "outcomeCount": 8
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 2,
+      "fullDepthTopTwoGap": 1953.1988435227686,
+      "shallowTopTwoGap": 16.02236216649908,
+      "status": "completed",
+      "elapsedMs": 1010
+    },
+    {
+      "fixture": "reachable-two-step-c",
+      "stateId": "16163707701972040515",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "support",
+          "operationId": "blue-trait-random",
+          "outcomeIndex": 1,
+          "outcomeCount": 8
+        },
+        {
+          "role": "core",
+          "operationId": "red-quality-first",
+          "outcomeIndex": 2,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 2738.252560583409,
+      "shallowTopTwoGap": 2738.252560583409,
+      "status": "completed",
+      "elapsedMs": 291
+    }
+  ],
+  "sampleLimitPerDepth": 12,
+  "observations": [
+    {
+      "fixture": "default",
+      "stateId": "15394829123847042760",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "core",
+          "operationId": "green-stat-all",
+          "outcomeIndex": 0,
+          "outcomeCount": 5
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 2,
+      "fullDepthTopTwoGap": 391.5941331593858,
+      "shallowTopTwoGap": 314.47390424910554
+    },
+    {
+      "fixture": "default",
+      "stateId": "15394829123853792760",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "core",
+          "operationId": "green-stat-all",
+          "outcomeIndex": 0,
+          "outcomeCount": 5
+        },
+        {
+          "role": "mid",
+          "operationId": "red-trait-all",
+          "outcomeIndex": 1,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "blue-quality-all",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 447.1557001655601,
+      "shallowTopTwoGap": 447.1557001655601
+    },
+    {
+      "fixture": "quality-heavy",
+      "stateId": "15394829123880789010",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "mid",
+          "operationId": "red-quality-all",
+          "outcomeIndex": 3,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "blue-quality-all",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 534.6948449223346,
+      "shallowTopTwoGap": 66.98261556430953
+    },
+    {
+      "fixture": "quality-heavy",
+      "stateId": "15403372092630789010",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "mid",
+          "operationId": "red-quality-all",
+          "outcomeIndex": 3,
+          "outcomeCount": 4
+        },
+        {
+          "role": "support",
+          "operationId": "quality-increase-one",
+          "outcomeIndex": 2,
+          "outcomeCount": 6
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 2062.725705179597,
+      "shallowTopTwoGap": 2062.725705179597
+    },
+    {
+      "fixture": "stat-heavy",
+      "stateId": "16163719092597039010",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "support",
+          "operationId": "blue-trait-all",
+          "outcomeIndex": 6,
+          "outcomeCount": 16
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 514.2524482403533,
+      "shallowTopTwoGap": 97.77621917255601
+    },
+    {
+      "fixture": "stat-heavy",
+      "stateId": "16163719092597039610",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "support",
+          "operationId": "blue-trait-all",
+          "outcomeIndex": 6,
+          "outcomeCount": 16
+        },
+        {
+          "role": "core",
+          "operationId": "green-trait-all",
+          "outcomeIndex": 3,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 1494.1142880530315,
+      "shallowTopTwoGap": 1494.1142880530315
+    },
+    {
+      "fixture": "trait-heavy",
+      "stateId": "15394829123847057760",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "core",
+          "operationId": "green-stat-first",
+          "outcomeIndex": 4,
+          "outcomeCount": 5
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 2,
+      "fullDepthTopTwoGap": 297.8441550414136,
+      "shallowTopTwoGap": 283.08563512024557
+    },
+    {
+      "fixture": "trait-heavy",
+      "stateId": "15394829187128307760",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "core",
+          "operationId": "green-stat-first",
+          "outcomeIndex": 4,
+          "outcomeCount": 5
+        },
+        {
+          "role": "mid",
+          "operationId": "blue-stat-all",
+          "outcomeIndex": 4,
+          "outcomeCount": 5
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 338.2023472623696,
+      "shallowTopTwoGap": 338.2023472623696
+    },
+    {
+      "fixture": "global-quality",
+      "stateId": "15394829123813289010",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "mid",
+          "operationId": "red-quality-first",
+          "outcomeIndex": 0,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 1502.423774462979,
+      "shallowTopTwoGap": 1396.6169768679465
+    },
+    {
+      "fixture": "global-quality",
+      "stateId": "14121983733188289010",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "mid",
+          "operationId": "red-quality-first",
+          "outcomeIndex": 0,
+          "outcomeCount": 4
+        },
+        {
+          "role": "support",
+          "operationId": "quality-redistribution",
+          "outcomeIndex": 17,
+          "outcomeCount": 24
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 1389.6294100032028,
+      "shallowTopTwoGap": 1389.6294100032028
+    },
+    {
+      "fixture": "reachable-core-stat",
+      "stateId": "15394874686346476560",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "support",
+          "operationId": "blue-trait-first",
+          "outcomeIndex": 3,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 986.1623499833804,
+      "shallowTopTwoGap": 669.2777311997488
+    },
+    {
+      "fixture": "reachable-core-stat",
+      "stateId": "15394874686348726635",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "support",
+          "operationId": "blue-trait-first",
+          "outcomeIndex": 3,
+          "outcomeCount": 4
+        },
+        {
+          "role": "core",
+          "operationId": "red-stat-all",
+          "outcomeIndex": 20,
+          "outcomeCount": 21
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 1791.691339909812,
+      "shallowTopTwoGap": 1791.691339909812
+    },
+    {
+      "fixture": "reachable-support-trait",
+      "stateId": "15651163748847054010",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "core",
+          "operationId": "green-stat-last",
+          "outcomeIndex": 3,
+          "outcomeCount": 5
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 1223.9371263508656,
+      "shallowTopTwoGap": 1194.7597354222307
+    },
+    {
+      "fixture": "reachable-support-trait",
+      "stateId": "15651163753909554010",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "core",
+          "operationId": "green-stat-last",
+          "outcomeIndex": 3,
+          "outcomeCount": 5
+        },
+        {
+          "role": "mid",
+          "operationId": "blue-quality-all",
+          "outcomeIndex": 3,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "red-quality-all",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 0,
+      "shallowTopTwoGap": 0
+    },
+    {
+      "fixture": "reachable-mid-quality",
+      "stateId": "15394829498455164010",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "mid",
+          "operationId": "red-quality-last",
+          "outcomeIndex": 1,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "red-quality-all",
+      "deepWinnerShallowRank": 2,
+      "fullDepthTopTwoGap": 3.551925532752648,
+      "shallowTopTwoGap": 428.7875164688303
+    },
+    {
+      "fixture": "reachable-mid-quality",
+      "stateId": "15480259185955164010",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "mid",
+          "operationId": "red-quality-last",
+          "outcomeIndex": 1,
+          "outcomeCount": 4
+        },
+        {
+          "role": "support",
+          "operationId": "green-stat-all",
+          "outcomeIndex": 1,
+          "outcomeCount": 5
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "red-quality-all",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 421.090259246339,
+      "shallowTopTwoGap": 421.090259246339
+    },
+    {
+      "fixture": "reachable-global-quality",
+      "stateId": "15651118186347151510",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "support",
+          "operationId": "blue-trait-last",
+          "outcomeIndex": 0,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 1219.9624347293357,
+      "shallowTopTwoGap": 269.4061806652753
+    },
+    {
+      "fixture": "reachable-global-quality",
+      "stateId": "15651118186346926520",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "support",
+          "operationId": "blue-trait-last",
+          "outcomeIndex": 0,
+          "outcomeCount": 4
+        },
+        {
+          "role": "core",
+          "operationId": "red-quality-all",
+          "outcomeIndex": 13,
+          "outcomeCount": 16
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 1021.8605486759479,
+      "shallowTopTwoGap": 1021.8605486759479
+    },
+    {
+      "fixture": "reachable-two-step-a",
+      "stateId": "15907441420724300285",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "core",
+          "operationId": "green-stat-random",
+          "outcomeIndex": 2,
+          "outcomeCount": 5
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 1278.6461801827463,
+      "shallowTopTwoGap": 2067.3241788997984
+    },
+    {
+      "fixture": "reachable-two-step-a",
+      "stateId": "15907441421230550285",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "core",
+          "operationId": "green-stat-random",
+          "outcomeIndex": 2,
+          "outcomeCount": 5
+        },
+        {
+          "role": "mid",
+          "operationId": "blue-trait-all",
+          "outcomeIndex": 0,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 1459.836592851505,
+      "shallowTopTwoGap": 1459.836592851505
+    },
+    {
+      "fixture": "reachable-two-step-b",
+      "stateId": "15394829888284539010",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "mid",
+          "operationId": "red-quality-random",
+          "outcomeIndex": 2,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "blue-quality-all",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 38.84738059883239,
+      "shallowTopTwoGap": 376.74823938459303
+    },
+    {
+      "fixture": "reachable-two-step-b",
+      "stateId": "15437544732034539010",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "mid",
+          "operationId": "red-quality-random",
+          "outcomeIndex": 2,
+          "outcomeCount": 4
+        },
+        {
+          "role": "support",
+          "operationId": "green-stat-first",
+          "outcomeIndex": 0,
+          "outcomeCount": 5
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "red-quality-all",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 424.41247036464483,
+      "shallowTopTwoGap": 424.41247036464483
+    },
+    {
+      "fixture": "reachable-two-step-c",
+      "stateId": "16163707701972040510",
+      "recursiveDepth": 1,
+      "proxyPath": [
+        {
+          "role": "support",
+          "operationId": "blue-trait-random",
+          "outcomeIndex": 1,
+          "outcomeCount": 8
+        }
+      ],
+      "tokensRemaining": 2,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 2,
+      "fullDepthTopTwoGap": 1953.1988435227686,
+      "shallowTopTwoGap": 16.02236216649908
+    },
+    {
+      "fixture": "reachable-two-step-c",
+      "stateId": "16163707701972040515",
+      "recursiveDepth": 2,
+      "proxyPath": [
+        {
+          "role": "support",
+          "operationId": "blue-trait-random",
+          "outcomeIndex": 1,
+          "outcomeCount": 8
+        },
+        {
+          "role": "core",
+          "operationId": "red-quality-first",
+          "outcomeIndex": 2,
+          "outcomeCount": 4
+        }
+      ],
+      "tokensRemaining": 1,
+      "legalOperations": 20,
+      "configuredFreshMenuStrata": 8,
+      "fullDepthBestOperationId": "quality-redistribution",
+      "deepWinnerShallowRank": 1,
+      "fullDepthTopTwoGap": 2738.252560583409,
+      "shallowTopTwoGap": 2738.252560583409
+    }
+  ],
+  "overall": {
+    "samples": 24,
+    "pRank1": 0.8333333333333334,
+    "pRankLe3": 1,
+    "pRankLe5": 1,
+    "pRankLe8": 1,
+    "pRankLe12": 1
+  },
+  "byDepth": {
+    "1": {
+      "samples": 12,
+      "pRank1": 0.6666666666666666,
+      "pRankLe3": 1,
+      "pRankLe5": 1,
+      "pRankLe8": 1,
+      "pRankLe12": 1
+    },
+    "2": {
+      "samples": 12,
+      "pRank1": 1,
+      "pRankLe3": 1,
+      "pRankLe5": 1,
+      "pRankLe8": 1,
+      "pRankLe12": 1
+    }
+  }
 }
