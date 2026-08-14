@@ -8,8 +8,15 @@ const ROLES = ['core', 'mid', 'support'];
  * evaluateBoardExpectedFast. The difference is identity and materialization. Each role-local
  * BannerStateID is decoded once per search instead of materializing every reachable three-role
  * BoardState combination at the descriptive boundary.
+ *
+ * Terminal composition is intentionally stored as a dense prefix-aligned vector. Deep search
+ * calls this scalar evaluator millions of times; avoiding repeated linear prefix lookups keeps
+ * that exact composition cost proportional to the number of title prefixes rather than its
+ * square while preserving the descriptive scorer's incomplete-frontier fallback.
  */
 export function createEngineExpectedScorer(context, data, iterations = data.simulation.optimizerIterations) {
+    const prefixCount = data.titles.prefixes.length;
+    const prefixIndex = new Map(data.titles.prefixes.map((prefix, index) => [prefix.id, index]));
     const frontierMemo = {
         core: new Map(), mid: new Map(), support: new Map(),
     };
@@ -26,6 +33,16 @@ export function createEngineExpectedScorer(context, data, iterations = data.simu
         bannerMaterializations++;
         return banner;
     };
+    const vectorizeFrontier = (frontier) => {
+        const values = new Float64Array(prefixCount);
+        values.fill(Number.NaN);
+        for (const entry of frontier) {
+            const index = prefixIndex.get(entry.prefixId);
+            if (index !== undefined)
+                values[index] = entry.adjustedExpected;
+        }
+        return values;
+    };
     const frontierFor = (role, id) => {
         const prior = frontierMemo[role].get(id);
         if (prior) {
@@ -33,28 +50,21 @@ export function createEngineExpectedScorer(context, data, iterations = data.simu
             return prior;
         }
         bannerCacheMisses++;
-        const frontier = rolePrefixFrontier(role, bannerFor(role, id), data, iterations);
+        const frontier = vectorizeFrontier(rolePrefixFrontier(role, bannerFor(role, id), data, iterations));
         frontierMemo[role].set(id, frontier);
         return frontier;
     };
     const evaluate = (state) => {
-        const frontiers = {
-            core: frontierFor('core', state.core),
-            mid: frontierFor('mid', state.mid),
-            support: frontierFor('support', state.support),
-        };
+        const core = frontierFor('core', state.core);
+        const mid = frontierFor('mid', state.mid);
+        const support = frontierFor('support', state.support);
         let best = -Infinity;
-        for (const prefix of data.titles.prefixes) {
-            let total = 0, complete = true;
-            for (const role of ROLES) {
-                const entry = frontiers[role].find(x => x.prefixId === prefix.id);
-                if (!entry) {
-                    complete = false;
-                    break;
-                }
-                total += entry.adjustedExpected;
-            }
-            if (complete && total > best)
+        for (let index = 0; index < prefixCount; index++) {
+            const coreValue = core[index], midValue = mid[index], supportValue = support[index];
+            if (!Number.isFinite(coreValue) || !Number.isFinite(midValue) || !Number.isFinite(supportValue))
+                continue;
+            const total = coreValue + midValue + supportValue;
+            if (total > best)
                 best = total;
         }
         if (Number.isFinite(best))

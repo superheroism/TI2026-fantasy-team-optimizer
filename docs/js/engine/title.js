@@ -1,8 +1,15 @@
 import { displayTeamName } from '../data/ti2026Rosters.js';
 const ROLES = ['core', 'mid', 'support'];
-export function titlePrefixBoostPct(catalog, role, team, prefixId) {
+export function titlePrefixBoostRow(catalog, role, team) {
+    const byTeam = catalog.prefixBoostPctByRoleTeam[role];
+    const direct = byTeam?.[team];
+    if (direct)
+        return direct;
     const canonical = displayTeamName(team);
-    return catalog.prefixBoostPctByRoleTeam[role]?.[canonical]?.[prefixId] ?? 0;
+    return byTeam?.[canonical];
+}
+export function titlePrefixBoostPct(catalog, role, team, prefixId) {
+    return titlePrefixBoostRow(catalog, role, team)?.[prefixId] ?? 0;
 }
 function fixedSuffix(catalog) {
     return catalog.suffixes.find(s => s.id === catalog.fixedSuffixId) ?? catalog.suffixes[0] ?? null;
