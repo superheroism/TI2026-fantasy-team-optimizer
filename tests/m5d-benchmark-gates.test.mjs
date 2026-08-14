@@ -1,9 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { compareRuns, evaluateCalibrationGate, evaluateCombinedHoldoutGate, marginBin, selectWidestPassing } from '../scripts/m5d-benchmark-lib.mjs';
 
 function run(fixture,key='board_action|green-stat-all|core',runnerUp='board_action|red-quality-all|core',gap=400,runtimeMs=100){return{fixture,recommendationKey:key,utility:10_000,runtimeMs,ranking:[{key,utility:10_000},{key:runnerUp,utility:10_000-gap},{key:'stop',utility:9_000},{key:'menu_reroll',utility:8_900}]};}
 function exactComparisons(count=12){return Array.from({length:count},(_,i)=>compareRuns(run(`f${i}`,undefined,undefined,400,200),run(`f${i}`,undefined,undefined,400,100),{runtimeRatioVsAggressive:.5}));}
+
+test('M5D batch CLI plan smoke test',()=>{const child=spawnSync(process.execPath,['scripts/benchmark-m5d.mjs','--plan'],{encoding:'utf8'});assert.equal(child.status,0,child.stderr);const plan=JSON.parse(child.stdout);assert.equal(plan.calibrationFixtures.length,12);assert.deepEqual(plan.calibrationModes.map(row=>row.id),['oracle','m5c-aggressive','wide','medium','narrow']);assert.match(plan.holdout,/only after/i);assert.deepEqual(plan.t4Fixtures,['default','quality-heavy','stat-heavy','trait-heavy','global-quality']);});
 
 test('margin bins match frozen M5D reporting boundaries',()=>{assert.equal(marginBin(500),'<=500');assert.equal(marginBin(501),'500-1500');assert.equal(marginBin(1500),'500-1500');assert.equal(marginBin(1501),'>1500');});
 
