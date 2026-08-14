@@ -1,23 +1,14 @@
 import { createEngineExpectedScorer } from './engineExpectedScoring.js';
-import { evaluateBoardTargetProbabilityFast } from './targetProbability.js';
-import { boardAdapterContext, boardToEngineState, engineStateToBoard } from './stateEncoding.js';
+import { createEngineTargetScorer } from './engineTargetScoring.js';
+import { boardAdapterContext, boardToEngineState } from './stateEncoding.js';
 export function createTerminalSearchRuntime(state, data) {
     const context = boardAdapterContext(state.board);
     const initialEngine = boardToEngineState(state.board);
     const expectedScorer = createEngineExpectedScorer(context, data, data.simulation.optimizerIterations);
-    const boardMemo = new Map([[initialEngine.id, state.board]]);
+    const targetScorer = createEngineTargetScorer(context, data, state.targetScore ?? 0, data.simulation.optimizerIterations);
     const expectedMemo = new Map();
     const targetMemo = new Map();
-    let descriptiveBoardMaterializations = 0, terminalScoringCalls = 0;
-    const boardFor = (engine) => {
-        const prior = boardMemo.get(engine.id);
-        if (prior)
-            return prior;
-        const board = engineStateToBoard(engine, context);
-        boardMemo.set(engine.id, board);
-        descriptiveBoardMaterializations++;
-        return board;
-    };
+    let terminalScoringCalls = 0;
     const expectedScalar = (engine) => {
         const prior = expectedMemo.get(engine.id);
         if (prior !== undefined)
@@ -32,7 +23,7 @@ export function createTerminalSearchRuntime(state, data) {
         if (prior !== undefined)
             return prior;
         terminalScoringCalls++;
-        const value = evaluateBoardTargetProbabilityFast(boardFor(engine), data, state.targetScore ?? 0, data.simulation.optimizerIterations);
+        const value = targetScorer.evaluate(engine);
         targetMemo.set(engine.id, value);
         return value;
     };
@@ -44,14 +35,19 @@ export function createTerminalSearchRuntime(state, data) {
             targetMemo.set(initialEngine.id, current.targetProbability);
     };
     const diagnostics = () => {
-        const compact = expectedScorer.getDiagnostics();
+        const expectedCompact = expectedScorer.getDiagnostics();
+        const targetCompact = targetScorer.getDiagnostics();
         return {
-            descriptiveBoardMaterializations, descriptiveBoardCacheEntries: boardMemo.size,
+            descriptiveBoardMaterializations: 0, descriptiveBoardCacheEntries: 1,
             expectedScalarStates: expectedMemo.size, targetScalarStates: targetMemo.size, terminalScoringCalls,
-            expectedBannerMaterializations: compact.bannerMaterializations,
-            expectedBannerCacheEntries: compact.bannerCacheEntries,
-            expectedBannerCacheHits: compact.bannerCacheHits,
-            expectedBannerCacheMisses: compact.bannerCacheMisses,
+            expectedBannerMaterializations: expectedCompact.bannerMaterializations,
+            expectedBannerCacheEntries: expectedCompact.bannerCacheEntries,
+            expectedBannerCacheHits: expectedCompact.bannerCacheHits,
+            expectedBannerCacheMisses: expectedCompact.bannerCacheMisses,
+            targetBannerMaterializations: targetCompact.bannerMaterializations,
+            targetBannerCacheEntries: targetCompact.bannerCacheEntries,
+            targetBannerCacheHits: targetCompact.bannerCacheHits,
+            targetBannerCacheMisses: targetCompact.bannerCacheMisses,
         };
     };
     return { initialEngine, expectedScalar, targetScalar, searchUtility, seedCurrent, diagnostics };
