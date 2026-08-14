@@ -8,6 +8,9 @@ import type { ValueActionPhase } from './valueFunction.js';
 import type { EngineState } from './stateEncoding.js';
 import type { TerminalSearchRuntime } from './optimizerTerminal.js';
 import { depthRecord, incrementDepth, OPTIMIZER_ROLES, stratifiedTransitions } from './optimizerHelpers.js';
+import { createActionWideningTracker, ACTION_WIDENING_PRESETS } from './actionWidening.js';
+import type { ActionWideningPolicy, ActionWideningReport } from './actionWidening.js';
+import { createFreshMenuActionWideningRuntime } from './actionWideningRuntime.js';
 import {
   CONTINUATION_FIDELITY_PRESETS,
   continuationFidelityReport,
@@ -20,8 +23,15 @@ export interface ExperimentalContinuationFidelityConfig {
   readonly policy:ContinuationFidelityPolicy;
 }
 
+export interface ExperimentalActionWideningConfig {
+  readonly modeledHorizon:number;
+  readonly policy:ActionWideningPolicy;
+}
+
 export { CONTINUATION_FIDELITY_PRESETS } from './continuationFidelity.js';
 export type { ContinuationFidelityPolicy, ContinuationFidelityReport } from './continuationFidelity.js';
+export { ACTION_WIDENING_PRESETS } from './actionWidening.js';
+export type { ActionWideningPolicy, ActionWideningReport } from './actionWidening.js';
 
 export interface TargetedContinuation {
   readonly value:number;
@@ -30,6 +40,7 @@ export interface TargetedContinuation {
 
 export interface ContinuationDiagnostics {
   readonly continuationFidelity:ContinuationFidelityReport;
+  readonly actionWidening:ActionWideningReport;
   readonly targetedActionCacheHits:number;
   readonly targetedActionCacheMisses:number;
   readonly targetedActionCacheBypasses:number;
@@ -65,6 +76,7 @@ export function createContinuationRuntime(
   terminal:TerminalSearchRuntime,
   uniformStatFallback:boolean,
   experimentalFidelity?:ExperimentalContinuationFidelityConfig,
+  experimentalWidening?:ExperimentalActionWideningConfig,
 ):ContinuationRuntime {
   const overrideMenus=data.menuSamples?.filter(menu=>menu.length===3);
   const menuModel=new MenuModel(overrideMenus?.length?overrideMenus:undefined);
@@ -73,8 +85,12 @@ export function createContinuationRuntime(
   const configured=experimentalFidelity&&experimentalFidelity.modeledHorizon>2
     ?{modeledHorizon:Math.max(3,Math.floor(experimentalFidelity.modeledHorizon)),policy:experimentalFidelity.policy}
     :undefined;
+  const wideningConfigured=experimentalWidening&&experimentalWidening.modeledHorizon>2
+    ?{modeledHorizon:Math.max(3,Math.floor(experimentalWidening.modeledHorizon)),policy:experimentalWidening.policy}
+    :undefined;
   const fidelityPolicy=configured?.policy??CONTINUATION_FIDELITY_PRESETS.current;
   const fidelity=continuationFidelityReport(fidelityPolicy,continuationStrata,continuationEntryStrata);
+  const disabledWidening=createActionWideningTracker(undefined);
 
   const transitionMemo=new Map<string,readonly EngineTransition[]>();
   let transitionDistributionCacheHits=0,transitionDistributionCacheMisses=0,transitionDistributionCacheBypasses=0;
@@ -136,6 +152,35 @@ export function createContinuationRuntime(
     const result={value,utilityOutcomes};if(retain)targetedMemo.set(key,result);return result;
   };
 
+  const fullActionValue=(engine:EngineState,operation:OfferedOperation,tokensRemaining:number,phase:ValueActionPhase):number=>{
+    let best=-Infinity;
+    for(const role of OPTIMIZER_ROLES)best=Math.max(best,targetedContinuation(engine,operation,role,tokensRemaining,phase).value);
+    return best;
+  };
+
+  const shallowActionValue=(engine:EngineState,operation:OfferedOperation,tokensRemaining:number):number=>{
+    const recursiveDepth=configured?Math.max(0,configured.modeledHorizon-tokensRemaining):Math.max(0,(wideningConfigured?.modeledHorizon??tokensRemaining)-tokensRemaining);
+    let best=-Infinity;
+    for(const role of OPTIMIZER_ROLES){
+      incrementDepth(transitionEvaluationsByDepth,tokensRemaining);
+      const exact=transitionDistribution(engine,role,operation,false);if(!exact.length)continue;
+      const modeled=stratifiedTransitions(exact,resolveFreshMenuOutcomeStrata(fidelityPolicy,recursiveDepth,continuationStrata));
+      addDepthTotal(outcomesBeforeByDepth,recursiveDepth,exact.length);addDepthTotal(outcomesAfterByDepth,recursiveDepth,modeled.length);
+      let value=0;for(const outcome of modeled)value+=outcome.probability*terminal.searchUtility(outcome.nextState);best=Math.max(best,value);
+    }
+    return best;
+  };
+
+  const wideningRuntime=wideningConfigured?createFreshMenuActionWideningRuntime<EngineState,OfferedOperation>({
+    policy:wideningConfigured.policy,
+    modeledHorizon:wideningConfigured.modeledHorizon,
+    operations:ACTION_CATALOG,
+    stateId:engine=>engine.id,
+    operationId:operation=>operation.id,
+    shallowValue:shallowActionValue,
+    deepValue:fullActionValue,
+  }):undefined;
+
   valueFunction=new FiniteHorizonValueFunction({
     stateId:(engine:EngineState)=>engine.id,
     operationId:(operation:OfferedOperation)=>operation.id,
@@ -143,16 +188,15 @@ export function createContinuationRuntime(
     menuOperations:(menu:OptimizerState['menu'])=>menu,
     menuId:(menu:OptimizerState['menu'])=>menu.map(operation=>operation.id).sort().join(','),
     terminalUtility:terminal.searchUtility,
-    actionValue:(engine,operation,tokensRemaining,phase)=>{
-      let best=-Infinity;
-      for(const role of OPTIMIZER_ROLES)best=Math.max(best,targetedContinuation(engine,operation,role,tokensRemaining,phase).value);
-      return best;
-    },
+    actionValue:(engine,operation,tokensRemaining,phase)=>wideningRuntime
+      ?wideningRuntime.evaluate(engine,operation,tokensRemaining,phase)
+      :fullActionValue(engine,operation,tokensRemaining,phase),
     freshMenuExpectedUtility:(_engine,_tokensRemaining,baseline,operationValues)=>menuModel.expectedFreshMenuUtility(operationValues,baseline),
   });
 
   const diagnostics=():ContinuationDiagnostics=>({
     continuationFidelity:fidelity,
+    actionWidening:wideningRuntime?.report()??disabledWidening.report(),
     targetedActionCacheHits,targetedActionCacheMisses,targetedActionCacheBypasses,targetedActionEntries:targetedMemo.size,
     targetedActionRequestsByDepth:depthRecord(requestsByDepth),targetedActionCacheHitsByDepth:depthRecord(hitsByDepth),
     targetedActionCacheMissesByDepth:depthRecord(missesByDepth),targetedActionCacheBypassesByDepth:depthRecord(bypassesByDepth),

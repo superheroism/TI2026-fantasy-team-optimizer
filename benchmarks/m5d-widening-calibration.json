@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-08-13T20:30:00Z",
+  "package": "M5D progressive action widening",
+  "status": "not_executed",
+  "outcome": "B",
+  "productionHorizon": 2,
+  "measurementCommit": "3c36ee7f2eeb8634d32a23a20bd9dd4babbac397",
+  "backgroundContinuationFidelity": [4, 2, 1],
+  "candidates": {
+    "wide": [12, 8, 4],
+    "medium": [8, 5, 3],
+    "narrow": [5, 3, 2]
+  },
+  "fixtureCount": 12,
+  "runs": [],
+  "comparisons": [],
+  "selectedPolicy": null,
+  "gatePassed": false,
+  "blocker": "The frozen calibration could not be executed in this environment without either substituting the exact statistical-model input or using a restricted temporary repository-side execution path. Both were rejected. No winner agreement, regret, rank-correlation, runtime, or memory results were inferred."
+}

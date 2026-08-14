@@ -208,3 +208,17 @@ Only aggressive advanced to `t=4`. It still timed out on **all five** establishe
 **Decision:** M5C is Outcome B. Continuation-outcome compression alone does not make four-token search tractable. Production remains at two modeled token spends. The recommended next bounded technique is **progressive widening of distant fresh-menu action evaluation**, because the aggressive schedule already reduces deepest transition outcomes to one stratum; the remaining target is action/state frontier breadth rather than additional outcome compression.
 
 Raw reports: `benchmarks/m5c-depth-calibration.json` and `benchmarks/m5c-four-token-benchmark.json`. Full interpretation: `M5C_DEPTH_AWARE_CONTINUATION.md`.
+
+## M5D progressive action widening
+
+M5D implements deterministic progressive widening of **distant fresh-menu operation evaluation** while leaving the root/current visible menu exact. Every future operation identity still receives a value and remains in the exact uniform best-of-three menu operator; deferred legal operations retain their one-spend shallow value rather than being removed or replaced by stop.
+
+The frozen engineering schedules are Wide `12→8→4`, Medium `8→5→3`, and Narrow `5→3→2`, with M5C aggressive outcome fidelity `4→2→1` fixed as the intended background policy. The option is per-call and structurally ignored at modeled horizons `t<=2`.
+
+The implementation reached CI-green measurement lock `3c36ee7f2eeb8634d32a23a20bd9dd4babbac397`. Node 22 passed typecheck, committed generated-artifact verification, and the full regression suite, including delayed-upside/non-greedy coverage and complete expected-score/target-probability ranked-table equality at `t<=2` with widening supplied.
+
+The required isolated M5D calibration could not be executed in the available agent runtime without either substituting the repository's exact large statistical-model input or using a restricted temporary repository-side execution path. Neither compromise was accepted. Consequently no widening schedule is selected, the seed-`20260813` eight-case holdout remains protected from result-driven tuning, and no M5D policy advances to `t=4`.
+
+**Decision:** M5D is an infrastructure-limited Outcome B, not a negative performance result. Production remains at two modeled token spends and M5C/M5D approximations remain disabled by default. The single next bounded step is to run the already-frozen M5D calibration package unchanged on a benchmark runner with complete repository-data access.
+
+Machine-readable status: `benchmarks/m5d-proxy-rank-diagnostics.json`, `benchmarks/m5d-widening-calibration.json`, `benchmarks/m5d-widening-holdout.json`, and `benchmarks/m5d-four-token-benchmark.json`. Full interpretation: `M5D_PROGRESSIVE_ACTION_WIDENING.md`.

@@ -22,6 +22,7 @@ function zeroDiagnostics():OptimizerEngineDiagnostics {
     transitionDistributionCacheHits:0,transitionDistributionCacheMisses:0,transitionDistributionCacheBypasses:0,
     transitionDistributionEntries:0,transitionEvaluationsByDepth:{},transitionOutcomesBeforeCompressionByDepth:{},transitionOutcomesAfterCompressionByDepth:{},
     continuationFidelity:{id:'current',description:'',freshMenuOutcomeStrataByDepth:[],baseFreshMenuOutcomeStrata:0,rootContinuationEntryStrata:0},
+    actionWidening:{enabled:false,policyId:'none',description:'Action widening disabled.',deepOperationCapsByDepth:[],byDepth:[],freshMenuStatesWidened:0,legalOperationEvaluations:0,shallowOperationEvaluations:0,recursivelyDeepenedOperationEvaluations:0,operationEvaluationsAvoided:0,wideningAvoidanceRate:0},
     valueFunction:{terminalCacheHits:0,terminalCacheMisses:0,vCalls:0,vCacheHits:0,vCacheMisses:0,qCalls:0,qCacheHits:0,qCacheMisses:0,
       actionCalls:0,actionCacheHits:0,actionCacheMisses:0,actionCacheBypasses:0,uniqueStatesByDepth:{},uniqueQStatesByDepth:{},uniqueActionStatesByDepth:{},
       vCallsByDepth:{},vCacheHitsByDepth:{},vCacheMissesByDepth:{},qCallsByDepth:{},qCacheHitsByDepth:{},qCacheMissesByDepth:{},
@@ -54,7 +55,10 @@ export function recommendNextAction(
   const experimentalFidelity=horizon>2&&searchOptions.experimentalContinuationFidelity
     ?{modeledHorizon:horizon,policy:searchOptions.experimentalContinuationFidelity}
     :undefined;
-  const continuation=createContinuationRuntime(state,data,terminal,uniformStatFallback,experimentalFidelity);
+  const experimentalWidening=horizon>2&&searchOptions.experimentalActionWidening
+    ?{modeledHorizon:horizon,policy:searchOptions.experimentalActionWidening}
+    :undefined;
+  const continuation=createContinuationRuntime(state,data,terminal,uniformStatFallback,experimentalFidelity,experimentalWidening);
   const {valueFunction,menuModel}=continuation;
   const initialEngine=terminal.initialEngine;
 

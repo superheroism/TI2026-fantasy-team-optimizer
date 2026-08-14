@@ -11,7 +11,9 @@
     "test": "npm run build && node --test tests/*.test.mjs",
     "test:ci": "npm run typecheck && npm run verify:generated && node --test tests/*.test.mjs",
     "benchmark": "npm run build && node scripts/benchmark.mjs",
-    "benchmark:m5": "npm run build && node scripts/benchmark-m5-four-token.mjs"
+    "benchmark:m5": "npm run build && node scripts/benchmark-m5-four-token.mjs",
+    "benchmark:m5d": "npm run test:ci && node scripts/benchmark-m5d.mjs",
+    "benchmark:m5d:plan": "node scripts/benchmark-m5d.mjs --plan"
   },
   "devDependencies": {
     "typescript": "5.8.3"

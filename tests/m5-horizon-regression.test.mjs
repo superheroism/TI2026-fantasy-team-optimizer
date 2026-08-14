@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { defaultBoard, defaultMenu } from '../docs/js/data/defaultState.js';
+import { ACTION_WIDENING_PRESETS } from '../docs/js/engine/actionWidening.js';
 import { getLastOptimizerEngineDiagnostics, recommendNextAction } from '../docs/js/engine/optimizer.js';
 import { testData } from './test-data.mjs';
 
@@ -31,7 +32,7 @@ for(const objective of ['expected_score','target_probability']){
         username:'M5 t<=2 regression',objective,...(objective==='target_probability'?{targetScore:55_000}:{})
       };
       const production=recommendNextAction(state,data,true);
-      const experimental=recommendNextAction(state,data,true,{modeledHorizonOverride:Math.min(tokensRemaining,2)});
+      const experimental=recommendNextAction(state,data,true,{modeledHorizonOverride:Math.min(tokensRemaining,2),experimentalActionWidening:ACTION_WIDENING_PRESETS.narrow});
       assertSameRankedTable(experimental,production);
     });
   }

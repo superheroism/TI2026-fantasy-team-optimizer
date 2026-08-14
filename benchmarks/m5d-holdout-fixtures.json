@@ -1,0 +1,215 @@
+{
+  "seed": 20260813,
+  "algorithm": "SeededRandom; first four one-step, final four two-step; reject only illegal transitions or duplicate final board IDs",
+  "fixtures": [
+    {
+      "name": "holdout-01",
+      "steps": 1,
+      "menu": [
+        "blue-quality-all",
+        "green-quality-all",
+        "blue-stat-all"
+      ],
+      "mutations": [
+        {
+          "role": "support",
+          "operationId": "green-stat-all",
+          "outcomeIndex": 0,
+          "outcomeCount": 5,
+          "beforeBoardId": "15394829123847039010",
+          "afterBoardId": "15437543967597039010"
+        }
+      ],
+      "finalBoardId": "15437543967597039010"
+    },
+    {
+      "name": "holdout-02",
+      "steps": 1,
+      "menu": [
+        "quality-increase-one",
+        "blue-trait-last",
+        "blue-trait-first"
+      ],
+      "mutations": [
+        {
+          "role": "core",
+          "operationId": "red-quality-first",
+          "outcomeIndex": 3,
+          "outcomeCount": 4,
+          "beforeBoardId": "15394829123847039010",
+          "afterBoardId": "15394829123847039020"
+        }
+      ],
+      "finalBoardId": "15394829123847039020"
+    },
+    {
+      "name": "holdout-03",
+      "steps": 1,
+      "menu": [
+        "green-quality-all",
+        "red-quality-random",
+        "red-trait-all"
+      ],
+      "mutations": [
+        {
+          "role": "core",
+          "operationId": "red-trait-all",
+          "outcomeIndex": 4,
+          "outcomeCount": 16,
+          "beforeBoardId": "15394829123847039010",
+          "afterBoardId": "15394829123847061512"
+        }
+      ],
+      "finalBoardId": "15394829123847061512"
+    },
+    {
+      "name": "holdout-04",
+      "steps": 1,
+      "menu": [
+        "green-stat-first",
+        "red-stat-all",
+        "red-quality-last"
+      ],
+      "mutations": [
+        {
+          "role": "support",
+          "operationId": "blue-trait-all",
+          "outcomeIndex": 8,
+          "outcomeCount": 16,
+          "beforeBoardId": "15394829123847039010",
+          "afterBoardId": "15651152358222039010"
+        }
+      ],
+      "finalBoardId": "15651152358222039010"
+    },
+    {
+      "name": "holdout-05",
+      "steps": 2,
+      "menu": [
+        "red-trait-all",
+        "red-quality-random",
+        "blue-stat-all"
+      ],
+      "mutations": [
+        {
+          "role": "mid",
+          "operationId": "red-quality-random",
+          "outcomeIndex": 0,
+          "outcomeCount": 4,
+          "beforeBoardId": "15394829123847039010",
+          "afterBoardId": "15394829123813289010"
+        },
+        {
+          "role": "core",
+          "operationId": "red-quality-random",
+          "outcomeIndex": 6,
+          "outcomeCount": 8,
+          "beforeBoardId": "15394829123813289010",
+          "afterBoardId": "15394829123813401510"
+        }
+      ],
+      "finalBoardId": "15394829123813401510"
+    },
+    {
+      "name": "holdout-06",
+      "steps": 2,
+      "menu": [
+        "blue-stat-all",
+        "quality-redistribution",
+        "red-quality-random"
+      ],
+      "mutations": [
+        {
+          "role": "support",
+          "operationId": "blue-trait-last",
+          "outcomeIndex": 3,
+          "outcomeCount": 4,
+          "beforeBoardId": "15394829123847039010",
+          "afterBoardId": "16419985373847039010"
+        },
+        {
+          "role": "mid",
+          "operationId": "red-stat-all",
+          "outcomeIndex": 4,
+          "outcomeCount": 5,
+          "beforeBoardId": "16419985373847039010",
+          "afterBoardId": "16419985374268914010"
+        }
+      ],
+      "finalBoardId": "16419985374268914010"
+    },
+    {
+      "name": "holdout-07",
+      "steps": 2,
+      "menu": [
+        "blue-trait-all",
+        "blue-trait-random",
+        "green-stat-all"
+      ],
+      "mutations": [
+        {
+          "role": "mid",
+          "operationId": "green-stat-all",
+          "outcomeIndex": 0,
+          "outcomeCount": 5,
+          "beforeBoardId": "15394829123847039010",
+          "afterBoardId": "15394831022284539010"
+        },
+        {
+          "role": "support",
+          "operationId": "blue-trait-random",
+          "outcomeIndex": 2,
+          "outcomeCount": 8,
+          "beforeBoardId": "15394831022284539010",
+          "afterBoardId": "15394865194159539010"
+        }
+      ],
+      "finalBoardId": "15394865194159539010"
+    },
+    {
+      "name": "holdout-08",
+      "steps": 2,
+      "menu": [
+        "red-quality-all",
+        "blue-trait-all",
+        "red-quality-last"
+      ],
+      "mutations": [
+        {
+          "role": "core",
+          "operationId": "red-stat-all",
+          "outcomeIndex": 18,
+          "outcomeCount": 21,
+          "beforeBoardId": "15394829123847039010",
+          "afterBoardId": "15394829123847601635"
+        },
+        {
+          "role": "mid",
+          "operationId": "blue-stat-all",
+          "outcomeIndex": 3,
+          "outcomeCount": 5,
+          "beforeBoardId": "15394829123847601635",
+          "afterBoardId": "15394829174472601635"
+        }
+      ],
+      "finalBoardId": "15394829174472601635"
+    }
+  ],
+  "rejectedDraws": [
+    {
+      "draw": 1,
+      "reason": "illegal core/blue-stat-all",
+      "mutations": []
+    },
+    {
+      "draw": 3,
+      "reason": "illegal core/blue-trait-random",
+      "mutations": []
+    },
+    {
+      "draw": 6,
+      "reason": "illegal support/red-quality-all",
+      "mutations": []
+    }
+  ]
+}
