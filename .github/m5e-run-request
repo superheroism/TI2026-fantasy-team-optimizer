@@ -1,5 +1,6 @@
-M5E authoritative run request
+M5E authoritative rerun request after bounded exact target-terminal optimization
 Target: 55000
 Oracle: current / no widening / t=3 / 600s
 Candidate: aggressive 4-2-1 + Wide 12-8-4 / t=3 / 60s
 Frozen material speedup gate: candidate/oracle <= 0.80
+No target, policy, timeout, or gate changed from the first authoritative run.
