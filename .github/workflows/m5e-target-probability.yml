@@ -1,0 +1,62 @@
+name: M5E Target Probability Feasibility
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/m5e-run-request'
+
+permissions:
+  contents: write
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Typecheck, verify generated output, and test
+        run: npm run test:ci
+
+      - name: Run frozen M5E benchmark
+        id: benchmark
+        continue-on-error: true
+        run: node scripts/benchmark-m5e-target.mjs --preflight-passed
+
+      - name: Upload M5E report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5e-target-probability-feasibility
+          path: benchmarks/m5e-target-probability-feasibility.json
+          if-no-files-found: warn
+
+      - name: Commit authoritative report to branch
+        if: always()
+        shell: bash
+        run: |
+          if [[ ! -f benchmarks/m5e-target-probability-feasibility.json ]]; then
+            exit 0
+          fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add benchmarks/m5e-target-probability-feasibility.json
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "M5E: record authoritative target feasibility run"
+          git push
+
+      - name: Propagate benchmark execution failure
+        if: steps.benchmark.outcome == 'failure'
+        run: exit 1
