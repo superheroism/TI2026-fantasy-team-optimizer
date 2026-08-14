@@ -1,0 +1,44 @@
+name: M5D Stat-Heavy Diagnostic
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - agent/m5d-stat-heavy-diagnostic
+    paths:
+      - .github/workflows/m5d-stat-heavy-diagnostic.yml
+      - benchmarks/m5d-stat-heavy-run-request.txt
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Verify branch before profiling
+        run: npm run test:ci
+
+      - name: Run stat-heavy t4 to natural completion
+        run: node --expose-gc scripts/benchmark-m5d-case.mjs stat-heavy 4 aggressive wide > benchmarks/m5d-stat-heavy-diagnostic.json
+
+      - name: Upload diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5d-stat-heavy-diagnostic-${{ github.run_id }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: benchmarks/m5d-stat-heavy-diagnostic.json
