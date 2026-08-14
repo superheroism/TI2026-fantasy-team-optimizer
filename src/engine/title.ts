@@ -3,9 +3,16 @@ import { displayTeamName } from '../data/ti2026Rosters.js';
 
 const ROLES: Role[] = ['core','mid','support'];
 
+export function titlePrefixBoostRow(catalog:TitleCatalog, role:Role, team:string) {
+  const byTeam=catalog.prefixBoostPctByRoleTeam[role];
+  const direct=byTeam?.[team];
+  if(direct)return direct;
+  const canonical=displayTeamName(team);
+  return byTeam?.[canonical];
+}
+
 export function titlePrefixBoostPct(catalog:TitleCatalog, role:Role, team:string, prefixId:string):number {
-  const canonical = displayTeamName(team);
-  return catalog.prefixBoostPctByRoleTeam[role]?.[canonical]?.[prefixId] ?? 0;
+  return titlePrefixBoostRow(catalog,role,team)?.[prefixId] ?? 0;
 }
 
 function fixedSuffix(catalog:TitleCatalog) {
