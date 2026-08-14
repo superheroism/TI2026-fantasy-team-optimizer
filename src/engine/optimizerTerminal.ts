@@ -1,7 +1,7 @@
 import type { BoardEvaluation, DataBundle, OptimizerState } from '../domain/types.js';
 import { createEngineExpectedScorer } from './engineExpectedScoring.js';
-import { evaluateBoardTargetProbabilityFast } from './targetProbability.js';
-import { boardAdapterContext, boardToEngineState, engineStateToBoard } from './stateEncoding.js';
+import { createEngineTargetScorer } from './engineTargetScoring.js';
+import { boardAdapterContext, boardToEngineState } from './stateEncoding.js';
 import type { BoardStateID, EngineState } from './stateEncoding.js';
 
 export interface TerminalSearchDiagnostics {
@@ -14,6 +14,10 @@ export interface TerminalSearchDiagnostics {
   readonly expectedBannerCacheEntries:number;
   readonly expectedBannerCacheHits:number;
   readonly expectedBannerCacheMisses:number;
+  readonly targetBannerMaterializations:number;
+  readonly targetBannerCacheEntries:number;
+  readonly targetBannerCacheHits:number;
+  readonly targetBannerCacheMisses:number;
 }
 
 export interface TerminalSearchRuntime {
@@ -29,15 +33,11 @@ export function createTerminalSearchRuntime(state:OptimizerState,data:DataBundle
   const context=boardAdapterContext(state.board);
   const initialEngine=boardToEngineState(state.board);
   const expectedScorer=createEngineExpectedScorer(context,data,data.simulation.optimizerIterations);
-  const boardMemo=new Map<BoardStateID,OptimizerState['board']>([[initialEngine.id,state.board]]);
+  const targetScorer=createEngineTargetScorer(context,data,state.targetScore??0,data.simulation.optimizerIterations);
   const expectedMemo=new Map<BoardStateID,number>();
   const targetMemo=new Map<BoardStateID,number>();
-  let descriptiveBoardMaterializations=0,terminalScoringCalls=0;
+  let terminalScoringCalls=0;
 
-  const boardFor=(engine:EngineState):OptimizerState['board']=>{
-    const prior=boardMemo.get(engine.id);if(prior)return prior;
-    const board=engineStateToBoard(engine,context);boardMemo.set(engine.id,board);descriptiveBoardMaterializations++;return board;
-  };
   const expectedScalar=(engine:EngineState):number=>{
     const prior=expectedMemo.get(engine.id);if(prior!==undefined)return prior;
     terminalScoringCalls++;
@@ -46,8 +46,7 @@ export function createTerminalSearchRuntime(state:OptimizerState,data:DataBundle
   const targetScalar=(engine:EngineState):number=>{
     const prior=targetMemo.get(engine.id);if(prior!==undefined)return prior;
     terminalScoringCalls++;
-    const value=evaluateBoardTargetProbabilityFast(boardFor(engine),data,state.targetScore??0,data.simulation.optimizerIterations);
-    targetMemo.set(engine.id,value);return value;
+    const value=targetScorer.evaluate(engine);targetMemo.set(engine.id,value);return value;
   };
   const searchUtility=(engine:EngineState):number=>state.objective==='expected_score'?expectedScalar(engine):targetScalar(engine);
   const seedCurrent=(current:BoardEvaluation):void=>{
@@ -55,14 +54,19 @@ export function createTerminalSearchRuntime(state:OptimizerState,data:DataBundle
     else if(current.targetProbability!==undefined)targetMemo.set(initialEngine.id,current.targetProbability);
   };
   const diagnostics=():TerminalSearchDiagnostics=>{
-    const compact=expectedScorer.getDiagnostics();
+    const expectedCompact=expectedScorer.getDiagnostics();
+    const targetCompact=targetScorer.getDiagnostics();
     return {
-      descriptiveBoardMaterializations,descriptiveBoardCacheEntries:boardMemo.size,
+      descriptiveBoardMaterializations:0,descriptiveBoardCacheEntries:1,
       expectedScalarStates:expectedMemo.size,targetScalarStates:targetMemo.size,terminalScoringCalls,
-      expectedBannerMaterializations:compact.bannerMaterializations,
-      expectedBannerCacheEntries:compact.bannerCacheEntries,
-      expectedBannerCacheHits:compact.bannerCacheHits,
-      expectedBannerCacheMisses:compact.bannerCacheMisses,
+      expectedBannerMaterializations:expectedCompact.bannerMaterializations,
+      expectedBannerCacheEntries:expectedCompact.bannerCacheEntries,
+      expectedBannerCacheHits:expectedCompact.bannerCacheHits,
+      expectedBannerCacheMisses:expectedCompact.bannerCacheMisses,
+      targetBannerMaterializations:targetCompact.bannerMaterializations,
+      targetBannerCacheEntries:targetCompact.bannerCacheEntries,
+      targetBannerCacheHits:targetCompact.bannerCacheHits,
+      targetBannerCacheMisses:targetCompact.bannerCacheMisses,
     };
   };
 
