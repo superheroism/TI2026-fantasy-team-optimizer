@@ -1,0 +1,70 @@
+name: M5E Terminal Composition
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - agent/m5e-terminal-composition
+    paths:
+      - .github/workflows/m5e-terminal-composition.yml
+      - src/engine/engineExpectedScoring.ts
+      - benchmarks/m5e-run-request.txt
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build optimized source
+        run: npm run build
+
+      - name: Typecheck and test built output
+        run: |
+          npm run typecheck
+          node --test tests/*.test.mjs
+
+      - name: Run five M5D Wide t4 workloads
+        shell: bash
+        run: |
+          mkdir -p benchmarks/m5e-terminal-composition
+          for fixture in default quality-heavy stat-heavy trait-heavy global-quality; do
+            echo "[M5E] $fixture"
+            if timeout 90s node --expose-gc scripts/benchmark-m5d-case.mjs "$fixture" 4 aggressive wide > "benchmarks/m5e-terminal-composition/$fixture.json"; then
+              true
+            else
+              code=$?
+              printf '{"fixture":"%s","status":"timeout_or_error","exitCode":%s}\n' "$fixture" "$code" > "benchmarks/m5e-terminal-composition/$fixture.json"
+            fi
+          done
+
+      - name: Package generated outputs
+        run: |
+          mkdir -p benchmarks/m5e-terminal-composition/generated/build/js/engine
+          mkdir -p benchmarks/m5e-terminal-composition/generated/docs/js/engine
+          cp build/js/engine/engineExpectedScoring.js benchmarks/m5e-terminal-composition/generated/build/js/engine/
+          cp build/js/engine/engineExpectedScoring.js.map benchmarks/m5e-terminal-composition/generated/build/js/engine/
+          cp docs/js/engine/engineExpectedScoring.js benchmarks/m5e-terminal-composition/generated/docs/js/engine/
+          cp docs/js/engine/engineExpectedScoring.js.map benchmarks/m5e-terminal-composition/generated/docs/js/engine/
+
+      - name: Upload benchmark and generated outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5e-terminal-composition-${{ github.run_id }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: benchmarks/m5e-terminal-composition
