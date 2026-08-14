@@ -11,10 +11,9 @@ import { getRawScenarioDiagnostics, resetRawScenarioDiagnostics } from '../docs/
 import { M5C_EXPECTED_FIXTURES } from './m5c-fixtures.mjs';
 
 const [fixtureName,horizonText,fidelityId='current',wideningId='none']=process.argv.slice(2);
-const horizon=Number(horizonText);
-const holdoutPath=new URL('../benchmarks/m5d-holdout-fixtures.json',import.meta.url);
-const holdouts=fs.existsSync(holdoutPath)?JSON.parse(fs.readFileSync(holdoutPath,'utf8')).fixtures:[];
-const fixture=[...M5C_EXPECTED_FIXTURES,...holdouts].find(row=>row.name===fixtureName);
+const horizon=Number(horizonText),calibrationFixture=M5C_EXPECTED_FIXTURES.find(row=>row.name===fixtureName);
+let fixture=calibrationFixture;
+if(!fixture){const holdoutPath=new URL('../benchmarks/m5d-holdout-fixtures.json',import.meta.url);const holdouts=fs.existsSync(holdoutPath)?JSON.parse(fs.readFileSync(holdoutPath,'utf8')).fixtures:[];fixture=holdouts.find(row=>row.name===fixtureName);}
 if(!fixture||!Number.isInteger(horizon)||horizon<1||!CONTINUATION_FIDELITY_PRESETS[fidelityId]||(wideningId!=='none'&&!ACTION_WIDENING_PRESETS[wideningId]))throw new Error('Usage: benchmark-m5d-case.mjs <fixture> <horizon> <current|aggressive> <none|wide|medium|narrow>');
 const raw=JSON.parse(fs.readFileSync(new URL('../data/ti2026-statistical-model.json',import.meta.url),'utf8'));
 const titles=JSON.parse(fs.readFileSync(new URL('../data/ti2026-title-model.json',import.meta.url),'utf8'));
