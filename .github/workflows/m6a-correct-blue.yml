@@ -1,0 +1,63 @@
+name: M6A Correct Expanded Blue Geometry
+
+on:
+  push:
+    branches:
+      - agent/m6a-versioned-board-layout
+
+permissions:
+  contents: write
+
+jobs:
+  correct-and-validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/m6a-versioned-board-layout
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Correct roadmap terminology
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('ENGINEERING_ROADMAP.md')
+          s = p.read_text()
+          s = s.replace('Mid `R-P-G-R-G`, and Support `P-G-P-G-P`. Purple is a physical slot color mapped to the existing blue-stat legality pool.', 'Mid `R-B-G-R-G`, and Support `B-G-B-G-B`. Expanded slots use only the existing Red, Green, and Blue colors and their unchanged legacy stat pools.')
+          p.write_text(s)
+          PY
+
+      - name: Install
+        run: npm install --no-audit --no-fund
+
+      - name: Rebuild generated artifacts
+        run: npm run build
+
+      - name: Run corrected M6A benchmark
+        run: node scripts/benchmark-m6a-layout.mjs --json=benchmarks/m6a-layout-comparison.json
+
+      - name: Run full tests
+        run: node --test tests/*.test.mjs
+
+      - name: Enforce three-color vocabulary
+        run: |
+          if git grep -ni -E 'purple' -- . ':!package-lock.json'; then
+            echo 'ERROR: purple reference remains after correction.'
+            exit 1
+          fi
+
+      - name: Commit corrected generated evidence
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ENGINEERING_ROADMAP.md build docs benchmarks/m6a-layout-comparison.json
+          if git diff --cached --quiet; then
+            echo "No generated changes to commit."
+          else
+            git commit -m "M6A: regenerate blue-layout evidence"
+            git push origin HEAD:agent/m6a-versioned-board-layout
+          fi
