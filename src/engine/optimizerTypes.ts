@@ -18,10 +18,16 @@ export interface OptimizerEngineDiagnostics {
   readonly expectedScalarStates:number;
   readonly targetScalarStates:number;
   readonly terminalScoringCalls:number;
+  readonly expectedScoringMs:number;
+  readonly targetScoringMs:number;
   readonly expectedBannerMaterializations:number;
   readonly expectedBannerCacheEntries:number;
   readonly expectedBannerCacheHits:number;
   readonly expectedBannerCacheMisses:number;
+  readonly targetBannerMaterializations:number;
+  readonly targetBannerCacheEntries:number;
+  readonly targetBannerCacheHits:number;
+  readonly targetBannerCacheMisses:number;
   readonly targetedActionCacheHits:number;
   readonly targetedActionCacheMisses:number;
   readonly targetedActionCacheBypasses:number;

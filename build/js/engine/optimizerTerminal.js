@@ -8,13 +8,15 @@ export function createTerminalSearchRuntime(state, data) {
     const targetScorer = createEngineTargetScorer(context, data, state.targetScore ?? 0, data.simulation.optimizerIterations, initialEngine.layoutId);
     const expectedMemo = new Map();
     const targetMemo = new Map();
-    let terminalScoringCalls = 0;
+    let terminalScoringCalls = 0, expectedScoringMs = 0, targetScoringMs = 0;
     const expectedScalar = (engine) => {
         const prior = expectedMemo.get(engine.id);
         if (prior !== undefined)
             return prior;
         terminalScoringCalls++;
+        const started = performance.now();
         const value = expectedScorer.evaluate(engine);
+        expectedScoringMs += performance.now() - started;
         expectedMemo.set(engine.id, value);
         return value;
     };
@@ -23,7 +25,9 @@ export function createTerminalSearchRuntime(state, data) {
         if (prior !== undefined)
             return prior;
         terminalScoringCalls++;
+        const started = performance.now();
         const value = targetScorer.evaluate(engine);
+        targetScoringMs += performance.now() - started;
         targetMemo.set(engine.id, value);
         return value;
     };
@@ -39,6 +43,7 @@ export function createTerminalSearchRuntime(state, data) {
         return {
             descriptiveBoardMaterializations: 0, descriptiveBoardCacheEntries: 1,
             expectedScalarStates: expectedMemo.size, targetScalarStates: targetMemo.size, terminalScoringCalls,
+            expectedScoringMs, targetScoringMs,
             expectedBannerMaterializations: expectedCompact.bannerMaterializations,
             expectedBannerCacheEntries: expectedCompact.bannerCacheEntries,
             expectedBannerCacheHits: expectedCompact.bannerCacheHits,
