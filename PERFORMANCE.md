@@ -298,3 +298,15 @@ M6C calibrated adaptive root refinement against exact expanded_5 t=2 oracles. Fr
 ## M6D expanded t=2 adaptive exact certification
 
 M6D closes as **Outcome A**. Calibration selected `adaptive-tight`; the fresh one-shot holdout achieved 100.0% root-action agreement, max expected-score regret 0.00, max target-probability regret 0.000000, 2.52× median speedup, 3.27× P90 speedup, 67.2% median structural work avoided, and 16.7% exact fallback. Production remains `legacy_3` / horizon <=2; the adaptive expanded policy remains off by default.
+
+---
+
+## M6E expanded t=2 production integration
+
+M6E promotes the unchanged M6D-certified `adaptive-tight` policy to the normal production path for `expanded_5` at modeled horizon `t=2`; all `legacy_3` paths and `expanded_5` t=0/1 remain exact. Explicit engineering horizon overrides also remain exact so the M6C/M6D oracle tools preserve their historical semantics. Invalid policy/runtime invariants and unresolved K=6 ambiguity fail safe to exact evaluation.
+
+The authoritative Node 22/Linux 12-case integration matrix covered both objectives plus stat, quality, trait, global-quality, mixed, clear, and close cases. It achieved **100.0% root-action agreement**, **0 maximum expected-score regret**, and **0 maximum target-probability regret**. Median production runtime was **4.239 s**, median speedup **1.66×**, P90 speedup **2.85×**, median structural work avoided **41.8%**, exact fallback **41.7%**, and maximum production RSS **1,038.3 MiB**. Stage completion was 41.7% at K=2, 16.7% at K=4, 0% at K=6, and 41.7% exact fallback.
+
+The lower median speedup than M6D's 2.52× holdout result is explained by the deliberately broader integration corpus: 5/12 M6E cases reach exact fallback versus 16.7% of M6D holdout cases, and those fallback cases necessarily run near exact cost. The certified thresholds and escalation logic were not retuned. Raw evidence is in `benchmarks/m6e-production-integration-results.json` and `benchmarks/m6e-production-integration-report.md`.
+
+**Decision:** M6E passes. `expanded_5` t=2 may use adaptive-tight in production with tested exact fallback; `legacy_3` behavior remains unchanged. Target t=3/t=4 remain frozen and M5H remains untouched.
