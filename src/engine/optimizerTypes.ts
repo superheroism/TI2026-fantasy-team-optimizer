@@ -5,6 +5,8 @@ import type { ValueFunctionDiagnostics } from './valueFunction.js';
 
 export interface OptimizerSearchOptions {
   readonly modeledHorizonOverride?:number;
+  /** Engineering-only exact-oracle switch for regression/certification tooling. Never surfaced in product UI. */
+  readonly engineeringForceExact?:boolean;
   /** Engineering-only M5C continuation policy. Ignored unless the modeled horizon exceeds two tokens. */
   readonly experimentalContinuationFidelity?:ContinuationFidelityPolicy;
   /** Engineering-only M5D operation widening policy. Ignored unless the modeled horizon exceeds two tokens. */
