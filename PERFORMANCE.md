@@ -255,22 +255,25 @@ No adaptive candidate qualified. Even the most complete candidate, A1, finished 
 
 The recommended next bounded technique is exact reuse of root-specific target-search preparation/evaluation work across screening and refinement passes. The objective should be to recover compute without introducing another fidelity approximation, then reassess adaptive refinement only if exact equivalence and measured headroom justify it. Do not begin target `t=4`.
 
-
 ## M6A versioned board-layout baseline
 
 M6A measured the 9→15 emblem expansion before attempting new search optimization. Authoritative runner: Node `v22.23.2`, Linux x64; base SHA `b058010829d7b48c5968d2540acf65a40b64f2a7`. Production controls remained `legacy_3`, horizon `<=2`; no new search approximation was introduced, M5H holdout data were not consumed, and neither target `t=3` nor `t=4` was run. The committed artifact is `benchmarks/m6a-layout-comparison.json`.
 
+Five-slot quality redistribution is fully defined in the final M6A model: choose one uniformly random slot to decrease, then choose two distinct recipients uniformly from the six unordered pairs among the remaining four slots. The other two slots are unchanged. Tier-direction distributions and Tier-I/Tier-V floor/cap waste remain unchanged, and duplicate final states are aggregated. The same implementation reduces exactly to the legacy mechanic on a three-slot banner.
+
 | Workload | expanded / legacy optimizer runtime | Interpretation |
 |---|---:|---|
-| stat-heavy `t=1` | 1.22× | One-step overhead remains modest despite more reachable outcomes. |
-| stat-heavy `t=2` | 1.76× | Frontier growth is material at the production horizon. |
-| quality-heavy `t=2` | 3.78× | Largest measured relative expansion; random/global quality exposes many more five-slot states. |
-| trait-heavy `t=2` | 2.19× | Repeated-color/all-matching operations enlarge continuation breadth. |
-| global-quality `t=2` | 1.93× | Not perfectly apples-to-apples because unresolved expanded redistribution is intentionally unavailable. |
-| target-probability `t=2` | 1.64× | Expanded run ≈6.75 s vs legacy ≈4.12 s on this runner. |
+| stat-heavy `t=1` | 0.24×* | Noisy isolated wall-time result; state counts still increase. |
+| stat-heavy `t=2` | 1.95× | Frontier growth is material at the production horizon. |
+| quality-heavy `t=2` | 4.21× | Largest measured relative expansion. |
+| trait-heavy `t=2` | 2.33× | Repeated-color/all-matching operations enlarge continuation breadth. |
+| global-quality `t=2` | 3.34× | Final apples-to-apples comparison with expanded redistribution enabled. |
+| target-probability `t=2` | 1.93× | Expanded ≈7.48 s vs legacy ≈3.87 s on this runner. |
 
-The stat-heavy `t=1` probe makes the source of growth concrete: a representative Core green-stat transition increased from **5 reachable outcomes** on `legacy_3` to **21** on `expanded_5`, while terminal scoring remained approximately flat (~147 ms legacy vs ~151 ms expanded in the same benchmark process). Codec round-trip cost increased modestly (~4.66 µs to ~5.75 µs per encode/decode loop). This points away from the N-dimensional scoring kernel as the primary problem and toward transition branching, unique compact states, and downstream terminal evaluations.
+`*` Do not interpret the isolated `t=1` timing as a structural expanded-board speedup. The production-relevant `t=2` runs and state/frontier counters are the useful comparison.
 
-Target-probability `t=2` completed on both layouts after layout identity was propagated through the target candidate-preparation cache. The expanded run used about **9,885 target scalar states** and completed in **~6.75 s**; the legacy comparison completed in **~4.12 s**. This remains the highest absolute-cost workload in the matrix, so the exact-reuse opportunity identified by M5H is still important even though the immediate 9→15 expansion also creates substantial expected-score frontier growth.
+The structural signal is clear. Representative Core green-stat branching remains **5 → 21 reachable outcomes**, while terminal scoring is still approximately flat at roughly 150 ms. Expanded target-probability `t=2` reaches **11,284 terminal entries** and takes about **7.48 s** in the final run. The increased runtime is therefore dominated by transition/frontier growth and downstream unique-state evaluation rather than the five-dimensional scoring kernel itself.
 
-The benchmark completed **12/12** matrix cases with **0 errors and 0 timeouts**. M6A therefore establishes a usable expanded-board baseline rather than a performance workaround. No M5C/M5D policy was retuned.
+The final benchmark completed **12/12** matrix cases with **0 benchmark errors and 0 timeouts**. The finalization workflow also rebuilt generated artifacts and ran the complete test suite successfully after enabling five-slot redistribution. M6A therefore closes **Outcome A**: one versioned engine supports both geometries and all currently known operation semantics while preserving production `legacy_3` behavior.
+
+No M5C/M5D policy was retuned. Production remains `legacy_3` / `t<=2`; the M5H holdout remains untouched; target `t=3` was not resumed and `t=4` was not begun. The next package should profile expanded-board `t=2` frontier containment first while retaining exact target-search work reuse as the other major performance opportunity.
