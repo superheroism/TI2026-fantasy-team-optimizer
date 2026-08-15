@@ -20,7 +20,7 @@ function diagnostics(fidelity='current',widening='none'){
 function run(id,horizon,fidelityId,wideningId,runtimeMs=20_000,best=undefined){
   const rows=ranking(best);
   return {id,status:'completed',horizon,fidelityId,wideningId,runtimeMs,targetScore:55_000,menuIds:MENU,recommendationKey:rows[0].key,utility:rows[0].utility,ranking:rows,
-    memory:{end:{rss:100},maxRssEnd:100},engineDiagnostics:diagnostics(fidelityId,wideningId),futureOperationIds:OPS};
+    memory:{end:{rss:100},maxRssEndKb:100},engineDiagnostics:diagnostics(fidelityId,wideningId),futureOperationIds:OPS};
 }
 function passingReport(){
   const runs=[
@@ -63,6 +63,13 @@ test('candidate runtime gate is strict and frozen at both 60s and 0.80 oracle ra
   let gate=evaluateM5EGate(report);assert.equal(gate.checks.candidateCompletedUnder60s,false);
   candidate.runtimeMs=59_000;report.runs.find(row=>row.id==='t3-current-oracle').runtimeMs=70_000;
   gate=evaluateM5EGate(report);assert.equal(gate.checks.candidateCompletedUnder60s,true);assert.equal(gate.checks.candidateMateriallyFaster,false);
+});
+
+test('candidate memory gate reads the worker maxRssEndKb field',()=>{
+  const report=passingReport(),candidate=report.runs.find(row=>row.id==='t3-aggressive-wide');
+  assert.equal(evaluateM5EGate(report).checks.candidateMemoryHealthy,true);
+  delete candidate.memory.maxRssEndKb;
+  assert.equal(evaluateM5EGate(report).checks.candidateMemoryHealthy,false);
 });
 
 test('t=2 experimental options must resolve to current/no widening diagnostics',()=>{
