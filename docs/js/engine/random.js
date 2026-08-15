@@ -61,6 +61,17 @@ export function cholesky(matrix) {
     }
     return L;
 }
+export function correlatedUniformsPreparedN(rng, L) {
+    const n = L.length, z = Array.from({ length: n }, () => rng.normal()), out = new Array(n);
+    for (let i = 0; i < n; i++) {
+        let x = 0;
+        for (let j = 0; j <= i; j++)
+            x += (L[i]?.[j] ?? 0) * (z[j] ?? 0);
+        out[i] = normalCdf(x);
+    }
+    return out;
+}
+/** Frozen pre-M6A three-dimensional kernel. */
 export function correlatedUniformsPrepared(rng, L) {
     const z0 = rng.normal(), z1 = rng.normal(), z2 = rng.normal();
     const x0 = (L[0]?.[0] ?? 0) * z0;

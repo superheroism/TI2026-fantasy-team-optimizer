@@ -1,4 +1,4 @@
-import { cholesky, cholesky3, correlatedUniformsPrepared, normalCdf, SeededRandom } from './random.js';
+import { cholesky, cholesky3, correlatedUniformsPrepared, correlatedUniformsPreparedN, normalCdf, SeededRandom } from './random.js';
 import { mean, percentile, prepareQuantiles, quantileValuePrepared } from './distributions.js';
 import { recommendTitle, titlePrefixBoostPct } from './title.js';
 import { evaluateBanner } from '../domain/bannerEvaluator.js';
@@ -25,7 +25,7 @@ function hashString(value) {
     }
     return h >>> 0;
 }
-/** ScriptsBits stores Spearman rho; its Gaussian-copula implementation maps rho_s to latent Gaussian rho. */
+/** Spearman rho -> latent Gaussian rho for the Gaussian copula. */
 export function spearmanToGaussian(rho) {
     return Math.max(-0.98, Math.min(0.98, 2 * Math.sin(Math.PI * rho / 6)));
 }
@@ -40,11 +40,6 @@ export function selectedCorrelation(role, stats, data) {
         return spearmanToGaussian(model.spearman[ai]?.[bi] ?? 0);
     }));
 }
-/**
- * Apply the verified client retention rule to already-computed per-game role scores.
- * Each inner array is one series. Keep top N games in each series, then best N series.
- * TI 2026 V1 config is N_games=2 and N_series=1.
- */
 export function retainRoleScore(seriesGames, scoring) {
     const seriesScores = seriesGames.map(games => [...games].sort((a, b) => b - a)
         .slice(0, scoring.retainedGamesPerSeries).reduce((a, b) => a + b, 0));
@@ -114,13 +109,23 @@ function rawRoleScenario(profile, banner, data, iterations, seedOffset) {
     rawScenarioDiagnostics.generationMs += performance.now() - start;
     return out;
 }
+function selectedIndices(scenario, banner) {
+    const indices = banner.emblems.map(e => scenario.statIndex.get(e.stat) ?? -1);
+    if (indices.some(i => i < 0))
+        throw new Error(`Role scenario is missing one or more selected stats.`);
+    return indices;
+}
+function scoreSelectedGame(values, base, indices, mult) {
+    let score = 0;
+    for (let i = 0; i < indices.length; i++)
+        score += values[base + indices[i]] * (mult[i] ?? 0);
+    return score;
+}
 function scoreFromRawScenario(scenario, banner, mult) {
     const start = performance.now();
     rawScenarioDiagnostics.sampleRescores++;
     rawScenarioDiagnostics.rescoredIterations += scenario.iterations;
-    const indices = banner.emblems.map(e => scenario.statIndex.get(e.stat) ?? -1);
-    if (indices.some(i => i < 0))
-        throw new Error(`Role scenario is missing one or more selected stats.`);
+    const indices = selectedIndices(scenario, banner);
     const out = new Array(scenario.iterations), { values, third, statCount } = scenario;
     for (let iter = 0; iter < scenario.iterations; iter++) {
         let best = -Infinity;
@@ -129,7 +134,7 @@ function scoreFromRawScenario(scenario, banner, mult) {
             let a = 0, b = 0, c = 0;
             for (let game = 0; game < 3; game++) {
                 const base = (si * 3 + game) * statCount;
-                const score = values[base + indices[0]] * mult[0] + values[base + indices[1]] * mult[1] + values[base + indices[2]] * mult[2];
+                const score = scoreSelectedGame(values, base, indices, mult);
                 if (game === 0)
                     a = score;
                 else if (game === 1)
@@ -150,9 +155,7 @@ function meanFromRawScenario(scenario, banner, mult) {
     const start = performance.now();
     rawScenarioDiagnostics.meanRescores++;
     rawScenarioDiagnostics.rescoredIterations += scenario.iterations;
-    const indices = banner.emblems.map(e => scenario.statIndex.get(e.stat) ?? -1);
-    if (indices.some(i => i < 0))
-        throw new Error(`Role scenario is missing one or more selected stats.`);
+    const indices = selectedIndices(scenario, banner);
     const { values, third, statCount } = scenario;
     let total = 0;
     for (let iter = 0; iter < scenario.iterations; iter++) {
@@ -162,7 +165,7 @@ function meanFromRawScenario(scenario, banner, mult) {
             let a = 0, b = 0, c = 0;
             for (let game = 0; game < 3; game++) {
                 const base = (si * 3 + game) * statCount;
-                const score = values[base + indices[0]] * mult[0] + values[base + indices[1]] * mult[1] + values[base + indices[2]] * mult[2];
+                const score = scoreSelectedGame(values, base, indices, mult);
                 if (game === 0)
                     a = score;
                 else if (game === 1)
@@ -199,6 +202,10 @@ function simulateRoleTeamExpected(profile, banner, data, iterations, seedOffset)
     cache.set(key, result);
     return result;
 }
+function selectedUniforms(rng, corr) {
+    // Preserve the legacy three-slot random stream and numerical path exactly.
+    return corr.length === 3 ? correlatedUniformsPrepared(rng, cholesky3(corr)) : correlatedUniformsPreparedN(rng, cholesky(corr));
+}
 export function simulateRoleTeam(profile, banner, data, iterations = data.simulation.iterations, seedOffset = 0) {
     const missing = missingBannerStats(profile, banner);
     if (missing.length)
@@ -211,9 +218,6 @@ export function simulateRoleTeam(profile, banner, data, iterations = data.simula
     const stats = banner.emblems.map(e => e.stat);
     const corr = selectedCorrelation(banner.role, stats, data);
     const evaluatedBanner = evaluateBanner(banner);
-    // Random scenarios depend on team/role/stat structure, not quality/trait multipliers. Keeping
-    // the seed stable across multiplier-only changes acts as common random numbers and reduces
-    // action-comparison Monte Carlo noise.
     const key = JSON.stringify({ p: profile.id, b: banner.emblems.map((e, i) => [e.stat, e.qualityTier, e.trait, evaluatedBanner[i].effectiveMultiplierPct]), n: iterations, s: banner.expectedSeries, c: corr, r: data.simulation.scoring, z: data.simulation.seed + seedOffset });
     const cached = cache.get(key);
     if (cached)
@@ -221,7 +225,6 @@ export function simulateRoleTeam(profile, banner, data, iterations = data.simula
     const scenarioKey = JSON.stringify({ p: profile.id, stats, n: iterations, s: banner.expectedSeries, c: corr, r: data.simulation.scoring, z: data.simulation.seed + seedOffset });
     const rng = new SeededRandom((data.simulation.seed + hashString(scenarioKey) + seedOffset) >>> 0);
     const scoring = data.simulation.scoring;
-    const L = cholesky3(corr);
     const prepared = stats.map(stat => prepareQuantiles(profile.statQuantiles[stat]));
     const mult = evaluatedBanner.map(x => x.effectiveMultiplierPct / 100);
     if (iterations <= RAW_SCENARIO_MAX_ITERATIONS && scoring.retainedGamesPerSeries === 2 && scoring.retainedSeries === 1) {
@@ -230,8 +233,6 @@ export function simulateRoleTeam(profile, banner, data, iterations = data.simula
         return out;
     }
     const out = new Array(iterations);
-    // Specialized TI-2026 retention kernel: top 2 games per series, then best series.
-    // Avoids thousands of short-lived arrays and sorts per team/banner simulation.
     const topTwo = scoring.retainedGamesPerSeries === 2 && scoring.retainedSeries === 1;
     for (let iter = 0; iter < iterations; iter++) {
         if (topTwo) {
@@ -240,10 +241,10 @@ export function simulateRoleTeam(profile, banner, data, iterations = data.simula
                 const gameCount = 2 + (rng.uniform() < scoring.thirdGameProbability ? 1 : 0);
                 let a = 0, b = 0, c = 0;
                 for (let g = 0; g < gameCount; g++) {
-                    const u = correlatedUniformsPrepared(rng, L);
-                    const score = quantileValuePrepared(prepared[0], u[0]) * mult[0]
-                        + quantileValuePrepared(prepared[1], u[1]) * mult[1]
-                        + quantileValuePrepared(prepared[2], u[2]) * mult[2];
+                    const u = selectedUniforms(rng, corr);
+                    let score = 0;
+                    for (let i = 0; i < prepared.length; i++)
+                        score += quantileValuePrepared(prepared[i], u[i] ?? 0.5) * (mult[i] ?? 0);
                     if (g === 0)
                         a = score;
                     else if (g === 1)
@@ -262,10 +263,11 @@ export function simulateRoleTeam(profile, banner, data, iterations = data.simula
             for (let s = 0; s < banner.expectedSeries; s++) {
                 const gameCount = 2 + (rng.uniform() < scoring.thirdGameProbability ? 1 : 0), games = [];
                 for (let g = 0; g < gameCount; g++) {
-                    const u = correlatedUniformsPrepared(rng, L);
-                    games.push(quantileValuePrepared(prepared[0], u[0]) * mult[0]
-                        + quantileValuePrepared(prepared[1], u[1]) * mult[1]
-                        + quantileValuePrepared(prepared[2], u[2]) * mult[2]);
+                    const u = selectedUniforms(rng, corr);
+                    let score = 0;
+                    for (let i = 0; i < prepared.length; i++)
+                        score += quantileValuePrepared(prepared[i], u[i] ?? 0.5) * (mult[i] ?? 0);
+                    games.push(score);
                 }
                 seriesGames.push(games);
             }
@@ -290,9 +292,6 @@ export function rankTeamsForRole(role, board, data, iterations = data.simulation
         rankingCache.set(data, cache);
     }
     const banner = board[role];
-    // Team choice does not change a banner's underlying team-by-team role distributions. Excluding
-    // selectedTeam lets the Likely Results comparison remain cached and instantly re-highlight when
-    // the user switches teams without changing stats/tiers/traits/series.
     const key = `${role}|${bannerMechanicsKey(banner)}|${iterations}`;
     const cached = cache.get(key);
     if (cached)
@@ -360,9 +359,6 @@ export function rolePrefixFrontier(role, banner, data, iterations = data.simulat
     cache.set(key, out);
     return out;
 }
-/** Fast scalar evaluator for optimizer search. It is mathematically equivalent for expected-score
- * utility to full board evaluation, but composes cached per-role/per-prefix frontiers instead of
- * rebuilding roster/title/sample objects for every terminal board combination. */
 export function evaluateBoardExpectedFast(board, data, iterations = data.simulation.optimizerIterations) {
     const frontiers = {
         core: rolePrefixFrontier('core', board.core, data, iterations),
@@ -427,7 +423,6 @@ function titleAwareBestRoster(board, data, iterations) {
     }
     return { roster: bestRoster, ...(bestPrefixId !== undefined ? { prefixId: bestPrefixId } : {}) };
 }
-/** Evaluate exactly the teams selected by the user, mirroring the ScriptsBits setup view. */
 export function evaluateSelectedBoard(board, username, data, targetScore) {
     const n = data.simulation.iterations;
     const roster = { core: [], mid: [], support: [] };
@@ -438,10 +433,6 @@ export function evaluateSelectedBoard(board, username, data, targetScore) {
     });
     return buildEvaluation(roster, username, data, targetScore);
 }
-/**
- * Terminal board evaluator used by the stochastic action engine. Team selection is free, so it
- * re-optimizes the team independently for Core, Mid and Support after every hypothetical board.
- */
 export function evaluateBoard(board, username, data, targetScore) {
     const n = data.simulation.optimizerIterations;
     const optimized = titleAwareBestRoster(board, data, n);
