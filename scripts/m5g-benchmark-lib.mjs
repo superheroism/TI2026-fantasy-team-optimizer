@@ -5,6 +5,7 @@ export const M5G_CANDIDATE={fidelityId:'aggressive',wideningId:'wide',timeoutMs:
 export const M5G_MEMORY_GUARD_BYTES=6*1024*1024*1024;
 const EPS=1e-12;
 
+export function isM5GCaseArtifactPath(filePath){return /^m5g-(?:canonical-default|holdout-0[1-8])-(?:50000|55000|60000)\.json$/.test(filePath.replaceAll('\\','/').split('/').at(-1)??'');}
 export function actionType(key){return key==='stop'?'stop':key==='menu_reroll'?'menu_reroll':'board_action';}
 export function actionFamily(key){if(actionType(key)!=='board_action')return actionType(key);const id=key.split('|')[1]??'';return id.includes('stat')?'stat':id.includes('quality')?'quality':id.includes('trait')?'trait':'other';}
 export function percentile(values,q){if(!values.length)return null;const s=[...values].sort((a,b)=>a-b);const i=Math.min(s.length-1,Math.max(0,Math.ceil(q*s.length)-1));return s[i];}
