@@ -1,0 +1,49 @@
+name: M5F Apply Transfer
+
+on:
+  push:
+    paths:
+      - '.github/m5f-apply-transfer-request'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out M5F branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Reconstruct implementation bundle
+        run: |
+          cat .m5f-transfer/part-* | base64 -d > /tmp/m5f-transfer.tar.gz
+          tar -xzf /tmp/m5f-transfer.tar.gz -C .
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build and validate implementation bundle
+        run: |
+          npm run typecheck
+          npm run build
+          npm run verify:generated
+          node --test tests/*.test.mjs
+          npm run benchmark:m5f:plan
+          npm run benchmark:m5f:kernel
+
+      - name: Commit implementation and generated output
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/engine/targetSearch.ts tests/m5f-target-search-kernel.test.mjs tests/m5f-benchmark-gate.test.mjs scripts/benchmark-m5f-target-kernel.mjs scripts/benchmark-m5f-target-case.mjs scripts/benchmark-m5f-target.mjs scripts/m5f-benchmark-lib.mjs package.json .github/workflows/m5f-exact-target-search.yml docs
+          git commit -m "M5F: accelerate exact target-search kernel"
+          git push origin HEAD:${GITHUB_REF_NAME}
