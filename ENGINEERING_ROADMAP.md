@@ -492,3 +492,20 @@ M1 is intentionally limited to making the existing optimizer trustworthy and mea
 4. Existing tests remain green.
 5. Target-probability mode jointly chooses the free roster/title that maximizes `P(score >= target)`.
 6. Benchmarks produce repeatable cold/warm measurements suitable for later M2–M6 comparisons.
+
+
+---
+
+## M6A — Versioned board-layout expansion
+
+M6A interrupted the post-M5 deep-search sequence because the client geometry is expanding from three to five emblem slots per role. The engine now treats board geometry as ruleset/version data rather than a search invariant. `legacy_3` preserves Core `R-G-R`, Mid `R-B-G`, and Support `B-G-B`; `expanded_5` uses Core `R-G-R-G-R`, Mid `R-B-G-R-G`, and Support `B-G-B-G-B`. Both layouts use only the existing Red, Green, and Blue stat colors and their unchanged legacy eligible-stat pools.
+
+Legacy compact IDs retain their original numeric namespace. Expanded board IDs occupy a disjoint versioned namespace, and layout identity is included in transition, scoring, target-preparation, and mechanics caches. The descriptive `BoardState` boundary remains explicit; old unversioned board objects resolve to `legacy_3`. Production remains pinned to `legacy_3` with modeled horizon `<=2`.
+
+Five-slot quality redistribution is defined and tested: one slot is selected uniformly to decrease, then two distinct recipients are selected uniformly from all unordered pairs among the remaining four slots. The other two slots are unchanged. Existing tier-direction distributions, Tier-I/Tier-V floor/cap waste, and final-state aggregation are preserved. For `legacy_3`, the same generalized definition reduces exactly to one decreased slot and the other two increased.
+
+The corrected authoritative Node 22 matrix completed 12/12 cases and the complete 199-test suite passed. Relative to `legacy_3`, corrected `expanded_5` optimizer runtime at `t=2` was **2.86× stat-heavy, 5.48× quality-heavy, 3.26× trait-heavy, 4.13× global-quality, and 3.09× target-probability**. The expanded target case reached **17,862 target scalar states**. The isolated stat-heavy `t=1` wall-time ratio was 0.14× and is treated as runner noise rather than evidence of a structural speedup.
+
+The dominant effect is frontier/branch growth: representative stat-heavy one-step reachable outcomes remain 5 → 21, while correctly recognizing the added Blue slots substantially increases the operations and future states reachable from Mid/Support. M6A therefore closes as **Outcome A** with exactly three stat colors and one authoritative implementation.
+
+**Sequencing decision:** do not resume experimental target `t=3`, consume the untouched M5H holdout, or begin `t=4` yet. The corrected measurements make expanded-board `t=2` frontier containment the next problem to profile first; exact target-search reuse from M5H remains relevant, but the next package should be selected from the expanded frontier profile rather than assumed in advance.

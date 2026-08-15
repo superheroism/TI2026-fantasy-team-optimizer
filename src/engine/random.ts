@@ -40,7 +40,6 @@ export function cholesky3(matrix: number[][]): number[][] {
   return L;
 }
 
-
 export function cholesky(matrix:number[][]):number[][]{
   const n=matrix.length,L=Array.from({length:n},()=>new Array<number>(n).fill(0));
   for(let i=0;i<n;i++){
@@ -54,6 +53,12 @@ export function cholesky(matrix:number[][]):number[][]{
   return L;
 }
 
+export function correlatedUniformsPreparedN(rng:SeededRandom,L:number[][]):number[]{
+  const n=L.length,z=Array.from({length:n},()=>rng.normal()),out=new Array<number>(n);
+  for(let i=0;i<n;i++){let x=0;for(let j=0;j<=i;j++)x+=(L[i]?.[j]??0)*(z[j]??0);out[i]=normalCdf(x);}return out;
+}
+
+/** Frozen pre-M6A three-dimensional kernel. */
 export function correlatedUniformsPrepared(rng:SeededRandom,L:number[][]):[number,number,number]{
   const z0=rng.normal(),z1=rng.normal(),z2=rng.normal();
   const x0=(L[0]?.[0]??0)*z0;

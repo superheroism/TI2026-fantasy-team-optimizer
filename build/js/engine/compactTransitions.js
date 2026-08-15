@@ -1,31 +1,15 @@
-import { BANNER_COLORS, LEGAL_STAT_POOLS } from '../domain/rules.js';
+import { DEFAULT_LAYOUT_ID, LEGAL_STAT_POOLS, boardLayout } from '../domain/rules.js';
 import { TRAIT_COUNT, decodeBannerEmblemIds, emblemQualityTier, emblemStatIndex, emblemTraitIndex, encodeBannerEmblemIds, encodeEmblemComponents, replaceEngineBanner, } from './stateEncoding.js';
 const QUALITY_TIERS = [1, 2, 3, 4, 5];
-const ROLES = ['core', 'mid', 'support'];
-function newDiagnostics() {
-    return {
-        cacheHits: 0,
-        cacheMisses: 0,
-        uniqueTransitionCalculations: 0,
-        outcomesBeforeAggregation: 0,
-        outcomesAfterAggregation: 0,
-        transitionGenerationMs: 0,
-    };
-}
+function newDiagnostics() { return { cacheHits: 0, cacheMisses: 0, uniqueTransitionCalculations: 0, outcomesBeforeAggregation: 0, outcomesAfterAggregation: 0, transitionGenerationMs: 0 }; }
 let diagnostics = newDiagnostics();
-/** role -> compact banner ID -> mechanics-only operation key -> cached distribution */
-const transitionCache = new Map(ROLES.map(role => [role, new Map()]));
-export function clearTransitionCache() {
-    for (const cache of transitionCache.values())
-        cache.clear();
-}
+const transitionCache = new Map();
+export function clearTransitionCache() { transitionCache.clear(); }
 export function resetTransitionDiagnostics() { diagnostics = newDiagnostics(); }
 export function getTransitionDiagnostics() { return { ...diagnostics }; }
 function operationKey(op, uniformStatFallback) {
     if (op.kind === 'stat_reroll') {
-        const weights = op.outcomeWeights
-            ? LEGAL_STAT_POOLS[op.color].map(stat => `${stat}:${op.outcomeWeights?.[stat] ?? 0}`).join(',')
-            : '-';
+        const weights = op.outcomeWeights ? LEGAL_STAT_POOLS[op.color].map(stat => `${stat}:${op.outcomeWeights?.[stat] ?? 0}`).join(',') : '-';
         return `s|${op.color}|${op.scope}|${op.excludeCurrent ? 1 : 0}|${uniformStatFallback ? 1 : 0}|${weights}`;
     }
     if (op.kind === 'quality_reroll')
@@ -36,10 +20,7 @@ function operationKey(op, uniformStatFallback) {
         return 'i';
     return 'r';
 }
-function matchingIndices(role, color) {
-    const colors = BANNER_COLORS[role];
-    return colors.map((slotColor, index) => slotColor === color ? index : -1).filter(index => index >= 0);
-}
+function matchingIndices(layoutId, role, color) { return boardLayout(layoutId).roles[role].filter(slot => slot.color === color).map(slot => slot.index); }
 function targetChoices(matching, scope) {
     if (!matching.length)
         return [];
@@ -65,68 +46,41 @@ function aggregate(outcomes) {
     diagnostics.outcomesAfterAggregation += result.length;
     return result;
 }
-function withSlot(ids, index, next) {
-    if (index === 0)
-        return [next, ids[1], ids[2]];
-    if (index === 1)
-        return [ids[0], next, ids[2]];
-    return [ids[0], ids[1], next];
-}
-function bannerId(ids) {
-    return encodeBannerEmblemIds(ids[0], ids[1], ids[2]);
-}
-function statName(role, index, id) {
-    const color = BANNER_COLORS[role][index];
-    return LEGAL_STAT_POOLS[color][emblemStatIndex(id)];
-}
+function withSlot(ids, index, next) { const out = [...ids]; out[index] = next; return out; }
+function bannerId(layoutId, ids) { return encodeBannerEmblemIds(layoutId, ids); }
+function statName(layoutId, role, index, id) { const slot = boardLayout(layoutId).roles[role][index]; if (!slot)
+    throw new RangeError(`No ${layoutId}/${role} slot ${index}.`); return LEGAL_STAT_POOLS[slot.color][emblemStatIndex(id)]; }
 function weightedCandidates(op, candidates, uniformFallback) {
     if (op.outcomeWeights) {
-        const weighted = candidates
-            .map(stat => [stat, Math.max(0, op.outcomeWeights?.[stat] ?? 0)])
-            .filter(([, weight]) => weight > 0);
+        const weighted = candidates.map(stat => [stat, Math.max(0, op.outcomeWeights?.[stat] ?? 0)]).filter(([, weight]) => weight > 0);
         if (weighted.length)
             return weighted;
     }
-    if (!uniformFallback)
-        return [];
-    return candidates.map(stat => [stat, 1]);
+    return uniformFallback ? candidates.map(stat => [stat, 1]) : [];
 }
-function enumerateStatReroll(role, banner, op, uniformFallback) {
-    const source = decodeBannerEmblemIds(banner);
-    const matching = matchingIndices(role, op.color);
+function enumerateStatReroll(layoutId, role, banner, op, uniformFallback) {
+    const source = decodeBannerEmblemIds(banner, layoutId), matching = matchingIndices(layoutId, role, op.color);
     if (!matching.length)
         return [];
     const out = [];
     for (const choice of targetChoices(matching, op.scope)) {
-        const targetSet = new Set(choice.indices);
-        const fixedStats = new Set();
-        for (let index = 0; index < 3; index++)
+        const targetSet = new Set(choice.indices), fixedStats = new Set();
+        for (let index = 0; index < source.length; index++)
             if (!targetSet.has(index))
-                fixedStats.add(statName(role, index, source[index]));
-        const originals = new Map(choice.indices.map(index => [index, statName(role, index, source[index])]));
-        const pool = LEGAL_STAT_POOLS[op.color];
+                fixedStats.add(statName(layoutId, role, index, source[index]));
+        const originals = new Map(choice.indices.map(index => [index, statName(layoutId, role, index, source[index])])), pool = LEGAL_STAT_POOLS[op.color];
         const recurse = (depth, ids, probability, used) => {
             if (depth >= choice.indices.length) {
-                const outcome = choice.note
-                    ? { banner: bannerId(ids), probability, note: choice.note }
-                    : { banner: bannerId(ids), probability };
-                out.push(outcome);
+                out.push(choice.note ? { banner: bannerId(layoutId, ids), probability, note: choice.note } : { banner: bannerId(layoutId, ids), probability });
                 return;
             }
-            const index = choice.indices[depth];
-            const original = originals.get(index);
-            const candidates = pool.filter(stat => stat !== original && !used.has(stat));
-            const weighted = weightedCandidates(op, candidates, uniformFallback);
-            const totalWeight = weighted.reduce((sum, [, weight]) => sum + weight, 0);
+            const index = choice.indices[depth], original = originals.get(index);
+            const candidates = pool.filter(stat => stat !== original && !used.has(stat)), weighted = weightedCandidates(op, candidates, uniformFallback), totalWeight = weighted.reduce((sum, [, weight]) => sum + weight, 0);
             if (totalWeight <= 0)
                 return;
-            const currentId = ids[index];
-            const quality = emblemQualityTier(currentId);
-            const trait = emblemTraitIndex(currentId);
+            const currentId = ids[index], quality = emblemQualityTier(currentId), trait = emblemTraitIndex(currentId);
             for (const [nextStat, weight] of weighted) {
-                const nextStatIndex = pool.indexOf(nextStat);
-                const nextId = encodeEmblemComponents(nextStatIndex, quality, trait);
-                const nextUsed = new Set(used);
+                const nextId = encodeEmblemComponents(pool.indexOf(nextStat), quality, trait), nextUsed = new Set(used);
                 nextUsed.add(nextStat);
                 recurse(depth + 1, withSlot(ids, index, nextId), probability * weight / totalWeight, nextUsed);
             }
@@ -135,152 +89,117 @@ function enumerateStatReroll(role, banner, op, uniformFallback) {
     }
     return aggregate(out);
 }
-function enumerateQualityReroll(role, banner, op) {
+function enumerateQualityReroll(layoutId, role, banner, op) {
     if (op.kind !== 'quality_reroll')
         return [];
-    const source = decodeBannerEmblemIds(banner);
-    const out = [];
-    for (const choice of targetChoices(matchingIndices(role, op.color), op.scope)) {
-        const recurse = (depth, ids, probability) => {
-            if (depth >= choice.indices.length) {
-                const outcome = choice.note
-                    ? { banner: bannerId(ids), probability, note: choice.note }
-                    : { banner: bannerId(ids), probability };
-                out.push(outcome);
-                return;
-            }
-            const index = choice.indices[depth];
-            const currentId = ids[index];
-            const current = emblemQualityTier(currentId);
-            const stat = emblemStatIndex(currentId), trait = emblemTraitIndex(currentId);
-            const candidates = QUALITY_TIERS.filter(tier => tier !== current);
-            for (const tier of candidates)
-                recurse(depth + 1, withSlot(ids, index, encodeEmblemComponents(stat, tier, trait)), probability / candidates.length);
-        };
+    const source = decodeBannerEmblemIds(banner, layoutId), out = [];
+    for (const choice of targetChoices(matchingIndices(layoutId, role, op.color), op.scope)) {
+        const recurse = (depth, ids, probability) => { if (depth >= choice.indices.length) {
+            out.push(choice.note ? { banner: bannerId(layoutId, ids), probability, note: choice.note } : { banner: bannerId(layoutId, ids), probability });
+            return;
+        } const index = choice.indices[depth], currentId = ids[index], current = emblemQualityTier(currentId), stat = emblemStatIndex(currentId), trait = emblemTraitIndex(currentId), candidates = QUALITY_TIERS.filter(tier => tier !== current); for (const tier of candidates)
+            recurse(depth + 1, withSlot(ids, index, encodeEmblemComponents(stat, tier, trait)), probability / candidates.length); };
         recurse(0, source, choice.probability);
     }
     return aggregate(out);
 }
-function enumerateTraitReroll(role, banner, op) {
+function enumerateTraitReroll(layoutId, role, banner, op) {
     if (op.kind !== 'trait_reroll')
         return [];
-    const source = decodeBannerEmblemIds(banner);
-    const out = [];
-    for (const choice of targetChoices(matchingIndices(role, op.color), op.scope)) {
-        const recurse = (depth, ids, probability) => {
-            if (depth >= choice.indices.length) {
-                const outcome = choice.note
-                    ? { banner: bannerId(ids), probability, note: choice.note }
-                    : { banner: bannerId(ids), probability };
-                out.push(outcome);
-                return;
-            }
-            const index = choice.indices[depth];
-            const currentId = ids[index];
-            const current = emblemTraitIndex(currentId);
-            const stat = emblemStatIndex(currentId), quality = emblemQualityTier(currentId);
-            for (let trait = 0; trait < TRAIT_COUNT; trait++) {
-                if (trait === current)
-                    continue;
-                recurse(depth + 1, withSlot(ids, index, encodeEmblemComponents(stat, quality, trait)), probability / (TRAIT_COUNT - 1));
-            }
-        };
+    const source = decodeBannerEmblemIds(banner, layoutId), out = [];
+    for (const choice of targetChoices(matchingIndices(layoutId, role, op.color), op.scope)) {
+        const recurse = (depth, ids, probability) => { if (depth >= choice.indices.length) {
+            out.push(choice.note ? { banner: bannerId(layoutId, ids), probability, note: choice.note } : { banner: bannerId(layoutId, ids), probability });
+            return;
+        } const index = choice.indices[depth], currentId = ids[index], current = emblemTraitIndex(currentId), stat = emblemStatIndex(currentId), quality = emblemQualityTier(currentId); for (let trait = 0; trait < TRAIT_COUNT; trait++)
+            if (trait !== current)
+                recurse(depth + 1, withSlot(ids, index, encodeEmblemComponents(stat, quality, trait)), probability / (TRAIT_COUNT - 1)); };
         recurse(0, source, choice.probability);
     }
     return aggregate(out);
 }
-function directionalTierOutcomes(current, direction) {
-    const candidates = QUALITY_TIERS.filter(tier => direction === 'increase' ? tier > current : tier < current);
-    if (!candidates.length)
-        return [{ tier: current, probability: 1 }];
-    return candidates.map(tier => ({ tier, probability: 1 / candidates.length }));
-}
-function enumerateQualityIncrease(banner, op) {
+function directionalTierOutcomes(current, direction) { const candidates = QUALITY_TIERS.filter(tier => direction === 'increase' ? tier > current : tier < current); return candidates.length ? candidates.map(tier => ({ tier, probability: 1 / candidates.length })) : [{ tier: current, probability: 1 }]; }
+function enumerateQualityIncrease(layoutId, banner, op) {
     if (op.kind !== 'quality_increase')
         return [];
-    const source = decodeBannerEmblemIds(banner);
+    const source = decodeBannerEmblemIds(banner, layoutId), out = [];
+    for (let index = 0; index < source.length; index++) {
+        const currentId = source[index], current = emblemQualityTier(currentId), stat = emblemStatIndex(currentId), trait = emblemTraitIndex(currentId);
+        for (const next of directionalTierOutcomes(current, 'increase'))
+            out.push({ banner: bannerId(layoutId, withSlot(source, index, encodeEmblemComponents(stat, next.tier, trait))), probability: (1 / source.length) * next.probability, note: `Randomly selected slot ${index + 1} to increase.` });
+    }
+    return aggregate(out);
+}
+function choosePairs(indices) { const pairs = []; for (let i = 0; i < indices.length; i++)
+    for (let j = i + 1; j < indices.length; j++)
+        pairs.push([indices[i], indices[j]]); return pairs; }
+function enumerateQualityRedistribution(layoutId, banner, op) {
+    if (op.kind !== 'quality_redistribution')
+        return [];
+    const source = decodeBannerEmblemIds(banner, layoutId), count = source.length;
+    if (count < 3)
+        return [];
     const out = [];
-    for (const index of [0, 1, 2]) {
-        const currentId = source[index], current = emblemQualityTier(currentId);
-        const stat = emblemStatIndex(currentId), trait = emblemTraitIndex(currentId);
-        for (const next of directionalTierOutcomes(current, 'increase')) {
-            out.push({
-                banner: bannerId(withSlot(source, index, encodeEmblemComponents(stat, next.tier, trait))),
-                probability: (1 / 3) * next.probability,
-                note: `Randomly selected slot ${index + 1} to increase.`,
-            });
+    for (let downIndex = 0; downIndex < count; downIndex++) {
+        const remaining = Array.from({ length: count }, (_, index) => index).filter(index => index !== downIndex), recipientPairs = choosePairs(remaining);
+        for (const recipients of recipientPairs) {
+            const recipientSet = new Set(recipients);
+            const recurse = (index, ids, probability) => {
+                if (index >= source.length) {
+                    out.push({ banner: bannerId(layoutId, ids), probability, note: `Randomly selected slot ${downIndex + 1} to decrease; slots ${recipients[0] + 1} and ${recipients[1] + 1} increase.` });
+                    return;
+                }
+                const currentId = ids[index], quality = emblemQualityTier(currentId), stat = emblemStatIndex(currentId), trait = emblemTraitIndex(currentId), direction = index === downIndex ? 'decrease' : recipientSet.has(index) ? 'increase' : null;
+                if (!direction) {
+                    recurse(index + 1, ids, probability);
+                    return;
+                }
+                for (const next of directionalTierOutcomes(quality, direction))
+                    recurse(index + 1, withSlot(ids, index, encodeEmblemComponents(stat, next.tier, trait)), probability * next.probability);
+            };
+            recurse(0, source, (1 / count) * (1 / recipientPairs.length));
         }
     }
     return aggregate(out);
 }
-function enumerateQualityRedistribution(banner, op) {
-    if (op.kind !== 'quality_redistribution')
-        return [];
-    const source = decodeBannerEmblemIds(banner);
-    const out = [];
-    for (const downIndex of [0, 1, 2]) {
-        const recurse = (index, ids, probability) => {
-            if (index >= 3) {
-                out.push({ banner: bannerId(ids), probability, note: `Randomly selected slot ${downIndex + 1} to decrease; the other two increase.` });
-                return;
-            }
-            const position = index;
-            const currentId = ids[position], quality = emblemQualityTier(currentId);
-            const stat = emblemStatIndex(currentId), trait = emblemTraitIndex(currentId);
-            const direction = position === downIndex ? 'decrease' : 'increase';
-            for (const next of directionalTierOutcomes(quality, direction)) {
-                recurse(index + 1, withSlot(ids, position, encodeEmblemComponents(stat, next.tier, trait)), probability * next.probability);
-            }
-        };
-        recurse(0, source, 1 / 3);
-    }
-    return aggregate(out);
-}
-function calculateBannerOperation(role, banner, op, uniformStatFallback) {
+function calculateBannerOperation(layoutId, role, banner, op, uniformStatFallback) {
     if (op.kind === 'stat_reroll')
-        return enumerateStatReroll(role, banner, op, uniformStatFallback);
+        return enumerateStatReroll(layoutId, role, banner, op, uniformStatFallback);
     if (op.kind === 'quality_reroll')
-        return enumerateQualityReroll(role, banner, op);
+        return enumerateQualityReroll(layoutId, role, banner, op);
     if (op.kind === 'trait_reroll')
-        return enumerateTraitReroll(role, banner, op);
+        return enumerateTraitReroll(layoutId, role, banner, op);
     if (op.kind === 'quality_increase')
-        return enumerateQualityIncrease(banner, op);
+        return enumerateQualityIncrease(layoutId, banner, op);
     if (op.kind === 'quality_redistribution')
-        return enumerateQualityRedistribution(banner, op);
+        return enumerateQualityRedistribution(layoutId, banner, op);
     return [];
 }
-export function enumerateCompactBannerOperation(role, banner, op, uniformStatFallback = true) {
-    const roleCache = transitionCache.get(role);
+export function enumerateCompactBannerOperation(role, banner, op, uniformStatFallback = true, layoutId = DEFAULT_LAYOUT_ID) {
+    const cacheKey = `${layoutId}|${role}`;
+    let roleCache = transitionCache.get(cacheKey);
+    if (!roleCache) {
+        roleCache = new Map();
+        transitionCache.set(cacheKey, roleCache);
+    }
     let bannerCache = roleCache.get(banner);
     if (!bannerCache) {
         bannerCache = new Map();
         roleCache.set(banner, bannerCache);
     }
-    const key = operationKey(op, uniformStatFallback);
-    const prior = bannerCache.get(key);
+    const key = operationKey(op, uniformStatFallback), prior = bannerCache.get(key);
     if (prior) {
         diagnostics.cacheHits++;
         return prior;
     }
     diagnostics.cacheMisses++;
     diagnostics.uniqueTransitionCalculations++;
-    const start = performance.now();
-    const result = calculateBannerOperation(role, banner, op, uniformStatFallback);
+    const start = performance.now(), result = calculateBannerOperation(layoutId, role, banner, op, uniformStatFallback);
     diagnostics.transitionGenerationMs += performance.now() - start;
     bannerCache.set(key, result);
     return result;
 }
-/**
- * Compact transition API used by search. Only the targeted role-local banner ID
- * changes; the two unchanged role IDs are structurally reused in every outcome.
- */
 export function enumerateEngineOperation(state, role, op, uniformStatFallback = true) {
-    const banner = state[role];
-    return enumerateCompactBannerOperation(role, banner, op, uniformStatFallback).map(outcome => {
-        const nextState = replaceEngineBanner(state, role, outcome.banner);
-        return outcome.note
-            ? { nextState, probability: outcome.probability, note: outcome.note }
-            : { nextState, probability: outcome.probability };
-    });
+    return enumerateCompactBannerOperation(role, state[role], op, uniformStatFallback, state.layoutId).map(outcome => { const nextState = replaceEngineBanner(state, role, outcome.banner); return outcome.note ? { nextState, probability: outcome.probability, note: outcome.note } : { nextState, probability: outcome.probability }; });
 }
 //# sourceMappingURL=compactTransitions.js.map

@@ -1,31 +1,21 @@
 import { QUALITY_BONUS_PCT } from './clientRules.js';
-const POSITIONS = [0, 1, 2];
 function adjacent(a, b) { return Math.abs(a - b) === 1; }
 function allDifferent(values) { return new Set(values).size === values.length; }
 function qualityBonus(tier) { return QUALITY_BONUS_PCT[tier]; }
-/**
- * Deterministically derives all three effective emblem multipliers from the current
- * TI 2026 client quality and trait rules.
- *
- * Percentage bonuses are additive percentage points to the emblem's 100% base rate.
- * All traits are evaluated against the same complete banner state, then stacked.
- */
+/** Evaluate the current verified trait definitions against the complete banner, independent of slot count. */
 export function evaluateBanner(banner) {
-    const qualities = banner.emblems.map(e => e.qualityTier);
-    const traits = banner.emblems.map(e => e.trait);
-    const fractalCondition = allDifferent(qualities);
-    const uniqueCount = traits.filter(t => t === 'Unique').length;
-    const friendlyCount = traits.filter(t => t === 'Friendly').length;
-    const out = POSITIONS.map(position => {
+    const positions = banner.emblems.map((_, index) => index), qualities = banner.emblems.map(e => e.qualityTier), traits = banner.emblems.map(e => e.trait);
+    const fractalCondition = allDifferent(qualities), uniqueCount = traits.filter(t => t === 'Unique').length, friendlyCount = traits.filter(t => t === 'Friendly').length;
+    return positions.map(position => {
         const emblem = banner.emblems[position];
         const effects = [];
         const add = (sourcePosition, trait, modifierPct, reason) => effects.push({ sourcePosition, trait, modifierPct, reason });
-        for (const sourcePosition of POSITIONS) {
+        for (const sourcePosition of positions) {
             const source = banner.emblems[sourcePosition];
             switch (source.trait) {
                 case 'Fractal':
                     if (sourcePosition === position && fractalCondition)
-                        add(sourcePosition, 'Fractal', 60, 'all three emblem qualities are different');
+                        add(sourcePosition, 'Fractal', 60, 'all emblem qualities are different');
                     break;
                 case 'Benevolent':
                     if (adjacent(sourcePosition, position))
@@ -47,14 +37,10 @@ export function evaluateBanner(banner) {
                     break;
             }
         }
-        const tierBonusPct = qualityBonus(emblem.qualityTier);
-        const baseMultiplierPct = 100 + tierBonusPct;
-        const traitModifierPct = effects.reduce((sum, e) => sum + e.modifierPct, 0);
+        const tierBonusPct = qualityBonus(emblem.qualityTier), baseMultiplierPct = 100 + tierBonusPct, traitModifierPct = effects.reduce((sum, e) => sum + e.modifierPct, 0);
         return { position, tierBonusPct, baseMultiplierPct, traitModifierPct, effectiveMultiplierPct: baseMultiplierPct + traitModifierPct, effects };
     });
-    return out;
 }
-export function effectiveMultiplierPct(banner, position) {
-    return evaluateBanner(banner)[position].effectiveMultiplierPct;
-}
+export function effectiveMultiplierPct(banner, position) { const row = evaluateBanner(banner)[position]; if (!row)
+    throw new RangeError(`Banner has no slot ${position}.`); return row.effectiveMultiplierPct; }
 //# sourceMappingURL=bannerEvaluator.js.map

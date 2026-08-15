@@ -1,12 +1,13 @@
 import type {
-  BannerState, BoardEvaluation, BoardState, DataBundle, PlayerProfile,
+  BannerState, BoardEvaluation, BoardLayoutId, BoardState, DataBundle, PlayerProfile,
   PlayerScore, Role, ScoringRules, StatName
 } from '../domain/types.js';
-import { cholesky, cholesky3, correlatedUniformsPrepared, normalCdf, SeededRandom } from './random.js';
+import { cholesky, cholesky3, correlatedUniformsPrepared, correlatedUniformsPreparedN, normalCdf, SeededRandom } from './random.js';
 import { mean, percentile, prepareQuantiles, quantileValuePrepared } from './distributions.js';
 import { recommendTitle, titlePrefixBoostPct } from './title.js';
 import { evaluateBanner } from '../domain/bannerEvaluator.js';
 import { bannerMechanicsKey } from './bannerMechanics.js';
+import { DEFAULT_LAYOUT_ID } from '../domain/rules.js';
 
 const ROLES: Role[] = ['core','mid','support'];
 const sampleCache = new WeakMap<DataBundle, Map<string, number[]>>();
@@ -68,12 +69,12 @@ function hashString(value:string):number {
   return h>>>0;
 }
 
-/** ScriptsBits stores Spearman rho; its Gaussian-copula implementation maps rho_s to latent Gaussian rho. */
+/** Spearman rho -> latent Gaussian rho for the Gaussian copula. */
 export function spearmanToGaussian(rho:number):number {
   return Math.max(-0.98,Math.min(0.98,2*Math.sin(Math.PI*rho/6)));
 }
 
-export function selectedCorrelation(role:Role, stats:[StatName,StatName,StatName], data:DataBundle):number[][] {
+export function selectedCorrelation(role:Role, stats:readonly StatName[], data:DataBundle):number[][] {
   const model=data.roleCorrelations[role];
   return stats.map((a,i)=>stats.map((b,j)=>{
     if(i===j)return 1;
@@ -83,11 +84,6 @@ export function selectedCorrelation(role:Role, stats:[StatName,StatName,StatName
   }));
 }
 
-/**
- * Apply the verified client retention rule to already-computed per-game role scores.
- * Each inner array is one series. Keep top N games in each series, then best N series.
- * TI 2026 V1 config is N_games=2 and N_series=1.
- */
 export function retainRoleScore(seriesGames:number[][], scoring:ScoringRules):number {
   const seriesScores=seriesGames.map(games=>[...games].sort((a,b)=>b-a)
     .slice(0,scoring.retainedGamesPerSeries).reduce((a,b)=>a+b,0));
@@ -149,12 +145,20 @@ function rawRoleScenario(profile:PlayerProfile,banner:BannerState,data:DataBundl
   return out;
 }
 
-function scoreFromRawScenario(scenario:RawRoleScenario,banner:BannerState,mult:[number,number,number]):number[]{
+function selectedIndices(scenario:RawRoleScenario,banner:BannerState):number[]{
+  const indices=banner.emblems.map(e=>scenario.statIndex.get(e.stat)??-1);
+  if(indices.some(i=>i<0))throw new Error(`Role scenario is missing one or more selected stats.`);
+  return indices;
+}
+function scoreSelectedGame(values:Float64Array,base:number,indices:readonly number[],mult:readonly number[]):number{
+  let score=0;for(let i=0;i<indices.length;i++)score+=values[base+indices[i]!]!*(mult[i]??0);return score;
+}
+
+function scoreFromRawScenario(scenario:RawRoleScenario,banner:BannerState,mult:readonly number[]):number[]{
   const start=performance.now();
   rawScenarioDiagnostics.sampleRescores++;
   rawScenarioDiagnostics.rescoredIterations+=scenario.iterations;
-  const indices=banner.emblems.map(e=>scenario.statIndex.get(e.stat)??-1) as [number,number,number];
-  if(indices.some(i=>i<0))throw new Error(`Role scenario is missing one or more selected stats.`);
+  const indices=selectedIndices(scenario,banner);
   const out=new Array<number>(scenario.iterations),{values,third,statCount}=scenario;
   for(let iter=0;iter<scenario.iterations;iter++){
     let best=-Infinity;
@@ -162,7 +166,7 @@ function scoreFromRawScenario(scenario:RawRoleScenario,banner:BannerState,mult:[
       const si=iter*scenario.series+series;let a=0,b=0,c=0;
       for(let game=0;game<3;game++){
         const base=(si*3+game)*statCount;
-        const score=values[base+indices[0]]!*mult[0]+values[base+indices[1]]!*mult[1]+values[base+indices[2]]!*mult[2];
+        const score=scoreSelectedGame(values,base,indices,mult);
         if(game===0)a=score;else if(game===1)b=score;else c=score;
       }
       const seriesScore=third[si]?a+b+c-Math.min(a,b,c):a+b;
@@ -174,12 +178,11 @@ function scoreFromRawScenario(scenario:RawRoleScenario,banner:BannerState,mult:[
   return out;
 }
 
-function meanFromRawScenario(scenario:RawRoleScenario,banner:BannerState,mult:[number,number,number]):number{
+function meanFromRawScenario(scenario:RawRoleScenario,banner:BannerState,mult:readonly number[]):number{
   const start=performance.now();
   rawScenarioDiagnostics.meanRescores++;
   rawScenarioDiagnostics.rescoredIterations+=scenario.iterations;
-  const indices=banner.emblems.map(e=>scenario.statIndex.get(e.stat)??-1) as [number,number,number];
-  if(indices.some(i=>i<0))throw new Error(`Role scenario is missing one or more selected stats.`);
+  const indices=selectedIndices(scenario,banner);
   const {values,third,statCount}=scenario;let total=0;
   for(let iter=0;iter<scenario.iterations;iter++){
     let best=-Infinity;
@@ -187,7 +190,7 @@ function meanFromRawScenario(scenario:RawRoleScenario,banner:BannerState,mult:[n
       const si=iter*scenario.series+series;let a=0,b=0,c=0;
       for(let game=0;game<3;game++){
         const base=(si*3+game)*statCount;
-        const score=values[base+indices[0]]!*mult[0]+values[base+indices[1]]!*mult[1]+values[base+indices[2]]!*mult[2];
+        const score=scoreSelectedGame(values,base,indices,mult);
         if(game===0)a=score;else if(game===1)b=score;else c=score;
       }
       const seriesScore=third[si]?a+b+c-Math.min(a,b,c):a+b;if(seriesScore>best)best=seriesScore;
@@ -200,7 +203,7 @@ function meanFromRawScenario(scenario:RawRoleScenario,banner:BannerState,mult:[n
 
 function simulateRoleTeamExpected(profile:PlayerProfile,banner:BannerState,data:DataBundle,iterations:number,seedOffset:number):number{
   let cache=expectedSampleCache.get(data);if(!cache){cache=new Map();expectedSampleCache.set(data,cache);}
-  const evaluated=evaluateBanner(banner),mult=evaluated.map(x=>x.effectiveMultiplierPct/100) as [number,number,number];
+  const evaluated=evaluateBanner(banner),mult=evaluated.map(x=>x.effectiveMultiplierPct/100);
   const key=JSON.stringify({p:profile.id,b:banner.emblems.map((e,i)=>[e.stat,e.qualityTier,e.trait,evaluated[i]!.effectiveMultiplierPct]),n:iterations,s:banner.expectedSeries,z:data.simulation.seed+seedOffset});
   const prior=cache.get(key);if(prior!==undefined)return prior;
   let result:number;
@@ -220,29 +223,24 @@ export function simulateRoleTeam(
   const missing=missingBannerStats(profile,banner);
   if(missing.length)throw new Error(`${profile.name} is missing statistical model data for: ${missing.join(', ')}.`);
   let cache=sampleCache.get(data);if(!cache){cache=new Map();sampleCache.set(data,cache);}
-  const stats=banner.emblems.map(e=>e.stat) as [StatName,StatName,StatName];
+  const stats=banner.emblems.map(e=>e.stat);
   const corr=selectedCorrelation(banner.role,stats,data);
   const evaluatedBanner=evaluateBanner(banner);
-  // Random scenarios depend on team/role/stat structure, not quality/trait multipliers. Keeping
-  // the seed stable across multiplier-only changes acts as common random numbers and reduces
-  // action-comparison Monte Carlo noise.
   const key=JSON.stringify({p:profile.id,b:banner.emblems.map((e,i)=>[e.stat,e.qualityTier,e.trait,evaluatedBanner[i]!.effectiveMultiplierPct]),n:iterations,s:banner.expectedSeries,c:corr,r:data.simulation.scoring,z:data.simulation.seed+seedOffset});
   const cached=cache.get(key);if(cached)return cached;
 
   const scenarioKey=JSON.stringify({p:profile.id,stats,n:iterations,s:banner.expectedSeries,c:corr,r:data.simulation.scoring,z:data.simulation.seed+seedOffset});
   const rng=new SeededRandom((data.simulation.seed+hashString(scenarioKey)+seedOffset)>>>0);
+  const legacyThree=corr.length===3,L=legacyThree?cholesky3(corr):cholesky(corr);
+  const sampleUniforms=()=>legacyThree?correlatedUniformsPrepared(rng,L):correlatedUniformsPreparedN(rng,L);
   const scoring=data.simulation.scoring;
-  const L=cholesky3(corr);
   const prepared=stats.map(stat=>prepareQuantiles(profile.statQuantiles[stat]));
-  const mult=evaluatedBanner.map(x=>x.effectiveMultiplierPct/100) as [number,number,number];
+  const mult=evaluatedBanner.map(x=>x.effectiveMultiplierPct/100);
   if(iterations<=RAW_SCENARIO_MAX_ITERATIONS&&scoring.retainedGamesPerSeries===2&&scoring.retainedSeries===1){
     const out=scoreFromRawScenario(rawRoleScenario(profile,banner,data,iterations,seedOffset),banner,mult);
     cache.set(key,out);return out;
   }
   const out=new Array<number>(iterations);
-
-  // Specialized TI-2026 retention kernel: top 2 games per series, then best series.
-  // Avoids thousands of short-lived arrays and sorts per team/banner simulation.
   const topTwo=scoring.retainedGamesPerSeries===2&&scoring.retainedSeries===1;
   for(let iter=0;iter<iterations;iter++){
     if(topTwo){
@@ -251,10 +249,8 @@ export function simulateRoleTeam(
         const gameCount=2+(rng.uniform()<scoring.thirdGameProbability?1:0);
         let a=0,b=0,c=0;
         for(let g=0;g<gameCount;g++){
-          const u=correlatedUniformsPrepared(rng,L);
-          const score=quantileValuePrepared(prepared[0],u[0])*mult[0]
-            +quantileValuePrepared(prepared[1],u[1])*mult[1]
-            +quantileValuePrepared(prepared[2],u[2])*mult[2];
+          const u=sampleUniforms();let score=0;
+          for(let i=0;i<prepared.length;i++)score+=quantileValuePrepared(prepared[i],u[i]??0.5)*(mult[i]??0);
           if(g===0)a=score;else if(g===1)b=score;else c=score;
         }
         const seriesScore=gameCount===2?a+b:a+b+c-Math.min(a,b,c);
@@ -266,10 +262,9 @@ export function simulateRoleTeam(
       for(let s=0;s<banner.expectedSeries;s++){
         const gameCount=2+(rng.uniform()<scoring.thirdGameProbability?1:0),games:number[]=[];
         for(let g=0;g<gameCount;g++){
-          const u=correlatedUniformsPrepared(rng,L);
-          games.push(quantileValuePrepared(prepared[0],u[0])*mult[0]
-            +quantileValuePrepared(prepared[1],u[1])*mult[1]
-            +quantileValuePrepared(prepared[2],u[2])*mult[2]);
+          const u=sampleUniforms();let score=0;
+          for(let i=0;i<prepared.length;i++)score+=quantileValuePrepared(prepared[i],u[i]??0.5)*(mult[i]??0);
+          games.push(score);
         }
         seriesGames.push(games);
       }
@@ -290,10 +285,7 @@ function scoreProfile(profile:PlayerProfile,banner:BannerState,data:DataBundle,i
 export function rankTeamsForRole(role:Role,board:BoardState,data:DataBundle,iterations=data.simulation.rankingIterations):PlayerScore[]{
   let cache=rankingCache.get(data);if(!cache){cache=new Map();rankingCache.set(data,cache);}
   const banner=board[role];
-  // Team choice does not change a banner's underlying team-by-team role distributions. Excluding
-  // selectedTeam lets the Likely Results comparison remain cached and instantly re-highlight when
-  // the user switches teams without changing stats/tiers/traits/series.
-  const key=`${role}|${bannerMechanicsKey(banner)}|${iterations}`;
+  const key=`${role}|${bannerMechanicsKey(banner,board.layoutId??DEFAULT_LAYOUT_ID)}|${iterations}`;
   const cached=cache.get(key);if(cached)return cached;
   const rows=data.players.filter(p=>p.role===role&&profileSupportsBanner(p,board[role]))
     .map((p,i)=>scoreProfile(p,board[role],data,iterations,10_007*(i+1)))
@@ -334,9 +326,9 @@ function buildEvaluation(
   return result;
 }
 
-export function rolePrefixFrontier(role:Role,banner:BannerState,data:DataBundle,iterations=data.simulation.optimizerIterations):RolePrefixFrontierEntry[]{
+export function rolePrefixFrontier(role:Role,banner:BannerState,data:DataBundle,iterations=data.simulation.optimizerIterations,layoutId:BoardLayoutId=DEFAULT_LAYOUT_ID):RolePrefixFrontierEntry[]{
   let cache=frontierCache.get(data);if(!cache){cache=new Map();frontierCache.set(data,cache);}
-  const key=`${role}|${bannerMechanicsKey(banner)}|${iterations}`;;const prior=cache.get(key);if(prior)return prior;
+  const key=`${role}|${bannerMechanicsKey(banner,layoutId)}|${iterations}`;;const prior=cache.get(key);if(prior)return prior;
   const profiles=data.players.filter(p=>p.role===role&&profileSupportsBanner(p,banner));
   const ranked=profiles.map((p,i)=>({playerId:p.id,name:p.name,team:p.team,attachedPlayers:p.attachedPlayers,expected:simulateRoleTeamExpected(p,banner,data,iterations,10_007*(i+1)),samples:[]} satisfies PlayerScore));
   const out:RolePrefixFrontierEntry[]=[];
@@ -348,14 +340,11 @@ export function rolePrefixFrontier(role:Role,banner:BannerState,data:DataBundle,
   cache.set(key,out);return out;
 }
 
-/** Fast scalar evaluator for optimizer search. It is mathematically equivalent for expected-score
- * utility to full board evaluation, but composes cached per-role/per-prefix frontiers instead of
- * rebuilding roster/title/sample objects for every terminal board combination. */
 export function evaluateBoardExpectedFast(board:BoardState,data:DataBundle,iterations=data.simulation.optimizerIterations):number{
   const frontiers={
-    core:rolePrefixFrontier('core',board.core,data,iterations),
-    mid:rolePrefixFrontier('mid',board.mid,data,iterations),
-    support:rolePrefixFrontier('support',board.support,data,iterations),
+    core:rolePrefixFrontier('core',board.core,data,iterations,board.layoutId??DEFAULT_LAYOUT_ID),
+    mid:rolePrefixFrontier('mid',board.mid,data,iterations,board.layoutId??DEFAULT_LAYOUT_ID),
+    support:rolePrefixFrontier('support',board.support,data,iterations,board.layoutId??DEFAULT_LAYOUT_ID),
   };
   let best=-Infinity;
   for(const prefix of data.titles.prefixes){
@@ -396,7 +385,6 @@ function titleAwareBestRoster(board:BoardState,data:DataBundle,iterations:number
   return {roster:bestRoster,...(bestPrefixId!==undefined?{prefixId:bestPrefixId}:{})};
 }
 
-/** Evaluate exactly the teams selected by the user, mirroring the ScriptsBits setup view. */
 export function evaluateSelectedBoard(board:BoardState,username:string,data:DataBundle,targetScore?:number):BoardEvaluation{
   const n=data.simulation.iterations;
   const roster={core:[] as PlayerScore[],mid:[] as PlayerScore[],support:[] as PlayerScore[]};
@@ -406,10 +394,6 @@ export function evaluateSelectedBoard(board:BoardState,username:string,data:Data
   return buildEvaluation(roster,username,data,targetScore);
 }
 
-/**
- * Terminal board evaluator used by the stochastic action engine. Team selection is free, so it
- * re-optimizes the team independently for Core, Mid and Support after every hypothetical board.
- */
 export function evaluateBoard(board:BoardState,username:string,data:DataBundle,targetScore?:number):BoardEvaluation{
   const n=data.simulation.optimizerIterations;
   const optimized=titleAwareBestRoster(board,data,n);

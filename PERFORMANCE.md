@@ -254,3 +254,30 @@ No adaptive candidate qualified. Even the most complete candidate, A1, finished 
 **Decision: M5H Outcome C.** The separately frozen holdout was intentionally **not consumed**, so no holdout aggregate or selected-candidate file exists. Target `t=3` remains engineering-only, and production remains `t<=2`. The failure is mixed runtime + policy fidelity rather than semantic/integrity failure.
 
 The recommended next bounded technique is exact reuse of root-specific target-search preparation/evaluation work across screening and refinement passes. The objective should be to recover compute without introducing another fidelity approximation, then reassess adaptive refinement only if exact equivalence and measured headroom justify it. Do not begin target `t=4`.
+
+## M6A versioned board-layout baseline
+
+M6A generalizes the engine from the legacy 9-emblem board to a versioned 15-emblem layout while preserving production behavior. Both layouts use exactly the same three stat colors — **Red, Green, and Blue** — and each color uses the unchanged `legacy_3` eligible-stat pool.
+
+Five-slot quality redistribution is defined from authoritative project input: choose one uniformly random slot to decrease, then choose two distinct recipients uniformly from the six unordered pairs among the remaining four slots. The other two slots are unchanged. Tier-direction distributions and Tier-I/Tier-V floor/cap waste remain unchanged, and duplicate final states are aggregated. The same implementation reduces exactly to the legacy mechanic on a three-slot banner.
+
+The authoritative corrected Node 22/Linux benchmark was regenerated after removing the erroneous fourth stat-color assumption. It completed all 12 matrix cases with no benchmark errors or timeouts.
+
+| Workload | expanded / legacy optimizer runtime | Interpretation |
+|---|---:|---|
+| stat-heavy `t=1` | 0.14×* | Noisy isolated wall-time result; state counts increase substantially. |
+| stat-heavy `t=2` | 2.86× | Correctly targeting all repeated Blue/Red/Green slots enlarges the frontier. |
+| quality-heavy `t=2` | 5.48× | Largest measured relative expansion. |
+| trait-heavy `t=2` | 3.26× | Repeated-color/all-matching operations enlarge continuation breadth. |
+| global-quality `t=2` | 4.13× | Includes validated five-slot redistribution. |
+| target-probability `t=2` | 3.09× | Highest absolute-cost workload in the corrected matrix. |
+
+`*` Do not interpret the isolated `t=1` timing as a structural expanded-board speedup. The production-relevant `t=2` runs and state/frontier counters are the useful comparison.
+
+The structural conclusion strengthens after the correction. Representative Core green-stat branching remains **5 → 21 reachable outcomes**, while the corrected expanded target-probability `t=2` run reaches **17,862 target scalar states**. The dominant cost is transition/frontier growth and downstream unique-state evaluation rather than simply encoding five slots.
+
+The final validation rebuilt generated artifacts, ran the corrected benchmark, and passed the complete **199-test** suite. A targeted audit also verifies that M6A board/stat semantics contain no fourth stat color. Existing unrelated visual-theme uses of the word “purple” are intentionally unaffected because they are UI palette terminology, not emblem/stat semantics.
+
+M6A closes **Outcome A**: one versioned engine supports `legacy_3` and `expanded_5`, all known expanded operation semantics are represented, and stat legality remains the original Red/Green/Blue pools. Production remains `legacy_3` / `t<=2`; the M5H holdout remains untouched; target `t=3` was not resumed and `t=4` was not begun.
+
+The next package should profile expanded-board `t=2` frontier containment first while retaining exact target-search work reuse as the other major performance opportunity.
