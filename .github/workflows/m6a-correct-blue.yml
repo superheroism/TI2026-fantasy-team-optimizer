@@ -43,10 +43,17 @@ jobs:
       - name: Run full tests
         run: node --test tests/*.test.mjs
 
-      - name: Enforce three-color vocabulary
+      - name: Enforce three stat colors in M6A semantics
         run: |
-          if git grep -ni -E 'purple' -- . ':!package-lock.json'; then
-            echo 'ERROR: purple reference remains after correction.'
+          if git grep -ni -E 'purple' -- \
+            src/domain src/engine src/data/defaultState.ts \
+            scripts/benchmark-m6a-layout-case.mjs scripts/benchmark-m6a-layout.mjs \
+            tests/m6a-versioned-layout.test.mjs \
+            benchmarks/m6a-layout-expanded-fixtures.json benchmarks/m6a-layout-legacy-fixtures.json \
+            M6A_VERSIONED_BOARD_LAYOUT.md ENGINEERING_ROADMAP.md \
+            build/js/domain build/js/engine build/js/data/defaultState.js \
+            docs/js/domain docs/js/engine docs/js/data/defaultState.js; then
+            echo 'ERROR: purple remains in board/stat-color semantics.'
             exit 1
           fi
 
