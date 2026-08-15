@@ -1,5 +1,7 @@
 export type Role = 'core' | 'mid' | 'support';
-export type SlotColor = 'red' | 'green' | 'blue';
+export type BoardLayoutId = 'legacy_3' | 'expanded_5';
+/** Physical emblem color. Purple uses the existing blue-stat pool; it is a geometry/color distinction, not a new stat pool. */
+export type SlotColor = 'red' | 'green' | 'blue' | 'purple';
 export type QualityTier = 1 | 2 | 3 | 4 | 5;
 export type Confidence = 'high' | 'medium' | 'low';
 export type ModelingMode = 'full_simulation' | 'distribution_aware_proxy' | 'average_proxy' | 'heuristic';
@@ -14,7 +16,7 @@ export type TraitName = 'Fractal' | 'Friendly' | 'Vampiric' | 'Unique' | 'Benevo
 
 export interface EmblemState {
   id: string;
-  position: 0 | 1 | 2;
+  position: number;
   color: SlotColor;
   stat: StatName;
   qualityTier: QualityTier;
@@ -25,11 +27,20 @@ export interface BannerState {
   role: Role;
   /** User-selectable Fantasy roster unit. Core/Support resolve to a fixed same-team pair; Mid to one player. */
   selectedTeam: string;
-  emblems: [EmblemState, EmblemState, EmblemState];
+  emblems: EmblemState[];
   expectedSeries: number;
 }
 
-export type BoardState = Record<Role, BannerState>;
+/**
+ * Descriptive/UI board state. Pre-M6A persisted boards omit layoutId and therefore
+ * load as legacy_3 at the adapter/persistence boundary.
+ */
+export interface BoardState {
+  layoutId?: BoardLayoutId;
+  core: BannerState;
+  mid: BannerState;
+  support: BannerState;
+}
 
 export interface QuantilePoint { q: number; value: number; }
 export type StatQuantiles = Partial<Record<StatName, QuantilePoint[]>>;
