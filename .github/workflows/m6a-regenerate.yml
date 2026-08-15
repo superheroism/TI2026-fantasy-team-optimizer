@@ -27,7 +27,7 @@ jobs:
       - run: npm run build
       - name: Commit reproducible generated artifacts when changed
         run: |
-          # M6A rerun: terminal scorers now carry layout identity.
+          # Final M6A source regeneration after target-cache layout propagation.
           if git diff --quiet -- build docs; then
             exit 0
           fi
