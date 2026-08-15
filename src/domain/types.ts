@@ -23,11 +23,15 @@ export interface EmblemState {
   trait: TraitName;
 }
 
+export type BannerEmblems =
+  | [EmblemState, EmblemState, EmblemState]
+  | [EmblemState, EmblemState, EmblemState, EmblemState, EmblemState];
+
 export interface BannerState {
   role: Role;
   /** User-selectable Fantasy roster unit. Core/Support resolve to a fixed same-team pair; Mid to one player. */
   selectedTeam: string;
-  emblems: EmblemState[];
+  emblems: BannerEmblems;
   expectedSeries: number;
 }
 
@@ -35,12 +39,7 @@ export interface BannerState {
  * Descriptive/UI board state. Pre-M6A persisted boards omit layoutId and therefore
  * load as legacy_3 at the adapter/persistence boundary.
  */
-export interface BoardState {
-  layoutId?: BoardLayoutId;
-  core: BannerState;
-  mid: BannerState;
-  support: BannerState;
-}
+export type BoardState = Record<Role, BannerState> & { layoutId?: BoardLayoutId };
 
 export interface QuantilePoint { q: number; value: number; }
 export type StatQuantiles = Partial<Record<StatName, QuantilePoint[]>>;
