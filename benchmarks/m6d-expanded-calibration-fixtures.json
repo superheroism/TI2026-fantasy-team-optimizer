@@ -1,0 +1,27 @@
+{
+  "m6dBaseSha": "7757654ff91a4ca7a4f2fb7cad556620efc88140",
+  "layoutId": "expanded_5",
+  "horizon": 2,
+  "frozenPurpose": "calibration",
+  "corpusVersion": 1,
+  "cases": [
+    {"id":"m6d-cal-exp-stat-base","seed":62001,"boardVariant":"baseline","objective":"expected_score","operationFamily":"stat","operationIds":["red-stat-all","green-stat-all","blue-stat-all"]},
+    {"id":"m6d-cal-exp-quality-inverted","seed":62002,"boardVariant":"quality_inverted","objective":"expected_score","operationFamily":"quality","operationIds":["quality-increase-one","red-quality-all","green-quality-all"]},
+    {"id":"m6d-cal-exp-trait-permuted","seed":62003,"boardVariant":"repeat_permuted","objective":"expected_score","operationFamily":"trait","operationIds":["red-trait-all","green-trait-all","blue-trait-all"]},
+    {"id":"m6d-cal-exp-global-low","seed":62004,"boardVariant":"repeat_permuted_low","objective":"expected_score","operationFamily":"global_quality","operationIds":["quality-increase-one","quality-redistribution","red-quality-all"]},
+    {"id":"m6d-cal-exp-mixed-capped","seed":62005,"boardVariant":"quality_capped","objective":"expected_score","operationFamily":"mixed","operationIds":["green-stat-all","quality-increase-one","red-trait-all"]},
+    {"id":"m6d-cal-exp-mixed-inverted","seed":62006,"boardVariant":"quality_inverted","objective":"expected_score","operationFamily":"mixed","operationIds":["blue-stat-all","quality-redistribution","green-trait-all"]},
+    {"id":"m6d-cal-exp-quality-base","seed":62007,"boardVariant":"baseline","objective":"expected_score","operationFamily":"quality","operationIds":["green-quality-all","blue-quality-all","quality-increase-one"]},
+    {"id":"m6d-cal-exp-global-capped","seed":62008,"boardVariant":"quality_capped","objective":"expected_score","operationFamily":"global_quality","operationIds":["quality-redistribution","quality-increase-one","blue-quality-all"]},
+    {"id":"m6d-cal-tgt-stat-73500","seed":62009,"boardVariant":"baseline","objective":"target_probability","operationFamily":"stat","operationIds":["red-stat-all","green-stat-all","blue-stat-all"],"targetScore":73500},
+    {"id":"m6d-cal-tgt-mixed-77500","seed":62010,"boardVariant":"repeat_permuted","objective":"target_probability","operationFamily":"mixed","operationIds":["green-stat-all","red-quality-all","blue-trait-all"],"targetScore":77500},
+    {"id":"m6d-cal-tgt-quality-81500","seed":62011,"boardVariant":"quality_inverted","objective":"target_probability","operationFamily":"quality","operationIds":["quality-increase-one","green-quality-all","blue-quality-all"],"targetScore":81500},
+    {"id":"m6d-cal-tgt-global-84500","seed":62012,"boardVariant":"repeat_permuted_low","objective":"target_probability","operationFamily":"global_quality","operationIds":["quality-increase-one","quality-redistribution","red-quality-all"],"targetScore":84500},
+    {"id":"m6d-cal-tgt-trait-87500","seed":62013,"boardVariant":"quality_capped","objective":"target_probability","operationFamily":"trait","operationIds":["red-trait-all","green-trait-all","blue-trait-all"],"targetScore":87500},
+    {"id":"m6d-cal-tgt-mixed-79500","seed":62014,"boardVariant":"baseline","objective":"target_probability","operationFamily":"mixed","operationIds":["blue-stat-all","quality-increase-one","green-trait-all"],"targetScore":79500},
+    {"id":"m6d-cal-tgt-quality-83500","seed":62015,"boardVariant":"quality_capped","objective":"target_probability","operationFamily":"quality","operationIds":["red-quality-all","green-quality-all","quality-increase-one"],"targetScore":83500},
+    {"id":"m6d-cal-tgt-stat-76500","seed":62016,"boardVariant":"repeat_permuted","objective":"target_probability","operationFamily":"stat","operationIds":["green-stat-all","blue-stat-all","red-stat-all"],"targetScore":76500},
+    {"id":"m6d-cal-tgt-close-80500","seed":62017,"boardVariant":"quality_inverted","objective":"target_probability","operationFamily":"mixed","operationIds":["red-stat-all","quality-increase-one","blue-trait-all"],"targetScore":80500},
+    {"id":"m6d-cal-exp-close-low","seed":62018,"boardVariant":"repeat_permuted_low","objective":"expected_score","operationFamily":"mixed","operationIds":["green-stat-all","green-quality-all","green-trait-all"]}
+  ]
+}
