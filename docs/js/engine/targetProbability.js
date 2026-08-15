@@ -1,3 +1,4 @@
+import { DEFAULT_LAYOUT_ID } from '../domain/rules.js';
 import { bannerMechanicsKey, boardMechanicsKey } from './bannerMechanics.js';
 import { mean, percentile } from './distributions.js';
 import { rankTeamsForRole } from './scoring.js';
@@ -129,7 +130,7 @@ function preparedRoleCandidates(role, board, data, prefixId, iterations) {
     }
     const banner = board[role];
     const key = JSON.stringify([
-        bannerMechanicsKey(banner),
+        bannerMechanicsKey(banner, board.layoutId ?? DEFAULT_LAYOUT_ID),
         prefixId ?? null,
         iterations,
     ]);
