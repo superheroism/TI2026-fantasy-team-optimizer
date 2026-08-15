@@ -1,0 +1,21 @@
+{
+  "m6eBaseSha": "0e287bf38dd3259e21827245c4bd1c0811e48eba",
+  "layoutId": "expanded_5",
+  "horizon": 2,
+  "frozenPurpose": "production_integration_regression_and_benchmark",
+  "source": "Independent M6E corpus frozen after M6D selection; no policy tuning permitted.",
+  "cases": [
+    {"id":"m6e-exp-stat-clear","boardVariant":"baseline","objective":"expected_score","operationFamily":"stat","marginClass":"clear","operationIds":["red-stat-all","green-stat-all","blue-stat-all"]},
+    {"id":"m6e-exp-quality-clear","boardVariant":"quality_inverted","objective":"expected_score","operationFamily":"quality","marginClass":"clear","operationIds":["quality-increase-one","red-quality-all","green-quality-all"]},
+    {"id":"m6e-exp-trait-clear","boardVariant":"repeat_permuted","objective":"expected_score","operationFamily":"trait","marginClass":"clear","operationIds":["red-trait-all","green-trait-all","blue-trait-all"]},
+    {"id":"m6e-exp-global-clear","boardVariant":"repeat_permuted_low","objective":"expected_score","operationFamily":"global_quality","marginClass":"clear","operationIds":["quality-increase-one","quality-redistribution","red-quality-all"]},
+    {"id":"m6e-exp-mixed-clear","boardVariant":"quality_capped","objective":"expected_score","operationFamily":"mixed","marginClass":"clear","operationIds":["green-stat-all","quality-increase-one","red-trait-all"]},
+    {"id":"m6e-exp-mixed-close","boardVariant":"repeat_permuted_low","objective":"expected_score","operationFamily":"mixed","marginClass":"close","operationIds":["green-stat-all","green-quality-all","green-trait-all"]},
+    {"id":"m6e-tgt-stat-clear","boardVariant":"baseline","objective":"target_probability","operationFamily":"stat","marginClass":"clear","operationIds":["red-stat-all","green-stat-all","blue-stat-all"],"targetScore":73500},
+    {"id":"m6e-tgt-quality-clear","boardVariant":"quality_inverted","objective":"target_probability","operationFamily":"quality","marginClass":"clear","operationIds":["quality-increase-one","green-quality-all","blue-quality-all"],"targetScore":81500},
+    {"id":"m6e-tgt-trait-clear","boardVariant":"quality_capped","objective":"target_probability","operationFamily":"trait","marginClass":"clear","operationIds":["red-trait-all","green-trait-all","blue-trait-all"],"targetScore":87500},
+    {"id":"m6e-tgt-global-clear","boardVariant":"repeat_permuted_low","objective":"target_probability","operationFamily":"global_quality","marginClass":"clear","operationIds":["quality-increase-one","quality-redistribution","red-quality-all"],"targetScore":84500},
+    {"id":"m6e-tgt-mixed-clear","boardVariant":"baseline","objective":"target_probability","operationFamily":"mixed","marginClass":"clear","operationIds":["blue-stat-all","quality-increase-one","green-trait-all"],"targetScore":79500},
+    {"id":"m6e-tgt-mixed-close","boardVariant":"quality_inverted","objective":"target_probability","operationFamily":"mixed","marginClass":"close","operationIds":["red-stat-all","quality-increase-one","blue-trait-all"],"targetScore":80500}
+  ]
+}
