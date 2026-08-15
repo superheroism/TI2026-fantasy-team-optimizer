@@ -105,7 +105,7 @@ export function evaluateM5EGate(report){
     candidateWinnerMatchesOracle:comparison?.topActionAgreement===true,
     candidateCompletedUnder60s:completed(candidate)&&candidate.runtimeMs<60_000,
     candidateMateriallyFaster:comparison!==null&&comparison.runtimeRatioVsOracle<=0.80,
-    candidateMemoryHealthy:completed(candidate)&&Number.isFinite(candidate.memory?.end?.rss)&&Number.isFinite(candidate.memory?.maxRssEnd),
+    candidateMemoryHealthy:completed(candidate)&&Number.isFinite(candidate.memory?.end?.rss)&&Number.isFinite(candidate.memory?.maxRssEndKb),
     stopAndMenuRetained:hasStopAndMenu(oracle)&&hasStopAndMenu(candidate),
     all20FutureOperationIdentitiesRepresented:operationIds.length===20&&uniqueOperationIds.size===20,
   };
