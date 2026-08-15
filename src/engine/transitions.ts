@@ -73,7 +73,7 @@ export function enumerateStatReroll(board: BoardState, role: Role, op: StatRerol
       }
       const idx=indices[depth]!;
       const original=originalByIndex.get(idx)!;
-      const candidates=pool.filter(stat=>(!op.excludeCurrent||stat!==original)&&!used.has(stat));
+      const candidates=pool.filter(stat=>stat!==original&&!used.has(stat));
       const weighted=weightedCandidates(op,candidates,uniformFallback);
       const totalWeight=weighted.reduce((s,x)=>s+x[1],0);
       if(totalWeight<=0)return;

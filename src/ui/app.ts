@@ -36,8 +36,10 @@ function cssVar(name:string,fallback:string):string{
 }
 
 function signedPct(n:number):string{return `${n>=0?'+':''}${n}%`;}
-function card(role:Role,banner:BannerState,index:0|1|2):string{
-  const e=banner.emblems[index],pool=legalStats(e.color),derived=evaluateBanner(banner)[index];
+function card(role:Role,banner:BannerState,index:number):string{
+  const e=banner.emblems[index],derived=evaluateBanner(banner)[index];
+  if(!e||!derived)throw new RangeError(`Banner ${role} has no slot ${index}.`);
+  const pool=legalStats(e.color);
   const effects=derived.effects.length
     ? derived.effects.map(x=>`${x.trait} ${signedPct(x.modifierPct)}${x.sourcePosition===index?'':` from slot ${x.sourcePosition+1}`}`).join(' · ')
     : 'No active trait modifier on this slot';
@@ -64,7 +66,7 @@ function bannerColumn(role:Role):string{
   const b=board[role],players=attachedPlayerLabel(b.selectedTeam,role);
   return `<section class="banner" data-banner-role="${role}"><div class="banner-head"><div class="role-heading"><span>${role.toUpperCase()}</span><small>${role==='mid'?'position 2':'fixed same-team pair'}</small></div><label class="series-control">EXPECTED SERIES<input class="series" data-role="${role}" type="number" min="1" max="8" value="${b.expectedSeries}"></label></div>
     <div class="team-picker"><label>TEAM<select class="team-select" data-role="${role}">${teamOptions(role,b.selectedTeam)}</select></label><div class="attached-players"><span>ATTACHED PLAYER${role==='mid'?'':'S'}</span><b>${escapeHtml(players)}</b></div></div>
-    <div class="emblems">${card(role,b,0)}${card(role,b,1)}${card(role,b,2)}</div><div id="selected-${role}" class="roster"><span>MODELED RETAINED ROLE</span><b>Run Optimizer to refresh</b></div></section>`;
+    <div class="emblems">${b.emblems.map((_,index)=>card(role,b,index)).join('')}</div><div id="selected-${role}" class="roster"><span>MODELED RETAINED ROLE</span><b>Run Optimizer to refresh</b></div></section>`;
 }
 function opEditor(op:OfferedOperation,i:number):string{
   const selectedElsewhere=new Set(menu.filter((_,j)=>j!==i).map(x=>x.id));
@@ -72,7 +74,7 @@ function opEditor(op:OfferedOperation,i:number):string{
   return `<article class="op-card" data-op="${i}"><div class="op-card-head"><span class="op-number">${i+1}</span><div><select class="op-select" data-opfield="action" aria-label="Action ${i+1}">${options}</select></div><span class="op-recommended" aria-hidden="true">RECOMMENDED</span></div><div class="op-results" data-opresult="${i}"><div class="op-empty">Run the optimizer to compare legal targets and reroll outcomes.</div></div></article>`;
 }
 function syncStateFromDom(){
-  document.querySelectorAll<HTMLElement>('.emblem').forEach(el=>{const role=el.dataset.role as Role,index=Number(el.dataset.index) as 0|1|2,e=board[role].emblems[index];el.querySelectorAll<HTMLInputElement|HTMLSelectElement>('[data-field]').forEach(input=>{const f=input.dataset.field!;if(f==='stat')e.stat=input.value as StatName;else if(f==='qualityTier')e.qualityTier=Number(input.value) as 1|2|3|4|5;else if(f==='trait')e.trait=input.value as TraitName;});});
+  document.querySelectorAll<HTMLElement>('.emblem').forEach(el=>{const role=el.dataset.role as Role,index=Number(el.dataset.index),e=board[role].emblems[index];if(!e)return;el.querySelectorAll<HTMLInputElement|HTMLSelectElement>('[data-field]').forEach(input=>{const f=input.dataset.field!;if(f==='stat')e.stat=input.value as StatName;else if(f==='qualityTier')e.qualityTier=Number(input.value) as 1|2|3|4|5;else if(f==='trait')e.trait=input.value as TraitName;});});
   document.querySelectorAll<HTMLInputElement>('.series').forEach(x=>board[x.dataset.role as Role].expectedSeries=Math.max(1,Number(x.value)||1));
   document.querySelectorAll<HTMLSelectElement>('.team-select').forEach(x=>board[x.dataset.role as Role].selectedTeam=x.value);
   tokens=Math.max(0,Number($<HTMLInputElement>('#tokens').value)||0);username=$<HTMLInputElement>('#username').value||'[Username]';targetScore=Math.max(0,Number($<HTMLInputElement>('#target').value)||0);objective=$<HTMLSelectElement>('#objective').value as OptimizerState['objective'];
@@ -113,7 +115,7 @@ function rangeLaneLabel(key:string,position:number,label:string,value:string):st
   return `<span class="range-marker-label ${key} ${edge}" style="left:${position.toFixed(2)}%"><small>${label}</small><b>${value}</b></span>`;
 }
 function affectedIndices(role:Role,op:OfferedOperation):number[]{
-  if(!('color' in op))return [0,1,2];
+  if(!('color' in op))return board[role].emblems.map((_,index)=>index);
   const matches=board[role].emblems.map((e,i)=>e.color===op.color?i:-1).filter(i=>i>=0);
   if(op.scope==='first_matching')return matches.length?[matches[0]!]:[];
   if(op.scope==='last_matching')return matches.length?[matches[matches.length-1]!]:[];

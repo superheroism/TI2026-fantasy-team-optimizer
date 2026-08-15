@@ -1,5 +1,5 @@
 import type {
-  BannerState, BoardEvaluation, BoardState, DataBundle, PlayerProfile,
+  BannerState, BoardEvaluation, BoardLayoutId, BoardState, DataBundle, PlayerProfile,
   PlayerScore, Role, ScoringRules, StatName
 } from '../domain/types.js';
 import { cholesky, cholesky3, correlatedUniformsPrepared, correlatedUniformsPreparedN, normalCdf, SeededRandom } from './random.js';
@@ -7,6 +7,7 @@ import { mean, percentile, prepareQuantiles, quantileValuePrepared } from './dis
 import { recommendTitle, titlePrefixBoostPct } from './title.js';
 import { evaluateBanner } from '../domain/bannerEvaluator.js';
 import { bannerMechanicsKey } from './bannerMechanics.js';
+import { DEFAULT_LAYOUT_ID } from '../domain/rules.js';
 
 const ROLES: Role[] = ['core','mid','support'];
 const sampleCache = new WeakMap<DataBundle, Map<string, number[]>>();
@@ -212,11 +213,6 @@ function simulateRoleTeamExpected(profile:PlayerProfile,banner:BannerState,data:
   cache.set(key,result);return result;
 }
 
-function selectedUniforms(rng:SeededRandom,corr:number[][]):number[]{
-  // Preserve the legacy three-slot random stream and numerical path exactly.
-  return corr.length===3?correlatedUniformsPrepared(rng,cholesky3(corr)):correlatedUniformsPreparedN(rng,cholesky(corr));
-}
-
 export function simulateRoleTeam(
   profile:PlayerProfile,
   banner:BannerState,
@@ -229,12 +225,15 @@ export function simulateRoleTeam(
   let cache=sampleCache.get(data);if(!cache){cache=new Map();sampleCache.set(data,cache);}
   const stats=banner.emblems.map(e=>e.stat);
   const corr=selectedCorrelation(banner.role,stats,data);
+  const legacyThree=corr.length===3,L=legacyThree?cholesky3(corr):cholesky(corr);
   const evaluatedBanner=evaluateBanner(banner);
   const key=JSON.stringify({p:profile.id,b:banner.emblems.map((e,i)=>[e.stat,e.qualityTier,e.trait,evaluatedBanner[i]!.effectiveMultiplierPct]),n:iterations,s:banner.expectedSeries,c:corr,r:data.simulation.scoring,z:data.simulation.seed+seedOffset});
   const cached=cache.get(key);if(cached)return cached;
 
   const scenarioKey=JSON.stringify({p:profile.id,stats,n:iterations,s:banner.expectedSeries,c:corr,r:data.simulation.scoring,z:data.simulation.seed+seedOffset});
   const rng=new SeededRandom((data.simulation.seed+hashString(scenarioKey)+seedOffset)>>>0);
+  const legacyThree=corr.length===3,L=legacyThree?cholesky3(corr):cholesky(corr);
+  const sampleUniforms=()=>legacyThree?correlatedUniformsPrepared(rng,L):correlatedUniformsPreparedN(rng,L);
   const scoring=data.simulation.scoring;
   const prepared=stats.map(stat=>prepareQuantiles(profile.statQuantiles[stat]));
   const mult=evaluatedBanner.map(x=>x.effectiveMultiplierPct/100);
@@ -251,7 +250,7 @@ export function simulateRoleTeam(
         const gameCount=2+(rng.uniform()<scoring.thirdGameProbability?1:0);
         let a=0,b=0,c=0;
         for(let g=0;g<gameCount;g++){
-          const u=selectedUniforms(rng,corr);let score=0;
+          const u=sampleUniforms();let score=0;
           for(let i=0;i<prepared.length;i++)score+=quantileValuePrepared(prepared[i],u[i]??0.5)*(mult[i]??0);
           if(g===0)a=score;else if(g===1)b=score;else c=score;
         }
@@ -264,7 +263,7 @@ export function simulateRoleTeam(
       for(let s=0;s<banner.expectedSeries;s++){
         const gameCount=2+(rng.uniform()<scoring.thirdGameProbability?1:0),games:number[]=[];
         for(let g=0;g<gameCount;g++){
-          const u=selectedUniforms(rng,corr);let score=0;
+          const u=sampleUniforms();let score=0;
           for(let i=0;i<prepared.length;i++)score+=quantileValuePrepared(prepared[i],u[i]??0.5)*(mult[i]??0);
           games.push(score);
         }
@@ -287,7 +286,7 @@ function scoreProfile(profile:PlayerProfile,banner:BannerState,data:DataBundle,i
 export function rankTeamsForRole(role:Role,board:BoardState,data:DataBundle,iterations=data.simulation.rankingIterations):PlayerScore[]{
   let cache=rankingCache.get(data);if(!cache){cache=new Map();rankingCache.set(data,cache);}
   const banner=board[role];
-  const key=`${role}|${bannerMechanicsKey(banner)}|${iterations}`;
+  const key=`${role}|${bannerMechanicsKey(banner,board.layoutId??DEFAULT_LAYOUT_ID)}|${iterations}`;
   const cached=cache.get(key);if(cached)return cached;
   const rows=data.players.filter(p=>p.role===role&&profileSupportsBanner(p,board[role]))
     .map((p,i)=>scoreProfile(p,board[role],data,iterations,10_007*(i+1)))
@@ -328,9 +327,9 @@ function buildEvaluation(
   return result;
 }
 
-export function rolePrefixFrontier(role:Role,banner:BannerState,data:DataBundle,iterations=data.simulation.optimizerIterations):RolePrefixFrontierEntry[]{
+export function rolePrefixFrontier(role:Role,banner:BannerState,data:DataBundle,iterations=data.simulation.optimizerIterations,layoutId:BoardLayoutId=DEFAULT_LAYOUT_ID):RolePrefixFrontierEntry[]{
   let cache=frontierCache.get(data);if(!cache){cache=new Map();frontierCache.set(data,cache);}
-  const key=`${role}|${bannerMechanicsKey(banner)}|${iterations}`;;const prior=cache.get(key);if(prior)return prior;
+  const key=`${role}|${bannerMechanicsKey(banner,board.layoutId??DEFAULT_LAYOUT_ID)}|${iterations}`;;const prior=cache.get(key);if(prior)return prior;
   const profiles=data.players.filter(p=>p.role===role&&profileSupportsBanner(p,banner));
   const ranked=profiles.map((p,i)=>({playerId:p.id,name:p.name,team:p.team,attachedPlayers:p.attachedPlayers,expected:simulateRoleTeamExpected(p,banner,data,iterations,10_007*(i+1)),samples:[]} satisfies PlayerScore));
   const out:RolePrefixFrontierEntry[]=[];
@@ -344,9 +343,9 @@ export function rolePrefixFrontier(role:Role,banner:BannerState,data:DataBundle,
 
 export function evaluateBoardExpectedFast(board:BoardState,data:DataBundle,iterations=data.simulation.optimizerIterations):number{
   const frontiers={
-    core:rolePrefixFrontier('core',board.core,data,iterations),
-    mid:rolePrefixFrontier('mid',board.mid,data,iterations),
-    support:rolePrefixFrontier('support',board.support,data,iterations),
+    core:rolePrefixFrontier('core',board.core,data,iterations,board.layoutId??DEFAULT_LAYOUT_ID),
+    mid:rolePrefixFrontier('mid',board.mid,data,iterations,board.layoutId??DEFAULT_LAYOUT_ID),
+    support:rolePrefixFrontier('support',board.support,data,iterations,board.layoutId??DEFAULT_LAYOUT_ID),
   };
   let best=-Infinity;
   for(const prefix of data.titles.prefixes){
