@@ -1,0 +1,68 @@
+name: M5F Exact Target Search
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/m5f-run-request'
+
+permissions:
+  contents: write
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out exact M5F branch head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Preflight typecheck, generated verification, and full tests
+        run: npm run test:ci
+
+      - name: Verify frozen M5F plan
+        run: npm run benchmark:m5f:plan
+
+      - name: Run authoritative same-runner M5F experiment
+        id: benchmark
+        continue-on-error: true
+        run: node scripts/benchmark-m5f-target.mjs --preflight-passed
+
+      - name: Upload M5F report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5f-exact-target-search
+          path: benchmarks/m5f-exact-target-search.json
+          if-no-files-found: error
+
+      - name: Commit authoritative report
+        if: always()
+        run: |
+          if [ ! -f benchmarks/m5f-exact-target-search.json ]; then
+            echo "M5F report was not produced."
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add benchmarks/m5f-exact-target-search.json
+          if git diff --cached --quiet; then
+            echo "No M5F benchmark report change to commit."
+          else
+            git commit -m "M5F: record authoritative benchmark"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+
+      - name: Propagate benchmark execution failure
+        if: steps.benchmark.outcome != 'success'
+        run: exit 1
