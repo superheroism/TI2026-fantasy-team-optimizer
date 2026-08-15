@@ -1,6 +1,6 @@
 # M6A — Versioned Board Layout Architecture
 
-**Status:** complete — Outcome B  
+**Status:** complete — Outcome A  
 **Base:** `b058010829d7b48c5968d2540acf65a40b64f2a7`  
 **Production default:** `legacy_3`, modeled horizon `<= 2`
 
@@ -91,17 +91,16 @@ Compact and descriptive/reference transition paths now enumerate layout-defined 
 - quality reroll: every matching physical slot implied by scope;
 - trait reroll: every matching physical slot implied by scope;
 - random quality increase: one uniformly selected physical slot from the complete banner, including Tier-V cap waste;
-- random matching scopes: uniform over the actual matching slot count.
+- random matching scopes: uniform over the actual matching slot count;
+- quality redistribution: one uniformly selected slot decreases, then two distinct recipients are selected uniformly from all unordered pairs among the remaining slots; all other slots remain unchanged.
+
+For `expanded_5`, each decreased slot has four possible remaining slots and therefore `C(4,2) = 6` equally likely recipient pairs. Conditional on the decreased slot, each pair has probability `1/6`. With five uniformly likely decreased slots, each source/pair selection has probability `1/30` before tier-change probabilities and cap/floor aggregation are applied.
+
+For `legacy_3`, this same definition is exactly the established mechanic: after one of three slots is chosen to decrease, only one pair remains, so the other two increase. No legacy transition semantics change.
+
+Directional quality outcomes preserve the existing rules: a selected increase is uniform over all higher tiers, a selected decrease is uniform over all lower tiers, and Tier-I/Tier-V selections retain existing floor/cap waste. Final states reached through multiple stochastic paths are aggregated exactly.
 
 Transition-cache identity includes layout and role before banner/operation identity, preventing cross-layout reuse.
-
-### Unresolved expanded operation
-
-`quality_redistribution` remains fully supported for `legacy_3`, where the verified mechanic is one randomly decreased slot and the other two increased.
-
-For `expanded_5`, the current rule definition does not establish how the two increases are chosen from the remaining four slots. M6A does **not** infer that behavior. The operation therefore produces no expanded transition and is treated as unavailable pending authoritative client evidence.
-
-That is an intentional Outcome-B safeguard, not an approximation.
 
 ## Trait and quality evaluation
 
@@ -141,10 +140,14 @@ M6A adds expanded-layout tests for:
 - random selection among repeated Purple slots;
 - five-slot duplicate-stat pressure under all-color stat rerolls;
 - probability normalization and aggregation;
-- explicit expanded redistribution unavailability;
+- expanded quality redistribution with all five possible decreased slots and all six recipient pairs per source;
+- a symmetric all-Tier-III redistribution fixture producing 240 equiprobable final transition states;
+- exact equality between descriptive/reference and compact redistribution distributions;
+- Tier-I/Tier-V floor/cap-waste normalization;
+- exact legacy three-slot redistribution combinatorics (24 equiprobable all-Tier-III outcomes);
 - transition-cache isolation across layouts.
 
-Authoritative Node 22 validation completed the full 12-case layout matrix with zero errors or timeouts. The expanded/legacy optimizer-runtime ratios were 1.22× for stat-heavy `t=1`; and at `t=2`, 1.76× stat-heavy, 3.78× quality-heavy, 2.19× trait-heavy, 1.93× global-quality, and 1.64× target-probability. Representative stat-heavy transition branching rose from 5 to 21 outcomes while terminal scoring stayed approximately flat, identifying frontier growth as the primary expansion cost.
+The finalization workflow regenerated `build/` and `docs/`, ran the fresh Node 22 benchmark matrix, and then ran the complete test suite against the regenerated artifacts. Build, benchmark, tests, and evidence commit all completed successfully.
 
 ## Performance measurement
 
@@ -157,7 +160,26 @@ Authoritative output:
 
 - `benchmarks/m6a-layout-comparison.json`
 
+The final comparison was generated on Node `v22.23.2`, Linux x64, after expanded quality redistribution was enabled. It completed all 12 cases with no benchmark error or timeout.
+
+Fresh expanded/legacy optimizer-runtime ratios were:
+
+| Workload | Expanded / legacy |
+|---|---:|
+| Stat-heavy `t=1` | 0.24×* |
+| Stat-heavy `t=2` | 1.95× |
+| Quality-heavy `t=2` | 4.21× |
+| Trait-heavy `t=2` | 2.33× |
+| Global-quality `t=2` | 3.34× |
+| Target-probability `t=2` | 1.93× |
+
+`*` The isolated `t=1` wall-time ratio is noisy and should not be interpreted as a structural expanded-board speedup. Its state counts still increase; the production-relevant `t=2` comparisons are the more informative result.
+
+The global-quality comparison is now semantically apples-to-apples because five-slot redistribution is fully enabled rather than omitted. The expanded target-probability `t=2` case took about **7.48 s** versus about **3.87 s** for legacy in this run.
+
 The comparison records codec throughput, terminal scoring, transition cold/warm behavior and branching, optimizer `t=1`, expected-score `t=2`, target-probability `t=2`, memory, cache diagnostics, and search-engine diagnostic counters. Timeout is reported as a result rather than hidden by reducing fidelity.
+
+The structural conclusion is unchanged but stronger: terminal scoring remains roughly flat while transition/frontier breadth grows substantially. Representative stat-heavy one-step branching is still 5 → 21 outcomes. With expanded redistribution enabled, global-quality frontier pressure becomes materially larger as well. The 15-emblem production-horizon search therefore needs frontier-oriented profiling before deeper-search work resumes.
 
 ## Production decision
 
@@ -168,8 +190,10 @@ layout = legacy_3
 horizon <= 2
 ```
 
-The expanded layout is a representable, testable rules geometry behind the same engine. The next work package must be selected from the measured frontier growth rather than predetermined.
+The expanded layout is now fully representable and its known operation mechanics are defined and tested through the same engine. Promotion of `expanded_5` to the production default remains a separate product/ruleset decision.
 
 ## Outcome
 
-Final classification: **Outcome B**. Architecture, compatibility, expanded-layout, and benchmark gates pass, while five-slot quality-redistribution target-selection semantics remain unverified and are therefore disabled for `expanded_5`. Production remains `legacy_3` / `t<=2`.
+Final classification: **Outcome A**. Legacy compatibility passes; expanded geometry, codecs, legality, transitions, scoring, caches, and UI paths are layout-aware; five-slot quality redistribution is defined as one random decrease plus two uniformly selected distinct recipients from the remaining four; and the fresh Node 22 benchmark/test finalization completed successfully.
+
+Production remains `legacy_3` / `t<=2`. The next package should be selected from the measured expanded-board frontier profile. Do not resume target `t=3`, consume the M5H holdout, or begin target `t=4` in M6A.
