@@ -4,12 +4,10 @@ export interface SlotDefinition { readonly index:number; readonly color:SlotColo
 export interface BoardLayout { readonly id:BoardLayoutId; readonly roles:Readonly<Record<Role,readonly SlotDefinition[]>>; }
 export interface Ruleset { readonly id:string; readonly boardLayout:BoardLayout; }
 
-const BLUE_POOL = ['Runes', 'Watchers', 'Wards Placed', 'Smokes Used', 'Camps Stacked', 'Lotuses'] as const satisfies readonly StatName[];
 export const LEGAL_STAT_POOLS: Record<SlotColor, readonly StatName[]> = {
   red: ['Creep Score', 'GPM', 'Deaths', 'Tower Kills', 'Madstone', 'Kills'],
   green: ['Teamfight Participation', 'Tormentor Kills', 'Roshan Kills', 'Stuns', 'Courier Kills', 'First Blood'],
-  blue: BLUE_POOL,
-  purple: BLUE_POOL,
+  blue: ['Runes', 'Watchers', 'Wards Placed', 'Smokes Used', 'Camps Stacked', 'Lotuses'],
 };
 
 const slots=(colors:readonly SlotColor[]):readonly SlotDefinition[]=>colors.map((color,index)=>({index,color}));
@@ -27,8 +25,8 @@ export const BOARD_LAYOUTS:Readonly<Record<BoardLayoutId,BoardLayout>>={
     id:'expanded_5',
     roles:{
       core:slots(['red','green','red','green','red']),
-      mid:slots(['red','purple','green','red','green']),
-      support:slots(['purple','green','purple','green','purple']),
+      mid:slots(['red','blue','green','red','green']),
+      support:slots(['blue','green','blue','green','blue']),
     },
   },
 };
@@ -50,6 +48,6 @@ export const BANNER_COLORS: Record<Role, readonly [SlotColor, SlotColor, SlotCol
 
 export function boardLayout(id:BoardLayoutId=DEFAULT_LAYOUT_ID):BoardLayout { return BOARD_LAYOUTS[id]; }
 export function slotDefinitions(id:BoardLayoutId,role:Role):readonly SlotDefinition[] { return BOARD_LAYOUTS[id].roles[role]; }
-export function statPoolColor(color:SlotColor):'red'|'green'|'blue' { return color==='purple'?'blue':color; }
+export function statPoolColor(color:SlotColor):SlotColor { return color; }
 export function legalStats(color: SlotColor): readonly StatName[] { return LEGAL_STAT_POOLS[color]; }
 export function isLegalStat(color: SlotColor, stat: StatName): boolean { return LEGAL_STAT_POOLS[color].includes(stat); }
