@@ -1,7 +1,6 @@
 export type Role = 'core' | 'mid' | 'support';
 export type BoardLayoutId = 'legacy_3' | 'expanded_5';
-/** Physical emblem color. Purple uses the existing blue-stat pool; it is a geometry/color distinction, not a new stat pool. */
-export type SlotColor = 'red' | 'green' | 'blue' | 'purple';
+export type SlotColor = 'red' | 'green' | 'blue';
 export type QualityTier = 1 | 2 | 3 | 4 | 5;
 export type Confidence = 'high' | 'medium' | 'low';
 export type ModelingMode = 'full_simulation' | 'distribution_aware_proxy' | 'average_proxy' | 'heuristic';
