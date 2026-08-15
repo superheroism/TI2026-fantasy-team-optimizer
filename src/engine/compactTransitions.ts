@@ -17,7 +17,6 @@ interface MutableTransitionDiagnostics { cacheHits:number;cacheMisses:number;uni
 const QUALITY_TIERS:readonly QualityTier[]=[1,2,3,4,5];
 function newDiagnostics():MutableTransitionDiagnostics{return{cacheHits:0,cacheMisses:0,uniqueTransitionCalculations:0,outcomesBeforeAggregation:0,outcomesAfterAggregation:0,transitionGenerationMs:0};}
 let diagnostics=newDiagnostics();
-/** layout/role/banner are all mechanics identity. */
 const transitionCache=new Map<string,Map<BannerStateID,Map<string,readonly CompactBannerTransition[]>>>();
 export function clearTransitionCache():void{transitionCache.clear();}
 export function resetTransitionDiagnostics():void{diagnostics=newDiagnostics();}
@@ -54,7 +53,9 @@ function enumerateStatReroll(layoutId:BoardLayoutId,role:Role,banner:BannerState
     const originals=new Map(choice.indices.map(index=>[index,statName(layoutId,role,index,source[index]!)] as const)),pool=LEGAL_STAT_POOLS[op.color];
     const recurse=(depth:number,ids:readonly EmblemStateID[],probability:number,used:Set<StatName>):void=>{
       if(depth>=choice.indices.length){out.push(choice.note?{banner:bannerId(layoutId,ids),probability,note:choice.note}:{banner:bannerId(layoutId,ids),probability});return;}
-      const index=choice.indices[depth]!,original=originals.get(index)!;const candidates=pool.filter(stat=>(!op.excludeCurrent||stat!==original)&&!used.has(stat));const weighted=weightedCandidates(op,candidates,uniformFallback),totalWeight=weighted.reduce((sum,[,weight])=>sum+weight,0);if(totalWeight<=0)return;
+      const index=choice.indices[depth]!,original=originals.get(index)!;
+      // Preserve the verified legacy mechanic: a rerolled stat always changes, irrespective of the descriptive flag.
+      const candidates=pool.filter(stat=>stat!==original&&!used.has(stat)),weighted=weightedCandidates(op,candidates,uniformFallback),totalWeight=weighted.reduce((sum,[,weight])=>sum+weight,0);if(totalWeight<=0)return;
       const currentId=ids[index]!,quality=emblemQualityTier(currentId),trait=emblemTraitIndex(currentId);
       for(const [nextStat,weight] of weighted){const nextId=encodeEmblemComponents(pool.indexOf(nextStat),quality,trait),nextUsed=new Set(used);nextUsed.add(nextStat);recurse(depth+1,withSlot(ids,index,nextId),probability*weight/totalWeight,nextUsed);}
     };
@@ -76,14 +77,17 @@ function enumerateQualityIncrease(layoutId:BoardLayoutId,banner:BannerStateID,op
 }
 function enumerateQualityRedistribution(layoutId:BoardLayoutId,banner:BannerStateID,op:GlobalQualityOperation):readonly CompactBannerTransition[]{
   if(op.kind!=='quality_redistribution')return[];
-  // Current verified rule is specifically one decreased slot + the other two increased on a 3-slot banner.
-  // How the two increased targets are chosen on a 5-slot banner is not authoritative yet; do not guess.
   if(layoutId!=='legacy_3')return[];
   const source=decodeBannerEmblemIds(banner,layoutId),out:CompactBannerTransition[]=[];
   for(let downIndex=0;downIndex<source.length;downIndex++){const recurse=(index:number,ids:readonly EmblemStateID[],probability:number):void=>{if(index>=source.length){out.push({banner:bannerId(layoutId,ids),probability,note:`Randomly selected slot ${downIndex+1} to decrease; the other two increase.`});return;}const currentId=ids[index]!,quality=emblemQualityTier(currentId),stat=emblemStatIndex(currentId),trait=emblemTraitIndex(currentId),direction=index===downIndex?'decrease':'increase';for(const next of directionalTierOutcomes(quality,direction))recurse(index+1,withSlot(ids,index,encodeEmblemComponents(stat,next.tier,trait)),probability*next.probability);};recurse(0,source,1/source.length);}return aggregate(out);
 }
 function calculateBannerOperation(layoutId:BoardLayoutId,role:Role,banner:BannerStateID,op:OfferedOperation,uniformStatFallback:boolean):readonly CompactBannerTransition[]{
-  if(op.kind==='stat_reroll')return enumerateStatReroll(layoutId,role,banner,op,uniformStatFallback);if(op.kind==='quality_reroll')return enumerateQualityReroll(layoutId,role,banner,op);if(op.kind==='trait_reroll')return enumerateTraitReroll(layoutId,role,banner,op);if(op.kind==='quality_increase')return enumerateQualityIncrease(layoutId,banner,op);return enumerateQualityRedistribution(layoutId,banner,op);
+  if(op.kind==='stat_reroll')return enumerateStatReroll(layoutId,role,banner,op,uniformStatFallback);
+  if(op.kind==='quality_reroll')return enumerateQualityReroll(layoutId,role,banner,op);
+  if(op.kind==='trait_reroll')return enumerateTraitReroll(layoutId,role,banner,op);
+  if(op.kind==='quality_increase')return enumerateQualityIncrease(layoutId,banner,op);
+  if(op.kind==='quality_redistribution')return enumerateQualityRedistribution(layoutId,banner,op);
+  return [];
 }
 export function enumerateCompactBannerOperation(role:Role,banner:BannerStateID,op:OfferedOperation,uniformStatFallback=true,layoutId:BoardLayoutId=DEFAULT_LAYOUT_ID):readonly CompactBannerTransition[]{
   const cacheKey=`${layoutId}|${role}`;let roleCache=transitionCache.get(cacheKey);if(!roleCache){roleCache=new Map();transitionCache.set(cacheKey,roleCache);}let bannerCache=roleCache.get(banner);if(!bannerCache){bannerCache=new Map();roleCache.set(banner,bannerCache);}const key=operationKey(op,uniformStatFallback),prior=bannerCache.get(key);if(prior){diagnostics.cacheHits++;return prior;}
