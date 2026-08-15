@@ -1,0 +1,84 @@
+name: M5G Target t3 Robustness
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [agent/m5g-target-t3-robustness]
+    paths: [.github/m5g-run-request]
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - name: Typecheck, generated verification, full tests
+        run: npm run test:ci
+      - name: Verify frozen plan
+        run: npm run benchmark:m5g:plan > m5g-plan.json
+      - name: Canonical M5F 55k sentinel
+        run: node scripts/benchmark-m5g-sentinel.mjs m5g-sentinel.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m5g-preflight
+          path: |
+            m5g-plan.json
+            m5g-sentinel.json
+
+  matrix:
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        fixture: [canonical-default, holdout-01, holdout-02, holdout-03, holdout-04, holdout-05, holdout-06, holdout-07, holdout-08]
+        target: [50000, 55000, 60000]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - name: Run isolated oracle/candidate pair and t2 control
+        run: node scripts/benchmark-m5g-target.mjs "${{ matrix.fixture }}" "${{ matrix.target }}" "m5g-${{ matrix.fixture }}-${{ matrix.target }}.json"
+      - name: Upload case artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5g-${{ matrix.fixture }}-${{ matrix.target }}
+          path: m5g-${{ matrix.fixture }}-${{ matrix.target }}.json
+          if-no-files-found: warn
+
+  aggregate:
+    if: always()
+    needs: [preflight, matrix]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: m5g-*
+          path: m5g-results
+          merge-multiple: true
+      - name: Aggregate frozen gate
+        env:
+          M5G_PREFLIGHT_PASSED: ${{ needs.preflight.result == 'success' }}
+        run: node scripts/aggregate-m5g-target.mjs m5g-results benchmarks/m5g-target-t3-robustness.json M5G_TARGET_T3_ROBUSTNESS.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m5g-aggregate
+          path: |
+            benchmarks/m5g-target-t3-robustness.json
+            M5G_TARGET_T3_ROBUSTNESS.md
