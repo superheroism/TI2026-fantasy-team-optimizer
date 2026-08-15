@@ -3,7 +3,9 @@ import { QUALITY_BONUS_PCT } from './clientRules.js';
 
 export interface TraitEffect { sourcePosition:number; trait:TraitName; modifierPct:number; reason:string; }
 export interface EvaluatedEmblem { position:number; tierBonusPct:number; baseMultiplierPct:number; traitModifierPct:number; effectiveMultiplierPct:number; effects:TraitEffect[]; }
-export type EvaluatedBanner = EvaluatedEmblem[];
+export type EvaluatedBanner =
+  | [EvaluatedEmblem,EvaluatedEmblem,EvaluatedEmblem]
+  | [EvaluatedEmblem,EvaluatedEmblem,EvaluatedEmblem,EvaluatedEmblem,EvaluatedEmblem];
 
 function adjacent(a:number,b:number):boolean{return Math.abs(a-b)===1;}
 function allDifferent<T>(values:T[]):boolean{return new Set(values).size===values.length;}
@@ -25,6 +27,6 @@ export function evaluateBanner(banner:BannerState):EvaluatedBanner {
     }}
     const tierBonusPct=qualityBonus(emblem.qualityTier),baseMultiplierPct=100+tierBonusPct,traitModifierPct=effects.reduce((sum,e)=>sum+e.modifierPct,0);
     return {position,tierBonusPct,baseMultiplierPct,traitModifierPct,effectiveMultiplierPct:baseMultiplierPct+traitModifierPct,effects};
-  });
+  }) as EvaluatedBanner;
 }
 export function effectiveMultiplierPct(banner:BannerState,position:number):number { const row=evaluateBanner(banner)[position];if(!row)throw new RangeError(`Banner has no slot ${position}.`);return row.effectiveMultiplierPct; }
