@@ -54,10 +54,25 @@ export interface TargetDiagnostics {
   boardCacheBypasses: number;
   preparedRoleCacheHits: number;
   preparedRoleCacheMisses: number;
+  searchCallsByTitlePrefix: Record<string, number>;
   candidateSets: Record<Role, number>;
   candidatesBeforePruning: Record<Role, number>;
   candidatesAfterPruning: Record<Role, number>;
   prefixesConsidered: number;
+  candidateCountSignatures: Record<string, number>;
+  uniquePreparedGroups: Record<Role, number>;
+  uniquePreparedGroupTuples: number;
+  reusedPreparedGroupTuples: number;
+  uniquePreparedGroupPairs: {
+    coreMid: number;
+    midSupport: number;
+    coreSupport: number;
+  };
+  reusedPreparedGroupPairs: {
+    coreMid: number;
+    midSupport: number;
+    coreSupport: number;
+  };
   prefixBoundPruned: number;
   coreBranchesConsidered: number;
   coreBranchesPruned: number;
@@ -73,6 +88,8 @@ export interface TargetDiagnostics {
   pairScenarioChecks: number;
   tripleScenarioChecks: number;
   survivingPairSampleBuilds: number;
+  thirdCandidatesVisited: number;
+  maxThirdCandidatesVisited: number;
   candidatePreparationMs: number;
   combinatorialSearchMs: number;
 }
@@ -83,6 +100,7 @@ interface AdapterDiagnostics {
   boardCacheBypasses: number;
   preparedRoleCacheHits: number;
   preparedRoleCacheMisses: number;
+  searchCallsByTitlePrefix: Record<string, number>;
 }
 
 function newAdapterDiagnostics(): AdapterDiagnostics {
@@ -92,6 +110,7 @@ function newAdapterDiagnostics(): AdapterDiagnostics {
     boardCacheBypasses: 0,
     preparedRoleCacheHits: 0,
     preparedRoleCacheMisses: 0,
+    searchCallsByTitlePrefix: {},
   };
 }
 
@@ -110,11 +129,12 @@ export function resetTargetDiagnostics(): void {
   resetTargetSearchDiagnostics();
 }
 
-/** Return the legacy Dota-facing diagnostic shape used by the M2 benchmark. */
+/** Return the Dota-facing target-search diagnostic shape used by engineering benchmarks. */
 export function getTargetDiagnostics(): TargetDiagnostics {
   const search = getTargetSearchDiagnostics();
   return {
     ...adapterDiagnostics,
+    searchCallsByTitlePrefix: { ...adapterDiagnostics.searchCallsByTitlePrefix },
     candidateSets: {
       core: search.candidateSets[0],
       mid: search.candidateSets[1],
@@ -131,6 +151,24 @@ export function getTargetDiagnostics(): TargetDiagnostics {
       support: search.candidatesAfterPruning[2],
     },
     prefixesConsidered: search.searchesConsidered,
+    candidateCountSignatures: { ...search.candidateCountSignatures },
+    uniquePreparedGroups: {
+      core: search.uniquePreparedGroups[0],
+      mid: search.uniquePreparedGroups[1],
+      support: search.uniquePreparedGroups[2],
+    },
+    uniquePreparedGroupTuples: search.uniquePreparedGroupTuples,
+    reusedPreparedGroupTuples: search.reusedPreparedGroupTuples,
+    uniquePreparedGroupPairs: {
+      coreMid: search.uniquePreparedGroupPairs[0],
+      midSupport: search.uniquePreparedGroupPairs[1],
+      coreSupport: search.uniquePreparedGroupPairs[2],
+    },
+    reusedPreparedGroupPairs: {
+      coreMid: search.reusedPreparedGroupPairs[0],
+      midSupport: search.reusedPreparedGroupPairs[1],
+      coreSupport: search.reusedPreparedGroupPairs[2],
+    },
     prefixBoundPruned: search.searchBoundPruned,
     coreBranchesConsidered: search.firstBranchesConsidered,
     coreBranchesPruned: search.firstBranchesPruned,
@@ -146,6 +184,8 @@ export function getTargetDiagnostics(): TargetDiagnostics {
     pairScenarioChecks: search.pairScenarioChecks,
     tripleScenarioChecks: search.tripleScenarioChecks,
     survivingPairSampleBuilds: search.survivingPairSampleBuilds,
+    thirdCandidatesVisited: search.thirdCandidatesVisited,
+    maxThirdCandidatesVisited: search.maxThirdCandidatesVisited,
     candidatePreparationMs: search.candidatePreparationMs,
     combinatorialSearchMs: search.combinatorialSearchMs,
   };
@@ -286,6 +326,12 @@ function optimizeTargetBoard(
   let best: TargetBoardChoice | undefined;
 
   for (const prefixId of prefixIds) {
+    if (diagnosticsEnabled) {
+      const diagnosticPrefix = prefixId ?? '(none)';
+      adapterDiagnostics.searchCallsByTitlePrefix[diagnosticPrefix] =
+        (adapterDiagnostics.searchCallsByTitlePrefix[diagnosticPrefix] ?? 0) + 1;
+    }
+
     const prepared: PreparedTargetSearchGroups<PlayerScore> = [
       preparedRoleCandidates('core', board, data, prefixId, iterations),
       preparedRoleCandidates('mid', board, data, prefixId, iterations),
