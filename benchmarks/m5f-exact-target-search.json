@@ -1,0 +1,2385 @@
+{
+  "generatedAt": "2026-08-15T05:16:53.090Z",
+  "package": "M5F exact target-search kernel acceleration",
+  "baseSha": "b5b9beae74138db46252eadaaa8d024bb7c29931",
+  "optimizedSha": "72dc7d0bfb26cddfa58fb78e99f130767946029b",
+  "runtime": {
+    "node": "v22.23.2",
+    "platform": "linux",
+    "arch": "x64",
+    "osRelease": "6.17.0-1022-azure",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "logicalCpus": 4,
+    "totalMemoryBytes": 16766406656
+  },
+  "preflightPassed": true,
+  "sameRunnerBaselineControl": true,
+  "authoritativeIntent": "Baseline and optimized aggressive-only controls run sequentially in isolated Node 22 processes on the same GitHub Actions runner; profiler overhead excluded.",
+  "productionHorizon": 2,
+  "frozenExperiment": {
+    "objective": "target_probability",
+    "targetScore": 55000,
+    "board": "default benchmark board",
+    "menuIds": [
+      "green-stat-all",
+      "red-quality-all",
+      "blue-trait-all"
+    ],
+    "tokensRemaining": 10,
+    "menuRerollAvailable": true,
+    "modeledHorizon": 3,
+    "continuationSchedule": [
+      4,
+      2,
+      1
+    ],
+    "wideningSchedule": [
+      12,
+      8,
+      4
+    ],
+    "aggressiveRuntimeRatioCeiling": 0.8
+  },
+  "timeouts": {
+    "baselineAggressiveMs": 600000,
+    "optimizedAggressiveMs": 600000,
+    "oracleMs": 600000,
+    "candidateMs": 60000
+  },
+  "memoryGuard": {
+    "oracleMaxRssBytes": 6442450944
+  },
+  "expectedScoreDiagnosticMeaning": "Expected final score remains the existing secondary diagnostic/tie-break context; target probability is the target-mode search utility.",
+  "developmentProfile": {
+    "runId": 31865479477,
+    "profileSourceSha": "2e515459ec917e44df4dd824a7e95f84e44f7b65",
+    "note": "Engineering-only Node 22 profile of the unchanged M5E traversal with identity diagnostics; not the authoritative speed denominator.",
+    "runtimeMs": 132428.425164,
+    "searches": 1738200,
+    "uniquePreparedGroupTuples": 1738200,
+    "reusedPreparedGroupTuples": 0,
+    "preparedPairIdentity": {
+      "coreMid": {
+        "unique": 419328,
+        "reused": 1318872
+      },
+      "midSupport": {
+        "unique": 483520,
+        "reused": 1254680
+      },
+      "coreSupport": {
+        "unique": 502704,
+        "reused": 1235496
+      }
+    },
+    "pairBranches": 299090699,
+    "triplesConsidered": 296256334,
+    "scenarioChecks": 17404506588,
+    "survivingPairSampleBuilds": 20044527,
+    "combinatorialSearchMs": 114850.93649300585
+  },
+  "cases": [
+    {
+      "id": "baseline-t3-aggressive-only",
+      "horizon": 3,
+      "fidelityId": "aggressive",
+      "wideningId": "none",
+      "timeoutMs": 600000,
+      "purpose": "Clean M5F_BASE_SHA same-runner aggressive-only control."
+    },
+    {
+      "id": "optimized-t3-aggressive-only",
+      "horizon": 3,
+      "fidelityId": "aggressive",
+      "wideningId": "none",
+      "timeoutMs": 600000,
+      "purpose": "Same-runner exact-kernel speed control."
+    },
+    {
+      "id": "optimized-t3-current-oracle",
+      "horizon": 3,
+      "fidelityId": "current",
+      "wideningId": "none",
+      "timeoutMs": 600000,
+      "purpose": "Optimized current-fidelity exact root-policy oracle."
+    },
+    {
+      "id": "optimized-t3-aggressive-wide",
+      "horizon": 3,
+      "fidelityId": "aggressive",
+      "wideningId": "wide",
+      "timeoutMs": 60000,
+      "purpose": "Frozen M5C aggressive + M5D Wide feasibility candidate."
+    }
+  ],
+  "runs": [
+    {
+      "id": "baseline-t3-aggressive-only",
+      "horizon": 3,
+      "fidelityId": "aggressive",
+      "wideningId": "none",
+      "objective": "target_probability",
+      "targetScore": 55000,
+      "menuIds": [
+        "green-stat-all",
+        "red-quality-all",
+        "blue-trait-all"
+      ],
+      "tokensRemaining": 10,
+      "runtimeMs": 99692.533278,
+      "recommendation": "CORE → Reroll Quality for Red Emblems",
+      "recommendationKey": "board_action|red-quality-all|core",
+      "utility": 0.9477961798742562,
+      "expectedScoreDiagnostic": 57912.35649178181,
+      "stopValue": 0.22916666666666666,
+      "menuRerollValue": 0.7804525771551503,
+      "ranking": [
+        {
+          "rank": 1,
+          "key": "board_action|red-quality-all|core",
+          "action": "CORE → Reroll Quality for Red Emblems",
+          "utility": 0.9477961798742562,
+          "expectedScore": 57912.35649178181,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 2,
+          "key": "board_action|red-quality-all|mid",
+          "action": "MID → Reroll Quality for Red Emblems",
+          "utility": 0.8609625522797079,
+          "expectedScore": 52884.745820272045,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 3,
+          "key": "board_action|blue-trait-all|support",
+          "action": "SUPPORT → Reroll Trait for Blue Emblems",
+          "utility": 0.8309144396860357,
+          "expectedScore": 53919.36601789001,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 4,
+          "key": "board_action|blue-trait-all|mid",
+          "action": "MID → Reroll Trait for Blue Emblems",
+          "utility": 0.8230313824526136,
+          "expectedScore": 53263.966392876144,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 5,
+          "key": "menu_reroll",
+          "action": "Reroll operation menu",
+          "utility": 0.7804525771551503,
+          "expectedScore": 52167.682113470284,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 6,
+          "key": "board_action|green-stat-all|core",
+          "action": "CORE → Reroll Stat for Green Emblems",
+          "utility": 0.6412898640286755,
+          "expectedScore": 49731.7335809543,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 7,
+          "key": "board_action|green-stat-all|mid",
+          "action": "MID → Reroll Stat for Green Emblems",
+          "utility": 0.5995338221055196,
+          "expectedScore": 49313.10502647097,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 8,
+          "key": "board_action|green-stat-all|support",
+          "action": "SUPPORT → Reroll Stat for Green Emblems",
+          "utility": 0.551433165332923,
+          "expectedScore": 48506.369265090674,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 9,
+          "key": "stop",
+          "action": "Best Current Setup",
+          "utility": 0.22916666666666666,
+          "expectedScore": 52167.682113470284,
+          "tokensAfter": 10
+        }
+      ],
+      "memory": {
+        "start": {
+          "heapUsed": 10080488,
+          "heapTotal": 27631616,
+          "rss": 66838528,
+          "external": 1851182,
+          "arrayBuffers": 18667
+        },
+        "end": {
+          "heapUsed": 966205560,
+          "heapTotal": 1015357440,
+          "rss": 2311225344,
+          "external": 839781298,
+          "arrayBuffers": 837951211
+        },
+        "heapDelta": 956125072,
+        "maxRssStartKb": 65524,
+        "maxRssEndKb": 2257056
+      },
+      "engineDiagnostics": {
+        "modeledHorizon": 3,
+        "descriptiveBoardMaterializations": 0,
+        "descriptiveBoardCacheEntries": 1,
+        "expectedScalarStates": 55,
+        "targetScalarStates": 217275,
+        "terminalScoringCalls": 217330,
+        "expectedBannerMaterializations": 58,
+        "expectedBannerCacheEntries": 58,
+        "expectedBannerCacheHits": 107,
+        "expectedBannerCacheMisses": 58,
+        "targetBannerMaterializations": 16661,
+        "targetBannerCacheEntries": 16661,
+        "targetBannerCacheHits": 635161,
+        "targetBannerCacheMisses": 16661,
+        "continuationFidelity": {
+          "id": "aggressive",
+          "description": "Strongly compress future fresh-menu continuation outcomes while leaving the root decision boundary untouched.",
+          "freshMenuOutcomeStrataByDepth": [
+            4,
+            2,
+            1
+          ],
+          "baseFreshMenuOutcomeStrata": 8,
+          "rootContinuationEntryStrata": 12
+        },
+        "actionWidening": {
+          "enabled": false,
+          "policyId": "none",
+          "description": "Action widening disabled.",
+          "deepOperationCapsByDepth": [],
+          "byDepth": [],
+          "freshMenuStatesWidened": 0,
+          "legalOperationEvaluations": 0,
+          "shallowOperationEvaluations": 0,
+          "recursivelyDeepenedOperationEvaluations": 0,
+          "operationEvaluationsAvoided": 0,
+          "wideningAvoidanceRate": 0
+        },
+        "targetedActionCacheHits": 7,
+        "targetedActionCacheMisses": 9,
+        "targetedActionCacheBypasses": 287160,
+        "targetedActionEntries": 9,
+        "targetedActionRequestsByDepth": {
+          "1": 284280,
+          "2": 2880,
+          "3": 16
+        },
+        "targetedActionCacheHitsByDepth": {
+          "3": 7
+        },
+        "targetedActionCacheMissesByDepth": {
+          "3": 9
+        },
+        "targetedActionCacheBypassesByDepth": {
+          "1": 284280,
+          "2": 2880
+        },
+        "transitionDistributionCacheHits": 9,
+        "transitionDistributionCacheMisses": 9,
+        "transitionDistributionCacheBypasses": 287160,
+        "transitionDistributionEntries": 9,
+        "transitionEvaluationsByDepth": {
+          "1": 284280,
+          "2": 2880,
+          "3": 9
+        },
+        "transitionOutcomesBeforeCompressionByDepth": {
+          "0": 55,
+          "1": 17507,
+          "2": 1734821
+        },
+        "transitionOutcomesAfterCompressionByDepth": {
+          "0": 47,
+          "1": 9215,
+          "2": 454847
+        },
+        "valueFunction": {
+          "terminalCacheHits": 242360,
+          "terminalCacheMisses": 217274,
+          "vCalls": 464159,
+          "vCacheHits": 4526,
+          "vCacheMisses": 4786,
+          "qCalls": 1,
+          "qCacheHits": 0,
+          "qCacheMisses": 1,
+          "actionCalls": 95723,
+          "actionCacheHits": 0,
+          "actionCacheMisses": 3,
+          "actionCacheBypasses": 95720,
+          "uniqueStatesByDepth": {
+            "0": 217129,
+            "1": 4738,
+            "2": 48
+          },
+          "uniqueQStatesByDepth": {
+            "3": 1
+          },
+          "uniqueActionStatesByDepth": {
+            "1": 94760,
+            "2": 960,
+            "3": 3
+          },
+          "vCallsByDepth": {
+            "0": 454847,
+            "1": 9263,
+            "2": 49
+          },
+          "vCacheHitsByDepth": {
+            "1": 4525,
+            "2": 1
+          },
+          "vCacheMissesByDepth": {
+            "1": 4738,
+            "2": 48
+          },
+          "qCallsByDepth": {
+            "3": 1
+          },
+          "qCacheHitsByDepth": {},
+          "qCacheMissesByDepth": {
+            "3": 1
+          },
+          "actionCallsByDepth": {
+            "1": 94760,
+            "2": 960,
+            "3": 3
+          },
+          "actionCacheHitsByDepth": {},
+          "actionCacheMissesByDepth": {
+            "3": 3
+          },
+          "actionCacheBypassesByDepth": {
+            "1": 94760,
+            "2": 960
+          },
+          "actionEvaluationsByDepth": {
+            "1": 94760,
+            "2": 960,
+            "3": 3
+          },
+          "terminalEntries": 217275,
+          "vEntries": 4786,
+          "qEntries": 1,
+          "actionEntries": 3,
+          "elapsedMs": 99691.565022
+        },
+        "menuOperator": {
+          "calls": 4786,
+          "uniformCalls": 4786,
+          "overrideCalls": 0,
+          "explicitMenusScanned": 0,
+          "operatorMs": 32.11102000014199
+        }
+      },
+      "transitionDiagnostics": {
+        "cacheHits": 258849,
+        "cacheMisses": 28320,
+        "uniqueTransitionCalculations": 28320,
+        "outcomesBeforeAggregation": 176048,
+        "outcomesAfterAggregation": 176017,
+        "transitionGenerationMs": 190.69175799900927
+      },
+      "rawScenarioDiagnostics": {
+        "requests": 267504,
+        "cacheHits": 267456,
+        "cacheMisses": 48,
+        "generations": 48,
+        "generatedIterations": 2304,
+        "generatedStatValues": 483840,
+        "generationMs": 113.68569999999998,
+        "sampleRescores": 266576,
+        "meanRescores": 928,
+        "rescoredIterations": 12840192,
+        "rescoreMs": 1469.720682000279
+      },
+      "targetDiagnostics": {
+        "boardCacheHits": 0,
+        "boardCacheMisses": 1,
+        "boardCacheBypasses": 217274,
+        "preparedRoleCacheHits": 5081312,
+        "preparedRoleCacheMisses": 133288,
+        "candidateSets": {
+          "core": 36808,
+          "mid": 43616,
+          "support": 52864
+        },
+        "candidatesBeforePruning": {
+          "core": 588928,
+          "mid": 697856,
+          "support": 845824
+        },
+        "candidatesAfterPruning": {
+          "core": 585428,
+          "mid": 693652,
+          "support": 757275
+        },
+        "prefixesConsidered": 1738200,
+        "prefixBoundPruned": 168179,
+        "coreBranchesConsidered": 25066321,
+        "coreBranchesPruned": 6323366,
+        "pairBranchesConsidered": 299090699,
+        "pairBranchesPruned": 279046172,
+        "triplesConsidered": 296256334,
+        "triplesCompleted": 400185,
+        "triplesEarlyTerminated": 295856149,
+        "scenarioChecks": 17404506588,
+        "prefixScenarioChecks": 77449875,
+        "seedScenarioChecks": 75361008,
+        "coreScenarioChecks": 1111547867,
+        "pairScenarioChecks": 10148373172,
+        "tripleScenarioChecks": 5991774666,
+        "survivingPairSampleBuilds": 20044527,
+        "candidatePreparationMs": 1980.3638169995554,
+        "combinatorialSearchMs": 86352.15704900505
+      },
+      "futureOperationIds": [
+        "green-stat-all",
+        "green-stat-first",
+        "green-stat-last",
+        "green-stat-random",
+        "green-quality-all",
+        "green-trait-all",
+        "red-stat-all",
+        "red-quality-all",
+        "red-quality-first",
+        "red-quality-last",
+        "red-quality-random",
+        "red-trait-all",
+        "blue-stat-all",
+        "blue-quality-all",
+        "blue-trait-all",
+        "blue-trait-first",
+        "blue-trait-last",
+        "blue-trait-random",
+        "quality-increase-one",
+        "quality-redistribution"
+      ],
+      "sourceSha": "b5b9beae74138db46252eadaaa8d024bb7c29931",
+      "status": "completed",
+      "elapsedMs": 100454,
+      "timeoutMs": 600000,
+      "purpose": "Clean M5F_BASE_SHA same-runner aggressive-only control."
+    },
+    {
+      "id": "optimized-t3-aggressive-only",
+      "horizon": 3,
+      "fidelityId": "aggressive",
+      "wideningId": "none",
+      "objective": "target_probability",
+      "targetScore": 55000,
+      "menuIds": [
+        "green-stat-all",
+        "red-quality-all",
+        "blue-trait-all"
+      ],
+      "tokensRemaining": 10,
+      "runtimeMs": 78175.697148,
+      "recommendation": "CORE → Reroll Quality for Red Emblems",
+      "recommendationKey": "board_action|red-quality-all|core",
+      "utility": 0.9477961798742562,
+      "expectedScoreDiagnostic": 57912.35649178181,
+      "stopValue": 0.22916666666666666,
+      "menuRerollValue": 0.7804525771551503,
+      "ranking": [
+        {
+          "rank": 1,
+          "key": "board_action|red-quality-all|core",
+          "action": "CORE → Reroll Quality for Red Emblems",
+          "utility": 0.9477961798742562,
+          "expectedScore": 57912.35649178181,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 2,
+          "key": "board_action|red-quality-all|mid",
+          "action": "MID → Reroll Quality for Red Emblems",
+          "utility": 0.8609625522797079,
+          "expectedScore": 52884.745820272045,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 3,
+          "key": "board_action|blue-trait-all|support",
+          "action": "SUPPORT → Reroll Trait for Blue Emblems",
+          "utility": 0.8309144396860357,
+          "expectedScore": 53919.36601789001,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 4,
+          "key": "board_action|blue-trait-all|mid",
+          "action": "MID → Reroll Trait for Blue Emblems",
+          "utility": 0.8230313824526136,
+          "expectedScore": 53263.966392876144,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 5,
+          "key": "menu_reroll",
+          "action": "Reroll operation menu",
+          "utility": 0.7804525771551503,
+          "expectedScore": 52167.682113470284,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 6,
+          "key": "board_action|green-stat-all|core",
+          "action": "CORE → Reroll Stat for Green Emblems",
+          "utility": 0.6412898640286755,
+          "expectedScore": 49731.7335809543,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 7,
+          "key": "board_action|green-stat-all|mid",
+          "action": "MID → Reroll Stat for Green Emblems",
+          "utility": 0.5995338221055196,
+          "expectedScore": 49313.10502647097,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 8,
+          "key": "board_action|green-stat-all|support",
+          "action": "SUPPORT → Reroll Stat for Green Emblems",
+          "utility": 0.551433165332923,
+          "expectedScore": 48506.369265090674,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 9,
+          "key": "stop",
+          "action": "Best Current Setup",
+          "utility": 0.22916666666666666,
+          "expectedScore": 52167.682113470284,
+          "tokensAfter": 10
+        }
+      ],
+      "memory": {
+        "start": {
+          "heapUsed": 10125744,
+          "heapTotal": 27631616,
+          "rss": 67039232,
+          "external": 1851182,
+          "arrayBuffers": 18667
+        },
+        "end": {
+          "heapUsed": 1358653752,
+          "heapTotal": 1410154496,
+          "rss": 3160506368,
+          "external": 1137108650,
+          "arrayBuffers": 1135278563
+        },
+        "heapDelta": 1348528008,
+        "maxRssStartKb": 65728,
+        "maxRssEndKb": 3086432
+      },
+      "engineDiagnostics": {
+        "modeledHorizon": 3,
+        "descriptiveBoardMaterializations": 0,
+        "descriptiveBoardCacheEntries": 1,
+        "expectedScalarStates": 55,
+        "targetScalarStates": 217275,
+        "terminalScoringCalls": 217330,
+        "expectedBannerMaterializations": 58,
+        "expectedBannerCacheEntries": 58,
+        "expectedBannerCacheHits": 107,
+        "expectedBannerCacheMisses": 58,
+        "targetBannerMaterializations": 16661,
+        "targetBannerCacheEntries": 16661,
+        "targetBannerCacheHits": 635161,
+        "targetBannerCacheMisses": 16661,
+        "continuationFidelity": {
+          "id": "aggressive",
+          "description": "Strongly compress future fresh-menu continuation outcomes while leaving the root decision boundary untouched.",
+          "freshMenuOutcomeStrataByDepth": [
+            4,
+            2,
+            1
+          ],
+          "baseFreshMenuOutcomeStrata": 8,
+          "rootContinuationEntryStrata": 12
+        },
+        "actionWidening": {
+          "enabled": false,
+          "policyId": "none",
+          "description": "Action widening disabled.",
+          "deepOperationCapsByDepth": [],
+          "byDepth": [],
+          "freshMenuStatesWidened": 0,
+          "legalOperationEvaluations": 0,
+          "shallowOperationEvaluations": 0,
+          "recursivelyDeepenedOperationEvaluations": 0,
+          "operationEvaluationsAvoided": 0,
+          "wideningAvoidanceRate": 0
+        },
+        "targetedActionCacheHits": 7,
+        "targetedActionCacheMisses": 9,
+        "targetedActionCacheBypasses": 287160,
+        "targetedActionEntries": 9,
+        "targetedActionRequestsByDepth": {
+          "1": 284280,
+          "2": 2880,
+          "3": 16
+        },
+        "targetedActionCacheHitsByDepth": {
+          "3": 7
+        },
+        "targetedActionCacheMissesByDepth": {
+          "3": 9
+        },
+        "targetedActionCacheBypassesByDepth": {
+          "1": 284280,
+          "2": 2880
+        },
+        "transitionDistributionCacheHits": 9,
+        "transitionDistributionCacheMisses": 9,
+        "transitionDistributionCacheBypasses": 287160,
+        "transitionDistributionEntries": 9,
+        "transitionEvaluationsByDepth": {
+          "1": 284280,
+          "2": 2880,
+          "3": 9
+        },
+        "transitionOutcomesBeforeCompressionByDepth": {
+          "0": 55,
+          "1": 17507,
+          "2": 1734821
+        },
+        "transitionOutcomesAfterCompressionByDepth": {
+          "0": 47,
+          "1": 9215,
+          "2": 454847
+        },
+        "valueFunction": {
+          "terminalCacheHits": 242360,
+          "terminalCacheMisses": 217274,
+          "vCalls": 464159,
+          "vCacheHits": 4526,
+          "vCacheMisses": 4786,
+          "qCalls": 1,
+          "qCacheHits": 0,
+          "qCacheMisses": 1,
+          "actionCalls": 95723,
+          "actionCacheHits": 0,
+          "actionCacheMisses": 3,
+          "actionCacheBypasses": 95720,
+          "uniqueStatesByDepth": {
+            "0": 217129,
+            "1": 4738,
+            "2": 48
+          },
+          "uniqueQStatesByDepth": {
+            "3": 1
+          },
+          "uniqueActionStatesByDepth": {
+            "1": 94760,
+            "2": 960,
+            "3": 3
+          },
+          "vCallsByDepth": {
+            "0": 454847,
+            "1": 9263,
+            "2": 49
+          },
+          "vCacheHitsByDepth": {
+            "1": 4525,
+            "2": 1
+          },
+          "vCacheMissesByDepth": {
+            "1": 4738,
+            "2": 48
+          },
+          "qCallsByDepth": {
+            "3": 1
+          },
+          "qCacheHitsByDepth": {},
+          "qCacheMissesByDepth": {
+            "3": 1
+          },
+          "actionCallsByDepth": {
+            "1": 94760,
+            "2": 960,
+            "3": 3
+          },
+          "actionCacheHitsByDepth": {},
+          "actionCacheMissesByDepth": {
+            "3": 3
+          },
+          "actionCacheBypassesByDepth": {
+            "1": 94760,
+            "2": 960
+          },
+          "actionEvaluationsByDepth": {
+            "1": 94760,
+            "2": 960,
+            "3": 3
+          },
+          "terminalEntries": 217275,
+          "vEntries": 4786,
+          "qEntries": 1,
+          "actionEntries": 3,
+          "elapsedMs": 78174.69984999999
+        },
+        "menuOperator": {
+          "calls": 4786,
+          "uniformCalls": 4786,
+          "overrideCalls": 0,
+          "explicitMenusScanned": 0,
+          "operatorMs": 27.45025899985319
+        }
+      },
+      "transitionDiagnostics": {
+        "cacheHits": 258849,
+        "cacheMisses": 28320,
+        "uniqueTransitionCalculations": 28320,
+        "outcomesBeforeAggregation": 176048,
+        "outcomesAfterAggregation": 176017,
+        "transitionGenerationMs": 176.7961970006869
+      },
+      "rawScenarioDiagnostics": {
+        "requests": 267504,
+        "cacheHits": 267456,
+        "cacheMisses": 48,
+        "generations": 48,
+        "generatedIterations": 2304,
+        "generatedStatValues": 483840,
+        "generationMs": 118.99710500000003,
+        "sampleRescores": 266576,
+        "meanRescores": 928,
+        "rescoredIterations": 12840192,
+        "rescoreMs": 1504.2761970014903
+      },
+      "targetDiagnostics": {
+        "boardCacheHits": 0,
+        "boardCacheMisses": 1,
+        "boardCacheBypasses": 217274,
+        "preparedRoleCacheHits": 5081312,
+        "preparedRoleCacheMisses": 133288,
+        "searchCallsByTitlePrefix": {
+          "cerulean": 217275,
+          "crimson": 217275,
+          "elemental": 217275,
+          "emerald": 217275,
+          "golden": 217275,
+          "heroic": 217275,
+          "otherworldly": 217275,
+          "royal": 217275
+        },
+        "candidateSets": {
+          "core": 36808,
+          "mid": 43616,
+          "support": 52864
+        },
+        "candidatesBeforePruning": {
+          "core": 588928,
+          "mid": 697856,
+          "support": 845824
+        },
+        "candidatesAfterPruning": {
+          "core": 585428,
+          "mid": 693652,
+          "support": 757275
+        },
+        "prefixesConsidered": 1738200,
+        "candidateCountSignatures": {
+          "16,16,15": 251828,
+          "16,16,16": 883264,
+          "16,16,13": 209456,
+          "15,16,15": 7906,
+          "15,16,16": 32607,
+          "15,16,13": 8167,
+          "16,16,10": 41312,
+          "16,16,11": 43356,
+          "16,16,14": 151244,
+          "16,15,15": 5146,
+          "16,15,16": 18600,
+          "16,15,13": 4390,
+          "16,16,12": 34280,
+          "15,16,10": 855,
+          "15,16,11": 1275,
+          "15,16,14": 4828,
+          "15,15,15": 119,
+          "15,15,16": 532,
+          "15,15,13": 134,
+          "15,16,12": 936,
+          "16,16,9": 8862,
+          "16,15,10": 660,
+          "16,15,11": 782,
+          "16,16,8": 6541,
+          "16,15,14": 2569,
+          "16,15,12": 489,
+          "16,14,15": 2524,
+          "16,14,16": 8891,
+          "16,14,13": 1672,
+          "15,14,15": 87,
+          "15,14,16": 396,
+          "15,14,13": 76,
+          "16,14,10": 433,
+          "16,14,11": 364,
+          "16,14,14": 1185,
+          "16,13,16": 641,
+          "16,13,13": 96,
+          "16,14,12": 240,
+          "16,16,7": 479,
+          "15,16,8": 193,
+          "16,15,8": 107,
+          "15,16,9": 126,
+          "15,15,10": 7,
+          "15,15,11": 15,
+          "15,15,14": 49,
+          "14,16,13": 2,
+          "15,15,12": 8,
+          "15,14,10": 7,
+          "15,14,11": 9,
+          "15,14,14": 34,
+          "15,13,16": 16,
+          "15,13,13": 2,
+          "15,14,12": 5,
+          "15,16,7": 5,
+          "15,15,8": 2,
+          "16,13,15": 91,
+          "16,12,16": 2,
+          "15,13,15": 1,
+          "16,13,10": 17,
+          "16,13,11": 11,
+          "16,13,14": 46,
+          "16,13,12": 8,
+          "16,15,9": 98,
+          "16,14,9": 41,
+          "16,14,8": 5,
+          "16,16,6": 66,
+          "16,15,7": 5
+        },
+        "uniquePreparedGroups": {
+          "core": 36808,
+          "mid": 43616,
+          "support": 52864
+        },
+        "uniquePreparedGroupTuples": 1738200,
+        "reusedPreparedGroupTuples": 0,
+        "uniquePreparedGroupPairs": {
+          "coreMid": 419328,
+          "midSupport": 483520,
+          "coreSupport": 502704
+        },
+        "reusedPreparedGroupPairs": {
+          "coreMid": 1318872,
+          "midSupport": 1254680,
+          "coreSupport": 1235496
+        },
+        "prefixBoundPruned": 168179,
+        "coreBranchesConsidered": 25066321,
+        "coreBranchesPruned": 6323366,
+        "pairBranchesConsidered": 299090699,
+        "pairBranchesPruned": 279046172,
+        "triplesConsidered": 35784425,
+        "triplesCompleted": 400185,
+        "triplesEarlyTerminated": 35384240,
+        "scenarioChecks": 13285618691,
+        "prefixScenarioChecks": 77449875,
+        "seedScenarioChecks": 75361008,
+        "coreScenarioChecks": 1111547867,
+        "pairScenarioChecks": 10148373172,
+        "tripleScenarioChecks": 932628967,
+        "survivingPairSampleBuilds": 5332992,
+        "thirdCandidatesVisited": 35784425,
+        "maxThirdCandidatesVisited": 16,
+        "candidatePreparationMs": 4518.419634999869,
+        "combinatorialSearchMs": 61785.50715799668
+      },
+      "targetKernelDiagnostics": {
+        "candidateSets": [
+          36808,
+          43616,
+          52864
+        ],
+        "candidatesBeforePruning": [
+          588928,
+          697856,
+          845824
+        ],
+        "candidatesAfterPruning": [
+          585428,
+          693652,
+          757275
+        ],
+        "searchesConsidered": 1738200,
+        "candidateCountSignatures": {
+          "16,16,15": 251828,
+          "16,16,16": 883264,
+          "16,16,13": 209456,
+          "15,16,15": 7906,
+          "15,16,16": 32607,
+          "15,16,13": 8167,
+          "16,16,10": 41312,
+          "16,16,11": 43356,
+          "16,16,14": 151244,
+          "16,15,15": 5146,
+          "16,15,16": 18600,
+          "16,15,13": 4390,
+          "16,16,12": 34280,
+          "15,16,10": 855,
+          "15,16,11": 1275,
+          "15,16,14": 4828,
+          "15,15,15": 119,
+          "15,15,16": 532,
+          "15,15,13": 134,
+          "15,16,12": 936,
+          "16,16,9": 8862,
+          "16,15,10": 660,
+          "16,15,11": 782,
+          "16,16,8": 6541,
+          "16,15,14": 2569,
+          "16,15,12": 489,
+          "16,14,15": 2524,
+          "16,14,16": 8891,
+          "16,14,13": 1672,
+          "15,14,15": 87,
+          "15,14,16": 396,
+          "15,14,13": 76,
+          "16,14,10": 433,
+          "16,14,11": 364,
+          "16,14,14": 1185,
+          "16,13,16": 641,
+          "16,13,13": 96,
+          "16,14,12": 240,
+          "16,16,7": 479,
+          "15,16,8": 193,
+          "16,15,8": 107,
+          "15,16,9": 126,
+          "15,15,10": 7,
+          "15,15,11": 15,
+          "15,15,14": 49,
+          "14,16,13": 2,
+          "15,15,12": 8,
+          "15,14,10": 7,
+          "15,14,11": 9,
+          "15,14,14": 34,
+          "15,13,16": 16,
+          "15,13,13": 2,
+          "15,14,12": 5,
+          "15,16,7": 5,
+          "15,15,8": 2,
+          "16,13,15": 91,
+          "16,12,16": 2,
+          "15,13,15": 1,
+          "16,13,10": 17,
+          "16,13,11": 11,
+          "16,13,14": 46,
+          "16,13,12": 8,
+          "16,15,9": 98,
+          "16,14,9": 41,
+          "16,14,8": 5,
+          "16,16,6": 66,
+          "16,15,7": 5
+        },
+        "uniquePreparedGroups": [
+          36808,
+          43616,
+          52864
+        ],
+        "uniquePreparedGroupTuples": 1738200,
+        "reusedPreparedGroupTuples": 0,
+        "uniquePreparedGroupPairs": [
+          419328,
+          483520,
+          502704
+        ],
+        "reusedPreparedGroupPairs": [
+          1318872,
+          1254680,
+          1235496
+        ],
+        "searchBoundPruned": 168179,
+        "firstBranchesConsidered": 25066321,
+        "firstBranchesPruned": 6323366,
+        "pairBranchesConsidered": 299090699,
+        "pairBranchesPruned": 279046172,
+        "triplesConsidered": 35784425,
+        "triplesCompleted": 400185,
+        "triplesEarlyTerminated": 35384240,
+        "scenarioChecks": 13285618691,
+        "searchScenarioChecks": 77449875,
+        "seedScenarioChecks": 75361008,
+        "firstScenarioChecks": 1111547867,
+        "pairScenarioChecks": 10148373172,
+        "tripleScenarioChecks": 932628967,
+        "suffixScenarioChecks": 940257802,
+        "survivingPairSampleBuilds": 5332992,
+        "thirdCandidatesVisited": 35784425,
+        "maxThirdCandidatesVisited": 16,
+        "suffixBoundCalls": 25199165,
+        "suffixBoundPruned": 20044359,
+        "suffixThirdCandidatesSkipped": 260471909,
+        "pairGroupCacheHits": 1129608,
+        "pairGroupCacheMisses": 440413,
+        "pairSampleCacheHits": 81914583,
+        "pairSampleCacheMisses": 217176116,
+        "pairSampleCacheBuilds": 2430984,
+        "pairCacheResets": 3,
+        "pairCacheEstimatedBytes": 253266232,
+        "suffixCacheHits": 1685336,
+        "suffixCacheMisses": 52864,
+        "suffixCacheBuilds": 52864,
+        "suffixCacheResets": 0,
+        "suffixCacheEstimatedBytes": 89481648,
+        "candidatePreparationMs": 4518.419634999869,
+        "pairSampleBuildMs": 543.450110990254,
+        "suffixSummaryBuildMs": 693.6601930003076,
+        "combinatorialSearchMs": 61785.50715799668
+      },
+      "futureOperationIds": [
+        "green-stat-all",
+        "green-stat-first",
+        "green-stat-last",
+        "green-stat-random",
+        "green-quality-all",
+        "green-trait-all",
+        "red-stat-all",
+        "red-quality-all",
+        "red-quality-first",
+        "red-quality-last",
+        "red-quality-random",
+        "red-trait-all",
+        "blue-stat-all",
+        "blue-quality-all",
+        "blue-trait-all",
+        "blue-trait-first",
+        "blue-trait-last",
+        "blue-trait-random",
+        "quality-increase-one",
+        "quality-redistribution"
+      ],
+      "sourceSha": "72dc7d0bfb26cddfa58fb78e99f130767946029b",
+      "status": "completed",
+      "elapsedMs": 79032,
+      "timeoutMs": 600000,
+      "purpose": "Same-runner exact-kernel speed control."
+    },
+    {
+      "id": "optimized-t3-current-oracle",
+      "horizon": 3,
+      "fidelityId": "current",
+      "wideningId": "none",
+      "objective": "target_probability",
+      "targetScore": 55000,
+      "menuIds": [
+        "green-stat-all",
+        "red-quality-all",
+        "blue-trait-all"
+      ],
+      "tokensRemaining": 10,
+      "runtimeMs": 167003.44611199998,
+      "recommendation": "CORE → Reroll Quality for Red Emblems",
+      "recommendationKey": "board_action|red-quality-all|core",
+      "utility": 0.935461190665708,
+      "expectedScoreDiagnostic": 57912.35649178181,
+      "stopValue": 0.22916666666666666,
+      "menuRerollValue": 0.7408340437716145,
+      "ranking": [
+        {
+          "rank": 1,
+          "key": "board_action|red-quality-all|core",
+          "action": "CORE → Reroll Quality for Red Emblems",
+          "utility": 0.935461190665708,
+          "expectedScore": 57912.35649178181,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 2,
+          "key": "board_action|red-quality-all|mid",
+          "action": "MID → Reroll Quality for Red Emblems",
+          "utility": 0.8317532017410828,
+          "expectedScore": 52884.745820272045,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 3,
+          "key": "board_action|blue-trait-all|support",
+          "action": "SUPPORT → Reroll Trait for Blue Emblems",
+          "utility": 0.8108823265231447,
+          "expectedScore": 53919.36601789001,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 4,
+          "key": "board_action|blue-trait-all|mid",
+          "action": "MID → Reroll Trait for Blue Emblems",
+          "utility": 0.7885786071821177,
+          "expectedScore": 53263.966392876144,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 5,
+          "key": "menu_reroll",
+          "action": "Reroll operation menu",
+          "utility": 0.7408340437716145,
+          "expectedScore": 52167.682113470284,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 6,
+          "key": "board_action|green-stat-all|core",
+          "action": "CORE → Reroll Stat for Green Emblems",
+          "utility": 0.5795386002250158,
+          "expectedScore": 49731.7335809543,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 7,
+          "key": "board_action|green-stat-all|mid",
+          "action": "MID → Reroll Stat for Green Emblems",
+          "utility": 0.5316963415626282,
+          "expectedScore": 49313.10502647097,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 8,
+          "key": "board_action|green-stat-all|support",
+          "action": "SUPPORT → Reroll Stat for Green Emblems",
+          "utility": 0.48760117637024003,
+          "expectedScore": 48506.369265090674,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 9,
+          "key": "stop",
+          "action": "Best Current Setup",
+          "utility": 0.22916666666666666,
+          "expectedScore": 52167.682113470284,
+          "tokensAfter": 10
+        }
+      ],
+      "memory": {
+        "start": {
+          "heapUsed": 10125848,
+          "heapTotal": 27631616,
+          "rss": 67117056,
+          "external": 1851182,
+          "arrayBuffers": 18667
+        },
+        "end": {
+          "heapUsed": 2273741912,
+          "heapTotal": 2346090496,
+          "rss": 5063032832,
+          "external": 1779184418,
+          "arrayBuffers": 1777354331
+        },
+        "heapDelta": 2263616064,
+        "maxRssStartKb": 65736,
+        "maxRssEndKb": 4944368
+      },
+      "engineDiagnostics": {
+        "modeledHorizon": 3,
+        "descriptiveBoardMaterializations": 0,
+        "descriptiveBoardCacheEntries": 1,
+        "expectedScalarStates": 55,
+        "targetScalarStates": 415223,
+        "terminalScoringCalls": 415278,
+        "expectedBannerMaterializations": 58,
+        "expectedBannerCacheEntries": 58,
+        "expectedBannerCacheHits": 107,
+        "expectedBannerCacheMisses": 58,
+        "targetBannerMaterializations": 31009,
+        "targetBannerCacheEntries": 31009,
+        "targetBannerCacheHits": 1214657,
+        "targetBannerCacheMisses": 31009,
+        "continuationFidelity": {
+          "id": "current",
+          "description": "Current-fidelity continuation: retain configured fresh-menu strata at every recursive depth.",
+          "freshMenuOutcomeStrataByDepth": [],
+          "baseFreshMenuOutcomeStrata": 8,
+          "rootContinuationEntryStrata": 12
+        },
+        "actionWidening": {
+          "enabled": false,
+          "policyId": "none",
+          "description": "Action widening disabled.",
+          "deepOperationCapsByDepth": [],
+          "byDepth": [],
+          "freshMenuStatesWidened": 0,
+          "legalOperationEvaluations": 0,
+          "shallowOperationEvaluations": 0,
+          "recursivelyDeepenedOperationEvaluations": 0,
+          "operationEvaluationsAvoided": 0,
+          "wideningAvoidanceRate": 0
+        },
+        "targetedActionCacheHits": 7,
+        "targetedActionCacheMisses": 9,
+        "targetedActionCacheBypasses": 396660,
+        "targetedActionEntries": 9,
+        "targetedActionRequestsByDepth": {
+          "1": 393780,
+          "2": 2880,
+          "3": 16
+        },
+        "targetedActionCacheHitsByDepth": {
+          "3": 7
+        },
+        "targetedActionCacheMissesByDepth": {
+          "3": 9
+        },
+        "targetedActionCacheBypassesByDepth": {
+          "1": 393780,
+          "2": 2880
+        },
+        "transitionDistributionCacheHits": 9,
+        "transitionDistributionCacheMisses": 9,
+        "transitionDistributionCacheBypasses": 396660,
+        "transitionDistributionEntries": 9,
+        "transitionEvaluationsByDepth": {
+          "1": 393780,
+          "2": 2880,
+          "3": 9
+        },
+        "transitionOutcomesBeforeCompressionByDepth": {
+          "0": 2418472
+        },
+        "transitionOutcomesAfterCompressionByDepth": {
+          "0": 1689699
+        },
+        "valueFunction": {
+          "terminalCacheHits": 1268753,
+          "terminalCacheMisses": 415222,
+          "vCalls": 1689749,
+          "vCacheHits": 5775,
+          "vCacheMisses": 6611,
+          "qCalls": 1,
+          "qCacheHits": 0,
+          "qCacheMisses": 1,
+          "actionCalls": 132223,
+          "actionCacheHits": 0,
+          "actionCacheMisses": 3,
+          "actionCacheBypasses": 132220,
+          "uniqueStatesByDepth": {
+            "0": 415223,
+            "1": 6563,
+            "2": 48
+          },
+          "uniqueQStatesByDepth": {
+            "3": 1
+          },
+          "uniqueActionStatesByDepth": {
+            "1": 131260,
+            "2": 960,
+            "3": 3
+          },
+          "vCallsByDepth": {
+            "0": 1677363,
+            "1": 12337,
+            "2": 49
+          },
+          "vCacheHitsByDepth": {
+            "1": 5774,
+            "2": 1
+          },
+          "vCacheMissesByDepth": {
+            "1": 6563,
+            "2": 48
+          },
+          "qCallsByDepth": {
+            "3": 1
+          },
+          "qCacheHitsByDepth": {},
+          "qCacheMissesByDepth": {
+            "3": 1
+          },
+          "actionCallsByDepth": {
+            "1": 131260,
+            "2": 960,
+            "3": 3
+          },
+          "actionCacheHitsByDepth": {},
+          "actionCacheMissesByDepth": {
+            "3": 3
+          },
+          "actionCacheBypassesByDepth": {
+            "1": 131260,
+            "2": 960
+          },
+          "actionEvaluationsByDepth": {
+            "1": 131260,
+            "2": 960,
+            "3": 3
+          },
+          "terminalEntries": 415223,
+          "vEntries": 6611,
+          "qEntries": 1,
+          "actionEntries": 3,
+          "elapsedMs": 167002.46952400001
+        },
+        "menuOperator": {
+          "calls": 6611,
+          "uniformCalls": 6611,
+          "overrideCalls": 0,
+          "explicitMenusScanned": 0,
+          "operatorMs": 55.42577100040478
+        }
+      },
+      "transitionDiagnostics": {
+        "cacheHits": 357029,
+        "cacheMisses": 39640,
+        "uniqueTransitionCalculations": 39640,
+        "outcomesBeforeAggregation": 247966,
+        "outcomesAfterAggregation": 247823,
+        "transitionGenerationMs": 371.06451200221954
+      },
+      "rawScenarioDiagnostics": {
+        "requests": 497072,
+        "cacheHits": 497024,
+        "cacheMisses": 48,
+        "generations": 48,
+        "generatedIterations": 2304,
+        "generatedStatValues": 483840,
+        "generationMs": 109.17834299999986,
+        "sampleRescores": 496144,
+        "meanRescores": 928,
+        "rescoredIterations": 23859456,
+        "rescoreMs": 2702.5092129995405
+      },
+      "targetDiagnostics": {
+        "boardCacheHits": 0,
+        "boardCacheMisses": 1,
+        "boardCacheBypasses": 415222,
+        "preparedRoleCacheHits": 9717280,
+        "preparedRoleCacheMisses": 248072,
+        "searchCallsByTitlePrefix": {
+          "cerulean": 415223,
+          "crimson": 415223,
+          "elemental": 415223,
+          "emerald": 415223,
+          "golden": 415223,
+          "heroic": 415223,
+          "otherworldly": 415223,
+          "royal": 415223
+        },
+        "candidateSets": {
+          "core": 75024,
+          "mid": 66728,
+          "support": 106320
+        },
+        "candidatesBeforePruning": {
+          "core": 1200384,
+          "mid": 1067648,
+          "support": 1701120
+        },
+        "candidatesAfterPruning": {
+          "core": 1194386,
+          "mid": 1060626,
+          "support": 1541657
+        },
+        "prefixesConsidered": 3321784,
+        "candidateCountSignatures": {
+          "16,16,15": 579592,
+          "16,16,16": 1666130,
+          "16,16,13": 334757,
+          "15,16,15": 16120,
+          "15,16,16": 55328,
+          "15,16,13": 11618,
+          "16,16,10": 74981,
+          "16,16,11": 77247,
+          "16,16,14": 255762,
+          "16,15,15": 7278,
+          "16,15,16": 24810,
+          "16,15,13": 5024,
+          "16,14,15": 6788,
+          "16,14,16": 20306,
+          "16,14,13": 4037,
+          "16,16,9": 62171,
+          "16,16,12": 66768,
+          "16,16,8": 21276,
+          "15,16,10": 1470,
+          "15,16,11": 1954,
+          "15,16,14": 7303,
+          "15,15,15": 164,
+          "15,15,16": 674,
+          "15,15,13": 147,
+          "15,14,15": 173,
+          "15,14,16": 704,
+          "15,14,13": 140,
+          "15,16,9": 1803,
+          "15,16,12": 1645,
+          "15,16,8": 434,
+          "16,13,15": 215,
+          "16,13,16": 1143,
+          "16,13,13": 191,
+          "16,15,10": 855,
+          "16,15,11": 917,
+          "16,14,10": 891,
+          "16,14,11": 825,
+          "16,16,7": 742,
+          "16,16,6": 311,
+          "16,15,14": 3047,
+          "16,14,14": 2906,
+          "16,15,9": 588,
+          "16,15,12": 661,
+          "16,15,8": 158,
+          "16,14,9": 519,
+          "16,14,12": 614,
+          "16,14,8": 150,
+          "15,13,15": 1,
+          "15,13,16": 14,
+          "15,13,13": 2,
+          "15,15,10": 9,
+          "15,15,11": 14,
+          "15,14,10": 10,
+          "15,14,11": 15,
+          "15,16,7": 5,
+          "15,16,6": 2,
+          "15,15,14": 55,
+          "15,14,14": 64,
+          "15,15,9": 14,
+          "15,15,12": 11,
+          "15,15,8": 2,
+          "15,14,9": 15,
+          "15,14,12": 12,
+          "15,14,8": 2,
+          "16,12,15": 1,
+          "16,12,16": 14,
+          "16,12,13": 2,
+          "16,13,10": 19,
+          "16,13,11": 22,
+          "16,13,14": 91,
+          "16,13,9": 19,
+          "16,13,12": 16,
+          "16,13,8": 2,
+          "16,15,7": 5,
+          "16,15,6": 2,
+          "16,14,7": 5,
+          "16,14,6": 2
+        },
+        "uniquePreparedGroups": {
+          "core": 75024,
+          "mid": 66728,
+          "support": 106320
+        },
+        "uniquePreparedGroupTuples": 3321784,
+        "reusedPreparedGroupTuples": 0,
+        "uniquePreparedGroupPairs": {
+          "coreMid": 752552,
+          "midSupport": 876168,
+          "coreSupport": 1048816
+        },
+        "reusedPreparedGroupPairs": {
+          "coreMid": 2569232,
+          "midSupport": 2445616,
+          "coreSupport": 2272968
+        },
+        "prefixBoundPruned": 298974,
+        "coreBranchesConsidered": 48272784,
+        "coreBranchesPruned": 11301081,
+        "pairBranchesConsidered": 590020671,
+        "pairBranchesPruned": 550850345,
+        "triplesConsidered": 66426910,
+        "triplesCompleted": 759227,
+        "triplesEarlyTerminated": 65667683,
+        "scenarioChecks": 25979062983,
+        "prefixScenarioChecks": 149249882,
+        "seedScenarioChecks": 145094880,
+        "coreScenarioChecks": 2153509480,
+        "pairScenarioChecks": 19972712619,
+        "tripleScenarioChecks": 1789054835,
+        "survivingPairSampleBuilds": 11381586,
+        "thirdCandidatesVisited": 66426910,
+        "maxThirdCandidatesVisited": 16,
+        "candidatePreparationMs": 12538.07322900106,
+        "combinatorialSearchMs": 129878.92144398968
+      },
+      "targetKernelDiagnostics": {
+        "candidateSets": [
+          75024,
+          66728,
+          106320
+        ],
+        "candidatesBeforePruning": [
+          1200384,
+          1067648,
+          1701120
+        ],
+        "candidatesAfterPruning": [
+          1194386,
+          1060626,
+          1541657
+        ],
+        "searchesConsidered": 3321784,
+        "candidateCountSignatures": {
+          "16,16,15": 579592,
+          "16,16,16": 1666130,
+          "16,16,13": 334757,
+          "15,16,15": 16120,
+          "15,16,16": 55328,
+          "15,16,13": 11618,
+          "16,16,10": 74981,
+          "16,16,11": 77247,
+          "16,16,14": 255762,
+          "16,15,15": 7278,
+          "16,15,16": 24810,
+          "16,15,13": 5024,
+          "16,14,15": 6788,
+          "16,14,16": 20306,
+          "16,14,13": 4037,
+          "16,16,9": 62171,
+          "16,16,12": 66768,
+          "16,16,8": 21276,
+          "15,16,10": 1470,
+          "15,16,11": 1954,
+          "15,16,14": 7303,
+          "15,15,15": 164,
+          "15,15,16": 674,
+          "15,15,13": 147,
+          "15,14,15": 173,
+          "15,14,16": 704,
+          "15,14,13": 140,
+          "15,16,9": 1803,
+          "15,16,12": 1645,
+          "15,16,8": 434,
+          "16,13,15": 215,
+          "16,13,16": 1143,
+          "16,13,13": 191,
+          "16,15,10": 855,
+          "16,15,11": 917,
+          "16,14,10": 891,
+          "16,14,11": 825,
+          "16,16,7": 742,
+          "16,16,6": 311,
+          "16,15,14": 3047,
+          "16,14,14": 2906,
+          "16,15,9": 588,
+          "16,15,12": 661,
+          "16,15,8": 158,
+          "16,14,9": 519,
+          "16,14,12": 614,
+          "16,14,8": 150,
+          "15,13,15": 1,
+          "15,13,16": 14,
+          "15,13,13": 2,
+          "15,15,10": 9,
+          "15,15,11": 14,
+          "15,14,10": 10,
+          "15,14,11": 15,
+          "15,16,7": 5,
+          "15,16,6": 2,
+          "15,15,14": 55,
+          "15,14,14": 64,
+          "15,15,9": 14,
+          "15,15,12": 11,
+          "15,15,8": 2,
+          "15,14,9": 15,
+          "15,14,12": 12,
+          "15,14,8": 2,
+          "16,12,15": 1,
+          "16,12,16": 14,
+          "16,12,13": 2,
+          "16,13,10": 19,
+          "16,13,11": 22,
+          "16,13,14": 91,
+          "16,13,9": 19,
+          "16,13,12": 16,
+          "16,13,8": 2,
+          "16,15,7": 5,
+          "16,15,6": 2,
+          "16,14,7": 5,
+          "16,14,6": 2
+        },
+        "uniquePreparedGroups": [
+          75024,
+          66728,
+          106320
+        ],
+        "uniquePreparedGroupTuples": 3321784,
+        "reusedPreparedGroupTuples": 0,
+        "uniquePreparedGroupPairs": [
+          752552,
+          876168,
+          1048816
+        ],
+        "reusedPreparedGroupPairs": [
+          2569232,
+          2445616,
+          2272968
+        ],
+        "searchBoundPruned": 298974,
+        "firstBranchesConsidered": 48272784,
+        "firstBranchesPruned": 11301081,
+        "pairBranchesConsidered": 590020671,
+        "pairBranchesPruned": 550850345,
+        "triplesConsidered": 66426910,
+        "triplesCompleted": 759227,
+        "triplesEarlyTerminated": 65667683,
+        "scenarioChecks": 25979062983,
+        "searchScenarioChecks": 149249882,
+        "seedScenarioChecks": 145094880,
+        "firstScenarioChecks": 2153509480,
+        "pairScenarioChecks": 19972712619,
+        "tripleScenarioChecks": 1789054835,
+        "suffixScenarioChecks": 1769441287,
+        "survivingPairSampleBuilds": 11381586,
+        "thirdCandidatesVisited": 66426910,
+        "maxThirdCandidatesVisited": 16,
+        "suffixBoundCalls": 48095502,
+        "suffixBoundPruned": 39169415,
+        "suffixThirdCandidatesSkipped": 510917219,
+        "pairGroupCacheHits": 2142747,
+        "pairGroupCacheMisses": 880063,
+        "pairSampleCacheHits": 160794649,
+        "pairSampleCacheMisses": 429226022,
+        "pairSampleCacheBuilds": 4520957,
+        "pairCacheResets": 7,
+        "pairCacheEstimatedBytes": 235688632,
+        "suffixCacheHits": 3209608,
+        "suffixCacheMisses": 112176,
+        "suffixCacheBuilds": 112176,
+        "suffixCacheResets": 1,
+        "suffixCacheEstimatedBytes": 56302160,
+        "candidatePreparationMs": 12538.07322900106,
+        "pairSampleBuildMs": 1223.0451330049432,
+        "suffixSummaryBuildMs": 1786.3064979968658,
+        "combinatorialSearchMs": 129878.92144398968
+      },
+      "futureOperationIds": [
+        "green-stat-all",
+        "green-stat-first",
+        "green-stat-last",
+        "green-stat-random",
+        "green-quality-all",
+        "green-trait-all",
+        "red-stat-all",
+        "red-quality-all",
+        "red-quality-first",
+        "red-quality-last",
+        "red-quality-random",
+        "red-trait-all",
+        "blue-stat-all",
+        "blue-quality-all",
+        "blue-trait-all",
+        "blue-trait-first",
+        "blue-trait-last",
+        "blue-trait-random",
+        "quality-increase-one",
+        "quality-redistribution"
+      ],
+      "sourceSha": "72dc7d0bfb26cddfa58fb78e99f130767946029b",
+      "status": "completed",
+      "elapsedMs": 168647,
+      "timeoutMs": 600000,
+      "purpose": "Optimized current-fidelity exact root-policy oracle."
+    },
+    {
+      "id": "optimized-t3-aggressive-wide",
+      "horizon": 3,
+      "fidelityId": "aggressive",
+      "wideningId": "wide",
+      "objective": "target_probability",
+      "targetScore": 55000,
+      "menuIds": [
+        "green-stat-all",
+        "red-quality-all",
+        "blue-trait-all"
+      ],
+      "tokensRemaining": 10,
+      "runtimeMs": 58421.424652999995,
+      "recommendation": "CORE → Reroll Quality for Red Emblems",
+      "recommendationKey": "board_action|red-quality-all|core",
+      "utility": 0.9469385538766203,
+      "expectedScoreDiagnostic": 57912.35649178181,
+      "stopValue": 0.22916666666666666,
+      "menuRerollValue": 0.7747125718169693,
+      "ranking": [
+        {
+          "rank": 1,
+          "key": "board_action|red-quality-all|core",
+          "action": "CORE → Reroll Quality for Red Emblems",
+          "utility": 0.9469385538766203,
+          "expectedScore": 57912.35649178181,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 2,
+          "key": "board_action|red-quality-all|mid",
+          "action": "MID → Reroll Quality for Red Emblems",
+          "utility": 0.8593135893776612,
+          "expectedScore": 52884.745820272045,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 3,
+          "key": "board_action|blue-trait-all|support",
+          "action": "SUPPORT → Reroll Trait for Blue Emblems",
+          "utility": 0.8242407985509964,
+          "expectedScore": 53919.36601789001,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 4,
+          "key": "board_action|blue-trait-all|mid",
+          "action": "MID → Reroll Trait for Blue Emblems",
+          "utility": 0.8189041314595196,
+          "expectedScore": 53263.966392876144,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 5,
+          "key": "menu_reroll",
+          "action": "Reroll operation menu",
+          "utility": 0.7747125718169693,
+          "expectedScore": 52167.682113470284,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 6,
+          "key": "board_action|green-stat-all|core",
+          "action": "CORE → Reroll Stat for Green Emblems",
+          "utility": 0.6326306583916846,
+          "expectedScore": 49731.7335809543,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 7,
+          "key": "board_action|green-stat-all|mid",
+          "action": "MID → Reroll Stat for Green Emblems",
+          "utility": 0.5913932928881964,
+          "expectedScore": 49313.10502647097,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 8,
+          "key": "board_action|green-stat-all|support",
+          "action": "SUPPORT → Reroll Stat for Green Emblems",
+          "utility": 0.5419835153604955,
+          "expectedScore": 48506.369265090674,
+          "tokensAfter": 9
+        },
+        {
+          "rank": 9,
+          "key": "stop",
+          "action": "Best Current Setup",
+          "utility": 0.22916666666666666,
+          "expectedScore": 52167.682113470284,
+          "tokensAfter": 10
+        }
+      ],
+      "memory": {
+        "start": {
+          "heapUsed": 10125832,
+          "heapTotal": 27631616,
+          "rss": 66736128,
+          "external": 1851182,
+          "arrayBuffers": 18667
+        },
+        "end": {
+          "heapUsed": 1043581688,
+          "heapTotal": 1081942016,
+          "rss": 2466172928,
+          "external": 893595562,
+          "arrayBuffers": 891765475
+        },
+        "heapDelta": 1033455856,
+        "maxRssStartKb": 65380,
+        "maxRssEndKb": 2408372
+      },
+      "engineDiagnostics": {
+        "modeledHorizon": 3,
+        "descriptiveBoardMaterializations": 0,
+        "descriptiveBoardCacheEntries": 1,
+        "expectedScalarStates": 55,
+        "targetScalarStates": 161816,
+        "terminalScoringCalls": 161871,
+        "expectedBannerMaterializations": 58,
+        "expectedBannerCacheEntries": 58,
+        "expectedBannerCacheHits": 107,
+        "expectedBannerCacheMisses": 58,
+        "targetBannerMaterializations": 12307,
+        "targetBannerCacheEntries": 12307,
+        "targetBannerCacheHits": 473138,
+        "targetBannerCacheMisses": 12307,
+        "continuationFidelity": {
+          "id": "aggressive",
+          "description": "Strongly compress future fresh-menu continuation outcomes while leaving the root decision boundary untouched.",
+          "freshMenuOutcomeStrataByDepth": [
+            4,
+            2,
+            1
+          ],
+          "baseFreshMenuOutcomeStrata": 8,
+          "rootContinuationEntryStrata": 12
+        },
+        "actionWidening": {
+          "enabled": true,
+          "policyId": "wide",
+          "description": "Deepen the top 12, then 8, then 4 shallow-ranked legal operations.",
+          "deepOperationCapsByDepth": [
+            12,
+            8,
+            4
+          ],
+          "byDepth": [
+            {
+              "recursiveDepth": 1,
+              "freshMenuStatesWidened": 48,
+              "operationIdentitiesConsidered": 960,
+              "legalOperationIdentitiesConsidered": 960,
+              "shallowOperationEvaluations": 960,
+              "recursivelyDeepenedOperationEvaluations": 576,
+              "operationEvaluationsAvoided": 384,
+              "configuredK": 12,
+              "meanActualDeepenedOperations": 12,
+              "medianActualDeepenedOperations": 12,
+              "wideningAvoidanceRate": 0.4
+            },
+            {
+              "recursiveDepth": 2,
+              "freshMenuStatesWidened": 3326,
+              "operationIdentitiesConsidered": 66520,
+              "legalOperationIdentitiesConsidered": 66520,
+              "shallowOperationEvaluations": 66520,
+              "recursivelyDeepenedOperationEvaluations": 26608,
+              "operationEvaluationsAvoided": 39912,
+              "configuredK": 8,
+              "meanActualDeepenedOperations": 8,
+              "medianActualDeepenedOperations": 8,
+              "wideningAvoidanceRate": 0.6
+            }
+          ],
+          "freshMenuStatesWidened": 3374,
+          "legalOperationEvaluations": 67480,
+          "shallowOperationEvaluations": 67480,
+          "recursivelyDeepenedOperationEvaluations": 27184,
+          "operationEvaluationsAvoided": 40296,
+          "wideningAvoidanceRate": 0.5971547125074096
+        },
+        "targetedActionCacheHits": 7,
+        "targetedActionCacheMisses": 9,
+        "targetedActionCacheBypasses": 81552,
+        "targetedActionEntries": 9,
+        "targetedActionRequestsByDepth": {
+          "1": 79824,
+          "2": 1728,
+          "3": 16
+        },
+        "targetedActionCacheHitsByDepth": {
+          "3": 7
+        },
+        "targetedActionCacheMissesByDepth": {
+          "3": 9
+        },
+        "targetedActionCacheBypassesByDepth": {
+          "1": 79824,
+          "2": 1728
+        },
+        "transitionDistributionCacheHits": 9,
+        "transitionDistributionCacheMisses": 9,
+        "transitionDistributionCacheBypasses": 283992,
+        "transitionDistributionEntries": 9,
+        "transitionEvaluationsByDepth": {
+          "1": 279384,
+          "2": 4608,
+          "3": 9
+        },
+        "transitionOutcomesBeforeCompressionByDepth": {
+          "0": 55,
+          "1": 29006,
+          "2": 1810999
+        },
+        "transitionOutcomesAfterCompressionByDepth": {
+          "0": 47,
+          "1": 14542,
+          "2": 444372
+        },
+        "valueFunction": {
+          "terminalCacheHits": 45260,
+          "terminalCacheMisses": 83192,
+          "vCalls": 130501,
+          "vCacheHits": 2050,
+          "vCacheMisses": 3374,
+          "qCalls": 1,
+          "qCacheHits": 0,
+          "qCacheMisses": 1,
+          "actionCalls": 67483,
+          "actionCacheHits": 0,
+          "actionCacheMisses": 3,
+          "actionCacheBypasses": 67480,
+          "uniqueStatesByDepth": {
+            "0": 82682,
+            "1": 3326,
+            "2": 48
+          },
+          "uniqueQStatesByDepth": {
+            "3": 1
+          },
+          "uniqueActionStatesByDepth": {
+            "1": 66520,
+            "2": 960,
+            "3": 3
+          },
+          "vCallsByDepth": {
+            "0": 125077,
+            "1": 5375,
+            "2": 49
+          },
+          "vCacheHitsByDepth": {
+            "1": 2049,
+            "2": 1
+          },
+          "vCacheMissesByDepth": {
+            "1": 3326,
+            "2": 48
+          },
+          "qCallsByDepth": {
+            "3": 1
+          },
+          "qCacheHitsByDepth": {},
+          "qCacheMissesByDepth": {
+            "3": 1
+          },
+          "actionCallsByDepth": {
+            "1": 66520,
+            "2": 960,
+            "3": 3
+          },
+          "actionCacheHitsByDepth": {},
+          "actionCacheMissesByDepth": {
+            "3": 3
+          },
+          "actionCacheBypassesByDepth": {
+            "1": 66520,
+            "2": 960
+          },
+          "actionEvaluationsByDepth": {
+            "1": 66520,
+            "2": 960,
+            "3": 3
+          },
+          "terminalEntries": 83193,
+          "vEntries": 3374,
+          "qEntries": 1,
+          "actionEntries": 3,
+          "elapsedMs": 58420.422598
+        },
+        "menuOperator": {
+          "calls": 3374,
+          "uniformCalls": 3374,
+          "overrideCalls": 0,
+          "explicitMenusScanned": 0,
+          "operatorMs": 18.018503000204646
+        }
+      },
+      "transitionDiagnostics": {
+        "cacheHits": 264361,
+        "cacheMisses": 19640,
+        "uniqueTransitionCalculations": 19640,
+        "outcomesBeforeAggregation": 121748,
+        "outcomesAfterAggregation": 121725,
+        "transitionGenerationMs": 223.07106599981924
+      },
+      "rawScenarioDiagnostics": {
+        "requests": 197840,
+        "cacheHits": 197792,
+        "cacheMisses": 48,
+        "generations": 48,
+        "generatedIterations": 2304,
+        "generatedStatValues": 483840,
+        "generationMs": 115.80804500000004,
+        "sampleRescores": 196912,
+        "meanRescores": 928,
+        "rescoredIterations": 9496320,
+        "rescoreMs": 1145.4284600014626
+      },
+      "targetDiagnostics": {
+        "boardCacheHits": 0,
+        "boardCacheMisses": 1,
+        "boardCacheBypasses": 161815,
+        "preparedRoleCacheHits": 3785128,
+        "preparedRoleCacheMisses": 98456,
+        "searchCallsByTitlePrefix": {
+          "cerulean": 161816,
+          "crimson": 161816,
+          "elemental": 161816,
+          "emerald": 161816,
+          "golden": 161816,
+          "heroic": 161816,
+          "otherworldly": 161816,
+          "royal": 161816
+        },
+        "candidateSets": {
+          "core": 24608,
+          "mid": 34792,
+          "support": 39056
+        },
+        "candidatesBeforePruning": {
+          "core": 393728,
+          "mid": 556672,
+          "support": 624896
+        },
+        "candidatesAfterPruning": {
+          "core": 391427,
+          "mid": 553729,
+          "support": 558757
+        },
+        "prefixesConsidered": 1294528,
+        "candidateCountSignatures": {
+          "16,16,15": 184374,
+          "16,16,16": 665083,
+          "16,16,13": 156501,
+          "15,16,15": 5721,
+          "15,16,16": 23462,
+          "15,16,13": 6216,
+          "16,16,10": 31170,
+          "16,16,11": 34417,
+          "16,16,14": 111246,
+          "16,15,15": 3833,
+          "16,15,16": 13263,
+          "16,15,13": 2971,
+          "16,16,12": 25842,
+          "16,14,15": 1054,
+          "16,14,16": 2962,
+          "16,14,13": 385,
+          "16,16,8": 6220,
+          "15,16,14": 3477,
+          "16,16,9": 7373,
+          "16,15,14": 1721,
+          "15,16,12": 693,
+          "15,16,11": 985,
+          "16,15,12": 327,
+          "16,15,11": 586,
+          "15,16,10": 655,
+          "16,16,7": 436,
+          "16,15,10": 513,
+          "15,16,8": 187,
+          "16,15,8": 103,
+          "15,15,15": 94,
+          "15,15,16": 437,
+          "15,15,13": 110,
+          "15,14,15": 67,
+          "15,14,16": 296,
+          "15,14,13": 53,
+          "16,14,10": 306,
+          "16,14,11": 130,
+          "16,14,14": 184,
+          "16,13,16": 440,
+          "16,13,13": 60,
+          "16,14,12": 61,
+          "15,16,9": 102,
+          "15,15,10": 7,
+          "15,15,11": 12,
+          "15,15,14": 36,
+          "15,15,12": 7,
+          "15,14,10": 7,
+          "15,14,11": 6,
+          "15,14,14": 20,
+          "15,13,16": 16,
+          "15,13,13": 2,
+          "15,14,12": 4,
+          "15,16,7": 5,
+          "15,15,8": 2,
+          "16,13,15": 73,
+          "16,12,16": 1,
+          "15,13,15": 1,
+          "16,13,10": 17,
+          "16,13,11": 8,
+          "16,13,14": 23,
+          "16,13,12": 5,
+          "16,15,9": 78,
+          "16,14,9": 22,
+          "16,14,8": 1,
+          "16,16,6": 54,
+          "16,15,7": 5
+        },
+        "uniquePreparedGroups": {
+          "core": 24608,
+          "mid": 34792,
+          "support": 39056
+        },
+        "uniquePreparedGroupTuples": 1294528,
+        "reusedPreparedGroupTuples": 0,
+        "uniquePreparedGroupPairs": {
+          "coreMid": 310400,
+          "midSupport": 369896,
+          "coreSupport": 365568
+        },
+        "reusedPreparedGroupPairs": {
+          "coreMid": 984128,
+          "midSupport": 924632,
+          "coreSupport": 928960
+        },
+        "prefixBoundPruned": 138406,
+        "coreBranchesConsidered": 18458589,
+        "coreBranchesPruned": 4231085,
+        "pairBranchesConsidered": 227216610,
+        "pairBranchesPruned": 211836487,
+        "triplesConsidered": 27908042,
+        "triplesCompleted": 308545,
+        "triplesEarlyTerminated": 27599497,
+        "scenarioChecks": 9882926992,
+        "prefixScenarioChecks": 56794463,
+        "seedScenarioChecks": 55493856,
+        "coreScenarioChecks": 805259203,
+        "pairScenarioChecks": 7523476391,
+        "tripleScenarioChecks": 712813329,
+        "survivingPairSampleBuilds": 3998069,
+        "thirdCandidatesVisited": 27908042,
+        "maxThirdCandidatesVisited": 16,
+        "candidatePreparationMs": 3000.081813000153,
+        "combinatorialSearchMs": 45992.792729999455
+      },
+      "targetKernelDiagnostics": {
+        "candidateSets": [
+          24608,
+          34792,
+          39056
+        ],
+        "candidatesBeforePruning": [
+          393728,
+          556672,
+          624896
+        ],
+        "candidatesAfterPruning": [
+          391427,
+          553729,
+          558757
+        ],
+        "searchesConsidered": 1294528,
+        "candidateCountSignatures": {
+          "16,16,15": 184374,
+          "16,16,16": 665083,
+          "16,16,13": 156501,
+          "15,16,15": 5721,
+          "15,16,16": 23462,
+          "15,16,13": 6216,
+          "16,16,10": 31170,
+          "16,16,11": 34417,
+          "16,16,14": 111246,
+          "16,15,15": 3833,
+          "16,15,16": 13263,
+          "16,15,13": 2971,
+          "16,16,12": 25842,
+          "16,14,15": 1054,
+          "16,14,16": 2962,
+          "16,14,13": 385,
+          "16,16,8": 6220,
+          "15,16,14": 3477,
+          "16,16,9": 7373,
+          "16,15,14": 1721,
+          "15,16,12": 693,
+          "15,16,11": 985,
+          "16,15,12": 327,
+          "16,15,11": 586,
+          "15,16,10": 655,
+          "16,16,7": 436,
+          "16,15,10": 513,
+          "15,16,8": 187,
+          "16,15,8": 103,
+          "15,15,15": 94,
+          "15,15,16": 437,
+          "15,15,13": 110,
+          "15,14,15": 67,
+          "15,14,16": 296,
+          "15,14,13": 53,
+          "16,14,10": 306,
+          "16,14,11": 130,
+          "16,14,14": 184,
+          "16,13,16": 440,
+          "16,13,13": 60,
+          "16,14,12": 61,
+          "15,16,9": 102,
+          "15,15,10": 7,
+          "15,15,11": 12,
+          "15,15,14": 36,
+          "15,15,12": 7,
+          "15,14,10": 7,
+          "15,14,11": 6,
+          "15,14,14": 20,
+          "15,13,16": 16,
+          "15,13,13": 2,
+          "15,14,12": 4,
+          "15,16,7": 5,
+          "15,15,8": 2,
+          "16,13,15": 73,
+          "16,12,16": 1,
+          "15,13,15": 1,
+          "16,13,10": 17,
+          "16,13,11": 8,
+          "16,13,14": 23,
+          "16,13,12": 5,
+          "16,15,9": 78,
+          "16,14,9": 22,
+          "16,14,8": 1,
+          "16,16,6": 54,
+          "16,15,7": 5
+        },
+        "uniquePreparedGroups": [
+          24608,
+          34792,
+          39056
+        ],
+        "uniquePreparedGroupTuples": 1294528,
+        "reusedPreparedGroupTuples": 0,
+        "uniquePreparedGroupPairs": [
+          310400,
+          369896,
+          365568
+        ],
+        "reusedPreparedGroupPairs": [
+          984128,
+          924632,
+          928960
+        ],
+        "searchBoundPruned": 138406,
+        "firstBranchesConsidered": 18458589,
+        "firstBranchesPruned": 4231085,
+        "pairBranchesConsidered": 227216610,
+        "pairBranchesPruned": 211836487,
+        "triplesConsidered": 27908042,
+        "triplesCompleted": 308545,
+        "triplesEarlyTerminated": 27599497,
+        "scenarioChecks": 9882926992,
+        "searchScenarioChecks": 56794463,
+        "seedScenarioChecks": 55493856,
+        "firstScenarioChecks": 805259203,
+        "pairScenarioChecks": 7523476391,
+        "tripleScenarioChecks": 712813329,
+        "suffixScenarioChecks": 729089750,
+        "survivingPairSampleBuilds": 3998069,
+        "thirdCandidatesVisited": 27908042,
+        "maxThirdCandidatesVisited": 16,
+        "suffixBoundCalls": 19483436,
+        "suffixBoundPruned": 15379971,
+        "suffixThirdCandidatesSkipped": 198415822,
+        "pairGroupCacheHits": 844235,
+        "pairGroupCacheMisses": 311887,
+        "pairSampleCacheHits": 57370321,
+        "pairSampleCacheMisses": 169846289,
+        "pairSampleCacheBuilds": 1777997,
+        "pairCacheResets": 2,
+        "pairCacheEstimatedBytes": 240838272,
+        "suffixCacheHits": 1255472,
+        "suffixCacheMisses": 39056,
+        "suffixCacheBuilds": 39056,
+        "suffixCacheResets": 0,
+        "suffixCacheEstimatedBytes": 65960272,
+        "candidatePreparationMs": 3000.081813000153,
+        "pairSampleBuildMs": 409.9995900009099,
+        "suffixSummaryBuildMs": 359.91665700016523,
+        "combinatorialSearchMs": 45992.792729999455
+      },
+      "futureOperationIds": [
+        "green-stat-all",
+        "green-stat-first",
+        "green-stat-last",
+        "green-stat-random",
+        "green-quality-all",
+        "green-trait-all",
+        "red-stat-all",
+        "red-quality-all",
+        "red-quality-first",
+        "red-quality-last",
+        "red-quality-random",
+        "red-trait-all",
+        "blue-stat-all",
+        "blue-quality-all",
+        "blue-trait-all",
+        "blue-trait-first",
+        "blue-trait-last",
+        "blue-trait-random",
+        "quality-increase-one",
+        "quality-redistribution"
+      ],
+      "sourceSha": "72dc7d0bfb26cddfa58fb78e99f130767946029b",
+      "status": "completed",
+      "elapsedMs": 59144,
+      "timeoutMs": 60000,
+      "purpose": "Frozen M5C aggressive + M5D Wide feasibility candidate."
+    }
+  ],
+  "aggressiveRuntimeRatio": 0.7841680272082292,
+  "comparison": {
+    "topActionAgreement": true,
+    "oracleBestKey": "board_action|red-quality-all|core",
+    "approxBestKey": "board_action|red-quality-all|core",
+    "oracleTopTwoGap": 0.10370798892462518,
+    "oracleTopTwoGapPercentagePoints": 10.370798892462519,
+    "oracleRegret": 0,
+    "oracleRegretPercentagePoints": 0,
+    "kendallTau": 1,
+    "top3OverlapCount": 3,
+    "top3OverlapFraction": 1,
+    "stopMenuOrderReversed": false,
+    "actionFamilyAgreement": true,
+    "oracleActionFamily": "quality",
+    "approxActionFamily": "quality",
+    "runtimeRatioVsOracle": 0.34982167142718706
+  },
+  "aggressiveOnlyComparison": {
+    "topActionAgreement": true,
+    "oracleBestKey": "board_action|red-quality-all|core",
+    "approxBestKey": "board_action|red-quality-all|core",
+    "oracleTopTwoGap": 0.10370798892462518,
+    "oracleTopTwoGapPercentagePoints": 10.370798892462519,
+    "oracleRegret": 0,
+    "oracleRegretPercentagePoints": 0,
+    "kendallTau": 1,
+    "top3OverlapCount": 3,
+    "top3OverlapFraction": 1,
+    "stopMenuOrderReversed": false,
+    "actionFamilyAgreement": true,
+    "oracleActionFamily": "quality",
+    "approxActionFamily": "quality",
+    "runtimeRatioVsOracle": 0.46810828739169785
+  },
+  "gate": {
+    "outcome": "A",
+    "passed": true,
+    "checks": {
+      "preflightPassed": true,
+      "genericKernelEquivalencePassed": true,
+      "dotaFacingTargetSemanticsPassed": true,
+      "t2RankedTargetRegressionPassed": true,
+      "expectedScoreRegressionPassed": true,
+      "productionHorizonUnchanged": true,
+      "engineeringSchedulesFrozen": true,
+      "baselineBaseShaExact": true,
+      "sameRunnerBaselineControl": true,
+      "targetFixedAt55k": true,
+      "defaultMenuFixed": true,
+      "optimizedAggressiveCompleted": true,
+      "aggressiveSpeedRatioAtMost080": true,
+      "oraclePolicyExact": true,
+      "oracleCompletedWithin600s": true,
+      "oracleMaxRssUnder6Gb": true,
+      "candidatePolicyFrozen": true,
+      "candidateCompletedUnder60s": true,
+      "candidateWinnerMatchesOracle": true,
+      "stopAndMenuRetained": true,
+      "all20FutureOperationIdentitiesRepresented": true,
+      "optimizedCachesBounded": true,
+      "noOptimizedExecutionErrors": true
+    },
+    "aggressiveRuntimeRatio": 0.7841680272082292,
+    "comparison": {
+      "topActionAgreement": true,
+      "oracleBestKey": "board_action|red-quality-all|core",
+      "approxBestKey": "board_action|red-quality-all|core",
+      "oracleTopTwoGap": 0.10370798892462518,
+      "oracleTopTwoGapPercentagePoints": 10.370798892462519,
+      "oracleRegret": 0,
+      "oracleRegretPercentagePoints": 0,
+      "kendallTau": 1,
+      "top3OverlapCount": 3,
+      "top3OverlapFraction": 1,
+      "stopMenuOrderReversed": false,
+      "actionFamilyAgreement": true,
+      "oracleActionFamily": "quality",
+      "approxActionFamily": "quality",
+      "runtimeRatioVsOracle": 0.34982167142718706
+    }
+  }
+}
