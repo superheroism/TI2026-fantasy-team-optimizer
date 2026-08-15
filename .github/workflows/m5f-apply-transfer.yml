@@ -25,7 +25,12 @@ jobs:
 
       - name: Reconstruct implementation bundle
         run: |
-          cat .m5f-transfer/part-* | base64 -d > /tmp/m5f-transfer.tar.gz
+          wc -c .m5f-transfer/part-*
+          sha256sum .m5f-transfer/part-*
+          cat .m5f-transfer/part-* | tr -d '\r\n ' > /tmp/m5f-transfer.b64
+          wc -c /tmp/m5f-transfer.b64
+          sha256sum /tmp/m5f-transfer.b64
+          base64 -d /tmp/m5f-transfer.b64 > /tmp/m5f-transfer.tar.gz
           tar -xzf /tmp/m5f-transfer.tar.gz -C .
 
       - name: Install dependencies
