@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import {
-  actionType,
   compareCase,
   monotonicUtilities,
   percentile,
@@ -15,7 +14,7 @@ export const M5H_THRESHOLDS = [50_000, 55_000, 60_000];
 
 export function isM5HCalibrationArtifactPath(filePath) {
   const name = filePath.replaceAll('\\', '/').split('/').at(-1) ?? '';
-  return /^m5h-(?:oracle|adaptive-A[1-8]|t2-current|t2-experimental-A1)-calibration-0[1-9]-(?:50000|55000|60000)\.json$/.test(name);
+  return /^m5h-(?:oracle|baseline|adaptive-A[1-8]|t2-current|t2-experimental-A1)-calibration-0[1-9]-(?:50000|55000|60000)\.json$/.test(name);
 }
 
 export function isM5HHoldoutArtifactPath(filePath) {
@@ -83,10 +82,41 @@ function caseKey(run) {
   return `${run.fixtureId}|${run.targetScore}`;
 }
 
+function summarizeAgainstOracle(runs, oracleByCase, expectedCases) {
+  const comparisons = [];
+  for (const run of runs) {
+    const oracle = oracleByCase.get(caseKey(run));
+    if (!oracle) continue;
+    const comparison = compareCase(oracle, run);
+    if (comparison) comparisons.push({ ...comparison, fixtureId: run.fixtureId, targetScore: run.targetScore });
+  }
+  const disagreements = comparisons.filter((x) => !x.topActionAgreement);
+  const regrets = comparisons.map((x) => x.oracleRegret ?? 0);
+  const runtimes = runs.filter((run) => run.status === 'completed').map((run) => run.runtimeMs);
+  return {
+    runs,
+    comparisons,
+    disagreements,
+    regrets,
+    runtimes,
+    summary: {
+      completedRuns: runtimes.length,
+      agreements: comparisons.filter((x) => x.topActionAgreement).length,
+      disagreements: disagreements.length,
+      meanOracleRegret: regrets.reduce((sum, value) => sum + value, 0) / Math.max(1, expectedCases),
+      maxOracleRegret: Math.max(0, ...regrets),
+      runtimeMedianMs: percentile(runtimes, 0.50),
+      runtimeP90Ms: percentile(runtimes, 0.90),
+      runtimeMaxMs: runtimes.length ? Math.max(...runtimes) : null,
+    },
+  };
+}
+
 export function evaluateCalibration({ manifest, candidateConfig, artifacts }) {
   const expectedCases = manifest.fixtures.length * manifest.thresholds.length;
   const values = artifacts.map((row) => row.value);
   const oracles = values.filter((run) => run.mode === 'oracle');
+  const baselineRuns = values.filter((run) => run.mode === 'baseline');
   const t2Current = values.filter((run) => run.mode === 't2-current');
   const t2Experimental = values.filter((run) => run.mode === 't2-experimental');
   const oracleByCase = new Map(oracles.map((run) => [caseKey(run), run]));
@@ -106,35 +136,37 @@ export function evaluateCalibration({ manifest, candidateConfig, artifacts }) {
       && [...t2CurrentByCase].every(([key, run]) => rankingsEqual(run.ranking, t2ExperimentalByCase.get(key)?.ranking)),
   };
 
+  const baseline = summarizeAgainstOracle(baselineRuns, oracleByCase, expectedCases);
+  const baselineSummary = {
+    completedRuns: baseline.summary.completedRuns,
+    under60sRuns: baselineRuns.filter((run) => completedUnder(run, 60_000)).length,
+    agreements: baseline.summary.agreements,
+    disagreements: baseline.summary.disagreements,
+    meanOracleRegret: baseline.summary.meanOracleRegret,
+    maxOracleRegret: baseline.summary.maxOracleRegret,
+    runtimeMedianMs: baseline.summary.runtimeMedianMs,
+    runtimeP90Ms: baseline.summary.runtimeP90Ms,
+    runtimeMaxMs: baseline.summary.runtimeMaxMs,
+  };
+
   const candidateResults = [];
   for (const candidate of candidateConfig.candidates) {
-    const runs = values.filter((run) => run.mode === 'adaptive' && run.candidateId === candidate.id);
-    const comparisons = [];
-    for (const run of runs) {
-      const oracle = oracleByCase.get(caseKey(run));
-      if (oracle) {
-        const comparison = compareCase(oracle, run);
-        if (comparison) comparisons.push({ ...comparison, fixtureId: run.fixtureId, targetScore: run.targetScore });
-      }
-    }
-    const disagreements = comparisons.filter((x) => !x.topActionAgreement);
-    const nonWaivable = disagreements.filter((x) => !waivableBoardDisagreement(x));
-    const regrets = comparisons.map((x) => x.oracleRegret ?? 0);
-    const runtimes = runs.filter((run) => run.status === 'completed').map((run) => run.runtimeMs);
-    const maxRegret = Math.max(0, ...regrets);
-    const meanRegret = regrets.reduce((sum, value) => sum + value, 0) / Math.max(1, expectedCases);
-    const runtimeP90 = percentile(runtimes, 0.90);
-    const runtimeMedian = percentile(runtimes, 0.50);
+    const measured = summarizeAgainstOracle(
+      values.filter((run) => run.mode === 'adaptive' && run.candidateId === candidate.id),
+      oracleByCase,
+      expectedCases,
+    );
+    const nonWaivable = measured.disagreements.filter((x) => !waivableBoardDisagreement(x));
     const checks = {
-      complete: runs.length === expectedCases && runs.every((run) => run.status === 'completed'),
-      under60s: runs.length === expectedCases && runs.every((run) => completedUnder(run, 60_000)),
-      memoryUnder6GiB: runs.length === expectedCases && runs.every(rssUnder),
-      all20FutureOperations: runs.length === expectedCases && runs.every(all20),
-      comparisonComplete: comparisons.length === expectedCases,
-      noStopMenuReversal: comparisons.every((x) => !x.stopMenuReversal),
+      complete: measured.runs.length === expectedCases && measured.runs.every((run) => run.status === 'completed'),
+      under60s: measured.runs.length === expectedCases && measured.runs.every((run) => completedUnder(run, 60_000)),
+      memoryUnder6GiB: measured.runs.length === expectedCases && measured.runs.every(rssUnder),
+      all20FutureOperations: measured.runs.length === expectedCases && measured.runs.every(all20),
+      comparisonComplete: measured.comparisons.length === expectedCases,
+      noStopMenuReversal: measured.comparisons.every((x) => !x.stopMenuReversal),
       noNonWaivableRootReversal: nonWaivable.length === 0,
-      maxRegret: maxRegret <= 0.0025 + EPS,
-      meanRegret: meanRegret <= 0.0005 + EPS,
+      maxRegret: measured.summary.maxOracleRegret <= 0.0025 + EPS,
+      meanRegret: measured.summary.meanOracleRegret <= 0.0005 + EPS,
       sharedIntegrity: Object.entries(baseIntegrity).every(([key, value]) => key.endsWith('Count') || key === 'expectedCases' || value === true),
     };
     const qualifies = Object.values(checks).every(Boolean);
@@ -144,18 +176,11 @@ export function evaluateCalibration({ manifest, candidateConfig, artifacts }) {
       qualifies,
       checks,
       summary: {
-        agreements: comparisons.filter((x) => x.topActionAgreement).length,
-        disagreements: disagreements.length,
-        waivableDisagreements: disagreements.length - nonWaivable.length,
+        ...measured.summary,
+        waivableDisagreements: measured.disagreements.length - nonWaivable.length,
         nonWaivableDisagreements: nonWaivable.length,
-        meanOracleRegret: meanRegret,
-        maxOracleRegret: maxRegret,
-        runtimeMedianMs: runtimeMedian,
-        runtimeP90Ms: runtimeP90,
-        runtimeMaxMs: runtimes.length ? Math.max(...runtimes) : null,
-        completedRuns: runtimes.length,
       },
-      disagreements,
+      disagreements: measured.disagreements,
     });
   }
 
@@ -170,6 +195,7 @@ export function evaluateCalibration({ manifest, candidateConfig, artifacts }) {
   return {
     outcome: qualifying.length ? 'candidate_selected' : 'C',
     baseIntegrity,
+    baselineSummary,
     candidateResults,
     selectedCandidate: qualifying[0]?.candidate ?? null,
     selectedCandidateId: qualifying[0]?.candidateId ?? null,
