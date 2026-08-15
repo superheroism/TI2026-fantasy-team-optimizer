@@ -27,7 +27,7 @@ jobs:
       - run: npm run build
       - name: Commit reproducible generated artifacts when changed
         run: |
-          # Rebuild only from canonical src/, site/, and data/ inputs.
+          # M6A rerun: terminal scorers now carry layout identity.
           if git diff --quiet -- build docs; then
             exit 0
           fi
