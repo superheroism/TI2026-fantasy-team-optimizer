@@ -94,6 +94,8 @@ Compact and descriptive/reference transition paths now enumerate layout-defined 
 - random matching scopes: uniform over the actual matching slot count;
 - quality redistribution: one uniformly selected slot decreases, then two distinct recipients are selected uniformly from all unordered pairs among the remaining slots; all other slots remain unchanged.
 
+The five-slot redistribution recipient rule was supplied as authoritative project input after the initial Outcome-B draft: **two of the remaining four slots increase, chosen randomly**. M6A implements that rule without altering any other quality-transition semantics.
+
 For `expanded_5`, each decreased slot has four possible remaining slots and therefore `C(4,2) = 6` equally likely recipient pairs. Conditional on the decreased slot, each pair has probability `1/6`. With five uniformly likely decreased slots, each source/pair selection has probability `1/30` before tier-change probabilities and cap/floor aggregation are applied.
 
 For `legacy_3`, this same definition is exactly the established mechanic: after one of three slots is chosen to decrease, only one pair remains, so the other two increase. No legacy transition semantics change.
