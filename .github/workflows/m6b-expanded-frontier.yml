@@ -35,42 +35,94 @@ jobs:
       - name: Preflight typecheck, generated verification, and full tests
         run: npm run test:ci
 
-      - name: Run authoritative M6B baseline profile
+      - name: Record M6B conclusion in performance and roadmap docs
+        run: |
+          if ! grep -q '^## M6B expanded t=2 frontier profile$' PERFORMANCE.md; then
+            cat >> PERFORMANCE.md <<'EOF'
+
+          ## M6B expanded t=2 frontier profile
+
+          M6B profiled the complete exact `expanded_5` production-horizon frontier before selecting any optimization. On the authoritative Node 22/Linux baseline, expanded/legacy `t=2` runtime ratios were **2.72× stat-heavy, 4.13× quality-heavy, 3.14× trait-heavy, 3.87× global-quality, and 3.03× target-probability**. Corresponding aggregated-transition growth was 6.31×, 9.30×, 6.88×, 7.01×, and 6.52×. Quality-heavy is the strongest relative frontier multiplier.
+
+          Target probability grew from **6,563 to 17,862 target scalar states** and from **432,886,346 to 1,383,756,976 exact scenario checks**. Expanded target runtime was 13.441 s versus 4.441 s legacy. Existing exact reuse is already active: expanded target prepared-role reuse is about 90%; pair/suffix target caches record zero capacity resets; pair/suffix construction consumes only ~0.19 s combined versus ~6.82 s in the exact target kernel. Compact transition aggregation, terminal BoardStateID memoization, role-local scoring/target caches, and compact no-BoardState terminal paths are already in place.
+
+          **Decision: M6B Outcome B.** The measured expanded `t=2` cost is predominantly genuinely distinct reachable state and exact target work, not avoidable duplicate computation. No new cache or exact-search mutation was added merely to claim a speedup. `benchmarks/m6b-expanded-frontier-baseline.json` contains the profile; `benchmarks/m6b-expanded-frontier-post.json` is a same-semantics validation replication with `optimizationSelected: null`. Production remains `legacy_3` / `t<=2`; target `t=3`/`t=4` were not run and the M5H holdout remains untouched. Full interpretation is in `M6B_EXPANDED_T2_FRONTIER.md`.
+          EOF
+          fi
+
+          if ! grep -q '^## M6B — Expanded t=2 frontier containment$' ENGINEERING_ROADMAP.md; then
+            cat >> ENGINEERING_ROADMAP.md <<'EOF'
+
+          ---
+
+          ## M6B — Expanded t=2 frontier containment
+
+          M6B closes as **Outcome B**. Exact profiling shows that the 15-emblem `t=2` slowdown is predominantly intrinsic frontier growth rather than a missing aggregation/transposition cache. Existing compact transitions aggregate at banner ID before downstream work; terminal evaluation is canonical BoardStateID-memoized; role-local scoring/target preparation already reuses unchanged banners; and target pair/suffix caches do not capacity-thrash. The expanded target case reaches 17,862 target scalar states and 1.384B exact scenario checks, while pair/suffix cache construction is a small fraction of total target-kernel time.
+
+          **Sequencing decision:** do not manufacture another exact cache. The next bounded package should calibrate expanded-board-specific `t=2` approximation candidates against frozen exact expanded oracles before any production change. Do not reuse M5C/M5D/M5H calibration conclusions without fresh expanded-board validation. Production stays `legacy_3` / `t<=2`; do not resume target `t=3`, consume the M5H holdout, or begin target `t=4` yet.
+          EOF
+          fi
+
+      - name: Run authoritative M6B post validation
         id: benchmark
         continue-on-error: true
         env:
           M6B_CASE_TIMEOUT_MS: 240000
-        run: node scripts/benchmark-m6b-frontier.mjs --json=benchmarks/m6b-expanded-frontier-baseline.json
+        run: node scripts/benchmark-m6b-frontier.mjs --phase=post --json=benchmarks/m6b-expanded-frontier-post.json
 
-      - name: Print M6B baseline summary
+      - name: Verify baseline/post semantic and structural equivalence
+        if: steps.benchmark.outcome == 'success'
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const before=JSON.parse(fs.readFileSync('benchmarks/m6b-expanded-frontier-baseline.json','utf8'));
+          const after=JSON.parse(fs.readFileSync('benchmarks/m6b-expanded-frontier-post.json','utf8'));
+          const key=r=>`${r.layoutId}|${r.case}|${r.horizon}`;
+          const a=new Map(after.runs.map(r=>[key(r),r]));
+          for(const b of before.runs){
+            const p=a.get(key(b));
+            if(!p||p.status!=='completed')throw new Error(`missing post run ${key(b)}`);
+            if(p.optimizer.recommendation!==b.optimizer.recommendation)throw new Error(`recommendation changed: ${key(b)}`);
+            if(Math.abs(p.optimizer.utility-b.optimizer.utility)>1e-12)throw new Error(`utility changed: ${key(b)}`);
+            for(const metric of ['rawTransitionOutcomesGenerated','aggregatedTransitionOutcomes','duplicateTransitionOutcomesCollapsed','uniqueTerminalBoards','expectedScalarStates','targetScalarStates','targetScenarioChecks']){
+              if(p.frontier[metric]!==b.frontier[metric])throw new Error(`${metric} changed: ${key(b)}`);
+            }
+          }
+          if(after.optimizationSelected!==null||after.outcome!=='B')throw new Error('post report must record M6B Outcome B with no manufactured optimization');
+          console.log('M6B baseline/post semantics and structural counters are identical.');
+          NODE
+
+      - name: Print M6B post summary
         if: always()
         run: |
-          if [ -f benchmarks/m6b-expanded-frontier-baseline.json ]; then
-            node -e "const r=require('./benchmarks/m6b-expanded-frontier-baseline.json'); console.log(JSON.stringify({summary:r.summary,pairs:r.pairs.map(p=>({case:p.case,horizon:p.horizon,runtimeRatio:p.optimizerRuntimeRatioExpandedVsLegacy,terminalRatio:p.terminalStateRatioExpandedVsLegacy,vRatio:p.vCallRatioExpandedVsLegacy,transitionRatio:p.transitionPathRatioExpandedVsLegacy,targetChecksRatio:p.targetScenarioCheckRatioExpandedVsLegacy}))},null,2))"
+          if [ -f benchmarks/m6b-expanded-frontier-post.json ]; then
+            node -e "const r=require('./benchmarks/m6b-expanded-frontier-post.json'); console.log(JSON.stringify({summary:r.summary,outcome:r.outcome,optimizationSelected:r.optimizationSelected,pairs:r.pairs.map(p=>({case:p.case,horizon:p.horizon,runtimeRatio:p.optimizerRuntimeRatioExpandedVsLegacy,terminalRatio:p.terminalStateRatioExpandedVsLegacy,vRatio:p.vCallRatioExpandedVsLegacy,transitionRatio:p.transitionPathRatioExpandedVsLegacy,targetChecksRatio:p.targetScenarioCheckRatioExpandedVsLegacy}))},null,2))"
           fi
 
-      - name: Upload M6B baseline report
+      - name: Upload M6B baseline and post reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: m6b-expanded-frontier-baseline
-          path: benchmarks/m6b-expanded-frontier-baseline.json
+          name: m6b-expanded-frontier
+          path: |
+            benchmarks/m6b-expanded-frontier-baseline.json
+            benchmarks/m6b-expanded-frontier-post.json
           if-no-files-found: error
 
-      - name: Commit generated trees and authoritative baseline
+      - name: Commit generated trees, docs, and authoritative post validation
         if: always()
         run: |
-          if [ ! -f benchmarks/m6b-expanded-frontier-baseline.json ]; then
-            echo "M6B baseline report was not produced."
+          if [ ! -f benchmarks/m6b-expanded-frontier-post.json ]; then
+            echo "M6B post report was not produced."
             exit 1
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add build docs benchmarks/m6b-expanded-frontier-baseline.json
+          git add build docs PERFORMANCE.md ENGINEERING_ROADMAP.md benchmarks/m6b-expanded-frontier-post.json
           if git diff --cached --quiet; then
             echo "No generated/report changes to commit."
           else
-            git commit -m "M6B: record authoritative frontier baseline"
+            git commit -m "M6B: record Outcome B post validation"
             git push origin HEAD:${GITHUB_REF_NAME}
           fi
 
