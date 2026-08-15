@@ -1,0 +1,24 @@
+{
+  "m6cBaseSha": "42a1a7ec7553e7d6df5f4d3c5576417fcdbbb35a",
+  "layoutId": "expanded_5",
+  "horizon": 2,
+  "frozenPurpose": "calibration",
+  "cases": [
+    {"id":"cal-exp-stat-base","seed":61001,"boardVariant":"baseline","objective":"expected_score","operationFamily":"stat","operationIds":["green-stat-all","red-stat-all","blue-stat-all"]},
+    {"id":"cal-exp-quality-base","seed":61002,"boardVariant":"baseline","objective":"expected_score","operationFamily":"quality","operationIds":["quality-increase-one","red-quality-all","green-quality-all"]},
+    {"id":"cal-exp-trait-base","seed":61003,"boardVariant":"baseline","objective":"expected_score","operationFamily":"trait","operationIds":["green-trait-all","red-trait-all","blue-trait-all"]},
+    {"id":"cal-exp-global-base","seed":61004,"boardVariant":"baseline","objective":"expected_score","operationFamily":"global_quality","operationIds":["quality-increase-one","quality-redistribution","green-quality-all"]},
+    {"id":"cal-exp-stat-permuted","seed":61005,"boardVariant":"repeat_permuted","objective":"expected_score","operationFamily":"stat","operationIds":["red-stat-all","green-stat-all","blue-stat-all"]},
+    {"id":"cal-exp-quality-inverted","seed":61006,"boardVariant":"quality_inverted","objective":"expected_score","operationFamily":"quality","operationIds":["quality-increase-one","green-quality-all","red-quality-all"]},
+    {"id":"cal-exp-global-capped","seed":61007,"boardVariant":"quality_capped","objective":"expected_score","operationFamily":"global_quality","operationIds":["quality-increase-one","quality-redistribution","green-quality-all"]},
+    {"id":"cal-exp-mixed-permuted","seed":61008,"boardVariant":"repeat_permuted_low","objective":"expected_score","operationFamily":"mixed","operationIds":["red-stat-all","quality-increase-one","blue-trait-all"]},
+    {"id":"cal-tgt-stat-72000","seed":61009,"boardVariant":"baseline","objective":"target_probability","operationFamily":"stat","operationIds":["green-stat-all","red-stat-all","blue-stat-all"],"targetScore":72000},
+    {"id":"cal-tgt-mixed-80000","seed":61010,"boardVariant":"baseline","objective":"target_probability","operationFamily":"mixed","operationIds":["green-stat-all","red-quality-all","blue-trait-all"],"targetScore":80000},
+    {"id":"cal-tgt-quality-88000","seed":61011,"boardVariant":"quality_inverted","objective":"target_probability","operationFamily":"quality","operationIds":["quality-increase-one","red-quality-all","green-quality-all"],"targetScore":88000},
+    {"id":"cal-tgt-repeat-76000","seed":61012,"boardVariant":"repeat_permuted","objective":"target_probability","operationFamily":"mixed","operationIds":["red-stat-all","green-quality-all","blue-trait-all"],"targetScore":76000},
+    {"id":"cal-tgt-global-82000","seed":61013,"boardVariant":"quality_inverted","objective":"target_probability","operationFamily":"global_quality","operationIds":["quality-increase-one","quality-redistribution","green-quality-all"],"targetScore":82000},
+    {"id":"cal-tgt-trait-86000","seed":61014,"boardVariant":"quality_capped","objective":"target_probability","operationFamily":"trait","operationIds":["green-trait-all","red-trait-all","blue-trait-all"],"targetScore":86000},
+    {"id":"cal-exp-mixed-capped","seed":61015,"boardVariant":"quality_capped","objective":"expected_score","operationFamily":"mixed","operationIds":["green-stat-all","quality-redistribution","red-trait-all"]},
+    {"id":"cal-exp-mixed-low","seed":61016,"boardVariant":"repeat_permuted_low","objective":"expected_score","operationFamily":"mixed","operationIds":["blue-stat-all","quality-increase-one","green-trait-all"]}
+  ]
+}
