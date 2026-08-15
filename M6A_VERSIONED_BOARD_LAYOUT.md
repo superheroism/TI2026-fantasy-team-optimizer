@@ -21,20 +21,20 @@ Mid      Red   Blue   Green
 Support  Blue  Green  Blue
 ```
 
-The new representable geometry is:
+The expanded geometry is:
 
 ```text
 expanded_5
-Core     Red     Green  Red     Green  Red
-Mid      Red     Purple Green   Red    Green
-Support  Purple  Green  Purple  Green  Purple
+Core     Red   Green  Red   Green  Red
+Mid      Red   Blue   Green Red    Green
+Support  Blue  Green  Blue  Green  Blue
 ```
 
 Slot position remains part of identity when colors repeat.
 
-### Purple and stat legality
+### Stat colors and legality
 
-M6A treats Purple as a physical slot color introduced by the expanded geometry. It maps to the existing blue-stat legality pool. This preserves the package invariant that M6A introduces no new stat pool or scoring stat definition.
+Both layouts use exactly the same three stat colors: **Red, Green, and Blue**. M6A introduces no fourth color, no color alias, and no new stat pool. Each Red, Green, or Blue slot in `expanded_5` uses the same eligible-stat pool as the corresponding color in `legacy_3`.
 
 ## Ruleset and layout boundary
 
@@ -44,7 +44,7 @@ M6A treats Purple as a physical slot color introduced by the expanded geometry. 
 - the frozen `legacy_3` and `expanded_5` definitions;
 - a minimal `Ruleset` boundary;
 - the production default ruleset/layout;
-- color-specific stat legality.
+- the existing Red/Green/Blue stat legality pools.
 
 Search, scoring, transitions, and rendering consume layout-defined slots rather than defining geometry themselves.
 
@@ -87,7 +87,7 @@ Adapters validate slot count, physical position, physical color, and color-speci
 
 Compact and descriptive/reference transition paths now enumerate layout-defined slot sets. Known operation semantics generalize naturally:
 
-- stat reroll: every matching physical slot implied by scope, with existing same-color pool and duplicate-stat rules;
+- stat reroll: every matching physical slot implied by scope, with the existing same-color pool and duplicate-stat rules;
 - quality reroll: every matching physical slot implied by scope;
 - trait reroll: every matching physical slot implied by scope;
 - random quality increase: one uniformly selected physical slot from the complete banner, including Tier-V cap waste;
@@ -134,12 +134,12 @@ The existing regression suite remains the primary non-waivable legacy gate. In p
 
 M6A adds expanded-layout tests for:
 
-- exact physical geometry;
-- Purple-to-blue-pool legality mapping;
+- exact Red/Green/Blue physical geometry;
+- unchanged per-color stat legality pools;
 - five-slot banner and board round trips;
 - cross-layout board-ID isolation;
 - random selection among five slots;
-- random selection among repeated Purple slots;
+- random selection among repeated Blue slots;
 - five-slot duplicate-stat pressure under all-color stat rerolls;
 - probability normalization and aggregation;
 - expanded quality redistribution with all five possible decreased slots and all six recipient pairs per source;
@@ -162,26 +162,7 @@ Authoritative output:
 
 - `benchmarks/m6a-layout-comparison.json`
 
-The final comparison was generated on Node `v22.23.2`, Linux x64, after expanded quality redistribution was enabled. It completed all 12 cases with no benchmark error or timeout.
-
-Fresh expanded/legacy optimizer-runtime ratios were:
-
-| Workload | Expanded / legacy |
-|---|---:|
-| Stat-heavy `t=1` | 0.24×* |
-| Stat-heavy `t=2` | 1.95× |
-| Quality-heavy `t=2` | 4.21× |
-| Trait-heavy `t=2` | 2.33× |
-| Global-quality `t=2` | 3.34× |
-| Target-probability `t=2` | 1.93× |
-
-`*` The isolated `t=1` wall-time ratio is noisy and should not be interpreted as a structural expanded-board speedup. Its state counts still increase; the production-relevant `t=2` comparisons are the more informative result.
-
-The global-quality comparison is now semantically apples-to-apples because five-slot redistribution is fully enabled rather than omitted. The expanded target-probability `t=2` case took about **7.48 s** versus about **3.87 s** for legacy in this run.
-
-The comparison records codec throughput, terminal scoring, transition cold/warm behavior and branching, optimizer `t=1`, expected-score `t=2`, target-probability `t=2`, memory, cache diagnostics, and search-engine diagnostic counters. Timeout is reported as a result rather than hidden by reducing fidelity.
-
-The structural conclusion is unchanged but stronger: terminal scoring remains roughly flat while transition/frontier breadth grows substantially. Representative stat-heavy one-step branching is still 5 → 21 outcomes. With expanded redistribution enabled, global-quality frontier pressure becomes materially larger as well. The 15-emblem production-horizon search therefore needs frontier-oriented profiling before deeper-search work resumes.
+The final comparison must be regenerated after the stat-color correction so its runtime evidence corresponds to the corrected Red/Green/Blue geometry. No performance conclusion from the prior mislabeled-color run is treated as final evidence until that regeneration completes.
 
 ## Production decision
 
@@ -192,10 +173,10 @@ layout = legacy_3
 horizon <= 2
 ```
 
-The expanded layout is now fully representable and its known operation mechanics are defined and tested through the same engine. Promotion of `expanded_5` to the production default remains a separate product/ruleset decision.
+The expanded layout is fully representable and its known operation mechanics are defined through the same engine. Promotion of `expanded_5` to the production default remains a separate product/ruleset decision.
 
 ## Outcome
 
-Final classification: **Outcome A**. Legacy compatibility passes; expanded geometry, codecs, legality, transitions, scoring, caches, and UI paths are layout-aware; five-slot quality redistribution is defined as one random decrease plus two uniformly selected distinct recipients from the remaining four; and the fresh Node 22 benchmark/test finalization completed successfully.
+Final classification remains pending regeneration of the authoritative M6A benchmark/test evidence after removal of the erroneous fourth-color assumption. The intended structural outcome is unchanged: one versioned engine, exact legacy compatibility, expanded five-slot geometry using only Red/Green/Blue, and no parallel implementation.
 
-Production remains `legacy_3` / `t<=2`. The next package should be selected from the measured expanded-board frontier profile. Do not resume target `t=3`, consume the M5H holdout, or begin target `t=4` in M6A.
+Production remains `legacy_3` / `t<=2`. Do not resume target `t=3`, consume the M5H holdout, or begin target `t=4` in M6A.
