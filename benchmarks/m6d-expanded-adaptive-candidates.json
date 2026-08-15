@@ -1,0 +1,47 @@
+{
+  "m6dBaseSha": "7757654ff91a4ca7a4f2fb7cad556620efc88140",
+  "layoutId": "expanded_5",
+  "horizon": 2,
+  "family": "staged_adaptive_root_refinement",
+  "description": "Screen all legal root board actions, refine top K=2, then conditionally expand to K=4 and K=6 using only frozen observable winner stability and objective-scale margin rules. If ambiguity remains after K=6, refine every remaining root exactly. Stop and menu reroll remain represented at every stage.",
+  "candidates": [
+    {
+      "id": "adaptive-tight",
+      "stages": [2,4,6],
+      "expectedScoreGapThresholds": [120,80,50],
+      "targetProbabilityGapThresholds": [0.0015,0.0010,0.0005],
+      "winnerChangeIsAmbiguous": true,
+      "exactFallback": true
+    },
+    {
+      "id": "adaptive-balanced",
+      "stages": [2,4,6],
+      "expectedScoreGapThresholds": [250,150,100],
+      "targetProbabilityGapThresholds": [0.0030,0.0020,0.0010],
+      "winnerChangeIsAmbiguous": true,
+      "exactFallback": true
+    },
+    {
+      "id": "adaptive-conservative",
+      "stages": [2,4,6],
+      "expectedScoreGapThresholds": [500,250,120],
+      "targetProbabilityGapThresholds": [0.0060,0.0030,0.0015],
+      "winnerChangeIsAmbiguous": true,
+      "exactFallback": true
+    }
+  ],
+  "decisionMarginBins": {
+    "expected_score": {"closeMax":100,"mediumMax":500},
+    "target_probability": {"closeMax":0.001,"mediumMax":0.005}
+  },
+  "acceptance": {
+    "minimumCompletionRate": 1.0,
+    "minimumRootActionAgreement": 0.98,
+    "maximumExpectedScoreOracleRegret": 100,
+    "maximumTargetProbabilityOracleRegret": 0.001,
+    "minimumMedianSpeedup": 1.50,
+    "minimumP90Speedup": 1.20
+  },
+  "selectionRule": "Among qualifying candidates, select highest median speedup; break ties by lower exact-fallback rate, then higher root-action agreement, then lower maximum oracle regret, then candidate id.",
+  "productionEnabled": false
+}

@@ -522,3 +522,9 @@ M6B closes as **Outcome B**. Exact profiling shows that the 15-emblem `t=2` slow
 ## M6C — Expanded t=2 approximation calibration
 
 M6C closes as **Outcome B**. The preregistered bounded approximation family did not pass the frozen fidelity/performance gates; retain exact expanded_5 t=2 as reference. Production remains `legacy_3` with horizon <=2. M5H holdout remains untouched and target t=3/t=4 remain frozen.
+
+---
+
+## M6D — Expanded t=2 adaptive exact certification
+
+M6D closes as **Outcome A**. A frozen staged K=2 → K=4 → K=6 → exact-fallback policy validated on a fresh one-shot expanded_5 t=2 holdout with exact root agreement and material aggregate speedup. The result supports a **separately frozen production-integration package**; M6D itself does not enable the policy. Production stays `legacy_3`, horizon <=2; M5H conclusions remain unchanged and target t=3/t=4 stay frozen.

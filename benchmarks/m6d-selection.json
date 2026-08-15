@@ -1,0 +1,16 @@
+{
+  "m6dBaseSha": "7757654ff91a4ca7a4f2fb7cad556620efc88140",
+  "selectedCandidate": "adaptive-tight",
+  "selectedOn": "calibration_only",
+  "acceptance": {
+    "minimumCompletionRate": 1,
+    "minimumRootActionAgreement": 0.98,
+    "maximumExpectedScoreOracleRegret": 100,
+    "maximumTargetProbabilityOracleRegret": 0.001,
+    "minimumMedianSpeedup": 1.5,
+    "minimumP90Speedup": 1.2
+  },
+  "holdoutConsumed": true,
+  "holdoutPassed": true,
+  "outcome": "A"
+}

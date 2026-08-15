@@ -1,0 +1,21 @@
+{
+  "m6dBaseSha": "7757654ff91a4ca7a4f2fb7cad556620efc88140",
+  "layoutId": "expanded_5",
+  "horizon": 2,
+  "frozenPurpose": "holdout",
+  "corpusVersion": 1,
+  "cases": [
+    {"id":"m6d-hold-exp-stat-inverted","seed":62101,"boardVariant":"quality_inverted","objective":"expected_score","operationFamily":"stat","operationIds":["red-stat-all","blue-stat-all","green-stat-all"]},
+    {"id":"m6d-hold-exp-quality-permuted","seed":62102,"boardVariant":"repeat_permuted","objective":"expected_score","operationFamily":"quality","operationIds":["quality-increase-one","blue-quality-all","red-quality-all"]},
+    {"id":"m6d-hold-exp-trait-capped","seed":62103,"boardVariant":"quality_capped","objective":"expected_score","operationFamily":"trait","operationIds":["blue-trait-all","red-trait-all","green-trait-all"]},
+    {"id":"m6d-hold-exp-global-base","seed":62104,"boardVariant":"baseline","objective":"expected_score","operationFamily":"global_quality","operationIds":["quality-redistribution","quality-increase-one","green-quality-all"]},
+    {"id":"m6d-hold-exp-mixed-low","seed":62105,"boardVariant":"repeat_permuted_low","objective":"expected_score","operationFamily":"mixed","operationIds":["red-stat-all","blue-quality-all","green-trait-all"]},
+    {"id":"m6d-hold-tgt-stat-74500","seed":62106,"boardVariant":"baseline","objective":"target_probability","operationFamily":"stat","operationIds":["blue-stat-all","red-stat-all","green-stat-all"],"targetScore":74500},
+    {"id":"m6d-hold-tgt-quality-82500","seed":62107,"boardVariant":"quality_inverted","objective":"target_probability","operationFamily":"quality","operationIds":["green-quality-all","quality-increase-one","red-quality-all"],"targetScore":82500},
+    {"id":"m6d-hold-tgt-trait-86500","seed":62108,"boardVariant":"quality_capped","objective":"target_probability","operationFamily":"trait","operationIds":["blue-trait-all","green-trait-all","red-trait-all"],"targetScore":86500},
+    {"id":"m6d-hold-tgt-global-85500","seed":62109,"boardVariant":"repeat_permuted_low","objective":"target_probability","operationFamily":"global_quality","operationIds":["quality-increase-one","quality-redistribution","blue-quality-all"],"targetScore":85500},
+    {"id":"m6d-hold-tgt-mixed-78500","seed":62110,"boardVariant":"repeat_permuted","objective":"target_probability","operationFamily":"mixed","operationIds":["green-stat-all","blue-quality-all","red-trait-all"],"targetScore":78500},
+    {"id":"m6d-hold-tgt-close-80500","seed":62111,"boardVariant":"baseline","objective":"target_probability","operationFamily":"mixed","operationIds":["red-stat-all","green-quality-all","blue-trait-all"],"targetScore":80500},
+    {"id":"m6d-hold-exp-close-inverted","seed":62112,"boardVariant":"quality_inverted","objective":"expected_score","operationFamily":"mixed","operationIds":["green-stat-all","green-quality-all","green-trait-all"]}
+  ]
+}

@@ -292,3 +292,9 @@ Target probability grew from **6,563 to 17,862 target scalar states** and from *
 ## M6C expanded t=2 approximation calibration
 
 M6C calibrated adaptive root refinement against exact expanded_5 t=2 oracles. Frozen selection: root-k2. Final outcome: **B**. One-shot holdout root agreement 75.0%, median speedup 2.8012x, P90 speedup 3.2658x, median structural work avoided 71.5%. Production remains legacy_3 / t<=2 and the approximation is disabled by default. See `M6C_EXPANDED_T2_APPROXIMATION.md`.
+
+---
+
+## M6D expanded t=2 adaptive exact certification
+
+M6D closes as **Outcome A**. Calibration selected `adaptive-tight`; the fresh one-shot holdout achieved 100.0% root-action agreement, max expected-score regret 0.00, max target-probability regret 0.000000, 2.52× median speedup, 3.27× P90 speedup, 67.2% median structural work avoided, and 16.7% exact fallback. Production remains `legacy_3` / horizon <=2; the adaptive expanded policy remains off by default.
