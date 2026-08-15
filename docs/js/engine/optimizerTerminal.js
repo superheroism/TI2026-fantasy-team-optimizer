@@ -4,8 +4,8 @@ import { boardAdapterContext, boardToEngineState } from './stateEncoding.js';
 export function createTerminalSearchRuntime(state, data) {
     const context = boardAdapterContext(state.board);
     const initialEngine = boardToEngineState(state.board);
-    const expectedScorer = createEngineExpectedScorer(context, data, data.simulation.optimizerIterations);
-    const targetScorer = createEngineTargetScorer(context, data, state.targetScore ?? 0, data.simulation.optimizerIterations);
+    const expectedScorer = createEngineExpectedScorer(context, data, data.simulation.optimizerIterations, initialEngine.layoutId);
+    const targetScorer = createEngineTargetScorer(context, data, state.targetScore ?? 0, data.simulation.optimizerIterations, initialEngine.layoutId);
     const expectedMemo = new Map();
     const targetMemo = new Map();
     let terminalScoringCalls = 0;
@@ -35,8 +35,7 @@ export function createTerminalSearchRuntime(state, data) {
             targetMemo.set(initialEngine.id, current.targetProbability);
     };
     const diagnostics = () => {
-        const expectedCompact = expectedScorer.getDiagnostics();
-        const targetCompact = targetScorer.getDiagnostics();
+        const expectedCompact = expectedScorer.getDiagnostics(), targetCompact = targetScorer.getDiagnostics();
         return {
             descriptiveBoardMaterializations: 0, descriptiveBoardCacheEntries: 1,
             expectedScalarStates: expectedMemo.size, targetScalarStates: targetMemo.size, terminalScoringCalls,
