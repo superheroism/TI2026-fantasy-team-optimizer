@@ -11,7 +11,30 @@ export interface OptimizerSearchOptions {
   readonly experimentalActionWidening?:ActionWideningPolicy;
 }
 
+export interface ExpandedT2AdaptiveStageDiagnostics {
+  readonly k:2|4|6|'all';
+  readonly winner:string;
+  readonly gap:number;
+  readonly threshold:number|null;
+  readonly winnerChanged:boolean;
+  readonly ambiguous:boolean;
+  readonly refinedBoardActions:number;
+}
+
+export interface ExpandedT2AdaptiveDiagnostics {
+  readonly policyId:string;
+  readonly rootBoardActionsScreened:number;
+  readonly rootBoardActionsRefined:number;
+  readonly rootBoardActionsSkipped:number;
+  readonly finalStage:'screen'|'k2'|'k4'|'k6'|'exact';
+  readonly exactFallback:boolean;
+  readonly stages:readonly ExpandedT2AdaptiveStageDiagnostics[];
+}
+
+export type OptimizerSearchMode='exact'|'expanded_t2_adaptive'|'expanded_t2_adaptive_exact_fallback'|'expanded_t2_exact_fallback';
+
 export interface OptimizerEngineDiagnostics {
+  readonly searchMode:OptimizerSearchMode;
   readonly modeledHorizon:number;
   readonly descriptiveBoardMaterializations:number;
   readonly descriptiveBoardCacheEntries:number;
@@ -47,4 +70,6 @@ export interface OptimizerEngineDiagnostics {
   readonly actionWidening:import('./actionWidening.js').ActionWideningReport;
   readonly valueFunction:ValueFunctionDiagnostics;
   readonly menuOperator:MenuOperatorDiagnostics;
+  readonly adaptiveRefinement?:ExpandedT2AdaptiveDiagnostics;
+  readonly fallbackReason?:string;
 }
