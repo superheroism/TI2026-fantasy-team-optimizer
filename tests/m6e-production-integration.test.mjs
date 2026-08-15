@@ -47,5 +47,5 @@ test('expanded_5 t=2 production recommendation agrees with engineering exact ora
 test('layout selector remains the only board geometry contract and M5H/t3/t4 stay outside M6E',()=>{
   assert.equal(defaultBoard.layoutId??'legacy_3','legacy_3');assert.equal(expandedBoard().layoutId,'expanded_5');
   const sources=['src/engine/expandedT2Adaptive.ts','src/engine/expandedT2AdaptivePolicy.ts','scripts/benchmark-m6e.mjs','scripts/m6e-benchmark-lib.mjs'].map(p=>fs.readFileSync(p,'utf8')).join('\n');
-  assert.doesNotMatch(sources,/m5h-target-holdout/i);assert.doesNotMatch(sources,/modeledHorizonOverride\s*:\s*[34]/);assert.doesNotMatch(sources,/stages\s*:\s*\[[^\]]*[34][^\]]*\]/);
+  assert.doesNotMatch(sources,/m5h-target-holdout/i);assert.doesNotMatch(sources,/modeledHorizonOverride\s*:\s*[34]/);assert.doesNotMatch(sources,/\bhorizon\s*:\s*[34]\b/);
 });
