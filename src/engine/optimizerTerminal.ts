@@ -10,6 +10,8 @@ export interface TerminalSearchDiagnostics {
   readonly expectedScalarStates:number;
   readonly targetScalarStates:number;
   readonly terminalScoringCalls:number;
+  readonly expectedScoringMs:number;
+  readonly targetScoringMs:number;
   readonly expectedBannerMaterializations:number;
   readonly expectedBannerCacheEntries:number;
   readonly expectedBannerCacheHits:number;
@@ -36,17 +38,21 @@ export function createTerminalSearchRuntime(state:OptimizerState,data:DataBundle
   const targetScorer=createEngineTargetScorer(context,data,state.targetScore??0,data.simulation.optimizerIterations,initialEngine.layoutId);
   const expectedMemo=new Map<BoardStateID,number>();
   const targetMemo=new Map<BoardStateID,number>();
-  let terminalScoringCalls=0;
+  let terminalScoringCalls=0,expectedScoringMs=0,targetScoringMs=0;
 
   const expectedScalar=(engine:EngineState):number=>{
     const prior=expectedMemo.get(engine.id);if(prior!==undefined)return prior;
     terminalScoringCalls++;
-    const value=expectedScorer.evaluate(engine);expectedMemo.set(engine.id,value);return value;
+    const started=performance.now();
+    const value=expectedScorer.evaluate(engine);expectedScoringMs+=performance.now()-started;
+    expectedMemo.set(engine.id,value);return value;
   };
   const targetScalar=(engine:EngineState):number=>{
     const prior=targetMemo.get(engine.id);if(prior!==undefined)return prior;
     terminalScoringCalls++;
-    const value=targetScorer.evaluate(engine);targetMemo.set(engine.id,value);return value;
+    const started=performance.now();
+    const value=targetScorer.evaluate(engine);targetScoringMs+=performance.now()-started;
+    targetMemo.set(engine.id,value);return value;
   };
   const searchUtility=(engine:EngineState):number=>state.objective==='expected_score'?expectedScalar(engine):targetScalar(engine);
   const seedCurrent=(current:BoardEvaluation):void=>{
@@ -58,6 +64,7 @@ export function createTerminalSearchRuntime(state:OptimizerState,data:DataBundle
     return {
       descriptiveBoardMaterializations:0,descriptiveBoardCacheEntries:1,
       expectedScalarStates:expectedMemo.size,targetScalarStates:targetMemo.size,terminalScoringCalls,
+      expectedScoringMs,targetScoringMs,
       expectedBannerMaterializations:expectedCompact.bannerMaterializations,
       expectedBannerCacheEntries:expectedCompact.bannerCacheEntries,
       expectedBannerCacheHits:expectedCompact.bannerCacheHits,
