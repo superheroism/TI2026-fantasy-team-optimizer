@@ -34,6 +34,12 @@ test('expanded_5 t=1 stays exact while production t=2 uses certified adaptive-ti
   state.tokensRemaining=2;recommendNextAction(state,data,true);const diag=getLastOptimizerEngineDiagnostics();assert.match(diag.searchMode,/^expanded_t2_adaptive/);assert.equal(diag.adaptiveRefinement?.policyId,'adaptive-tight');assert.equal(diag.modeledHorizon,2);
 });
 
+test('explicit engineering t=2 override preserves the historical exact-oracle path',()=>{
+  const definition=corpus.cases.find(x=>x.id==='m6e-exp-stat-clear'),state=makeState(definition,data);
+  recommendNextAction(state,data,true,{modeledHorizonOverride:2});
+  assert.equal(getLastOptimizerEngineDiagnostics().searchMode,'exact');
+});
+
 test('expanded_5 t=2 production recommendation agrees with engineering exact oracle on representative clear and close cases',()=>{
   for(const id of ['m6e-exp-stat-clear','m6e-tgt-mixed-close']){
     const definition=corpus.cases.find(x=>x.id===id),state=makeState(definition,data);
