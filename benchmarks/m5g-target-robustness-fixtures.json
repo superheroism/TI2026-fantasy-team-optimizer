@@ -1,0 +1,53 @@
+{
+  "package": "M5G Target-Probability t=3 Robustness Validation",
+  "M5G_BASE_SHA": "a138a7b968350e97261c2631c8298521d07b72d4",
+  "sourceHoldout": {
+    "file": "benchmarks/m5d-holdout-fixtures.json",
+    "seed": 20260813
+  },
+  "thresholds": [50000, 55000, 60000],
+  "tokensRemaining": 10,
+  "menuRerollAvailable": true,
+  "productionHorizon": 2,
+  "experimentHorizon": 3,
+  "objective": "target_probability",
+  "oracle": {
+    "continuationFidelity": "current",
+    "actionWidening": "none",
+    "timeoutMs": 600000
+  },
+  "candidate": {
+    "continuationFidelity": "aggressive",
+    "continuationSchedule": [4, 2, 1],
+    "actionWidening": "wide",
+    "wideningSchedule": [12, 8, 4],
+    "timeoutMs": 60000
+  },
+  "memoryGuardBytes": 6442450944,
+  "fixtures": [
+    {"id":"canonical-default","reachability":"canonical","boardStateId":"15394829123847039010","menu":["green-stat-all","red-quality-all","blue-trait-all"],"mutations":[]},
+    {"id":"holdout-01","reachability":"one-step","boardStateId":"15437543967597039010","menu":["blue-quality-all","green-quality-all","blue-stat-all"]},
+    {"id":"holdout-02","reachability":"one-step","boardStateId":"15394829123847039020","menu":["quality-increase-one","blue-trait-last","blue-trait-first"]},
+    {"id":"holdout-03","reachability":"one-step","boardStateId":"15394829123847061512","menu":["green-quality-all","red-quality-random","red-trait-all"]},
+    {"id":"holdout-04","reachability":"one-step","boardStateId":"15651152358222039010","menu":["green-stat-first","red-stat-all","red-quality-last"]},
+    {"id":"holdout-05","reachability":"two-step","boardStateId":"15394829123813401510","menu":["red-trait-all","red-quality-random","blue-stat-all"]},
+    {"id":"holdout-06","reachability":"two-step","boardStateId":"16419985374268914010","menu":["blue-stat-all","quality-redistribution","red-quality-random"]},
+    {"id":"holdout-07","reachability":"two-step","boardStateId":"15394865194159539010","menu":["blue-trait-all","blue-trait-random","green-stat-all"]},
+    {"id":"holdout-08","reachability":"two-step","boardStateId":"15394829174472601635","menu":["red-quality-all","blue-trait-all","red-quality-last"]}
+  ],
+  "gate": {
+    "plannedCases": 27,
+    "requiredTopActionAgreements": 26,
+    "maxDisagreements": 1,
+    "waivableDisagreement": {"boardActionOnly":true,"maxOracleTopTwoGap":0.01,"maxOracleRegret":0.0025},
+    "maxMeanOracleRegret": 0.0005,
+    "maxOracleRegret": 0.0025,
+    "candidateRuntimeStrictlyLessThanMs": 60000,
+    "oracleRuntimeStrictlyLessThanMs": 600000,
+    "maxRssStrictlyLessThanBytes": 6442450944,
+    "requireT2RankedTableEquality": true,
+    "requireThresholdMonotonicity": true,
+    "requireAll20FutureOperationIds": true,
+    "stopMenuDisagreementAllowed": false
+  }
+}
