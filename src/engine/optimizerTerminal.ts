@@ -32,8 +32,8 @@ export interface TerminalSearchRuntime {
 export function createTerminalSearchRuntime(state:OptimizerState,data:DataBundle):TerminalSearchRuntime {
   const context=boardAdapterContext(state.board);
   const initialEngine=boardToEngineState(state.board);
-  const expectedScorer=createEngineExpectedScorer(context,data,data.simulation.optimizerIterations);
-  const targetScorer=createEngineTargetScorer(context,data,state.targetScore??0,data.simulation.optimizerIterations);
+  const expectedScorer=createEngineExpectedScorer(context,data,data.simulation.optimizerIterations,initialEngine.layoutId);
+  const targetScorer=createEngineTargetScorer(context,data,state.targetScore??0,data.simulation.optimizerIterations,initialEngine.layoutId);
   const expectedMemo=new Map<BoardStateID,number>();
   const targetMemo=new Map<BoardStateID,number>();
   let terminalScoringCalls=0;
@@ -54,8 +54,7 @@ export function createTerminalSearchRuntime(state:OptimizerState,data:DataBundle
     else if(current.targetProbability!==undefined)targetMemo.set(initialEngine.id,current.targetProbability);
   };
   const diagnostics=():TerminalSearchDiagnostics=>{
-    const expectedCompact=expectedScorer.getDiagnostics();
-    const targetCompact=targetScorer.getDiagnostics();
+    const expectedCompact=expectedScorer.getDiagnostics(),targetCompact=targetScorer.getDiagnostics();
     return {
       descriptiveBoardMaterializations:0,descriptiveBoardCacheEntries:1,
       expectedScalarStates:expectedMemo.size,targetScalarStates:targetMemo.size,terminalScoringCalls,
