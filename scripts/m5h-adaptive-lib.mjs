@@ -95,12 +95,14 @@ export function selectAdaptiveContenders(rows, rule) {
   if (rule.kind === 'winner_margin') {
     const delta = Number(rule.delta ?? 0);
     const winner = ranked[0].screenedUtility;
+    const runnerUp = ranked[1]?.screenedUtility;
+    if (runnerUp === undefined || winner - runnerUp > delta + EPSILON) return [];
     return ranked
       .filter((row) => winner - row.screenedUtility <= delta + EPSILON)
       .slice(0, maxRefined)
       .map((row) => ({
         key: row.key,
-        reason: `screen-gap-${(winner - row.screenedUtility).toFixed(12)}-within-${delta}`,
+        reason: `screen-top-two-close;gap-${(winner - row.screenedUtility).toFixed(12)}-within-${delta}`,
       }));
   }
   throw new Error(`Unknown adaptive refinement rule: ${rule.kind}`);
@@ -127,13 +129,10 @@ function boardActionDescriptor(operation, banner) {
   };
 }
 
-function rootDescriptors(state, initialEngine, screenRuntime) {
+function rootDescriptors(state) {
   const roots = [{ key: 'stop', action: { kind: 'stop' } }];
   for (const operation of state.menu) {
-    for (const banner of OPTIMIZER_ROLES) {
-      if (!screenRuntime.transitionsFor(initialEngine, banner, operation).length) continue;
-      roots.push(boardActionDescriptor(operation, banner));
-    }
+    for (const banner of OPTIMIZER_ROLES) roots.push(boardActionDescriptor(operation, banner));
   }
   roots.push({ key: 'menu_reroll', action: { kind: 'menu_reroll' } });
   return roots;
@@ -159,6 +158,7 @@ function evaluateRootWithAttribution(pass, root, runtime, terminal, initialEngin
       action: root.action,
       triggerReason: triggerReason ?? null,
       elapsedMs,
+      legal: utility !== -Infinity,
       work: runtimeDelta(before, after),
     },
   };
@@ -192,7 +192,7 @@ export function runAdaptiveTargetSearch(state, data, candidate, options = {}) {
     terminal: clone(terminal.diagnostics()),
   };
 
-  const roots = rootDescriptors(state, initialEngine, screen);
+  const roots = rootDescriptors(state);
   const passRecords = [];
   const rows = [];
 
@@ -201,6 +201,7 @@ export function runAdaptiveTargetSearch(state, data, candidate, options = {}) {
       'screen', root, screen, terminal, initialEngine, stopUtility, modeledHorizon, null,
     );
     passRecords.push(result.attribution);
+    if (result.utility === -Infinity) continue;
     rows.push({
       key: root.key,
       action: root.action,
@@ -237,7 +238,7 @@ export function runAdaptiveTargetSearch(state, data, candidate, options = {}) {
   }));
   const screenWinner = stableRank(rows, 'screenedUtility')[0];
   const finalWinner = ranked[0];
-  const finalRowsByKey = new Map(ranked.map((row) => [row.key, row]));
+  const refinementChangedWinner = screenWinner.key !== finalWinner.key;
 
   return {
     candidateId: candidate.id,
@@ -254,13 +255,11 @@ export function runAdaptiveTargetSearch(state, data, candidate, options = {}) {
       screenPolicy: clone(candidate.screen),
       refinePolicy: clone(candidate.refine),
       rule: clone(candidate.rule),
-      rootAlternativesScreened: roots.length,
+      rootLegalityChecks: roots.length,
+      rootAlternativesScreened: rows.length,
       rootAlternativesRefined: contenders.length,
-      refinementChangedWinner: screenWinner.key !== finalWinner.key,
-      refinementChangedNothing: contenders.every(({ key }) => {
-        const row = finalRowsByKey.get(key);
-        return row?.refinedUtility === row?.screenedUtility;
-      }),
+      refinementChangedWinner,
+      refinementChangedNothing: !refinementChangedWinner,
       passRecords,
       finalTerminal: terminal.diagnostics(),
       screenContinuation: screen.diagnostics(),
