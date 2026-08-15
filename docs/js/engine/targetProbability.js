@@ -9,6 +9,7 @@ function newAdapterDiagnostics() {
     return {
         boardCacheHits: 0,
         boardCacheMisses: 0,
+        boardCacheBypasses: 0,
         preparedRoleCacheHits: 0,
         preparedRoleCacheMisses: 0,
     };
@@ -129,25 +130,32 @@ function preparedRoleCandidates(role, board, data, prefixId, iterations) {
     cache.set(key, prepared);
     return prepared;
 }
-function optimizeTargetBoard(board, data, targetScore, iterations) {
-    let cache = targetChoiceCache.get(data);
-    if (!cache) {
-        cache = new Map();
-        targetChoiceCache.set(data, cache);
-    }
-    const key = JSON.stringify([
-        boardMechanicsKey(board),
-        targetScore,
-        iterations,
-    ]);
-    const cached = cache.get(key);
-    if (cached) {
+function optimizeTargetBoard(board, data, targetScore, iterations, useBoardCache = true) {
+    let cache;
+    let key;
+    if (useBoardCache) {
+        cache = targetChoiceCache.get(data);
+        if (!cache) {
+            cache = new Map();
+            targetChoiceCache.set(data, cache);
+        }
+        key = JSON.stringify([
+            boardMechanicsKey(board),
+            targetScore,
+            iterations,
+        ]);
+        const cached = cache.get(key);
+        if (cached) {
+            if (diagnosticsEnabled)
+                adapterDiagnostics.boardCacheHits++;
+            return cached;
+        }
         if (diagnosticsEnabled)
-            adapterDiagnostics.boardCacheHits++;
-        return cached;
+            adapterDiagnostics.boardCacheMisses++;
     }
-    if (diagnosticsEnabled)
-        adapterDiagnostics.boardCacheMisses++;
+    else if (diagnosticsEnabled) {
+        adapterDiagnostics.boardCacheBypasses++;
+    }
     const prefixIds = data.titles.prefixes.length
         ? data.titles.prefixes.map((prefix) => prefix.id)
         : [undefined];
@@ -170,20 +178,27 @@ function optimizeTargetBoard(board, data, targetScore, iterations) {
             ...(prefixId !== undefined ? { prefixId } : {}),
         };
     }
-    if (best)
+    if (best && cache && key !== undefined)
         cache.set(key, best);
     return best;
 }
-/** Fast scalar target utility for optimizer search. */
+/** Fast scalar target utility for descriptive-board callers. */
 export function evaluateBoardTargetProbabilityFast(board, data, targetScore, iterations = data.simulation.optimizerIterations) {
-    return optimizeTargetBoard(board, data, targetScore, iterations)?.probability ?? 0;
+    return optimizeTargetBoard(board, data, targetScore, iterations, true)?.probability ?? 0;
+}
+/**
+ * Exact scalar target utility for callers that already own a canonical outer memo.
+ * Lower-level role/scenario caches remain active; only the redundant whole-board choice cache is bypassed.
+ */
+export function evaluateBoardTargetProbabilityFastUncached(board, data, targetScore, iterations = data.simulation.optimizerIterations) {
+    return optimizeTargetBoard(board, data, targetScore, iterations, false)?.probability ?? 0;
 }
 /**
  * Full terminal evaluation for target-probability mode. Free roster and title
  * prefix are selected by target probability itself.
  */
 export function evaluateBoardTarget(board, username, data, targetScore, iterations = data.simulation.optimizerIterations) {
-    const choice = optimizeTargetBoard(board, data, targetScore, iterations);
+    const choice = optimizeTargetBoard(board, data, targetScore, iterations, true);
     if (!choice) {
         throw new Error('No complete legal Core/Mid/Support roster is available for target-probability evaluation.');
     }
