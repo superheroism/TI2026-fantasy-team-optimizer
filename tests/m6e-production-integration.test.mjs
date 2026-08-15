@@ -40,6 +40,17 @@ test('explicit engineering t=2 override preserves the historical exact-oracle pa
   assert.equal(getLastOptimizerEngineDiagnostics().searchMode,'exact');
 });
 
+test('K=6 ambiguity invokes exact fallback and reproduces the exact recommendation',()=>{
+  const definition=corpus.cases.find(x=>x.id==='m6e-exp-stat-clear'),state=makeState(definition,data);
+  const production=recommendNextAction(state,data,true),productionDiag=getLastOptimizerEngineDiagnostics();
+  assert.equal(productionDiag.searchMode,'expanded_t2_adaptive_exact_fallback');
+  assert.equal(productionDiag.adaptiveRefinement?.exactFallback,true);
+  assert.equal(productionDiag.adaptiveRefinement?.finalStage,'exact');
+  const exact=recommendNextAction(state,data,true,{modeledHorizonOverride:2,engineeringForceExact:true});
+  assert.equal(key(production.recommendation.action),key(exact.recommendation.action));
+  assert.equal(production.recommendation.expectedFinalUtility,exact.recommendation.expectedFinalUtility);
+});
+
 test('expanded_5 t=2 production recommendation agrees with engineering exact oracle on representative clear and close cases',()=>{
   for(const id of ['m6e-exp-stat-clear','m6e-tgt-mixed-close']){
     const definition=corpus.cases.find(x=>x.id===id),state=makeState(definition,data);
