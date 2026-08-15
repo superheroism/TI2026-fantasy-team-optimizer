@@ -1,0 +1,319 @@
+name: M5H Adaptive Target t3
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - agent/m5h-adaptive-target-t3-impl
+    paths:
+      - .github/workflows/m5h-target-adaptive.yml
+
+permissions:
+  contents: write
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out measurement commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Typecheck, generated verification, and tests
+        run: npm run test:ci
+
+      - name: Verify frozen fresh corpora reproduce exactly
+        run: node scripts/generate-m5h-fixtures.mjs calibration holdout --check
+
+      - name: Verify pre-calibration freeze and measurement authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f benchmarks/m5h-target-adaptive-candidates.json
+          test -f benchmarks/m5h-target-holdout-gate.json
+          test -f benchmarks/m5h-target-calibration-fixtures.json
+          test -f benchmarks/m5h-target-holdout-fixtures.json
+          test -f benchmarks/m5h-calibration-authority.json
+          test ! -f benchmarks/m5h-selected-candidate.json
+          minimum=$(node -p "require('./benchmarks/m5h-calibration-authority.json').minimumAuthoritativeMeasurementCommit")
+          git merge-base --is-ancestor "$minimum" "${{ github.sha }}"
+
+  calibration:
+    needs: preflight
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        fixture:
+          - calibration-01
+          - calibration-02
+          - calibration-03
+          - calibration-04
+          - calibration-05
+          - calibration-06
+          - calibration-07
+          - calibration-08
+          - calibration-09
+        target: [50000, 55000, 60000]
+    steps:
+      - name: Check out measurement commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build generated engine artifacts
+        run: npm run build
+
+      - name: Run production-isolation controls
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p m5h-out
+          node scripts/benchmark-m5h-target-case.mjs calibration ${{ matrix.fixture }} ${{ matrix.target }} t2-current m5h-out/m5h-t2-current-${{ matrix.fixture }}-${{ matrix.target }}.json || true
+          node scripts/benchmark-m5h-target-case.mjs calibration ${{ matrix.fixture }} ${{ matrix.target }} t2-experimental A1 m5h-out/m5h-t2-experimental-A1-${{ matrix.fixture }}-${{ matrix.target }}.json || true
+
+      - name: Run current-fidelity oracle
+        run: node scripts/benchmark-m5h-target-case.mjs calibration ${{ matrix.fixture }} ${{ matrix.target }} oracle m5h-out/m5h-oracle-${{ matrix.fixture }}-${{ matrix.target }}.json || true
+
+      - name: Run frozen M5G baseline
+        run: node scripts/benchmark-m5h-target-case.mjs calibration ${{ matrix.fixture }} ${{ matrix.target }} baseline m5h-out/m5h-baseline-${{ matrix.fixture }}-${{ matrix.target }}.json || true
+
+      - name: Run preregistered adaptive candidates
+        shell: bash
+        run: |
+          set -uo pipefail
+          for candidate in A1 A2 A3 A4 A5 A6 A7 A8; do
+            node scripts/benchmark-m5h-target-case.mjs calibration ${{ matrix.fixture }} ${{ matrix.target }} adaptive "$candidate" "m5h-out/m5h-adaptive-$candidate-${{ matrix.fixture }}-${{ matrix.target }}.json" || true
+          done
+
+      - name: Upload raw calibration case JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5h-calibration-${{ matrix.fixture }}-${{ matrix.target }}
+          path: m5h-out/*.json
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate-calibration:
+    needs: calibration
+    if: always() && needs.calibration.result != 'cancelled'
+    runs-on: ubuntu-latest
+    outputs:
+      selected: ${{ steps.commit.outputs.selected }}
+      selection_sha: ${{ steps.commit.outputs.selection_sha }}
+      outcome: ${{ steps.commit.outputs.outcome }}
+    steps:
+      - name: Check out measurement branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/m5h-adaptive-target-t3-impl
+          fetch-depth: 0
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Download raw calibration artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: m5h-calibration-*
+          path: m5h-calibration-artifacts
+          merge-multiple: true
+
+      - name: Aggregate using frozen artifact filter, authority guard, and selection rule
+        run: node scripts/aggregate-m5h-calibration.mjs m5h-calibration-artifacts benchmarks/m5h-target-adaptive-calibration.json benchmarks/m5h-selected-candidate.json
+
+      - name: Upload calibration aggregate
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5h-target-adaptive-calibration
+          path: |
+            benchmarks/m5h-target-adaptive-calibration.json
+            benchmarks/m5h-selected-candidate.json
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Commit calibration outcome before any holdout execution
+        id: commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add benchmarks/m5h-target-adaptive-calibration.json
+          if test -f benchmarks/m5h-selected-candidate.json; then
+            git add benchmarks/m5h-selected-candidate.json
+            selected=$(node -p "require('./benchmarks/m5h-selected-candidate.json').candidateId")
+            outcome=candidate_selected
+          else
+            selected=''
+            outcome=C
+          fi
+          if ! git diff --cached --quiet; then
+            git commit -m 'M5H: freeze calibration outcome'
+            git push origin HEAD:agent/m5h-adaptive-target-t3-impl
+          fi
+          selection_sha=$(git rev-parse HEAD)
+          echo "selected=$selected" >> "$GITHUB_OUTPUT"
+          echo "selection_sha=$selection_sha" >> "$GITHUB_OUTPUT"
+          echo "outcome=$outcome" >> "$GITHUB_OUTPUT"
+
+  holdout:
+    needs: aggregate-calibration
+    if: needs.aggregate-calibration.outputs.selected != ''
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        fixture:
+          - holdout-01
+          - holdout-02
+          - holdout-03
+          - holdout-04
+          - holdout-05
+          - holdout-06
+          - holdout-07
+          - holdout-08
+          - holdout-09
+        target: [50000, 55000, 60000]
+    steps:
+      - name: Check out frozen selected-candidate commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.aggregate-calibration.outputs.selection_sha }}
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build generated engine artifacts
+        run: npm run build
+
+      - name: Read frozen selected candidate
+        id: selected
+        run: echo "id=$(node -p \"require('./benchmarks/m5h-selected-candidate.json').candidateId\")" >> "$GITHUB_OUTPUT"
+
+      - name: Run production-isolation controls
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p m5h-out
+          node scripts/benchmark-m5h-target-case.mjs holdout ${{ matrix.fixture }} ${{ matrix.target }} t2-current m5h-out/m5h-t2-current-${{ matrix.fixture }}-${{ matrix.target }}.json || true
+          node scripts/benchmark-m5h-target-case.mjs holdout ${{ matrix.fixture }} ${{ matrix.target }} t2-experimental "${{ steps.selected.outputs.id }}" m5h-out/m5h-t2-experimental-${{ matrix.fixture }}-${{ matrix.target }}.json || true
+
+      - name: Run current-fidelity oracle
+        run: node scripts/benchmark-m5h-target-case.mjs holdout ${{ matrix.fixture }} ${{ matrix.target }} oracle m5h-out/m5h-oracle-${{ matrix.fixture }}-${{ matrix.target }}.json || true
+
+      - name: Run frozen adaptive candidate
+        run: node scripts/benchmark-m5h-target-case.mjs holdout ${{ matrix.fixture }} ${{ matrix.target }} adaptive "${{ steps.selected.outputs.id }}" m5h-out/m5h-adaptive-${{ matrix.fixture }}-${{ matrix.target }}.json || true
+
+      - name: Upload raw holdout case JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5h-holdout-${{ matrix.fixture }}-${{ matrix.target }}
+          path: m5h-out/*.json
+          if-no-files-found: error
+          retention-days: 30
+
+  aggregate-holdout:
+    needs: [aggregate-calibration, holdout]
+    if: always() && needs.aggregate-calibration.outputs.selected != '' && needs.holdout.result != 'cancelled'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out frozen selected-candidate commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.aggregate-calibration.outputs.selection_sha }}
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Download raw holdout artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: m5h-holdout-*
+          path: m5h-holdout-artifacts
+          merge-multiple: true
+
+      - name: Aggregate authoritative holdout
+        run: node scripts/aggregate-m5h-holdout.mjs m5h-holdout-artifacts benchmarks/m5h-target-adaptive-holdout.json
+
+      - name: Upload authoritative holdout aggregate
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5h-target-adaptive-holdout
+          path: benchmarks/m5h-target-adaptive-holdout.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Commit immutable holdout result
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add benchmarks/m5h-target-adaptive-holdout.json
+          git commit -m 'M5H: record authoritative holdout result'
+          git push origin HEAD:agent/m5h-adaptive-target-t3-impl
+
+  m5g-regression-sentinel:
+    needs: [aggregate-calibration, aggregate-holdout]
+    if: always() && needs.aggregate-calibration.outputs.selected != '' && needs.aggregate-holdout.result != 'cancelled'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out frozen selected-candidate commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.aggregate-calibration.outputs.selection_sha }}
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies and build
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+
+      - name: Read frozen selected candidate
+        id: selected
+        run: echo "id=$(node -p \"require('./benchmarks/m5h-selected-candidate.json').candidateId\")" >> "$GITHUB_OUTPUT"
+
+      - name: Run diagnostic holdout-05 at 60k
+        run: node scripts/benchmark-m5h-target-case.mjs sentinel holdout-05 60000 adaptive "${{ steps.selected.outputs.id }}" m5h-sentinel-holdout-05-60000.json || true
+
+      - name: Upload sentinel JSON separately from holdout cases
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5h-regression-sentinel
+          path: m5h-sentinel-holdout-05-60000.json
+          if-no-files-found: error
+          retention-days: 30

@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "minimumAuthoritativeMeasurementCommit": "31ed84afed4bfd5e53e37843b2fc058b67a8ea5f",
+  "reason": "Calibration measurements must include the finalized pre-calibration margin-trigger semantics, artifact filters, and adversarial tests. Earlier workflow runs are diagnostic-only and must not be aggregated as M5H evidence."
+}

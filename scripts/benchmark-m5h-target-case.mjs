@@ -14,7 +14,7 @@ if (!corpus || !fixtureId || !targetScore || !mode || !outputPath || (needsCandi
   throw new Error('Usage: benchmark-m5h-target-case.mjs <corpus> <fixture> <target> <mode> [candidate] <output>');
 }
 
-const timeoutMs = mode === 'oracle' ? 600_000 : mode === 'adaptive' ? 60_000 : 180_000;
+const timeoutMs = mode === 'oracle' ? 600_000 : (mode === 'adaptive' || mode === 'baseline') ? 60_000 : 180_000;
 const args = ['--expose-gc', worker, corpus, fixtureId, String(targetScore), mode];
 if (needsCandidate) args.push(candidateId);
 const started = Date.now();

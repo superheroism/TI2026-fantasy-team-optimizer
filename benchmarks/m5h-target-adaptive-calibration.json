@@ -1,0 +1,894 @@
+{
+  "schemaVersion": 1,
+  "package": "M5H Adaptive Target-Probability t=3 Precision",
+  "corpus": "calibration",
+  "generatedAt": "2026-08-15T16:59:56.784Z",
+  "manifestSeed": 2026081501,
+  "fixtureCount": 9,
+  "thresholdCount": 3,
+  "expectedCases": 27,
+  "candidateCount": 8,
+  "artifactFilter": "isM5HCalibrationArtifactPath",
+  "admittedArtifactCount": 324,
+  "minimumAuthoritativeMeasurementCommit": "31ed84afed4bfd5e53e37843b2fc058b67a8ea5f",
+  "sourceShas": [
+    "aad253d621939bd391593a85fe0bae0b7d6d1265"
+  ],
+  "outcome": "C",
+  "baseIntegrity": {
+    "expectedCases": 27,
+    "oracleCount": 27,
+    "allOraclesComplete": true,
+    "oracleMemoryUnder6GiB": true,
+    "oracleAll20FutureOperations": true,
+    "t2ControlCount": 27,
+    "t2ExperimentalCount": 27,
+    "productionIsolation": true
+  },
+  "baselineSummary": {
+    "completedRuns": 18,
+    "under60sRuns": 18,
+    "agreements": 14,
+    "disagreements": 4,
+    "meanOracleRegret": 0.00021456714771653023,
+    "maxOracleRegret": 0.0026930428573561094,
+    "runtimeMedianMs": 41880.460104,
+    "runtimeP90Ms": 51995.152081,
+    "runtimeMaxMs": 54129.416901
+  },
+  "candidateResults": [
+    {
+      "candidateId": "A1",
+      "candidate": {
+        "id": "A1",
+        "screen": {
+          "continuation": "aggressive",
+          "widening": "narrow"
+        },
+        "refine": {
+          "continuation": "aggressive",
+          "widening": "wide"
+        },
+        "rule": {
+          "kind": "top_k",
+          "topK": 2,
+          "maxRefined": 2
+        }
+      },
+      "qualifies": false,
+      "checks": {
+        "complete": false,
+        "under60s": false,
+        "memoryUnder6GiB": false,
+        "all20FutureOperations": false,
+        "comparisonComplete": false,
+        "noStopMenuReversal": true,
+        "noNonWaivableRootReversal": false,
+        "maxRegret": false,
+        "meanRegret": true,
+        "sharedIntegrity": true
+      },
+      "summary": {
+        "completedRuns": 26,
+        "agreements": 21,
+        "disagreements": 5,
+        "meanOracleRegret": 0.00045346071305520867,
+        "maxOracleRegret": 0.006450126264144318,
+        "runtimeMedianMs": 36061.072069999995,
+        "runtimeP90Ms": 53463.351644999995,
+        "runtimeMaxMs": 59195.509316,
+        "waivableDisagreements": 3,
+        "nonWaivableDisagreements": 2
+      },
+      "disagreements": [
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|green-trait-all|core",
+          "candidateBestKey": "board_action|green-trait-all|support",
+          "oracleTopTwoGap": 0.00017512270235120475,
+          "oracleRegret": 0.0008556674915398688,
+          "kendallTau": 0.6888888888888889,
+          "top3Overlap": 2,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "trait",
+          "candidateFamily": "trait",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.23094341687744407,
+          "fixtureId": "calibration-03",
+          "targetScore": 50000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|red-quality-last|mid",
+          "candidateBestKey": "board_action|green-stat-all|mid",
+          "oracleTopTwoGap": 0.0026930428573561094,
+          "oracleRegret": 0.0026930428573561094,
+          "kendallTau": 0.8222222222222222,
+          "top3Overlap": 2,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "stat",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.3262783145425251,
+          "fixtureId": "calibration-05",
+          "targetScore": 55000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|red-quality-last|mid",
+          "candidateBestKey": "board_action|green-stat-all|mid",
+          "oracleTopTwoGap": 0.002052049568900788,
+          "oracleRegret": 0.002052049568900788,
+          "kendallTau": 0.9111111111111111,
+          "top3Overlap": 3,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "stat",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.3042238035932017,
+          "fixtureId": "calibration-05",
+          "targetScore": 60000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|quality-increase-one|mid",
+          "candidateBestKey": "board_action|quality-increase-one|core",
+          "oracleTopTwoGap": 0.0001925530705495504,
+          "oracleRegret": 0.0001925530705495504,
+          "kendallTau": 0.8545454545454545,
+          "top3Overlap": 3,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "quality",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.2529691475239332,
+          "fixtureId": "calibration-08",
+          "targetScore": 50000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|red-quality-last|core",
+          "candidateBestKey": "board_action|green-trait-all|mid",
+          "oracleTopTwoGap": 0.006007668095424856,
+          "oracleRegret": 0.006450126264144318,
+          "kendallTau": 0.8222222222222222,
+          "top3Overlap": 3,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "trait",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.2631209597264353,
+          "fixtureId": "calibration-09",
+          "targetScore": 50000
+        }
+      ]
+    },
+    {
+      "candidateId": "A2",
+      "candidate": {
+        "id": "A2",
+        "screen": {
+          "continuation": "aggressive",
+          "widening": "medium"
+        },
+        "refine": {
+          "continuation": "aggressive",
+          "widening": "wide"
+        },
+        "rule": {
+          "kind": "top_k",
+          "topK": 2,
+          "maxRefined": 2
+        }
+      },
+      "qualifies": false,
+      "checks": {
+        "complete": false,
+        "under60s": false,
+        "memoryUnder6GiB": false,
+        "all20FutureOperations": false,
+        "comparisonComplete": false,
+        "noStopMenuReversal": true,
+        "noNonWaivableRootReversal": false,
+        "maxRegret": false,
+        "meanRegret": true,
+        "sharedIntegrity": true
+      },
+      "summary": {
+        "completedRuns": 23,
+        "agreements": 19,
+        "disagreements": 4,
+        "meanOracleRegret": 0.00021456714771653023,
+        "maxOracleRegret": 0.0026930428573561094,
+        "runtimeMedianMs": 40194.667394000004,
+        "runtimeP90Ms": 52107.966967,
+        "runtimeMaxMs": 57087.308313,
+        "waivableDisagreements": 3,
+        "nonWaivableDisagreements": 1
+      },
+      "disagreements": [
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|green-trait-all|core",
+          "candidateBestKey": "board_action|green-trait-all|support",
+          "oracleTopTwoGap": 0.00017512270235120475,
+          "oracleRegret": 0.0008556674915398688,
+          "kendallTau": 0.7333333333333333,
+          "top3Overlap": 2,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "trait",
+          "candidateFamily": "trait",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.26561783858448185,
+          "fixtureId": "calibration-03",
+          "targetScore": 50000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|red-quality-last|mid",
+          "candidateBestKey": "board_action|green-stat-all|mid",
+          "oracleTopTwoGap": 0.0026930428573561094,
+          "oracleRegret": 0.0026930428573561094,
+          "kendallTau": 0.9111111111111111,
+          "top3Overlap": 3,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "stat",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.3491138278735026,
+          "fixtureId": "calibration-05",
+          "targetScore": 55000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|red-quality-last|mid",
+          "candidateBestKey": "board_action|green-stat-all|mid",
+          "oracleTopTwoGap": 0.002052049568900788,
+          "oracleRegret": 0.002052049568900788,
+          "kendallTau": 0.8222222222222222,
+          "top3Overlap": 2,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "stat",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.34232582348676144,
+          "fixtureId": "calibration-05",
+          "targetScore": 60000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|quality-increase-one|mid",
+          "candidateBestKey": "board_action|quality-increase-one|core",
+          "oracleTopTwoGap": 0.0001925530705495504,
+          "oracleRegret": 0.0001925530705495504,
+          "kendallTau": 0.9636363636363636,
+          "top3Overlap": 3,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "quality",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.3080160490341677,
+          "fixtureId": "calibration-08",
+          "targetScore": 50000
+        }
+      ]
+    },
+    {
+      "candidateId": "A3",
+      "candidate": {
+        "id": "A3",
+        "screen": {
+          "continuation": "aggressive",
+          "widening": "narrow"
+        },
+        "refine": {
+          "continuation": "medium",
+          "widening": "wide"
+        },
+        "rule": {
+          "kind": "top_k",
+          "topK": 2,
+          "maxRefined": 2
+        }
+      },
+      "qualifies": false,
+      "checks": {
+        "complete": false,
+        "under60s": false,
+        "memoryUnder6GiB": false,
+        "all20FutureOperations": false,
+        "comparisonComplete": false,
+        "noStopMenuReversal": true,
+        "noNonWaivableRootReversal": false,
+        "maxRegret": false,
+        "meanRegret": true,
+        "sharedIntegrity": true
+      },
+      "summary": {
+        "completedRuns": 21,
+        "agreements": 17,
+        "disagreements": 4,
+        "meanOracleRegret": 0.000448085182293553,
+        "maxOracleRegret": 0.006450126264144318,
+        "runtimeMedianMs": 42489.5556,
+        "runtimeP90Ms": 54006.601615,
+        "runtimeMaxMs": 55576.797288,
+        "waivableDisagreements": 2,
+        "nonWaivableDisagreements": 2
+      },
+      "disagreements": [
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|green-trait-all|core",
+          "candidateBestKey": "board_action|green-trait-all|mid",
+          "oracleTopTwoGap": 0.00017512270235120475,
+          "oracleRegret": 0.0009030812315247161,
+          "kendallTau": 0.6444444444444445,
+          "top3Overlap": 2,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "trait",
+          "candidateFamily": "trait",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.33204430893971815,
+          "fixtureId": "calibration-03",
+          "targetScore": 50000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|red-quality-last|mid",
+          "candidateBestKey": "board_action|green-stat-all|mid",
+          "oracleTopTwoGap": 0.0026930428573561094,
+          "oracleRegret": 0.0026930428573561094,
+          "kendallTau": 0.8222222222222222,
+          "top3Overlap": 2,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "stat",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.4588118793292678,
+          "fixtureId": "calibration-05",
+          "targetScore": 55000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|red-quality-last|mid",
+          "candidateBestKey": "board_action|green-stat-all|mid",
+          "oracleTopTwoGap": 0.002052049568900788,
+          "oracleRegret": 0.002052049568900788,
+          "kendallTau": 0.9111111111111111,
+          "top3Overlap": 3,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "stat",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.4549975311476273,
+          "fixtureId": "calibration-05",
+          "targetScore": 60000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|red-quality-last|core",
+          "candidateBestKey": "board_action|green-trait-all|mid",
+          "oracleTopTwoGap": 0.006007668095424856,
+          "oracleRegret": 0.006450126264144318,
+          "kendallTau": 0.8222222222222222,
+          "top3Overlap": 3,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "trait",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.3579124289161537,
+          "fixtureId": "calibration-09",
+          "targetScore": 50000
+        }
+      ]
+    },
+    {
+      "candidateId": "A4",
+      "candidate": {
+        "id": "A4",
+        "screen": {
+          "continuation": "aggressive",
+          "widening": "medium"
+        },
+        "refine": {
+          "continuation": "medium",
+          "widening": "wide"
+        },
+        "rule": {
+          "kind": "top_k",
+          "topK": 2,
+          "maxRefined": 2
+        }
+      },
+      "qualifies": false,
+      "checks": {
+        "complete": false,
+        "under60s": false,
+        "memoryUnder6GiB": false,
+        "all20FutureOperations": false,
+        "comparisonComplete": false,
+        "noStopMenuReversal": true,
+        "noNonWaivableRootReversal": false,
+        "maxRegret": false,
+        "meanRegret": true,
+        "sharedIntegrity": true
+      },
+      "summary": {
+        "completedRuns": 17,
+        "agreements": 14,
+        "disagreements": 3,
+        "meanOracleRegret": 0.00020919161695487457,
+        "maxOracleRegret": 0.0026930428573561094,
+        "runtimeMedianMs": 48904.617358,
+        "runtimeP90Ms": 58614.723358,
+        "runtimeMaxMs": 58987.43363399999,
+        "waivableDisagreements": 2,
+        "nonWaivableDisagreements": 1
+      },
+      "disagreements": [
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|green-trait-all|core",
+          "candidateBestKey": "board_action|green-trait-all|mid",
+          "oracleTopTwoGap": 0.00017512270235120475,
+          "oracleRegret": 0.0009030812315247161,
+          "kendallTau": 0.6888888888888889,
+          "top3Overlap": 2,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "trait",
+          "candidateFamily": "trait",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.36293020377580254,
+          "fixtureId": "calibration-03",
+          "targetScore": 50000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|red-quality-last|mid",
+          "candidateBestKey": "board_action|green-stat-all|mid",
+          "oracleTopTwoGap": 0.0026930428573561094,
+          "oracleRegret": 0.0026930428573561094,
+          "kendallTau": 0.9111111111111111,
+          "top3Overlap": 3,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "stat",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.4805054234430073,
+          "fixtureId": "calibration-05",
+          "targetScore": 55000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|red-quality-last|mid",
+          "candidateBestKey": "board_action|green-stat-all|mid",
+          "oracleTopTwoGap": 0.002052049568900788,
+          "oracleRegret": 0.002052049568900788,
+          "kendallTau": 0.8222222222222222,
+          "top3Overlap": 2,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "stat",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.49238725100918,
+          "fixtureId": "calibration-05",
+          "targetScore": 60000
+        }
+      ]
+    },
+    {
+      "candidateId": "A5",
+      "candidate": {
+        "id": "A5",
+        "screen": {
+          "continuation": "aggressive",
+          "widening": "narrow"
+        },
+        "refine": {
+          "continuation": "aggressive",
+          "widening": "wide"
+        },
+        "rule": {
+          "kind": "winner_margin",
+          "delta": 0.0025,
+          "maxRefined": 3
+        }
+      },
+      "qualifies": false,
+      "checks": {
+        "complete": true,
+        "under60s": true,
+        "memoryUnder6GiB": true,
+        "all20FutureOperations": true,
+        "comparisonComplete": true,
+        "noStopMenuReversal": true,
+        "noNonWaivableRootReversal": false,
+        "maxRegret": false,
+        "meanRegret": true,
+        "sharedIntegrity": true
+      },
+      "summary": {
+        "completedRuns": 27,
+        "agreements": 23,
+        "disagreements": 4,
+        "meanOracleRegret": 0.00021456714771653023,
+        "maxOracleRegret": 0.0026930428573561094,
+        "runtimeMedianMs": 32486.197785,
+        "runtimeP90Ms": 49982.591692,
+        "runtimeMaxMs": 55723.843021,
+        "waivableDisagreements": 3,
+        "nonWaivableDisagreements": 1
+      },
+      "disagreements": [
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|green-trait-all|core",
+          "candidateBestKey": "board_action|green-trait-all|support",
+          "oracleTopTwoGap": 0.00017512270235120475,
+          "oracleRegret": 0.0008556674915398688,
+          "kendallTau": 0.6888888888888889,
+          "top3Overlap": 2,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "trait",
+          "candidateFamily": "trait",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.24108607773581497,
+          "fixtureId": "calibration-03",
+          "targetScore": 50000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|red-quality-last|mid",
+          "candidateBestKey": "board_action|green-stat-all|mid",
+          "oracleTopTwoGap": 0.0026930428573561094,
+          "oracleRegret": 0.0026930428573561094,
+          "kendallTau": 0.8222222222222222,
+          "top3Overlap": 2,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "stat",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.32367668243029823,
+          "fixtureId": "calibration-05",
+          "targetScore": 55000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|red-quality-last|mid",
+          "candidateBestKey": "board_action|green-stat-all|mid",
+          "oracleTopTwoGap": 0.002052049568900788,
+          "oracleRegret": 0.002052049568900788,
+          "kendallTau": 0.9111111111111111,
+          "top3Overlap": 3,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "stat",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.3207924629294356,
+          "fixtureId": "calibration-05",
+          "targetScore": 60000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|quality-increase-one|mid",
+          "candidateBestKey": "board_action|quality-increase-one|core",
+          "oracleTopTwoGap": 0.0001925530705495504,
+          "oracleRegret": 0.0001925530705495504,
+          "kendallTau": 0.8545454545454545,
+          "top3Overlap": 3,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "quality",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.2745894467389477,
+          "fixtureId": "calibration-08",
+          "targetScore": 50000
+        }
+      ]
+    },
+    {
+      "candidateId": "A6",
+      "candidate": {
+        "id": "A6",
+        "screen": {
+          "continuation": "aggressive",
+          "widening": "narrow"
+        },
+        "refine": {
+          "continuation": "aggressive",
+          "widening": "wide"
+        },
+        "rule": {
+          "kind": "winner_margin",
+          "delta": 0.005,
+          "maxRefined": 3
+        }
+      },
+      "qualifies": false,
+      "checks": {
+        "complete": true,
+        "under60s": true,
+        "memoryUnder6GiB": true,
+        "all20FutureOperations": true,
+        "comparisonComplete": true,
+        "noStopMenuReversal": true,
+        "noNonWaivableRootReversal": false,
+        "maxRegret": false,
+        "meanRegret": true,
+        "sharedIntegrity": true
+      },
+      "summary": {
+        "completedRuns": 27,
+        "agreements": 23,
+        "disagreements": 4,
+        "meanOracleRegret": 0.00021456714771653023,
+        "maxOracleRegret": 0.0026930428573561094,
+        "runtimeMedianMs": 32896.169013,
+        "runtimeP90Ms": 49553.012326,
+        "runtimeMaxMs": 54116.938909,
+        "waivableDisagreements": 3,
+        "nonWaivableDisagreements": 1
+      },
+      "disagreements": [
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|green-trait-all|core",
+          "candidateBestKey": "board_action|green-trait-all|support",
+          "oracleTopTwoGap": 0.00017512270235120475,
+          "oracleRegret": 0.0008556674915398688,
+          "kendallTau": 0.6888888888888889,
+          "top3Overlap": 2,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "trait",
+          "candidateFamily": "trait",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.24682017377267068,
+          "fixtureId": "calibration-03",
+          "targetScore": 50000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|red-quality-last|mid",
+          "candidateBestKey": "board_action|green-stat-all|mid",
+          "oracleTopTwoGap": 0.0026930428573561094,
+          "oracleRegret": 0.0026930428573561094,
+          "kendallTau": 0.8222222222222222,
+          "top3Overlap": 2,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "stat",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.3276622787059383,
+          "fixtureId": "calibration-05",
+          "targetScore": 55000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|red-quality-last|mid",
+          "candidateBestKey": "board_action|green-stat-all|mid",
+          "oracleTopTwoGap": 0.002052049568900788,
+          "oracleRegret": 0.002052049568900788,
+          "kendallTau": 0.9111111111111111,
+          "top3Overlap": 3,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "stat",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.3310417808984497,
+          "fixtureId": "calibration-05",
+          "targetScore": 60000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|quality-increase-one|mid",
+          "candidateBestKey": "board_action|quality-increase-one|core",
+          "oracleTopTwoGap": 0.0001925530705495504,
+          "oracleRegret": 0.0001925530705495504,
+          "kendallTau": 0.8545454545454545,
+          "top3Overlap": 3,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "quality",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.2752277460608569,
+          "fixtureId": "calibration-08",
+          "targetScore": 50000
+        }
+      ]
+    },
+    {
+      "candidateId": "A7",
+      "candidate": {
+        "id": "A7",
+        "screen": {
+          "continuation": "aggressive",
+          "widening": "medium"
+        },
+        "refine": {
+          "continuation": "medium",
+          "widening": "wide"
+        },
+        "rule": {
+          "kind": "winner_margin",
+          "delta": 0.0025,
+          "maxRefined": 3
+        }
+      },
+      "qualifies": false,
+      "checks": {
+        "complete": false,
+        "under60s": false,
+        "memoryUnder6GiB": false,
+        "all20FutureOperations": false,
+        "comparisonComplete": false,
+        "noStopMenuReversal": true,
+        "noNonWaivableRootReversal": false,
+        "maxRegret": false,
+        "meanRegret": true,
+        "sharedIntegrity": true
+      },
+      "summary": {
+        "completedRuns": 21,
+        "agreements": 19,
+        "disagreements": 2,
+        "meanOracleRegret": 0.00017574416393544064,
+        "maxOracleRegret": 0.0026930428573561094,
+        "runtimeMedianMs": 39493.998627999994,
+        "runtimeP90Ms": 53301.157372999995,
+        "runtimeMaxMs": 58492.760337,
+        "waivableDisagreements": 1,
+        "nonWaivableDisagreements": 1
+      },
+      "disagreements": [
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|red-quality-last|mid",
+          "candidateBestKey": "board_action|green-stat-all|mid",
+          "oracleTopTwoGap": 0.0026930428573561094,
+          "oracleRegret": 0.0026930428573561094,
+          "kendallTau": 0.9111111111111111,
+          "top3Overlap": 3,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "stat",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.48446269826315885,
+          "fixtureId": "calibration-05",
+          "targetScore": 55000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|red-quality-last|mid",
+          "candidateBestKey": "board_action|green-stat-all|mid",
+          "oracleTopTwoGap": 0.002052049568900788,
+          "oracleRegret": 0.002052049568900788,
+          "kendallTau": 0.8222222222222222,
+          "top3Overlap": 2,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "stat",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.4990898775356129,
+          "fixtureId": "calibration-05",
+          "targetScore": 60000
+        }
+      ]
+    },
+    {
+      "candidateId": "A8",
+      "candidate": {
+        "id": "A8",
+        "screen": {
+          "continuation": "aggressive",
+          "widening": "medium"
+        },
+        "refine": {
+          "continuation": "medium",
+          "widening": "wide"
+        },
+        "rule": {
+          "kind": "winner_margin",
+          "delta": 0.005,
+          "maxRefined": 3
+        }
+      },
+      "qualifies": false,
+      "checks": {
+        "complete": false,
+        "under60s": false,
+        "memoryUnder6GiB": false,
+        "all20FutureOperations": false,
+        "comparisonComplete": false,
+        "noStopMenuReversal": true,
+        "noNonWaivableRootReversal": false,
+        "maxRegret": false,
+        "meanRegret": true,
+        "sharedIntegrity": true
+      },
+      "summary": {
+        "completedRuns": 21,
+        "agreements": 19,
+        "disagreements": 2,
+        "meanOracleRegret": 0.0002974153862206238,
+        "maxOracleRegret": 0.0053371725706007345,
+        "runtimeMedianMs": 39224.132776,
+        "runtimeP90Ms": 53007.956159,
+        "runtimeMaxMs": 59074.469531,
+        "waivableDisagreements": 0,
+        "nonWaivableDisagreements": 2
+      },
+      "disagreements": [
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|red-quality-last|mid",
+          "candidateBestKey": "board_action|green-stat-all|mid",
+          "oracleTopTwoGap": 0.0026930428573561094,
+          "oracleRegret": 0.0026930428573561094,
+          "kendallTau": 0.9111111111111111,
+          "top3Overlap": 3,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "stat",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.4792762727917333,
+          "fixtureId": "calibration-05",
+          "targetScore": 55000
+        },
+        {
+          "topActionAgreement": false,
+          "oracleBestKey": "board_action|red-quality-last|mid",
+          "candidateBestKey": "board_action|green-stat-all|core",
+          "oracleTopTwoGap": 0.002052049568900788,
+          "oracleRegret": 0.0053371725706007345,
+          "kendallTau": 0.7333333333333333,
+          "top3Overlap": 2,
+          "oracleType": "board_action",
+          "candidateType": "board_action",
+          "oracleFamily": "quality",
+          "candidateFamily": "stat",
+          "stopMenuReversal": false,
+          "runtimeRatio": 0.6250149018889712,
+          "fixtureId": "calibration-05",
+          "targetScore": 60000
+        }
+      ]
+    }
+  ],
+  "selectedCandidate": null,
+  "selectedCandidateId": null,
+  "selectionOrder": [
+    "lower_max_oracle_regret",
+    "higher_root_action_agreement",
+    "lower_p90_runtime",
+    "lower_median_runtime",
+    "simpler_adaptive_rule"
+  ]
+}
