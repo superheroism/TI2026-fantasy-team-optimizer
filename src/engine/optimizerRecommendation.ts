@@ -53,7 +53,9 @@ export function recommendNextAction(
   const layoutId=state.board.layoutId??'legacy_3';
   let adaptiveFallbackReason:string|undefined;
 
-  if(layoutId==='expanded_5'&&horizon===2&&!searchOptions.engineeringForceExact){
+  // Production defaults route expanded_5 t=2 through the M6D-certified policy.
+  // Any explicit engineering horizon override preserves the historical exact-oracle path.
+  if(layoutId==='expanded_5'&&horizon===2&&searchOptions.modeledHorizonOverride===undefined&&!searchOptions.engineeringForceExact){
     if(isCertifiedExpandedT2PolicyValid(CERTIFIED_EXPANDED_T2_POLICY)){
       try{
         const adaptive=recommendExpandedT2Adaptive(state,data,uniformStatFallback,CERTIFIED_EXPANDED_T2_POLICY);
