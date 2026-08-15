@@ -1,0 +1,79 @@
+name: M6B Expanded t2 Frontier
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - agent/m6b-expanded-t2-frontier
+    paths:
+      - '.github/m6b-run-request'
+
+permissions:
+  contents: write
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - name: Check out M6B branch head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Regenerate committed compatibility trees
+        run: npm run build
+
+      - name: Preflight typecheck, generated verification, and full tests
+        run: npm run test:ci
+
+      - name: Run authoritative M6B baseline profile
+        id: benchmark
+        continue-on-error: true
+        env:
+          M6B_CASE_TIMEOUT_MS: 240000
+        run: node scripts/benchmark-m6b-frontier.mjs --json=benchmarks/m6b-expanded-frontier-baseline.json
+
+      - name: Print M6B baseline summary
+        if: always()
+        run: |
+          if [ -f benchmarks/m6b-expanded-frontier-baseline.json ]; then
+            node -e "const r=require('./benchmarks/m6b-expanded-frontier-baseline.json'); console.log(JSON.stringify({summary:r.summary,pairs:r.pairs.map(p=>({case:p.case,horizon:p.horizon,runtimeRatio:p.optimizerRuntimeRatioExpandedVsLegacy,terminalRatio:p.terminalStateRatioExpandedVsLegacy,vRatio:p.vCallRatioExpandedVsLegacy,transitionRatio:p.transitionPathRatioExpandedVsLegacy,targetChecksRatio:p.targetScenarioCheckRatioExpandedVsLegacy}))},null,2))"
+          fi
+
+      - name: Upload M6B baseline report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m6b-expanded-frontier-baseline
+          path: benchmarks/m6b-expanded-frontier-baseline.json
+          if-no-files-found: error
+
+      - name: Commit generated trees and authoritative baseline
+        if: always()
+        run: |
+          if [ ! -f benchmarks/m6b-expanded-frontier-baseline.json ]; then
+            echo "M6B baseline report was not produced."
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add build docs benchmarks/m6b-expanded-frontier-baseline.json
+          if git diff --cached --quiet; then
+            echo "No generated/report changes to commit."
+          else
+            git commit -m "M6B: record authoritative frontier baseline"
+            git push origin HEAD:${GITHUB_REF_NAME}
+          fi
+
+      - name: Propagate benchmark execution failure
+        if: steps.benchmark.outcome != 'success'
+        run: exit 1
