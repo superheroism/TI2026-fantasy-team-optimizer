@@ -58,8 +58,13 @@ export function correlatedUniformsPreparedN(rng:SeededRandom,L:number[][]):numbe
   for(let i=0;i<n;i++){let x=0;for(let j=0;j<=i;j++)x+=(L[i]?.[j]??0)*(z[j]??0);out[i]=normalCdf(x);}return out;
 }
 
+/** Frozen pre-M6A three-dimensional kernel. */
 export function correlatedUniformsPrepared(rng:SeededRandom,L:number[][]):[number,number,number]{
-  const out=correlatedUniformsPreparedN(rng,L);return [out[0]??0.5,out[1]??0.5,out[2]??0.5];
+  const z0=rng.normal(),z1=rng.normal(),z2=rng.normal();
+  const x0=(L[0]?.[0]??0)*z0;
+  const x1=(L[1]?.[0]??0)*z0+(L[1]?.[1]??0)*z1;
+  const x2=(L[2]?.[0]??0)*z0+(L[2]?.[1]??0)*z1+(L[2]?.[2]??0)*z2;
+  return [normalCdf(x0),normalCdf(x1),normalCdf(x2)];
 }
 
 export function correlatedUniforms(rng: SeededRandom, correlation: number[][]): [number, number, number] {
