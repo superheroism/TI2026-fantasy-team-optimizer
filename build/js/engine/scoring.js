@@ -3,6 +3,7 @@ import { mean, percentile, prepareQuantiles, quantileValuePrepared } from './dis
 import { recommendTitle, titlePrefixBoostPct } from './title.js';
 import { evaluateBanner } from '../domain/bannerEvaluator.js';
 import { bannerMechanicsKey } from './bannerMechanics.js';
+import { DEFAULT_LAYOUT_ID } from '../domain/rules.js';
 const ROLES = ['core', 'mid', 'support'];
 const sampleCache = new WeakMap();
 const rankingCache = new WeakMap();
@@ -202,10 +203,6 @@ function simulateRoleTeamExpected(profile, banner, data, iterations, seedOffset)
     cache.set(key, result);
     return result;
 }
-function selectedUniforms(rng, corr) {
-    // Preserve the legacy three-slot random stream and numerical path exactly.
-    return corr.length === 3 ? correlatedUniformsPrepared(rng, cholesky3(corr)) : correlatedUniformsPreparedN(rng, cholesky(corr));
-}
 export function simulateRoleTeam(profile, banner, data, iterations = data.simulation.iterations, seedOffset = 0) {
     const missing = missingBannerStats(profile, banner);
     if (missing.length)
@@ -224,6 +221,8 @@ export function simulateRoleTeam(profile, banner, data, iterations = data.simula
         return cached;
     const scenarioKey = JSON.stringify({ p: profile.id, stats, n: iterations, s: banner.expectedSeries, c: corr, r: data.simulation.scoring, z: data.simulation.seed + seedOffset });
     const rng = new SeededRandom((data.simulation.seed + hashString(scenarioKey) + seedOffset) >>> 0);
+    const legacyThree = corr.length === 3, L = legacyThree ? cholesky3(corr) : cholesky(corr);
+    const sampleUniforms = () => legacyThree ? correlatedUniformsPrepared(rng, L) : correlatedUniformsPreparedN(rng, L);
     const scoring = data.simulation.scoring;
     const prepared = stats.map(stat => prepareQuantiles(profile.statQuantiles[stat]));
     const mult = evaluatedBanner.map(x => x.effectiveMultiplierPct / 100);
@@ -241,7 +240,7 @@ export function simulateRoleTeam(profile, banner, data, iterations = data.simula
                 const gameCount = 2 + (rng.uniform() < scoring.thirdGameProbability ? 1 : 0);
                 let a = 0, b = 0, c = 0;
                 for (let g = 0; g < gameCount; g++) {
-                    const u = selectedUniforms(rng, corr);
+                    const u = sampleUniforms();
                     let score = 0;
                     for (let i = 0; i < prepared.length; i++)
                         score += quantileValuePrepared(prepared[i], u[i] ?? 0.5) * (mult[i] ?? 0);
@@ -263,7 +262,7 @@ export function simulateRoleTeam(profile, banner, data, iterations = data.simula
             for (let s = 0; s < banner.expectedSeries; s++) {
                 const gameCount = 2 + (rng.uniform() < scoring.thirdGameProbability ? 1 : 0), games = [];
                 for (let g = 0; g < gameCount; g++) {
-                    const u = selectedUniforms(rng, corr);
+                    const u = sampleUniforms();
                     let score = 0;
                     for (let i = 0; i < prepared.length; i++)
                         score += quantileValuePrepared(prepared[i], u[i] ?? 0.5) * (mult[i] ?? 0);
@@ -292,7 +291,7 @@ export function rankTeamsForRole(role, board, data, iterations = data.simulation
         rankingCache.set(data, cache);
     }
     const banner = board[role];
-    const key = `${role}|${bannerMechanicsKey(banner)}|${iterations}`;
+    const key = `${role}|${bannerMechanicsKey(banner, board.layoutId ?? DEFAULT_LAYOUT_ID)}|${iterations}`;
     const cached = cache.get(key);
     if (cached)
         return cached;
@@ -329,13 +328,13 @@ function buildEvaluation(roster, username, data, targetScore, forcedPrefixId) {
         result.targetProbability = adjusted.filter(x => x >= targetScore).length / Math.max(adjusted.length, 1);
     return result;
 }
-export function rolePrefixFrontier(role, banner, data, iterations = data.simulation.optimizerIterations) {
+export function rolePrefixFrontier(role, banner, data, iterations = data.simulation.optimizerIterations, layoutId = DEFAULT_LAYOUT_ID) {
     let cache = frontierCache.get(data);
     if (!cache) {
         cache = new Map();
         frontierCache.set(data, cache);
     }
-    const key = `${role}|${bannerMechanicsKey(banner)}|${iterations}`;
+    const key = `${role}|${bannerMechanicsKey(banner, layoutId)}|${iterations}`;
     ;
     const prior = cache.get(key);
     if (prior)
@@ -361,9 +360,9 @@ export function rolePrefixFrontier(role, banner, data, iterations = data.simulat
 }
 export function evaluateBoardExpectedFast(board, data, iterations = data.simulation.optimizerIterations) {
     const frontiers = {
-        core: rolePrefixFrontier('core', board.core, data, iterations),
-        mid: rolePrefixFrontier('mid', board.mid, data, iterations),
-        support: rolePrefixFrontier('support', board.support, data, iterations),
+        core: rolePrefixFrontier('core', board.core, data, iterations, board.layoutId ?? DEFAULT_LAYOUT_ID),
+        mid: rolePrefixFrontier('mid', board.mid, data, iterations, board.layoutId ?? DEFAULT_LAYOUT_ID),
+        support: rolePrefixFrontier('support', board.support, data, iterations, board.layoutId ?? DEFAULT_LAYOUT_ID),
     };
     let best = -Infinity;
     for (const prefix of data.titles.prefixes) {
