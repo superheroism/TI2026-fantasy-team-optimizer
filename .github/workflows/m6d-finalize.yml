@@ -1,0 +1,57 @@
+name: M6D Finalize Evidence
+
+on:
+  push:
+    branches:
+      - agent/m6d-expanded-t2-adaptive-certification
+    paths:
+      - '.github/m6d-finalize-request'
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run build
+      - name: Finalize committed M6D evidence
+        env:
+          M6D_AUTHORITATIVE_RUN_ID: 31914003027
+        run: node scripts/finalize-m6d.mjs
+      - name: Validate finalized package
+        run: |
+          npm run test:ci
+          grep -q 'Outcome A' M6D_EXPANDED_T2_ADAPTIVE_CERTIFICATION.md
+          grep -q 'M6D expanded t=2 adaptive exact certification' PERFORMANCE.md
+          grep -q 'M6D — Expanded t=2 adaptive exact certification' ENGINEERING_ROADMAP.md
+          git diff --exit-code 7757654ff91a4ca7a4f2fb7cad556620efc88140 -- src data benchmarks/m5h-target-holdout-fixtures.json benchmarks/m5h-target-holdout-gate.json
+      - name: Upload finalized evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m6d-expanded-t2-finalized
+          path: |
+            M6D_EXPANDED_T2_ADAPTIVE_CERTIFICATION.md
+            PERFORMANCE.md
+            ENGINEERING_ROADMAP.md
+            benchmarks/m6d-summary.json
+            benchmarks/m6d-expanded-calibration-results.json
+            benchmarks/m6d-expanded-holdout-results.json
+            benchmarks/m6d-selection.json
+          if-no-files-found: error
+      - name: Commit final documentation and summary
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add M6D_EXPANDED_T2_ADAPTIVE_CERTIFICATION.md PERFORMANCE.md ENGINEERING_ROADMAP.md benchmarks/m6d-summary.json
+          if git diff --cached --quiet; then echo 'No finalization changes'; else git commit -m 'M6D: finalize Outcome A evidence'; git push origin HEAD:${GITHUB_REF_NAME}; fi
