@@ -225,7 +225,6 @@ export function simulateRoleTeam(
   let cache=sampleCache.get(data);if(!cache){cache=new Map();sampleCache.set(data,cache);}
   const stats=banner.emblems.map(e=>e.stat);
   const corr=selectedCorrelation(banner.role,stats,data);
-  const legacyThree=corr.length===3,L=legacyThree?cholesky3(corr):cholesky(corr);
   const evaluatedBanner=evaluateBanner(banner);
   const key=JSON.stringify({p:profile.id,b:banner.emblems.map((e,i)=>[e.stat,e.qualityTier,e.trait,evaluatedBanner[i]!.effectiveMultiplierPct]),n:iterations,s:banner.expectedSeries,c:corr,r:data.simulation.scoring,z:data.simulation.seed+seedOffset});
   const cached=cache.get(key);if(cached)return cached;
@@ -329,7 +328,7 @@ function buildEvaluation(
 
 export function rolePrefixFrontier(role:Role,banner:BannerState,data:DataBundle,iterations=data.simulation.optimizerIterations,layoutId:BoardLayoutId=DEFAULT_LAYOUT_ID):RolePrefixFrontierEntry[]{
   let cache=frontierCache.get(data);if(!cache){cache=new Map();frontierCache.set(data,cache);}
-  const key=`${role}|${bannerMechanicsKey(banner,board.layoutId??DEFAULT_LAYOUT_ID)}|${iterations}`;;const prior=cache.get(key);if(prior)return prior;
+  const key=`${role}|${bannerMechanicsKey(banner,layoutId)}|${iterations}`;;const prior=cache.get(key);if(prior)return prior;
   const profiles=data.players.filter(p=>p.role===role&&profileSupportsBanner(p,banner));
   const ranked=profiles.map((p,i)=>({playerId:p.id,name:p.name,team:p.team,attachedPlayers:p.attachedPlayers,expected:simulateRoleTeamExpected(p,banner,data,iterations,10_007*(i+1)),samples:[]} satisfies PlayerScore));
   const out:RolePrefixFrontierEntry[]=[];
