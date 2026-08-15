@@ -12,6 +12,7 @@ function newAdapterDiagnostics() {
         boardCacheBypasses: 0,
         preparedRoleCacheHits: 0,
         preparedRoleCacheMisses: 0,
+        searchCallsByTitlePrefix: {},
     };
 }
 let diagnosticsEnabled = false;
@@ -26,11 +27,12 @@ export function resetTargetDiagnostics() {
     adapterDiagnostics = newAdapterDiagnostics();
     resetTargetSearchDiagnostics();
 }
-/** Return the legacy Dota-facing diagnostic shape used by the M2 benchmark. */
+/** Return the Dota-facing target-search diagnostic shape used by engineering benchmarks. */
 export function getTargetDiagnostics() {
     const search = getTargetSearchDiagnostics();
     return {
         ...adapterDiagnostics,
+        searchCallsByTitlePrefix: { ...adapterDiagnostics.searchCallsByTitlePrefix },
         candidateSets: {
             core: search.candidateSets[0],
             mid: search.candidateSets[1],
@@ -47,6 +49,24 @@ export function getTargetDiagnostics() {
             support: search.candidatesAfterPruning[2],
         },
         prefixesConsidered: search.searchesConsidered,
+        candidateCountSignatures: { ...search.candidateCountSignatures },
+        uniquePreparedGroups: {
+            core: search.uniquePreparedGroups[0],
+            mid: search.uniquePreparedGroups[1],
+            support: search.uniquePreparedGroups[2],
+        },
+        uniquePreparedGroupTuples: search.uniquePreparedGroupTuples,
+        reusedPreparedGroupTuples: search.reusedPreparedGroupTuples,
+        uniquePreparedGroupPairs: {
+            coreMid: search.uniquePreparedGroupPairs[0],
+            midSupport: search.uniquePreparedGroupPairs[1],
+            coreSupport: search.uniquePreparedGroupPairs[2],
+        },
+        reusedPreparedGroupPairs: {
+            coreMid: search.reusedPreparedGroupPairs[0],
+            midSupport: search.reusedPreparedGroupPairs[1],
+            coreSupport: search.reusedPreparedGroupPairs[2],
+        },
         prefixBoundPruned: search.searchBoundPruned,
         coreBranchesConsidered: search.firstBranchesConsidered,
         coreBranchesPruned: search.firstBranchesPruned,
@@ -62,6 +82,8 @@ export function getTargetDiagnostics() {
         pairScenarioChecks: search.pairScenarioChecks,
         tripleScenarioChecks: search.tripleScenarioChecks,
         survivingPairSampleBuilds: search.survivingPairSampleBuilds,
+        thirdCandidatesVisited: search.thirdCandidatesVisited,
+        maxThirdCandidatesVisited: search.maxThirdCandidatesVisited,
         candidatePreparationMs: search.candidatePreparationMs,
         combinatorialSearchMs: search.combinatorialSearchMs,
     };
@@ -161,6 +183,11 @@ function optimizeTargetBoard(board, data, targetScore, iterations, useBoardCache
         : [undefined];
     let best;
     for (const prefixId of prefixIds) {
+        if (diagnosticsEnabled) {
+            const diagnosticPrefix = prefixId ?? '(none)';
+            adapterDiagnostics.searchCallsByTitlePrefix[diagnosticPrefix] =
+                (adapterDiagnostics.searchCallsByTitlePrefix[diagnosticPrefix] ?? 0) + 1;
+        }
         const prepared = [
             preparedRoleCandidates('core', board, data, prefixId, iterations),
             preparedRoleCandidates('mid', board, data, prefixId, iterations),

@@ -15,7 +15,10 @@
     "benchmark:m5d": "npm run test:ci && node scripts/benchmark-m5d.mjs",
     "benchmark:m5d:plan": "node scripts/benchmark-m5d.mjs --plan",
     "benchmark:m5e": "npm run test:ci && node scripts/benchmark-m5e-target.mjs --preflight-passed",
-    "benchmark:m5e:plan": "node scripts/benchmark-m5e-target.mjs --plan"
+    "benchmark:m5e:plan": "node scripts/benchmark-m5e-target.mjs --plan",
+    "benchmark:m5f": "npm run test:ci && node scripts/benchmark-m5f-target.mjs --preflight-passed",
+    "benchmark:m5f:plan": "node scripts/benchmark-m5f-target.mjs --plan",
+    "benchmark:m5f:kernel": "npm run build && node scripts/benchmark-m5f-target-kernel.mjs"
   },
   "devDependencies": {
     "typescript": "5.8.3"
