@@ -14,7 +14,7 @@ export interface ExpandedT2AdaptivePolicy {
 }
 
 export const CERTIFIED_EXPANDED_T2_POLICY:ExpandedT2AdaptivePolicy=Object.freeze({
-  id:'adaptive-tight',
+  id:"adaptive-tight",
   layoutId:'expanded_5',
   horizon:2,
   stages:[2,4,6] as const,

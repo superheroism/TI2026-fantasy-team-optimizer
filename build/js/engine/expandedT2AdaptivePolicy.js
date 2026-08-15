@@ -1,0 +1,28 @@
+// GENERATED FROM benchmarks/m6d-expanded-adaptive-candidates.json + benchmarks/m6d-selection.json.
+// scripts/generate-m6e-policy.mjs is the source-of-truth bridge from certification evidence to production.
+export const CERTIFIED_EXPANDED_T2_POLICY = Object.freeze({
+    id: "adaptive-tight",
+    layoutId: 'expanded_5',
+    horizon: 2,
+    stages: [2, 4, 6],
+    expectedScoreGapThresholds: [120, 80, 50],
+    targetProbabilityGapThresholds: [0.0015, 0.001, 0.0005],
+    winnerChangeIsAmbiguous: true,
+    exactFallback: true,
+    certificationOutcome: 'A',
+});
+export function isCertifiedExpandedT2PolicyValid(policy) {
+    return policy.id === 'adaptive-tight'
+        && policy.layoutId === 'expanded_5'
+        && policy.horizon === 2
+        && policy.certificationOutcome === 'A'
+        && policy.winnerChangeIsAmbiguous === true
+        && policy.exactFallback === true
+        && policy.stages.length === 3
+        && policy.stages[0] === 2 && policy.stages[1] === 4 && policy.stages[2] === 6
+        && policy.expectedScoreGapThresholds.length === 3
+        && policy.expectedScoreGapThresholds.every(Number.isFinite)
+        && policy.targetProbabilityGapThresholds.length === 3
+        && policy.targetProbabilityGapThresholds.every(Number.isFinite);
+}
+//# sourceMappingURL=expandedT2AdaptivePolicy.js.map
