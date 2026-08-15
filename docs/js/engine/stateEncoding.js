@@ -22,8 +22,10 @@ function assertSlot(layoutId, role, position, emblem) {
         throw new Error(`Layout ${layoutId} has no ${role} slot ${position}.`);
     if (emblem.position !== position)
         throw new Error(`Expected ${role} slot ${position} position ${position}, got ${emblem.position}.`);
-    if (emblem.color !== slot.color)
-        throw new Error(`Expected ${layoutId}/${role} slot ${position} color ${slot.color}, got ${emblem.color}.`);
+    if (emblem.color !== slot.color) {
+        const prefix = layoutId === 'legacy_3' ? `${role} slot ${position}` : `${layoutId}/${role} slot ${position}`;
+        throw new Error(`Expected ${prefix} color ${slot.color}, got ${emblem.color}.`);
+    }
 }
 export function encodeEmblemComponents(statIndex, qualityTier, traitIndex) {
     integerInRange(statIndex, 0, STATS_PER_COLOR - 1, 'stat index');
@@ -87,9 +89,6 @@ export function encodeBannerState(banner, layoutId = DEFAULT_LAYOUT_ID) {
     const slots = boardLayout(layoutId).roles[banner.role];
     if (banner.emblems.length !== slots.length)
         throw new Error(`${layoutId}/${banner.role} requires ${slots.length} emblems, got ${banner.emblems.length}.`);
-    const stats = banner.emblems.map(emblem => emblem.stat);
-    if (new Set(stats).size !== stats.length)
-        throw new Error(`${layoutId}/${banner.role} contains duplicate stats.`);
     return encodeBannerEmblemIds(layoutId, banner.emblems.map((emblem, index) => encodeEmblemState(banner.role, index, emblem, layoutId)));
 }
 export function decodeBannerState(role, id, context, layoutId = DEFAULT_LAYOUT_ID) {

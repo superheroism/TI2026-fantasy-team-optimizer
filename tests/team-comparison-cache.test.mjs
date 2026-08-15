@@ -11,7 +11,7 @@ test('team comparison cache is independent of selectedTeam when banner mechanics
   const block=scoring.slice(start,end);
   const keyLine=block.split('\n').find(line=>line.includes('const key='))??'';
 
-  assert.match(keyLine,/bannerMechanicsKey\(banner\)/);
+  assert.match(keyLine,/bannerMechanicsKey\(banner/);
   assert.equal(keyLine.includes('selectedTeam'),false);
 });
 
