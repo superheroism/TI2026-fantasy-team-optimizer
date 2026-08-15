@@ -39,14 +39,14 @@ function makeExpandedBanner(role){
 
 function expandedBoard(){return {layoutId:'expanded_5',core:makeExpandedBanner('core'),mid:makeExpandedBanner('mid'),support:makeExpandedBanner('support')};}
 
-test('M6A freezes exact legacy and expanded physical geometry',()=>{
+test('M6A freezes exact legacy and expanded physical geometry with only red green blue',()=>{
+  assert.deepEqual(Object.keys(LEGAL_STAT_POOLS).sort(),['blue','green','red']);
   assert.deepEqual(BOARD_LAYOUTS.legacy_3.roles.core.map(x=>x.color),['red','green','red']);
   assert.deepEqual(BOARD_LAYOUTS.legacy_3.roles.mid.map(x=>x.color),['red','blue','green']);
   assert.deepEqual(BOARD_LAYOUTS.legacy_3.roles.support.map(x=>x.color),['blue','green','blue']);
   assert.deepEqual(BOARD_LAYOUTS.expanded_5.roles.core.map(x=>x.color),['red','green','red','green','red']);
-  assert.deepEqual(BOARD_LAYOUTS.expanded_5.roles.mid.map(x=>x.color),['red','purple','green','red','green']);
-  assert.deepEqual(BOARD_LAYOUTS.expanded_5.roles.support.map(x=>x.color),['purple','green','purple','green','purple']);
-  assert.deepEqual(LEGAL_STAT_POOLS.purple,LEGAL_STAT_POOLS.blue);
+  assert.deepEqual(BOARD_LAYOUTS.expanded_5.roles.mid.map(x=>x.color),['red','blue','green','red','green']);
+  assert.deepEqual(BOARD_LAYOUTS.expanded_5.roles.support.map(x=>x.color),['blue','green','blue','green','blue']);
 });
 
 test('expanded_5 banner and board codecs round-trip with a layout-isolated board namespace',()=>{
@@ -104,9 +104,9 @@ test('Tier-V cap waste aggregates correctly on a five-slot random quality increa
   assert.equal(outcomes.length,2);
 });
 
-test('expanded random matching uses all repeated purple slots and aggregates to probability one',()=>{
+test('expanded random matching uses all repeated blue slots and aggregates to probability one',()=>{
   const banner=makeExpandedBanner('support');
-  const outcomes=enumerateCompactBannerOperation('support',encodeBannerState(banner,'expanded_5'),{id:'purple-trait-random',label:'Purple Trait',kind:'trait_reroll',color:'purple',scope:'random_matching'},true,'expanded_5');
+  const outcomes=enumerateCompactBannerOperation('support',encodeBannerState(banner,'expanded_5'),{id:'blue-trait-random',label:'Blue Trait',kind:'trait_reroll',color:'blue',scope:'random_matching'},true,'expanded_5');
   assert.equal(outcomes.length,12);
   approx(sumP(outcomes),1);
   for(const outcome of outcomes)approx(outcome.probability,1/12);
@@ -130,6 +130,13 @@ test('expanded all-color stat reroll respects color pool and five-slot duplicate
     assert.equal(new Set(reds.map(e=>e.stat)).size,reds.length);
     for(const e of reds)assert.ok(LEGAL_STAT_POOLS.red.includes(e.stat));
   }
+});
+
+test('expanded blue slots use the unchanged legacy blue stat pool',()=>{
+  const support=makeExpandedBanner('support');
+  const blues=support.emblems.filter(e=>e.color==='blue');
+  assert.equal(blues.length,3);
+  for(const emblem of blues)assert.ok(LEGAL_STAT_POOLS.blue.includes(emblem.stat));
 });
 
 test('an operation with zero physical targets returns no expanded transitions',()=>{
