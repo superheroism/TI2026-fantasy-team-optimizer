@@ -96,7 +96,7 @@ Because calibration produced no qualifying candidate, the workflow stopped at th
 
 The fresh holdout manifest remains frozen in `benchmarks/m5h-target-holdout-fixtures.json`, but **no adaptive holdout measurement was executed and no `benchmarks/m5h-target-adaptive-holdout.json` exists**. This is intentional under Outcome C. The work-package deliverable is therefore the committed calibration aggregate plus the preserved untouched holdout manifest, rather than a fabricated or empty holdout result. Consuming a fresh holdout for a policy already known to fail calibration would provide no valid selection evidence and would waste the corpus.
 
-Likewise, there is no final selected M5H policy to run against the M5G `holdout-05 @ 60k` diagnostic sentinel. The sentinel remains diagnostic evidence from M5G rather than a substitute for fresh validation.
+The workflow's M5G `holdout-05 @ 60k` sentinel stage is downstream of a selected candidate and authoritative holdout aggregation. Outcome C creates no selected policy, so that stage is intentionally skipped. The sentinel remains diagnostic evidence from M5G rather than a substitute for fresh validation.
 
 ## Outcome
 
