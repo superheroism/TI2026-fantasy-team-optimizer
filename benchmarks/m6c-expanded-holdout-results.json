@@ -1,0 +1,46 @@
+{
+  "generatedAt": "2026-08-15T22:51:49Z",
+  "evidenceSource": {
+    "workflowRunId": 31912908836,
+    "jobId": 95080548920,
+    "node": "22.23.2",
+    "platform": "ubuntu-24.04",
+    "recoveredFromImmutableActionsLog": true,
+    "oneShot": true,
+    "note": "The frozen root-k2 candidate and exact oracle completed on the holdout once. This evidence was recovered from the immutable Actions log after a later documentation grep guard prevented workspace artifact upload. The holdout was not rerun."
+  },
+  "m6cBaseSha": "42a1a7ec7553e7d6df5f4d3c5576417fcdbbb35a",
+  "phase": "holdout",
+  "corpusPath": "benchmarks/m6c-expanded-holdout-fixtures.json",
+  "selectedCandidate": "root-k2",
+  "policy": {"id":"root-k2","maxRefinedBoardActions":2},
+  "passed": false,
+  "outcome": "B",
+  "summary": {
+    "completionRate": 1,
+    "rootActionAgreement": 0.75,
+    "meanOracleRegret": 0.00004178469176413255,
+    "medianOracleRegret": 0,
+    "p90OracleRegret": 0.00010028326023391805,
+    "maximumOracleRegret": 0.0003342775341130604,
+    "maximumExpectedScoreOracleRegret": 0,
+    "maximumTargetProbabilityOracleRegret": 0.0003342775341130604,
+    "meanAbsoluteSelectedUtilityError": 2.7755575615628914e-17,
+    "medianSpeedup": 2.801200042155587,
+    "p90Speedup": 3.2657890840231887,
+    "medianStructuralWorkAvoided": 0.7148751353267779
+  },
+  "paired": [
+    {"caseId":"hold-exp-quality-permuted","objective":"expected_score","operationFamily":"quality","agreement":true,"oracleRegret":0,"runnerUpGap":156.45351098700485,"speedup":3.430571862274032,"structuralWorkAvoided":0.761010617381046,"exactRuntimeMs":3323.034522,"candidateRuntimeMs":968.6532319999999},
+    {"caseId":"hold-exp-global-inverted","objective":"expected_score","operationFamily":"global_quality","agreement":true,"oracleRegret":0,"runnerUpGap":159.42967060999945,"speedup":2.621963715719272,"structuralWorkAvoided":0.7487629329734593,"exactRuntimeMs":3615.216881,"candidateRuntimeMs":1378.820332},
+    {"caseId":"hold-exp-stat-low","objective":"expected_score","operationFamily":"stat","agreement":true,"oracleRegret":0,"runnerUpGap":755.6393064203003,"speedup":2.7755088779830914,"structuralWorkAvoided":0.6725099174439799,"exactRuntimeMs":3256.988965,"candidateRuntimeMs":1173.474526},
+    {"caseId":"hold-exp-mixed-capped","objective":"expected_score","operationFamily":"mixed","agreement":true,"oracleRegret":0,"runnerUpGap":735.6865373309702,"speedup":2.1270982487205905,"structuralWorkAvoided":0.612539018396759,"exactRuntimeMs":2449.3911150000004,"candidateRuntimeMs":1151.517621},
+    {"caseId":"hold-tgt-stat-74000","objective":"target_probability","operationFamily":"stat","agreement":true,"oracleRegret":0,"runnerUpGap":0.08765324226364535,"speedup":2.842778164666643,"structuralWorkAvoided":0.6907913583603478,"exactRuntimeMs":16492.257684999997,"candidateRuntimeMs":5801.457845},
+    {"caseId":"hold-tgt-mixed-79000","objective":"target_probability","operationFamily":"mixed","agreement":false,"oracleRegret":0,"runnerUpGap":0,"speedup":2.7439800309846065,"structuralWorkAvoided":0.8360576714657917,"exactRuntimeMs":6621.61377,"candidateRuntimeMs":2413.1421130000003,"note":"Exact target-utility tie; disagreement still counts under the preregistered root-action-agreement gate."},
+    {"caseId":"hold-tgt-global-84000","objective":"target_probability","operationFamily":"global_quality","agreement":true,"oracleRegret":0,"runnerUpGap":0,"speedup":3.1951678933442555,"structuralWorkAvoided":0.7389589122932081,"exactRuntimeMs":18673.102526,"candidateRuntimeMs":5844.16943},
+    {"caseId":"hold-tgt-trait-90000","objective":"target_probability","operationFamily":"trait","agreement":false,"oracleRegret":0.0003342775341130604,"runnerUpGap":0.00008756700779727095,"speedup":2.8268912063280833,"structuralWorkAvoided":0.6800452480608487,"exactRuntimeMs":7786.996255999999,"candidateRuntimeMs":2754.614765}
+  ],
+  "production": {"layoutId":"legacy_3","maxModeledHorizon":2,"expandedApproximationEnabled":false},
+  "semantics": {"m5hHoldoutConsumed":false,"targetT3Run":false,"targetT4Run":false,"scenarioFidelityChanged":false},
+  "evidencePackagingLimitation": "Full per-root ranked tables were computed in the successful one-shot worker but were not persisted after the subsequent workflow guard failed. They are intentionally not regenerated because M6C forbids a second holdout run. The immutable Actions log preserves all gate-driving summary and per-case metrics used to establish Outcome B."
+}
