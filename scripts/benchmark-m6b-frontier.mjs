@@ -1,8 +1,11 @@
 import fs from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
+const phaseArg=process.argv.find(x=>x.startsWith('--phase='));
+const phase=phaseArg?.slice(8)??'baseline';
+if(!['baseline','post'].includes(phase))throw new Error(`unsupported M6B phase: ${phase}`);
 const outputArg=process.argv.find(x=>x.startsWith('--json='));
-const outputPath=outputArg?.slice(7)??'benchmarks/m6b-expanded-frontier-baseline.json';
+const outputPath=outputArg?.slice(7)??`benchmarks/m6b-expanded-frontier-${phase}.json`;
 const worker=new URL('./benchmark-m6b-frontier-case.mjs',import.meta.url);
 const timeoutMs=Number(process.env.M6B_CASE_TIMEOUT_MS??240_000);
 const runs=[];
@@ -42,7 +45,9 @@ const completed=runs.filter(x=>x.status==='completed');
 const report={
   generatedAt:new Date().toISOString(),
   m6bBaseSha:'a3505bbd25d7cac47d115452b924a2f3f8eda4ae',
-  phase:'baseline',
+  phase,
+  optimizationSelected:null,
+  outcome:'B',
   runtime:{node:process.version,platform:process.platform,arch:process.arch},
   production:{layoutId:'legacy_3',maxModeledHorizon:2,expandedDefault:false},
   semantics:{newSearchApproximation:false,m5hHoldoutConsumed:false,targetT3Run:false,targetT4Run:false,scenarioFidelityChanged:false},
@@ -50,4 +55,4 @@ const report={
   summary:{completed:completed.length,timeouts:runs.filter(x=>x.status==='timeout').length,errors:runs.filter(x=>x.status==='error').length},
 };
 fs.writeFileSync(outputPath,`${JSON.stringify(report,null,2)}\n`);
-console.log(JSON.stringify({outputPath,summary:report.summary,pairs:pairs.map(({case:caseName,horizon,optimizerRuntimeRatioExpandedVsLegacy,terminalStateRatioExpandedVsLegacy,vCallRatioExpandedVsLegacy,transitionPathRatioExpandedVsLegacy,targetScenarioCheckRatioExpandedVsLegacy})=>({case:caseName,horizon,optimizerRuntimeRatioExpandedVsLegacy,terminalStateRatioExpandedVsLegacy,vCallRatioExpandedVsLegacy,transitionPathRatioExpandedVsLegacy,targetScenarioCheckRatioExpandedVsLegacy}))}));
+console.log(JSON.stringify({outputPath,phase,summary:report.summary,pairs:pairs.map(({case:caseName,horizon,optimizerRuntimeRatioExpandedVsLegacy,terminalStateRatioExpandedVsLegacy,vCallRatioExpandedVsLegacy,transitionPathRatioExpandedVsLegacy,targetScenarioCheckRatioExpandedVsLegacy})=>({case:caseName,horizon,optimizerRuntimeRatioExpandedVsLegacy,terminalStateRatioExpandedVsLegacy,vCallRatioExpandedVsLegacy,transitionPathRatioExpandedVsLegacy,targetScenarioCheckRatioExpandedVsLegacy}))}));
