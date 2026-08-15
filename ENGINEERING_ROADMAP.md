@@ -516,3 +516,9 @@ The dominant effect is frontier/branch growth: representative stat-heavy one-ste
 M6B closes as **Outcome B**. Exact profiling shows that the 15-emblem `t=2` slowdown is predominantly intrinsic frontier growth rather than a missing aggregation/transposition cache. Existing compact transitions aggregate at banner ID before downstream work; terminal evaluation is canonical BoardStateID-memoized; role-local scoring/target preparation already reuses unchanged banners; and target pair/suffix caches do not capacity-thrash. The expanded target case reaches 17,862 target scalar states and 1.384B exact scenario checks, while pair/suffix cache construction is a small fraction of total target-kernel time.
 
 **Sequencing decision:** do not manufacture another exact cache. The next bounded package should calibrate expanded-board-specific `t=2` approximation candidates against frozen exact expanded oracles before any production change. Do not reuse M5C/M5D/M5H calibration conclusions without fresh expanded-board validation. Production stays `legacy_3` / `t<=2`; do not resume target `t=3`, consume the M5H holdout, or begin target `t=4` yet.
+
+---
+
+## M6C — Expanded t=2 approximation calibration
+
+M6C closes as **Outcome B**. The preregistered bounded approximation family did not pass the frozen fidelity/performance gates; retain exact expanded_5 t=2 as reference. Production remains `legacy_3` with horizon <=2. M5H holdout remains untouched and target t=3/t=4 remain frozen.
