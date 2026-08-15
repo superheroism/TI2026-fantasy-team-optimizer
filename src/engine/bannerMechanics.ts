@@ -1,17 +1,16 @@
-import type { BannerState, BoardState } from '../domain/types.js';
+import type { BannerState, BoardLayoutId, BoardState } from '../domain/types.js';
+import { DEFAULT_LAYOUT_ID } from '../domain/rules.js';
 import { encodeBannerState, encodeBoardState } from './stateEncoding.js';
 
 /**
  * Canonical identity for score-relevant banner mechanics.
- * The compact banner ID is role-local and excludes fixed scoring context, so
- * shared scoring caches add role + expectedSeries here. Free roster selection
- * remains intentionally excluded.
+ * Layout is explicit because a banner ID is only meaningful inside a layout/role namespace.
  */
-export function bannerMechanicsKey(banner: BannerState): string {
-  return `${banner.role}:${encodeBannerState(banner)}:${banner.expectedSeries}`;
+export function bannerMechanicsKey(banner: BannerState, layoutId:BoardLayoutId=DEFAULT_LAYOUT_ID): string {
+  return `${layoutId}:${banner.role}:${encodeBannerState(banner,layoutId)}:${banner.expectedSeries}`;
 }
 
 /** Canonical mechanics/scoring-context identity for a complete board. */
 export function boardMechanicsKey(board: BoardState): string {
-  return `${encodeBoardState(board)}:${board.core.expectedSeries},${board.mid.expectedSeries},${board.support.expectedSeries}`;
+  return `${board.layoutId??DEFAULT_LAYOUT_ID}:${encodeBoardState(board)}:${board.core.expectedSeries},${board.mid.expectedSeries},${board.support.expectedSeries}`;
 }
