@@ -172,7 +172,7 @@ test('expanded descriptive and compact redistribution distributions agree exactl
   for(const [key,p] of d)approx(c.get(key),p);
 });
 
-test('expanded redistribution aggregates complete floor/cap waste to one unchanged state',()=>{
+test('expanded redistribution preserves normalization under floor/cap waste',()=>{
   const banner=makeExpandedBanner('support');
   banner.emblems.forEach((e,index)=>e.qualityTier=index===0?1:5);
   const op={id:'redistribute-cap',label:'Redistribute',kind:'quality_redistribution'};
