@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 import {
@@ -14,9 +15,14 @@ const reportPath = path.resolve(process.argv[3] ?? path.join(root, 'benchmarks/m
 const selectedPath = path.resolve(process.argv[4] ?? path.join(root, 'benchmarks/m5h-selected-candidate.json'));
 const manifest = JSON.parse(fs.readFileSync(path.join(root, 'benchmarks/m5h-target-calibration-fixtures.json'), 'utf8'));
 const candidateConfig = JSON.parse(fs.readFileSync(path.join(root, 'benchmarks/m5h-target-adaptive-candidates.json'), 'utf8'));
+const authority = JSON.parse(fs.readFileSync(path.join(root, 'benchmarks/m5h-calibration-authority.json'), 'utf8'));
 const artifacts = readNamedArtifacts(artifactRoot, isM5HCalibrationArtifactPath);
-const evaluated = evaluateCalibration({ manifest, candidateConfig, artifacts });
 const sourceShas = [...new Set(artifacts.map((row) => row.value.sourceSha).filter(Boolean))];
+if (sourceShas.length !== 1) throw new Error(`M5H calibration requires exactly one measurement source SHA; found ${sourceShas.join(', ') || 'none'}`);
+const minimumSha = authority.minimumAuthoritativeMeasurementCommit;
+const ancestry = execFileSync('git', ['merge-base', '--is-ancestor', minimumSha, sourceShas[0]], { cwd: root, stdio: 'ignore' });
+void ancestry;
+const evaluated = evaluateCalibration({ manifest, candidateConfig, artifacts });
 const report = {
   schemaVersion: 1,
   package: 'M5H Adaptive Target-Probability t=3 Precision',
@@ -29,6 +35,7 @@ const report = {
   candidateCount: candidateConfig.candidates.length,
   artifactFilter: 'isM5HCalibrationArtifactPath',
   admittedArtifactCount: artifacts.length,
+  minimumAuthoritativeMeasurementCommit: minimumSha,
   sourceShas,
   ...evaluated,
 };
