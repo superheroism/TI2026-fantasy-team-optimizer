@@ -251,6 +251,6 @@ The fixed M5G baseline completed only **18/27** fresh calibration cases within t
 
 No adaptive candidate qualified. Even the most complete candidate, A1, finished only **26/27** cases and had non-waivable root reversals with maximum regret **0.6450 pp**. A2 completed 23/27 with maximum regret **0.2693 pp**; A3 completed 21/27 with maximum regret **0.6450 pp**. Thus the bounded family could not simultaneously satisfy complete sub-60-second execution and the frozen decision-quality gate.
 
-**Decision: M5H Outcome C.** The separately frozen holdout was intentionally **not consumed**, no selected-candidate file was created, target `t=3` remains engineering-only, and production remains `t<=2`. The failure is mixed runtime + policy fidelity rather than semantic/integrity failure.
+**Decision: M5H Outcome C.** The separately frozen holdout was intentionally **not consumed**, so no holdout aggregate or selected-candidate file exists. Target `t=3` remains engineering-only, and production remains `t<=2`. The failure is mixed runtime + policy fidelity rather than semantic/integrity failure.
 
 The recommended next bounded technique is exact reuse of root-specific target-search preparation/evaluation work across screening and refinement passes. The objective should be to recover compute without introducing another fidelity approximation, then reassess adaptive refinement only if exact equivalence and measured headroom justify it. Do not begin target `t=4`.
