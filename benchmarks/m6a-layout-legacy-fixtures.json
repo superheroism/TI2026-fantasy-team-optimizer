@@ -1,0 +1,16 @@
+{
+  "layoutId": "legacy_3",
+  "description": "Frozen production geometry benchmark cases for M6A.",
+  "geometry": {
+    "core": ["red", "green", "red"],
+    "mid": ["red", "blue", "green"],
+    "support": ["blue", "green", "blue"]
+  },
+  "cases": [
+    {"name":"stat_heavy","operationIds":["green-stat-all","red-stat-all","blue-stat-all"]},
+    {"name":"quality_heavy","operationIds":["quality-increase-one","red-quality-all","green-quality-all"]},
+    {"name":"trait_heavy","operationIds":["green-trait-all","red-trait-all","blue-trait-all"]},
+    {"name":"global_quality","operationIds":["quality-increase-one","quality-redistribution","green-quality-all"]},
+    {"name":"target_probability","operationIds":["green-stat-all","red-quality-all","blue-trait-all"],"targetScore":55000}
+  ]
+}
