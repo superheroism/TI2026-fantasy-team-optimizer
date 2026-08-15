@@ -9,6 +9,7 @@ import {
 
 test('M5H calibration artifact filter admits only explicitly named case artifacts', () => {
   assert.equal(isM5HCalibrationArtifactPath('/tmp/m5h-oracle-calibration-01-50000.json'), true);
+  assert.equal(isM5HCalibrationArtifactPath('/tmp/m5h-baseline-calibration-01-50000.json'), true);
   assert.equal(isM5HCalibrationArtifactPath('/tmp/m5h-adaptive-A8-calibration-09-60000.json'), true);
   assert.equal(isM5HCalibrationArtifactPath('/tmp/m5h-t2-current-calibration-03-55000.json'), true);
   assert.equal(isM5HCalibrationArtifactPath('/tmp/m5h-t2-experimental-A1-calibration-03-55000.json'), true);
