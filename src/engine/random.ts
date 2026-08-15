@@ -40,7 +40,6 @@ export function cholesky3(matrix: number[][]): number[][] {
   return L;
 }
 
-
 export function cholesky(matrix:number[][]):number[][]{
   const n=matrix.length,L=Array.from({length:n},()=>new Array<number>(n).fill(0));
   for(let i=0;i<n;i++){
@@ -54,12 +53,13 @@ export function cholesky(matrix:number[][]):number[][]{
   return L;
 }
 
+export function correlatedUniformsPreparedN(rng:SeededRandom,L:number[][]):number[]{
+  const n=L.length,z=Array.from({length:n},()=>rng.normal()),out=new Array<number>(n);
+  for(let i=0;i<n;i++){let x=0;for(let j=0;j<=i;j++)x+=(L[i]?.[j]??0)*(z[j]??0);out[i]=normalCdf(x);}return out;
+}
+
 export function correlatedUniformsPrepared(rng:SeededRandom,L:number[][]):[number,number,number]{
-  const z0=rng.normal(),z1=rng.normal(),z2=rng.normal();
-  const x0=(L[0]?.[0]??0)*z0;
-  const x1=(L[1]?.[0]??0)*z0+(L[1]?.[1]??0)*z1;
-  const x2=(L[2]?.[0]??0)*z0+(L[2]?.[1]??0)*z1+(L[2]?.[2]??0)*z2;
-  return [normalCdf(x0),normalCdf(x1),normalCdf(x2)];
+  const out=correlatedUniformsPreparedN(rng,L);return [out[0]??0.5,out[1]??0.5,out[2]??0.5];
 }
 
 export function correlatedUniforms(rng: SeededRandom, correlation: number[][]): [number, number, number] {
