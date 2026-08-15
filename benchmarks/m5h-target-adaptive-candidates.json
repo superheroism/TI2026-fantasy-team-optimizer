@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "frozenBeforeCalibration": true,
+  "baseSha": "64a7796da307575b0b83d5d80b72e803e57ea41f",
+  "objective": "target_probability",
+  "experimentalHorizon": 3,
+  "productionHorizonMax": 2,
+  "utilityGapUnits": "probability",
+  "notes": [
+    "All schedules reference existing frozen M5C/M5D presets without modification.",
+    "Margin 0.0025 = 0.25 percentage points; 0.005 = 0.50 percentage points.",
+    "Stop and menu_reroll are eligible under the same contender rule as board actions.",
+    "Root/current-menu transitions remain full fidelity and all visible root alternatives are screened."
+  ],
+  "baseline": {
+    "id": "m5g-baseline",
+    "continuation": "aggressive",
+    "widening": "wide"
+  },
+  "candidates": [
+    {
+      "id": "A1",
+      "screen": {"continuation": "aggressive", "widening": "narrow"},
+      "refine": {"continuation": "aggressive", "widening": "wide"},
+      "rule": {"kind": "top_k", "topK": 2, "maxRefined": 2}
+    },
+    {
+      "id": "A2",
+      "screen": {"continuation": "aggressive", "widening": "medium"},
+      "refine": {"continuation": "aggressive", "widening": "wide"},
+      "rule": {"kind": "top_k", "topK": 2, "maxRefined": 2}
+    },
+    {
+      "id": "A3",
+      "screen": {"continuation": "aggressive", "widening": "narrow"},
+      "refine": {"continuation": "medium", "widening": "wide"},
+      "rule": {"kind": "top_k", "topK": 2, "maxRefined": 2}
+    },
+    {
+      "id": "A4",
+      "screen": {"continuation": "aggressive", "widening": "medium"},
+      "refine": {"continuation": "medium", "widening": "wide"},
+      "rule": {"kind": "top_k", "topK": 2, "maxRefined": 2}
+    },
+    {
+      "id": "A5",
+      "screen": {"continuation": "aggressive", "widening": "narrow"},
+      "refine": {"continuation": "aggressive", "widening": "wide"},
+      "rule": {"kind": "winner_margin", "delta": 0.0025, "maxRefined": 3}
+    },
+    {
+      "id": "A6",
+      "screen": {"continuation": "aggressive", "widening": "narrow"},
+      "refine": {"continuation": "aggressive", "widening": "wide"},
+      "rule": {"kind": "winner_margin", "delta": 0.005, "maxRefined": 3}
+    },
+    {
+      "id": "A7",
+      "screen": {"continuation": "aggressive", "widening": "medium"},
+      "refine": {"continuation": "medium", "widening": "wide"},
+      "rule": {"kind": "winner_margin", "delta": 0.0025, "maxRefined": 3}
+    },
+    {
+      "id": "A8",
+      "screen": {"continuation": "aggressive", "widening": "medium"},
+      "refine": {"continuation": "medium", "widening": "wide"},
+      "rule": {"kind": "winner_margin", "delta": 0.005, "maxRefined": 3}
+    }
+  ],
+  "calibrationSelectionOrder": [
+    "lower_max_oracle_regret",
+    "higher_root_action_agreement",
+    "lower_p90_runtime",
+    "lower_median_runtime",
+    "simpler_adaptive_rule"
+  ],
+  "calibrationQualityGate": {
+    "maxOracleRegretPp": 0.25,
+    "meanOracleRegretPp": 0.05,
+    "stopMenuReversalAllowed": false,
+    "nonWaivableRootReversalAllowed": false,
+    "candidateRuntimeLimitSeconds": 60,
+    "oracleRuntimeLimitSeconds": 600,
+    "maxRssGiB": 6
+  }
+}
