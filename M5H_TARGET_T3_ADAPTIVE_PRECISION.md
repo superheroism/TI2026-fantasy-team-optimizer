@@ -71,7 +71,7 @@ Thus Outcome C is not caused by an oracle failure, production regression, or cor
 
 The required M5G baseline — Aggressive `4→2→1` continuation plus Wide `12→8→4` widening — remained an informative comparator but was not eligible for selection.
 
-It completed only **18/27** calibration runs within the measurement guard. Among those completed runs it agreed with the oracle on **14/18** and disagreed on four. Its completed-run runtime median was **41.88 s**, P90 **52.00 s**, and maximum **54.13 s**. Mean oracle regret over completed comparisons was **0.0215 pp** and maximum regret was **0.2693 pp**, already above the frozen `0.25 pp` maximum-regret limit.
+It completed only **18/27** calibration runs within the measurement guard. Among those completed runs it agreed with the oracle on **14/18** and disagreed on four. Its completed-run runtime median was **41.88 s**, P90 **52.00 s**, and maximum **54.13 s**. Mean oracle regret over completed comparisons was **0.02146 pp** and maximum regret was **0.2693 pp**, already above the frozen `0.25 pp` maximum-regret limit.
 
 This independently reproduces the M5G conclusion on fresh states: fixed fidelity is neither reliably fast enough nor decision-robust enough for experimental target `t=3`.
 
