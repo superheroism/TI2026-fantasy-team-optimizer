@@ -1,0 +1,21 @@
+{
+  "layoutId": "expanded_5",
+  "description": "Non-production M6A geometry benchmark cases. Purple uses the existing blue-stat pool.",
+  "geometry": {
+    "core": ["red", "green", "red", "green", "red"],
+    "mid": ["red", "purple", "green", "red", "green"],
+    "support": ["purple", "green", "purple", "green", "purple"]
+  },
+  "boardExtension": {
+    "core": [{"slot":3,"stat":"Stuns","qualityTier":2,"trait":"Friendly"},{"slot":4,"stat":"Deaths","qualityTier":4,"trait":"Unique"}],
+    "mid": [{"slot":3,"stat":"GPM","qualityTier":2,"trait":"Friendly"},{"slot":4,"stat":"Stuns","qualityTier":4,"trait":"Unique"}],
+    "support": [{"slot":3,"stat":"Stuns","qualityTier":2,"trait":"Friendly"},{"slot":4,"stat":"Smokes Used","qualityTier":4,"trait":"Unique"}]
+  },
+  "cases": [
+    {"name":"stat_heavy","operationIds":["green-stat-all","red-stat-all","blue-stat-all"]},
+    {"name":"quality_heavy","operationIds":["quality-increase-one","red-quality-all","green-quality-all"]},
+    {"name":"trait_heavy","operationIds":["green-trait-all","red-trait-all","blue-trait-all"]},
+    {"name":"global_quality","operationIds":["quality-increase-one","quality-redistribution","green-quality-all"],"note":"quality-redistribution is intentionally unavailable for expanded_5 pending authoritative target-selection semantics"},
+    {"name":"target_probability","operationIds":["green-stat-all","red-quality-all","blue-trait-all"],"targetScore":80000}
+  ]
+}
