@@ -19,6 +19,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
+          fetch-depth: 0
 
       - name: Set up Node 22
         uses: actions/setup-node@v4
@@ -34,7 +35,7 @@ jobs:
       - name: Verify frozen fresh corpora reproduce exactly
         run: node scripts/generate-m5h-fixtures.mjs calibration holdout --check
 
-      - name: Verify pre-calibration freeze state
+      - name: Verify pre-calibration freeze and measurement authority
         shell: bash
         run: |
           set -euo pipefail
@@ -42,7 +43,10 @@ jobs:
           test -f benchmarks/m5h-target-holdout-gate.json
           test -f benchmarks/m5h-target-calibration-fixtures.json
           test -f benchmarks/m5h-target-holdout-fixtures.json
+          test -f benchmarks/m5h-calibration-authority.json
           test ! -f benchmarks/m5h-selected-candidate.json
+          minimum=$(node -p "require('./benchmarks/m5h-calibration-authority.json').minimumAuthoritativeMeasurementCommit")
+          git merge-base --is-ancestor "$minimum" "${{ github.sha }}"
 
   calibration:
     needs: preflight
@@ -122,6 +126,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: agent/m5h-adaptive-target-t3-impl
+          fetch-depth: 0
 
       - name: Set up Node 22
         uses: actions/setup-node@v4
@@ -135,7 +140,7 @@ jobs:
           path: m5h-calibration-artifacts
           merge-multiple: true
 
-      - name: Aggregate using frozen artifact filter and selection rule
+      - name: Aggregate using frozen artifact filter, authority guard, and selection rule
         run: node scripts/aggregate-m5h-calibration.mjs m5h-calibration-artifacts benchmarks/m5h-target-adaptive-calibration.json benchmarks/m5h-selected-candidate.json
 
       - name: Upload calibration aggregate
@@ -277,3 +282,38 @@ jobs:
           git add benchmarks/m5h-target-adaptive-holdout.json
           git commit -m 'M5H: record authoritative holdout result'
           git push origin HEAD:agent/m5h-adaptive-target-t3-impl
+
+  m5g-regression-sentinel:
+    needs: [aggregate-calibration, aggregate-holdout]
+    if: always() && needs.aggregate-calibration.outputs.selected != '' && needs.aggregate-holdout.result != 'cancelled'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out frozen selected-candidate commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.aggregate-calibration.outputs.selection_sha }}
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies and build
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+
+      - name: Read frozen selected candidate
+        id: selected
+        run: echo "id=$(node -p \"require('./benchmarks/m5h-selected-candidate.json').candidateId\")" >> "$GITHUB_OUTPUT"
+
+      - name: Run diagnostic holdout-05 at 60k
+        run: node scripts/benchmark-m5h-target-case.mjs sentinel holdout-05 60000 adaptive "${{ steps.selected.outputs.id }}" m5h-sentinel-holdout-05-60000.json || true
+
+      - name: Upload sentinel JSON separately from holdout cases
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5h-regression-sentinel
+          path: m5h-sentinel-holdout-05-60000.json
+          if-no-files-found: error
+          retention-days: 30
