@@ -1,170 +1,105 @@
-import type { BannerState, BoardState, EmblemState, QualityTier, Role, StatName, TraitName } from '../domain/types.js';
-import { BANNER_COLORS, LEGAL_STAT_POOLS } from '../domain/rules.js';
+import type { BannerState, BoardLayoutId, BoardState, EmblemState, QualityTier, Role, StatName, TraitName } from '../domain/types.js';
+import { DEFAULT_LAYOUT_ID, LEGAL_STAT_POOLS, boardLayout } from '../domain/rules.js';
 
 export type EmblemStateID = number;
 export type BannerStateID = number;
 export type BoardStateID = bigint;
 
 export interface EngineState {
+  readonly layoutId:BoardLayoutId;
   readonly core: BannerStateID;
   readonly mid: BannerStateID;
   readonly support: BannerStateID;
   readonly id: BoardStateID;
 }
 
-export interface BannerAdapterContext {
-  readonly selectedTeam: string;
-  readonly expectedSeries: number;
-}
-
+export interface BannerAdapterContext { readonly selectedTeam:string; readonly expectedSeries:number; }
 export type BoardAdapterContext = Readonly<Record<Role, BannerAdapterContext>>;
 
 export const TRAIT_ORDER: readonly TraitName[] = ['Fractal','Friendly','Vampiric','Unique','Benevolent'];
-export const QUALITY_COUNT = 5;
-export const TRAIT_COUNT = TRAIT_ORDER.length;
-export const STATS_PER_COLOR = 6;
-export const EMBLEM_STATE_COUNT = STATS_PER_COLOR * QUALITY_COUNT * TRAIT_COUNT;
-export const BANNER_STATE_COUNT = EMBLEM_STATE_COUNT ** 3;
+export const QUALITY_COUNT=5, TRAIT_COUNT=TRAIT_ORDER.length, STATS_PER_COLOR=6;
+export const EMBLEM_STATE_COUNT=STATS_PER_COLOR*QUALITY_COUNT*TRAIT_COUNT;
+export const LEGACY_BANNER_STATE_COUNT=EMBLEM_STATE_COUNT**3;
+export const BANNER_STATE_COUNT=LEGACY_BANNER_STATE_COUNT;
+const LEGACY_BOARD_RADIX=BigInt(LEGACY_BANNER_STATE_COUNT);
+const LEGACY_BOARD_STATE_COUNT=LEGACY_BOARD_RADIX**3n;
+const EXPANDED_BANNER_STATE_COUNT=EMBLEM_STATE_COUNT**5;
+const EXPANDED_BOARD_RADIX=BigInt(EXPANDED_BANNER_STATE_COUNT);
+const EXPANDED_BOARD_STATE_COUNT=EXPANDED_BOARD_RADIX**3n;
 
-const BOARD_RADIX = BigInt(BANNER_STATE_COUNT);
+function integerInRange(value:number,min:number,max:number,label:string):void { if(!Number.isSafeInteger(value)||value<min||value>max) throw new RangeError(`${label} must be a safe integer in [${min}, ${max}], got ${value}.`); }
+function layoutFromBoard(board:BoardState):BoardLayoutId { return board.layoutId??DEFAULT_LAYOUT_ID; }
+function bannerCount(layoutId:BoardLayoutId):number { return layoutId==='legacy_3'?LEGACY_BANNER_STATE_COUNT:EXPANDED_BANNER_STATE_COUNT; }
+function boardRadix(layoutId:BoardLayoutId):bigint { return BigInt(bannerCount(layoutId)); }
+function boardOffset(layoutId:BoardLayoutId):bigint { return layoutId==='legacy_3'?0n:LEGACY_BOARD_STATE_COUNT; }
 
-function integerInRange(value:number,min:number,max:number,label:string):void {
-  if(!Number.isInteger(value)||value<min||value>max) throw new RangeError(`${label} must be an integer in [${min}, ${max}], got ${value}.`);
+function assertSlot(layoutId:BoardLayoutId,role:Role,position:number,emblem:EmblemState):void {
+  const slot=boardLayout(layoutId).roles[role][position];
+  if(!slot)throw new Error(`Layout ${layoutId} has no ${role} slot ${position}.`);
+  if(emblem.position!==position)throw new Error(`Expected ${role} slot ${position} position ${position}, got ${emblem.position}.`);
+  if(emblem.color!==slot.color)throw new Error(`Expected ${layoutId}/${role} slot ${position} color ${slot.color}, got ${emblem.color}.`);
 }
 
-function assertSlot(role:Role, position:0|1|2, emblem:EmblemState):void {
-  if(emblem.position!==position) throw new Error(`Expected ${role} slot ${position} position ${position}, got ${emblem.position}.`);
-  const color=BANNER_COLORS[role][position];
-  if(emblem.color!==color) throw new Error(`Expected ${role} slot ${position} color ${color}, got ${emblem.color}.`);
-}
-
-export function encodeEmblemComponents(statIndex:number, qualityTier:QualityTier, traitIndex:number):EmblemStateID {
-  integerInRange(statIndex,0,STATS_PER_COLOR-1,'stat index');
-  integerInRange(qualityTier,1,QUALITY_COUNT,'quality tier');
-  integerInRange(traitIndex,0,TRAIT_COUNT-1,'trait index');
+export function encodeEmblemComponents(statIndex:number,qualityTier:QualityTier,traitIndex:number):EmblemStateID {
+  integerInRange(statIndex,0,STATS_PER_COLOR-1,'stat index');integerInRange(qualityTier,1,QUALITY_COUNT,'quality tier');integerInRange(traitIndex,0,TRAIT_COUNT-1,'trait index');
   return ((statIndex*QUALITY_COUNT+(qualityTier-1))*TRAIT_COUNT)+traitIndex;
 }
+export function emblemStatIndex(id:EmblemStateID):number { integerInRange(id,0,EMBLEM_STATE_COUNT-1,'emblem state ID');return Math.floor(id/(TRAIT_COUNT*QUALITY_COUNT)); }
+export function emblemQualityTier(id:EmblemStateID):QualityTier { integerInRange(id,0,EMBLEM_STATE_COUNT-1,'emblem state ID');return (Math.floor(id/TRAIT_COUNT)%QUALITY_COUNT+1) as QualityTier; }
+export function emblemTraitIndex(id:EmblemStateID):number { integerInRange(id,0,EMBLEM_STATE_COUNT-1,'emblem state ID');return id%TRAIT_COUNT; }
 
-export function emblemStatIndex(id:EmblemStateID):number {
-  integerInRange(id,0,EMBLEM_STATE_COUNT-1,'emblem state ID');
-  return Math.floor(id/(TRAIT_COUNT*QUALITY_COUNT));
-}
-
-export function emblemQualityTier(id:EmblemStateID):QualityTier {
-  integerInRange(id,0,EMBLEM_STATE_COUNT-1,'emblem state ID');
-  return (Math.floor(id/TRAIT_COUNT)%QUALITY_COUNT+1) as QualityTier;
-}
-
-export function emblemTraitIndex(id:EmblemStateID):number {
-  integerInRange(id,0,EMBLEM_STATE_COUNT-1,'emblem state ID');
-  return id%TRAIT_COUNT;
-}
-
-export function encodeEmblemState(role:Role, position:0|1|2, emblem:EmblemState):EmblemStateID {
-  assertSlot(role,position,emblem);
-  const pool=LEGAL_STAT_POOLS[emblem.color];
-  const statIndex=pool.indexOf(emblem.stat);
-  if(statIndex<0) throw new Error(`${emblem.stat} is not legal for ${emblem.color} slot ${role}/${position}.`);
-  const traitIndex=TRAIT_ORDER.indexOf(emblem.trait);
-  if(traitIndex<0) throw new Error(`Unknown trait ${emblem.trait}.`);
-  integerInRange(emblem.qualityTier,1,5,'qualityTier');
+export function encodeEmblemState(role:Role,position:number,emblem:EmblemState,layoutId:BoardLayoutId=DEFAULT_LAYOUT_ID):EmblemStateID {
+  assertSlot(layoutId,role,position,emblem);const pool=LEGAL_STAT_POOLS[emblem.color],statIndex=pool.indexOf(emblem.stat);
+  if(statIndex<0)throw new Error(`${emblem.stat} is not legal for ${emblem.color} slot ${layoutId}/${role}/${position}.`);
+  const traitIndex=TRAIT_ORDER.indexOf(emblem.trait);if(traitIndex<0)throw new Error(`Unknown trait ${emblem.trait}.`);
   return encodeEmblemComponents(statIndex,emblem.qualityTier,traitIndex);
 }
-
-export function decodeEmblemState(role:Role, position:0|1|2, id:EmblemStateID):EmblemState {
-  const statIndex=emblemStatIndex(id);
-  const qualityTier=emblemQualityTier(id);
-  const traitIndex=emblemTraitIndex(id);
-  const color=BANNER_COLORS[role][position];
-  return {
-    id:`${role}-${position}`,
-    position,
-    color,
-    stat:LEGAL_STAT_POOLS[color][statIndex] as StatName,
-    qualityTier,
-    trait:TRAIT_ORDER[traitIndex]!,
-  };
+export function decodeEmblemState(role:Role,position:number,id:EmblemStateID,layoutId:BoardLayoutId=DEFAULT_LAYOUT_ID):EmblemState {
+  const slot=boardLayout(layoutId).roles[role][position];if(!slot)throw new Error(`Layout ${layoutId} has no ${role} slot ${position}.`);
+  const color=slot.color;
+  return {id:`${role}-${position}`,position,color,stat:LEGAL_STAT_POOLS[color][emblemStatIndex(id)] as StatName,qualityTier:emblemQualityTier(id),trait:TRAIT_ORDER[emblemTraitIndex(id)]!};
 }
 
-export function decodeBannerEmblemIds(id:BannerStateID):readonly [EmblemStateID,EmblemStateID,EmblemStateID] {
-  integerInRange(id,0,BANNER_STATE_COUNT-1,'banner state ID');
-  let config=id;
-  const e0=config%EMBLEM_STATE_COUNT; config=Math.floor(config/EMBLEM_STATE_COUNT);
-  const e1=config%EMBLEM_STATE_COUNT; config=Math.floor(config/EMBLEM_STATE_COUNT);
-  const e2=config;
-  return [e0,e1,e2];
+export function decodeBannerEmblemIds(id:BannerStateID,layoutId:BoardLayoutId=DEFAULT_LAYOUT_ID):readonly EmblemStateID[] {
+  const slots=boardLayout(layoutId).roles.core.length;integerInRange(id,0,bannerCount(layoutId)-1,'banner state ID');
+  let config=id;const out:number[]=[];for(let i=0;i<slots;i++){out.push(config%EMBLEM_STATE_COUNT);config=Math.floor(config/EMBLEM_STATE_COUNT);}return out;
+}
+export function encodeBannerEmblemIds(...args:(EmblemStateID|readonly EmblemStateID[]|BoardLayoutId)[]):BannerStateID {
+  let layoutId:BoardLayoutId=DEFAULT_LAYOUT_ID;let ids:readonly EmblemStateID[];
+  if(typeof args[0]==='string'){layoutId=args[0] as BoardLayoutId;ids=Array.isArray(args[1])?args[1] as readonly EmblemStateID[]:args.slice(1) as EmblemStateID[];}
+  else ids=Array.isArray(args[0])?args[0] as readonly EmblemStateID[]:args as EmblemStateID[];
+  const expected=boardLayout(layoutId).roles.core.length;if(ids.length!==expected)throw new Error(`Layout ${layoutId} requires ${expected} emblem IDs, got ${ids.length}.`);
+  let value=0,multiplier=1;for(let i=0;i<ids.length;i++){const id=ids[i]!;integerInRange(id,0,EMBLEM_STATE_COUNT-1,`slot ${i} emblem state ID`);value+=id*multiplier;multiplier*=EMBLEM_STATE_COUNT;}return value;
 }
 
-export function encodeBannerEmblemIds(e0:EmblemStateID,e1:EmblemStateID,e2:EmblemStateID):BannerStateID {
-  integerInRange(e0,0,EMBLEM_STATE_COUNT-1,'slot 0 emblem state ID');
-  integerInRange(e1,0,EMBLEM_STATE_COUNT-1,'slot 1 emblem state ID');
-  integerInRange(e2,0,EMBLEM_STATE_COUNT-1,'slot 2 emblem state ID');
-  return e0+EMBLEM_STATE_COUNT*(e1+EMBLEM_STATE_COUNT*e2);
+export function encodeBannerState(banner:BannerState,layoutId:BoardLayoutId=DEFAULT_LAYOUT_ID):BannerStateID {
+  const slots=boardLayout(layoutId).roles[banner.role];if(banner.emblems.length!==slots.length)throw new Error(`${layoutId}/${banner.role} requires ${slots.length} emblems, got ${banner.emblems.length}.`);
+  return encodeBannerEmblemIds(layoutId,banner.emblems.map((emblem,index)=>encodeEmblemState(banner.role,index,emblem,layoutId)));
+}
+export function decodeBannerState(role:Role,id:BannerStateID,context:BannerAdapterContext,layoutId:BoardLayoutId=DEFAULT_LAYOUT_ID):BannerState {
+  const ids=decodeBannerEmblemIds(id,layoutId);return {role,selectedTeam:context.selectedTeam,expectedSeries:context.expectedSeries,emblems:ids.map((emblemId,index)=>decodeEmblemState(role,index,emblemId,layoutId))};
 }
 
-/** Role-local ID containing only reroll-variable banner mechanics. */
-export function encodeBannerState(banner:BannerState):BannerStateID {
-  const e0=encodeEmblemState(banner.role,0,banner.emblems[0]);
-  const e1=encodeEmblemState(banner.role,1,banner.emblems[1]);
-  const e2=encodeEmblemState(banner.role,2,banner.emblems[2]);
-  return encodeBannerEmblemIds(e0,e1,e2);
+export function encodeBoardStateIds(core:BannerStateID,mid:BannerStateID,support:BannerStateID,layoutId:BoardLayoutId=DEFAULT_LAYOUT_ID):BoardStateID {
+  const count=bannerCount(layoutId);for(const [role,id] of [['core',core],['mid',mid],['support',support]] as const)integerInRange(id,0,count-1,`${role} banner state ID`);
+  const radix=boardRadix(layoutId);return boardOffset(layoutId)+BigInt(core)+radix*(BigInt(mid)+radix*BigInt(support));
 }
-
-export function decodeBannerState(role:Role, id:BannerStateID, context:BannerAdapterContext):BannerState {
-  const [e0,e1,e2]=decodeBannerEmblemIds(id);
-  return {
-    role,
-    selectedTeam:context.selectedTeam,
-    expectedSeries:context.expectedSeries,
-    emblems:[decodeEmblemState(role,0,e0),decodeEmblemState(role,1,e1),decodeEmblemState(role,2,e2)],
-  };
+export function decodeBoardStateId(id:BoardStateID):readonly [BoardLayoutId,BannerStateID,BannerStateID,BannerStateID] {
+  if(id<0n||id>=LEGACY_BOARD_STATE_COUNT+EXPANDED_BOARD_STATE_COUNT)throw new RangeError(`board state ID is outside the canonical range: ${id}.`);
+  const layoutId:BoardLayoutId=id<LEGACY_BOARD_STATE_COUNT?'legacy_3':'expanded_5';let value=id-boardOffset(layoutId),radix=boardRadix(layoutId);
+  const core=Number(value%radix);value/=radix;const mid=Number(value%radix);value/=radix;const support=Number(value);return [layoutId,core,mid,support];
 }
-
-export function encodeBoardStateIds(core:BannerStateID,mid:BannerStateID,support:BannerStateID):BoardStateID {
-  for(const [role,id] of [['core',core],['mid',mid],['support',support]] as const) integerInRange(id,0,BANNER_STATE_COUNT-1,`${role} banner state ID`);
-  return BigInt(core)+BOARD_RADIX*(BigInt(mid)+BOARD_RADIX*BigInt(support));
-}
-
-export function decodeBoardStateId(id:BoardStateID):readonly [BannerStateID,BannerStateID,BannerStateID] {
-  if(id<0n||id>=BOARD_RADIX**3n) throw new RangeError(`board state ID is outside the canonical range: ${id}.`);
-  let value=id;
-  const core=Number(value%BOARD_RADIX); value/=BOARD_RADIX;
-  const mid=Number(value%BOARD_RADIX); value/=BOARD_RADIX;
-  const support=Number(value);
-  return [core,mid,support];
-}
+/** Pre-M6A helper preserving the original 3-tuple decode shape for committed legacy fixtures. */
+export function decodeLegacyBoardStateId(id:BoardStateID):readonly [BannerStateID,BannerStateID,BannerStateID] { const [layout,core,mid,support]=decodeBoardStateId(id);if(layout!=='legacy_3')throw new Error(`Expected legacy_3 board ID, got ${layout}.`);return [core,mid,support]; }
 
 export function replaceEngineBanner(state:EngineState,role:Role,banner:BannerStateID):EngineState {
-  integerInRange(banner,0,BANNER_STATE_COUNT-1,`${role} banner state ID`);
-  const core=role==='core'?banner:state.core;
-  const mid=role==='mid'?banner:state.mid;
-  const support=role==='support'?banner:state.support;
-  return {core,mid,support,id:encodeBoardStateIds(core,mid,support)};
+  integerInRange(banner,0,bannerCount(state.layoutId)-1,`${role} banner state ID`);const core=role==='core'?banner:state.core,mid=role==='mid'?banner:state.mid,support=role==='support'?banner:state.support;
+  return {layoutId:state.layoutId,core,mid,support,id:encodeBoardStateIds(core,mid,support,state.layoutId)};
 }
-
-export function boardAdapterContext(board:BoardState):BoardAdapterContext {
-  return {
-    core:{selectedTeam:board.core.selectedTeam,expectedSeries:board.core.expectedSeries},
-    mid:{selectedTeam:board.mid.selectedTeam,expectedSeries:board.mid.expectedSeries},
-    support:{selectedTeam:board.support.selectedTeam,expectedSeries:board.support.expectedSeries},
-  };
-}
-
-export function encodeBoardState(board:BoardState):BoardStateID {
-  return encodeBoardStateIds(encodeBannerState(board.core),encodeBannerState(board.mid),encodeBannerState(board.support));
-}
-
-export function boardToEngineState(board:BoardState):EngineState {
-  const core=encodeBannerState(board.core),mid=encodeBannerState(board.mid),support=encodeBannerState(board.support);
-  return {core,mid,support,id:encodeBoardStateIds(core,mid,support)};
-}
-
-export function engineStateToBoard(state:EngineState, context:BoardAdapterContext):BoardState {
-  const decoded=decodeBoardStateId(state.id);
-  if(decoded[0]!==state.core||decoded[1]!==state.mid||decoded[2]!==state.support) throw new Error('EngineState banner IDs do not match its board ID.');
-  return {
-    core:decodeBannerState('core',state.core,context.core),
-    mid:decodeBannerState('mid',state.mid,context.mid),
-    support:decodeBannerState('support',state.support,context.support),
-  };
+export function boardAdapterContext(board:BoardState):BoardAdapterContext { return {core:{selectedTeam:board.core.selectedTeam,expectedSeries:board.core.expectedSeries},mid:{selectedTeam:board.mid.selectedTeam,expectedSeries:board.mid.expectedSeries},support:{selectedTeam:board.support.selectedTeam,expectedSeries:board.support.expectedSeries}}; }
+export function encodeBoardState(board:BoardState):BoardStateID { const layoutId=layoutFromBoard(board);return encodeBoardStateIds(encodeBannerState(board.core,layoutId),encodeBannerState(board.mid,layoutId),encodeBannerState(board.support,layoutId),layoutId); }
+export function boardToEngineState(board:BoardState):EngineState { const layoutId=layoutFromBoard(board),core=encodeBannerState(board.core,layoutId),mid=encodeBannerState(board.mid,layoutId),support=encodeBannerState(board.support,layoutId);return {layoutId,core,mid,support,id:encodeBoardStateIds(core,mid,support,layoutId)}; }
+export function engineStateToBoard(state:EngineState,context:BoardAdapterContext):BoardState {
+  const [layoutId,core,mid,support]=decodeBoardStateId(state.id);if(layoutId!==state.layoutId||core!==state.core||mid!==state.mid||support!==state.support)throw new Error('EngineState banner/layout IDs do not match its board ID.');
+  return {layoutId,core:decodeBannerState('core',core,context.core,layoutId),mid:decodeBannerState('mid',mid,context.mid,layoutId),support:decodeBannerState('support',support,context.support,layoutId)};
 }
