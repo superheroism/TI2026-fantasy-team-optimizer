@@ -2,6 +2,7 @@ import type {
   BoardState, ColoredRerollOperation, GlobalQualityOperation, OfferedOperation,
   QualityTier, Role, SlotColor, StatName, StatRerollOperation, TraitName
 } from '../domain/types.js';
+import { legalStats } from '../domain/rules.js';
 
 export interface BoardTransition { board: BoardState; probability: number; note?: string; }
 
@@ -63,7 +64,7 @@ export function enumerateStatReroll(board: BoardState, role: Role, op: StatRerol
     const targetSet=new Set(indices);
     const fixedStats=new Set<StatName>(banner.emblems.filter((_,i)=>!targetSet.has(i)).map(e=>e.stat));
     const originalByIndex=new Map(indices.map(i=>[i,banner.emblems[i]!.stat] as const));
-    const pool=(await import('../domain/rules.js')).legalStats(op.color);
+    const pool=legalStats(op.color);
 
     const recurse=(depth:number,next:BoardState,probability:number,used:Set<StatName>)=>{
       if(depth>=indices.length){
