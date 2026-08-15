@@ -196,7 +196,7 @@ The runtime approximation affects continuation fidelity, not the legal action se
 M5C tests search-only compression of **future fresh-menu transition outcomes** while preserving the root decision boundary, exact menu probabilities, Dota mechanics, and production `t=2` policy. The approximation is an explicit per-call engineering option and is structurally ignored at `t<=2`.
 
 | Schedule | t=3 top-action agreement | Max oracle regret | Mean Kendall τ | Median runtime / current |
-|---|---:|---:|---:|
+|---|---:|---:|---:|---:|
 | High (8→6→4) | 12/12 | 0 | 0.969 | 1.194× |
 | Medium (6→4→2) | 11/12 | 408.9 | 0.962 | 0.959× |
 | Aggressive (4→2→1) | 12/12 | 0 | 0.957 | 0.579× |
