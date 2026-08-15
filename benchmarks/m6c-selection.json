@@ -16,5 +16,7 @@
   "outcome": "B",
   "authoritativeWorkflowRunId": 31912908836,
   "authoritativeJobId": 95080548920,
-  "noRetuningAfterHoldout": true
+  "noRetuningAfterHoldout": true,
+  "recoveryRun": true,
+  "originalAuthoritativeWorkflowRunId": 31912908836
 }
