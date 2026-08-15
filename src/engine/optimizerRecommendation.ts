@@ -53,7 +53,7 @@ export function recommendNextAction(
   const layoutId=state.board.layoutId??'legacy_3';
   let adaptiveFallbackReason:string|undefined;
 
-  if(layoutId==='expanded_5'&&horizon===2){
+  if(layoutId==='expanded_5'&&horizon===2&&!searchOptions.engineeringForceExact){
     if(isCertifiedExpandedT2PolicyValid(CERTIFIED_EXPANDED_T2_POLICY)){
       try{
         const adaptive=recommendExpandedT2Adaptive(state,data,uniformStatFallback,CERTIFIED_EXPANDED_T2_POLICY);
