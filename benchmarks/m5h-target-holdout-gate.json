@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "frozenBeforeCalibrationMeasurement": true,
+  "cases": 27,
+  "thresholds": [50000, 55000, 60000],
+  "oracle": {
+    "horizon": 3,
+    "continuation": "current",
+    "widening": "none",
+    "runtimeStrictlyLessThanMs": 600000
+  },
+  "adaptive": {
+    "horizon": 3,
+    "runtimeStrictlyLessThanMs": 60000
+  },
+  "memory": {
+    "maxRssStrictlyLessThanBytes": 6442450944
+  },
+  "integrity": {
+    "requireProductionT2Equality": true,
+    "requireExactBoardStateReconstruction": true,
+    "requireAll20FutureOperationIds": true,
+    "requireThresholdProbabilityMonotonicity": true,
+    "requireProductionHorizonMax": 2,
+    "timedOutCandidateCountsAsFailure": true,
+    "incompleteOutputCountsAsAgreement": false
+  },
+  "policyQuality": {
+    "minimumRootActionAgreements": 26,
+    "maximumDisagreements": 1,
+    "waiver": {
+      "boardActionsOnly": true,
+      "maxOracleTopTwoGapProbability": 0.01,
+      "maxOracleRegretProbability": 0.0025
+    },
+    "stopMenuDisagreementAllowed": false,
+    "maxMeanOracleRegretProbability": 0.0005,
+    "maxOracleRegretProbability": 0.0025
+  }
+}
