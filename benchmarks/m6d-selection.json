@@ -10,5 +10,7 @@
     "minimumMedianSpeedup": 1.5,
     "minimumP90Speedup": 1.2
   },
-  "holdoutConsumed": false
+  "holdoutConsumed": true,
+  "holdoutPassed": true,
+  "outcome": "A"
 }
