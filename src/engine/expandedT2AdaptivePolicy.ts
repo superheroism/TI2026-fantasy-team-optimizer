@@ -1,5 +1,5 @@
 // GENERATED FROM benchmarks/m6d-expanded-adaptive-candidates.json + benchmarks/m6d-selection.json.
-// scripts/build.mjs validates this committed runtime module against those certification artifacts.
+// scripts/generate-m6e-policy.mjs is the source-of-truth bridge from certification evidence to production.
 
 export interface ExpandedT2AdaptivePolicy {
   readonly id:string;
@@ -19,7 +19,7 @@ export const CERTIFIED_EXPANDED_T2_POLICY:ExpandedT2AdaptivePolicy=Object.freeze
   horizon:2,
   stages:[2,4,6],
   expectedScoreGapThresholds:[120,80,50],
-  targetProbabilityGapThresholds:[0.0015,0.0010,0.0005],
+  targetProbabilityGapThresholds:[0.0015,0.001,0.0005],
   winnerChangeIsAmbiguous:true,
   exactFallback:true,
   certificationOutcome:'A',
