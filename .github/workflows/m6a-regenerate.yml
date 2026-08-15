@@ -1,0 +1,37 @@
+name: M6A regenerate generated artifacts
+
+on:
+  push:
+    branches:
+      - agent/m6a-versioned-board-layout
+    paths:
+      - 'src/**'
+      - 'site/**'
+      - 'data/**'
+      - '.github/workflows/m6a-regenerate.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/m6a-versioned-board-layout
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run build
+      - name: Commit reproducible generated artifacts when changed
+        run: |
+          if git diff --quiet -- build docs; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add build docs
+          git commit -m "build: regenerate M6A deployment artifacts"
+          git push origin HEAD:agent/m6a-versioned-board-layout
