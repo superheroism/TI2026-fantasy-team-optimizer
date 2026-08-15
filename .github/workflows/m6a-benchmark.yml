@@ -28,6 +28,7 @@ jobs:
           M6A_CASE_TIMEOUT_MS: '150000'
       - name: Commit benchmark artifact
         run: |
+          # Rerun after making compact terminal scoring layout-aware.
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add benchmarks/m6a-layout-comparison.json build docs
