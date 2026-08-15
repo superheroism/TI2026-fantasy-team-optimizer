@@ -268,9 +268,10 @@ function trackSearchIdentity(groups: PreparedTargetSearchGroups<unknown>): void 
   const [first, second, third] = groups;
   const arrays = [first, second, third] as const;
   for (let i = 0; i < 3; i++) {
-    if (!seenPreparedGroups[i]!.has(arrays[i])) {
-      seenPreparedGroups[i]!.add(arrays[i]);
-      diagnostics.uniquePreparedGroups[i]++;
+    const group = arrays[i]!;
+    if (!seenPreparedGroups[i]!.has(group)) {
+      seenPreparedGroups[i]!.add(group);
+      diagnostics.uniquePreparedGroups[i] = diagnostics.uniquePreparedGroups[i]! + 1;
     }
   }
   let secondMap = seenPreparedTuples.get(first);
@@ -283,10 +284,11 @@ function trackSearchIdentity(groups: PreparedTargetSearchGroups<unknown>): void 
   const pairs: readonly [object, object][] = [[first, second], [second, third], [first, third]];
   for (let pairIndex = 0; pairIndex < 3; pairIndex++) {
     const [left, right] = pairs[pairIndex]!;
-    let rights = seenPreparedPairs[pairIndex]!.get(left);
-    if (!rights) { rights = new WeakSet(); seenPreparedPairs[pairIndex]!.set(left, rights); }
-    if (rights.has(right)) diagnostics.reusedPreparedGroupPairs[pairIndex]++;
-    else { rights.add(right); diagnostics.uniquePreparedGroupPairs[pairIndex]++; }
+    const pairMap = seenPreparedPairs[pairIndex]!;
+    let rights = pairMap.get(left);
+    if (!rights) { rights = new WeakSet(); pairMap.set(left, rights); }
+    if (rights.has(right)) diagnostics.reusedPreparedGroupPairs[pairIndex] = diagnostics.reusedPreparedGroupPairs[pairIndex]! + 1;
+    else { rights.add(right); diagnostics.uniquePreparedGroupPairs[pairIndex] = diagnostics.uniquePreparedGroupPairs[pairIndex]! + 1; }
   }
 }
 
