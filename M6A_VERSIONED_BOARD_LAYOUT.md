@@ -149,7 +149,7 @@ M6A adds expanded-layout tests for:
 - exact legacy three-slot redistribution combinatorics (24 equiprobable all-Tier-III outcomes);
 - transition-cache isolation across layouts.
 
-The finalization workflow regenerated `build/` and `docs/`, ran the fresh Node 22 benchmark matrix, and then ran the complete test suite against the regenerated artifacts. Build, benchmark, tests, and evidence commit all completed successfully.
+A one-shot finalization workflow regenerated `build/` and `docs/`, ran the fresh Node 22 benchmark matrix, and then ran the complete test suite against the regenerated artifacts. Build, benchmark, tests, and evidence commit all completed successfully. The temporary finalization workflow was removed afterward rather than becoming permanent repository machinery.
 
 ## Performance measurement
 
