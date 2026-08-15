@@ -1,10 +1,10 @@
 {
   "layoutId": "expanded_5",
-  "description": "Non-production M6A geometry benchmark cases. Purple uses the existing blue-stat pool.",
+  "description": "Non-production M6A geometry benchmark cases using the same red, green, and blue stat pools as legacy_3.",
   "geometry": {
     "core": ["red", "green", "red", "green", "red"],
-    "mid": ["red", "purple", "green", "red", "green"],
-    "support": ["purple", "green", "purple", "green", "purple"]
+    "mid": ["red", "blue", "green", "red", "green"],
+    "support": ["blue", "green", "blue", "green", "blue"]
   },
   "boardExtension": {
     "core": [{"slot":3,"stat":"Stuns","qualityTier":2,"trait":"Friendly"},{"slot":4,"stat":"Deaths","qualityTier":4,"trait":"Unique"}],
@@ -15,7 +15,7 @@
     {"name":"stat_heavy","operationIds":["green-stat-all","red-stat-all","blue-stat-all"]},
     {"name":"quality_heavy","operationIds":["quality-increase-one","red-quality-all","green-quality-all"]},
     {"name":"trait_heavy","operationIds":["green-trait-all","red-trait-all","blue-trait-all"]},
-    {"name":"global_quality","operationIds":["quality-increase-one","quality-redistribution","green-quality-all"],"note":"quality-redistribution is intentionally unavailable for expanded_5 pending authoritative target-selection semantics"},
+    {"name":"global_quality","operationIds":["quality-increase-one","quality-redistribution","green-quality-all"],"note":"quality-redistribution uses the validated expanded_5 one-down/two-random-recipients mechanic"},
     {"name":"target_probability","operationIds":["green-stat-all","red-quality-all","blue-trait-all"],"targetScore":80000}
   ]
 }
