@@ -5,6 +5,7 @@
 **Complete — Outcome C.**
 
 - `M5H_BASE_SHA`: `64a7796da307575b0b83d5d80b72e803e57ea41f`
+- `M5H_BASE_SHA` was frozen at the initial M5H kickoff; subsequent implementation PRs re-anchored to newer `main` as earlier M5H setup PRs merged.
 - Authoritative measurement SHA: `aad253d621939bd391593a85fe0bae0b7d6d1265`
 - Objective: `P(final score >= targetScore)`
 - Experimental horizon: `t = 3`
