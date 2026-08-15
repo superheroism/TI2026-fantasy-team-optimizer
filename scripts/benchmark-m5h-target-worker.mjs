@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import os from 'node:os';
+import { execFileSync } from 'node:child_process';
 import { performance } from 'node:perf_hooks';
 
 import { convertStatisticalModel } from '../docs/js/data/statisticalModel.js';
@@ -20,14 +21,11 @@ import { runAdaptiveTargetSearch } from './m5h-adaptive-lib.mjs';
 
 const [corpus, fixtureId, targetText, mode, candidateId] = process.argv.slice(2);
 const targetScore = Number(targetText);
-if (!['calibration', 'holdout', 'sentinel'].includes(corpus)) throw new Error('Invalid M5H corpus.');
+if (!['calibration', 'holdout'].includes(corpus)) throw new Error('Invalid M5H corpus.');
 if (!fixtureId || ![50_000, 55_000, 60_000].includes(targetScore)) throw new Error('Invalid M5H fixture/target.');
-if (!['oracle', 'adaptive', 't2-current', 't2-experimental'].includes(mode)) throw new Error('Invalid M5H worker mode.');
+if (!['oracle', 'baseline', 'adaptive', 't2-current', 't2-experimental'].includes(mode)) throw new Error('Invalid M5H worker mode.');
 
-const manifestPath = corpus === 'sentinel'
-  ? new URL('../benchmarks/m5g-target-robustness-fixtures.json', import.meta.url)
-  : new URL(`../benchmarks/m5h-target-${corpus}-fixtures.json`, import.meta.url);
-const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+const manifest = JSON.parse(fs.readFileSync(new URL(`../benchmarks/m5h-target-${corpus}-fixtures.json`, import.meta.url), 'utf8'));
 const fixture = manifest.fixtures.find((x) => x.id === fixtureId);
 if (!fixture) throw new Error(`Unknown ${corpus} fixture: ${fixtureId}`);
 const candidates = JSON.parse(fs.readFileSync(new URL('../benchmarks/m5h-target-adaptive-candidates.json', import.meta.url), 'utf8'));
@@ -42,6 +40,7 @@ const action = (id) => {
   if (!found) throw new Error(`Unknown operation: ${id}`);
   return cloneAction(found);
 };
+const sourceSha = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
 
 function memory() {
   const value = process.memoryUsage();
@@ -82,7 +81,7 @@ function stateForFixture() {
   };
 }
 
-function normalizeStandard(result, state) {
+function normalizeStandard(result) {
   const ranking = result.ranking.map((row, index) => ({
     rank: index + 1,
     key: row.action.kind !== 'board_action' ? row.action.kind : `${row.action.kind}|${row.action.operationId}|${row.action.banner}`,
@@ -131,7 +130,16 @@ if (mode === 'oracle') {
   horizon = 3;
   fidelityId = 'current';
   wideningId = 'none';
-  normalized = normalizeStandard(recommendNextAction(state, data, true, { modeledHorizonOverride: 3 }), state);
+  normalized = normalizeStandard(recommendNextAction(state, data, true, { modeledHorizonOverride: 3 }));
+} else if (mode === 'baseline') {
+  horizon = 3;
+  fidelityId = 'aggressive';
+  wideningId = 'wide';
+  normalized = normalizeStandard(recommendNextAction(state, data, true, {
+    modeledHorizonOverride: 3,
+    experimentalContinuationFidelity: CONTINUATION_FIDELITY_PRESETS.aggressive,
+    experimentalActionWidening: ACTION_WIDENING_PRESETS.wide,
+  }));
 } else if (mode === 'adaptive') {
   horizon = 3;
   fidelityId = `adaptive:${candidate.id}`;
@@ -141,7 +149,7 @@ if (mode === 'oracle') {
   horizon = 2;
   fidelityId = 'current';
   wideningId = 'none';
-  normalized = normalizeStandard(recommendNextAction(state, data, true, { modeledHorizonOverride: 2 }), state);
+  normalized = normalizeStandard(recommendNextAction(state, data, true, { modeledHorizonOverride: 2 }));
 } else {
   horizon = 2;
   fidelityId = candidate.screen.continuation;
@@ -150,7 +158,7 @@ if (mode === 'oracle') {
     modeledHorizonOverride: 2,
     experimentalContinuationFidelity: CONTINUATION_FIDELITY_PRESETS[candidate.screen.continuation],
     experimentalActionWidening: ACTION_WIDENING_PRESETS[candidate.screen.widening],
-  }), state);
+  }));
 }
 
 const runtimeMs = performance.now() - started;
@@ -160,9 +168,10 @@ setTargetDiagnosticsEnabled(false);
 setTargetSearchDiagnosticsEnabled(false);
 
 process.stdout.write(`${JSON.stringify({
+  sourceSha,
   corpus,
   fixtureId,
-  reachabilityClass: fixture.reachabilityClass ?? fixture.reachability ?? 'unknown',
+  reachabilityClass: fixture.reachabilityClass ?? 'unknown',
   boardStateId: String(fixture.boardStateId),
   targetScore,
   mode,
