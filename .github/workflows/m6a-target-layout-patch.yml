@@ -1,0 +1,36 @@
+name: M6A target layout patch
+
+on:
+  push:
+    branches:
+      - agent/m6a-versioned-board-layout
+    paths:
+      - '.github/workflows/m6a-target-layout-patch.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/m6a-versioned-board-layout
+      - name: Patch target cache identity
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/engine/targetProbability.ts')
+          s=p.read_text()
+          s=s.replace("} from '../domain/types.js';\n\nimport { bannerMechanicsKey", "} from '../domain/types.js';\nimport { DEFAULT_LAYOUT_ID } from '../domain/rules.js';\n\nimport { bannerMechanicsKey")
+          s=s.replace('bannerMechanicsKey(banner),', 'bannerMechanicsKey(banner, board.layoutId ?? DEFAULT_LAYOUT_ID),')
+          p.write_text(s)
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/engine/targetProbability.ts
+          git commit -m "M6A: scope target candidate cache by layout"
+          git push origin HEAD:agent/m6a-versioned-board-layout
