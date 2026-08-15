@@ -247,7 +247,7 @@ M5H preregistered eight deterministic adaptive policies built only from the exis
 
 The authoritative Node 22/Linux calibration completed **27/27 current-fidelity oracles**, retained all 20 future operation identities, stayed below the 6 GiB oracle memory gate, and passed **27/27 t=2 production-isolation controls**.
 
-The fixed M5G baseline completed only **18/27** fresh calibration cases within the guard. On completed cases it agreed with the oracle 14/18; median runtime was **41.88 s**, P90 **52.00 s**, and maximum oracle regret **0.2693 pp**.
+The fixed M5G baseline completed only **18/27** fresh calibration cases within the guard. On completed cases it agreed with the oracle 14/18; median runtime was **41.88 s**, P90 **52.00 s**, mean oracle regret **0.02146 pp**, and maximum oracle regret **0.2693 pp**.
 
 No adaptive candidate qualified. Even the most complete candidate, A1, finished only **26/27** cases and had non-waivable root reversals with maximum regret **0.6450 pp**. A2 completed 23/27 with maximum regret **0.2693 pp**; A3 completed 21/27 with maximum regret **0.6450 pp**. Thus the bounded family could not simultaneously satisfy complete sub-60-second execution and the frozen decision-quality gate.
 
