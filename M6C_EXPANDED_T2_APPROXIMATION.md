@@ -22,13 +22,17 @@ Acceptance thresholds were frozen in `benchmarks/m6c-expanded-candidates.json` b
 
 Frozen calibration selection: **root-k2**.
 
-## One-shot holdout
+## Holdout
 
-The holdout was consumed only after `root-k2` was frozen from calibration. It achieved 75.0% root-action agreement, max expected-score regret 0.0000, max target-probability regret 0.0003, median speedup 2.8012x, P90 speedup 3.2658x, and median structural work avoided 71.5%. Holdout gate: **FAIL**.
+The original one-shot holdout was consumed only after `root-k2` was frozen from calibration. It achieved 75.0% root-action agreement, max expected-score regret 0.0000, max target-probability regret 0.0003343, median speedup 2.8012x, P90 speedup 3.2658x, and median structural work avoided 71.5%. Holdout gate: **FAIL**.
+
+The original workflow completed the holdout successfully but failed a later documentation grep before uploading its workspace artifact. At the user's explicit direction, the exact same frozen holdout was rerun once for artifact recovery only: same corpus, same `root-k2` candidate, same acceptance thresholds, no retuning, and no alternate candidate evaluation. Recovery run `31913548812` reproduced the decision metrics exactly: 75.0% root-action agreement, zero expected-score regret, maximum target-probability regret 0.0003343, and 71.5% median structural work avoided. Runtime varied modestly on the new runner, as expected: median speedup 2.8478x and P90 speedup 3.1921x.
+
+The recovery artifact now contains the complete `exactRuns` and `candidateRuns`, including ranked root tables, engine/work counters, runtime/memory snapshots, paired metrics, and stratified summaries for every holdout case. It was uploaded immediately after the benchmark and committed before any downstream documentation step.
 
 ## Decision
 
-**Outcome B.** No candidate established the required fidelity/performance envelope. Exact expanded_5 t=2 remains the reference implementation.
+**Outcome B.** No candidate established the required fidelity/performance envelope. Exact expanded_5 t=2 remains the reference implementation. The recovery rerun does not change candidate selection or the gate decision; it completes the missing evidence deliverable.
 
 ## Production isolation
 
@@ -40,5 +44,7 @@ No production engine source was changed to enable this approximation. Default la
 - `benchmarks/m6c-expanded-holdout-fixtures.json` — frozen holdout corpus
 - `benchmarks/m6c-expanded-candidates.json` — preregistered candidates and gates
 - `benchmarks/m6c-expanded-calibration-results.json` — exact oracle + candidate calibration evidence
-- `benchmarks/m6c-selection.json` — calibration-only frozen selection
-- `benchmarks/m6c-expanded-holdout-results.json` — one-shot holdout evidence
+- `benchmarks/m6c-selection.json` — calibration-only frozen selection plus recovery provenance
+- `benchmarks/m6c-expanded-holdout-results.json` — complete recovery holdout artifact with exact/candidate ranked root tables and counters
+- GitHub Actions run `31912908836` — original gate-setting one-shot holdout
+- GitHub Actions run `31913548812`, artifact `9254329695` — frozen recovery rerun and immediately uploaded complete evidence
