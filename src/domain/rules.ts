@@ -1,16 +1,55 @@
-import type { Role, SlotColor, StatName } from './types.js';
+import type { BoardLayoutId, Role, SlotColor, StatName } from './types.js';
 
+export interface SlotDefinition { readonly index:number; readonly color:SlotColor; }
+export interface BoardLayout { readonly id:BoardLayoutId; readonly roles:Readonly<Record<Role,readonly SlotDefinition[]>>; }
+export interface Ruleset { readonly id:string; readonly boardLayout:BoardLayout; }
+
+const BLUE_POOL = ['Runes', 'Watchers', 'Wards Placed', 'Smokes Used', 'Camps Stacked', 'Lotuses'] as const satisfies readonly StatName[];
 export const LEGAL_STAT_POOLS: Record<SlotColor, readonly StatName[]> = {
   red: ['Creep Score', 'GPM', 'Deaths', 'Tower Kills', 'Madstone', 'Kills'],
   green: ['Teamfight Participation', 'Tormentor Kills', 'Roshan Kills', 'Stuns', 'Courier Kills', 'First Blood'],
-  blue: ['Runes', 'Watchers', 'Wards Placed', 'Smokes Used', 'Camps Stacked', 'Lotuses'],
+  blue: BLUE_POOL,
+  purple: BLUE_POOL,
 };
 
+const slots=(colors:readonly SlotColor[]):readonly SlotDefinition[]=>colors.map((color,index)=>({index,color}));
+
+export const BOARD_LAYOUTS:Readonly<Record<BoardLayoutId,BoardLayout>>={
+  legacy_3:{
+    id:'legacy_3',
+    roles:{
+      core:slots(['red','green','red']),
+      mid:slots(['red','blue','green']),
+      support:slots(['blue','green','blue']),
+    },
+  },
+  expanded_5:{
+    id:'expanded_5',
+    roles:{
+      core:slots(['red','green','red','green','red']),
+      mid:slots(['red','purple','green','red','green']),
+      support:slots(['purple','green','purple','green','purple']),
+    },
+  },
+};
+
+export const RULESETS={
+  ti2026_legacy:{id:'ti2026_legacy',boardLayout:BOARD_LAYOUTS.legacy_3},
+  ti2026_expanded:{id:'ti2026_expanded',boardLayout:BOARD_LAYOUTS.expanded_5},
+} as const satisfies Record<string,Ruleset>;
+
+export const DEFAULT_RULESET:Ruleset=RULESETS.ti2026_legacy;
+export const DEFAULT_LAYOUT_ID:BoardLayoutId=DEFAULT_RULESET.boardLayout.id;
+
+/** Legacy compatibility alias. New code should use boardLayout(layoutId).roles[role]. */
 export const BANNER_COLORS: Record<Role, readonly [SlotColor, SlotColor, SlotColor]> = {
   core: ['red', 'green', 'red'],
   mid: ['red', 'blue', 'green'],
   support: ['blue', 'green', 'blue'],
 };
 
+export function boardLayout(id:BoardLayoutId=DEFAULT_LAYOUT_ID):BoardLayout { return BOARD_LAYOUTS[id]; }
+export function slotDefinitions(id:BoardLayoutId,role:Role):readonly SlotDefinition[] { return BOARD_LAYOUTS[id].roles[role]; }
+export function statPoolColor(color:SlotColor):'red'|'green'|'blue' { return color==='purple'?'blue':color; }
 export function legalStats(color: SlotColor): readonly StatName[] { return LEGAL_STAT_POOLS[color]; }
 export function isLegalStat(color: SlotColor, stat: StatName): boolean { return LEGAL_STAT_POOLS[color].includes(stat); }
