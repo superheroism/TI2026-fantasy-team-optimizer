@@ -6,6 +6,8 @@ import { createTerminalSearchRuntime } from './optimizerTerminal.js';
 import { createContinuationRuntime } from './optimizerContinuation.js';
 import { formatAction, OPTIMIZER_ROLES, weightedQuantile } from './optimizerHelpers.js';
 import type { OptimizerEngineDiagnostics, OptimizerSearchOptions } from './optimizerTypes.js';
+import { CERTIFIED_EXPANDED_T2_POLICY, isCertifiedExpandedT2PolicyValid } from './expandedT2AdaptivePolicy.js';
+import { recommendExpandedT2Adaptive } from './expandedT2Adaptive.js';
 
 export { formatAction } from './optimizerHelpers.js';
 export type { OptimizerEngineDiagnostics, OptimizerSearchOptions } from './optimizerTypes.js';
@@ -14,7 +16,7 @@ let lastDiagnostics:OptimizerEngineDiagnostics|undefined;
 
 function zeroDiagnostics():OptimizerEngineDiagnostics {
   return {
-    modeledHorizon:0,descriptiveBoardMaterializations:0,descriptiveBoardCacheEntries:0,
+    searchMode:'exact',modeledHorizon:0,descriptiveBoardMaterializations:0,descriptiveBoardCacheEntries:0,
     expectedScalarStates:0,targetScalarStates:0,terminalScoringCalls:0,expectedScoringMs:0,targetScoringMs:0,
     expectedBannerMaterializations:0,expectedBannerCacheEntries:0,expectedBannerCacheHits:0,expectedBannerCacheMisses:0,
     targetBannerMaterializations:0,targetBannerCacheEntries:0,targetBannerCacheHits:0,targetBannerCacheMisses:0,
@@ -48,6 +50,21 @@ export function recommendNextAction(
     ?productionHorizon
     :Math.max(1,Math.floor(searchOptions.modeledHorizonOverride));
   const horizon=Math.max(1,Math.min(state.tokensRemaining,requestedHorizon));
+  const layoutId=state.board.layoutId??'legacy_3';
+  let adaptiveFallbackReason:string|undefined;
+
+  if(layoutId==='expanded_5'&&horizon===2){
+    if(isCertifiedExpandedT2PolicyValid(CERTIFIED_EXPANDED_T2_POLICY)){
+      try{
+        const adaptive=recommendExpandedT2Adaptive(state,data,uniformStatFallback,CERTIFIED_EXPANDED_T2_POLICY);
+        lastDiagnostics=adaptive.diagnostics;
+        return adaptive.result;
+      }catch(error){
+        adaptiveFallbackReason=error instanceof Error?error.message:'unknown expanded t2 adaptive integration failure';
+      }
+    }else adaptiveFallbackReason='invalid M6D certified adaptive-tight policy configuration';
+  }
+
   const continuationStrata=Math.max(1,data.simulation.continuationOutcomeStrata??8);
   const continuationEntryStrata=Math.max(1,data.simulation.continuationEntryStrata??12);
   const overrideMenus=data.menuSamples?.filter(menu=>menu.length===3);
@@ -126,11 +143,13 @@ export function recommendNextAction(
   const ranking=rows.sort((a,b)=>b.expectedFinalUtility-a.expectedFinalUtility);
   const terminalDiagnostics=terminal.diagnostics(),continuationDiagnostics=continuation.diagnostics();
   lastDiagnostics={
+    searchMode:adaptiveFallbackReason?'expanded_t2_exact_fallback':'exact',
     modeledHorizon:horizon,
     ...terminalDiagnostics,
     terminalScoringCalls:terminalDiagnostics.terminalScoringCalls+1,
     ...continuationDiagnostics,
     valueFunction:valueFunction.getDiagnostics(),menuOperator:menuModel.getDiagnostics(),
+    ...(adaptiveFallbackReason?{fallbackReason:adaptiveFallbackReason}:{}),
   };
   return {current,ranking,recommendation:ranking[0]!,futureMenuMode:menuModel.mode};
 }
