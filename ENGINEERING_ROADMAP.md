@@ -528,3 +528,15 @@ M6C closes as **Outcome B**. The preregistered bounded approximation family did 
 ## M6D — Expanded t=2 adaptive exact certification
 
 M6D closes as **Outcome A**. A frozen staged K=2 → K=4 → K=6 → exact-fallback policy validated on a fresh one-shot expanded_5 t=2 holdout with exact root agreement and material aggregate speedup. The result supports a **separately frozen production-integration package**; M6D itself does not enable the policy. Production stays `legacy_3`, horizon <=2; M5H conclusions remain unchanged and target t=3/t=4 stay frozen.
+
+---
+
+## M6E — Expanded t=2 production integration
+
+M6E closes as **Outcome A / production integration passed**. The unchanged M6D-certified `adaptive-tight` policy is now the normal production search path only for `expanded_5` at modeled horizon `t=2`. `legacy_3` remains on the established exact path, `expanded_5` t=0/1 remains exact, and explicit engineering horizon overrides remain exact so historical M6C/M6D oracle tooling retains its pre-M6E semantics.
+
+The production route validates the committed M6D certification artifacts at build/runtime boundaries. Invalid policy configuration, integration invariant failure, or unresolved ambiguity after K=6 falls back to exact evaluation. The product exposes no K-stage controls; board geometry remains the existing `legacy_3` / `expanded_5` selector.
+
+The authoritative Node 22/Linux 12-case integration corpus achieved **100% root-action agreement**, **0 maximum expected-score regret**, and **0 maximum target-probability regret** versus exact. Median speedup was **1.66×**, P90 speedup **2.85×**, median structural work avoided **41.8%**, and exact fallback **41.7%**. The lower median speedup than M6D's 2.52× holdout result is explained by corpus mix: M6E intentionally contains more ambiguous integration cases and falls back exactly in 5/12 cases, which run near exact cost. No policy retuning occurred.
+
+**Sequencing decision:** stop after M6E. Do not automatically resume target `t=3`, begin `t=4`, consume the untouched M5H holdout, or begin another optimization milestone. Any next package must be separately proposed and frozen.
