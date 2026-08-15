@@ -1,0 +1,58 @@
+name: M6A source boundary patches
+
+on:
+  push:
+    branches: [agent/m6a-versioned-board-layout]
+    paths: ['.github/workflows/m6a-source-patches.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/m6a-versioned-board-layout
+      - name: Apply bounded layout generalization patches
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p=Path('src/ui/app.ts')
+          s=p.read_text()
+          s=s.replace("function card(role:Role,banner:BannerState,index:0|1|2):string{\n  const e=banner.emblems[index],pool=legalStats(e.color),derived=evaluateBanner(banner)[index];", "function card(role:Role,banner:BannerState,index:number):string{\n  const e=banner.emblems[index],derived=evaluateBanner(banner)[index];\n  if(!e||!derived)throw new RangeError(`Banner ${role} has no slot ${index}.`);\n  const pool=legalStats(e.color);")
+          s=s.replace("    <div class=\"emblems\">${card(role,b,0)}${card(role,b,1)}${card(role,b,2)}</div>", "    <div class=\"emblems\">${b.emblems.map((_,index)=>card(role,b,index)).join('')}</div>")
+          s=s.replace("const role=el.dataset.role as Role,index=Number(el.dataset.index) as 0|1|2,e=board[role].emblems[index];el.querySelectorAll", "const role=el.dataset.role as Role,index=Number(el.dataset.index),e=board[role].emblems[index];if(!e)return;el.querySelectorAll")
+          s=s.replace("  if(!('color' in op))return [0,1,2];", "  if(!('color' in op))return board[role].emblems.map((_,index)=>index);")
+          p.write_text(s)
+
+          p=Path('src/engine/scoring.ts')
+          s=p.read_text()
+          s=s.replace("  BannerState, BoardEvaluation, BoardState, DataBundle, PlayerProfile,\n  PlayerScore, Role, ScoringRules, StatName", "  BannerState, BoardEvaluation, BoardLayoutId, BoardState, DataBundle, PlayerProfile,\n  PlayerScore, Role, ScoringRules, StatName")
+          s=s.replace("import { bannerMechanicsKey } from './bannerMechanics.js';", "import { bannerMechanicsKey } from './bannerMechanics.js';\nimport { DEFAULT_LAYOUT_ID } from '../domain/rules.js';")
+          s=s.replace("function selectedUniforms(rng:SeededRandom,corr:number[][]):number[]{\n  // Preserve the legacy three-slot random stream and numerical path exactly.\n  return corr.length===3?correlatedUniformsPrepared(rng,cholesky3(corr)):correlatedUniformsPreparedN(rng,cholesky(corr));\n}\n\n", "")
+          s=s.replace("  const corr=selectedCorrelation(banner.role,stats,data);\n  const evaluatedBanner=evaluateBanner(banner);", "  const corr=selectedCorrelation(banner.role,stats,data);\n  const legacyThree=corr.length===3,L=legacyThree?cholesky3(corr):cholesky(corr);\n  const sampleUniforms=()=>legacyThree?correlatedUniformsPrepared(rng,L):correlatedUniformsPreparedN(rng,L);\n  const evaluatedBanner=evaluateBanner(banner);")
+          # The RNG must exist before the sampling closure is used; declaration remains before loops.
+          s=s.replace("  const sampleUniforms=()=>legacyThree?correlatedUniformsPrepared(rng,L):correlatedUniformsPreparedN(rng,L);\n  const evaluatedBanner", "  const evaluatedBanner")
+          s=s.replace("  const rng=new SeededRandom((data.simulation.seed+hashString(scenarioKey)+seedOffset)>>>0);\n  const scoring=data.simulation.scoring;", "  const rng=new SeededRandom((data.simulation.seed+hashString(scenarioKey)+seedOffset)>>>0);\n  const legacyThree=corr.length===3,L=legacyThree?cholesky3(corr):cholesky(corr);\n  const sampleUniforms=()=>legacyThree?correlatedUniformsPrepared(rng,L):correlatedUniformsPreparedN(rng,L);\n  const scoring=data.simulation.scoring;")
+          s=s.replace("selectedUniforms(rng,corr)", "sampleUniforms()")
+          s=s.replace("const key=`${role}|${bannerMechanicsKey(banner)}|${iterations}`;", "const key=`${role}|${bannerMechanicsKey(banner,board.layoutId??DEFAULT_LAYOUT_ID)}|${iterations}`;")
+          s=s.replace("export function rolePrefixFrontier(role:Role,banner:BannerState,data:DataBundle,iterations=data.simulation.optimizerIterations):RolePrefixFrontierEntry[]{", "export function rolePrefixFrontier(role:Role,banner:BannerState,data:DataBundle,iterations=data.simulation.optimizerIterations,layoutId:BoardLayoutId=DEFAULT_LAYOUT_ID):RolePrefixFrontierEntry[]{")
+          s=s.replace("const key=`${role}|${bannerMechanicsKey(banner)}|${iterations}`;;", "const key=`${role}|${bannerMechanicsKey(banner,layoutId)}|${iterations}`;;")
+          s=s.replace("core:rolePrefixFrontier('core',board.core,data,iterations),\n    mid:rolePrefixFrontier('mid',board.mid,data,iterations),\n    support:rolePrefixFrontier('support',board.support,data,iterations),", "core:rolePrefixFrontier('core',board.core,data,iterations,board.layoutId??DEFAULT_LAYOUT_ID),\n    mid:rolePrefixFrontier('mid',board.mid,data,iterations,board.layoutId??DEFAULT_LAYOUT_ID),\n    support:rolePrefixFrontier('support',board.support,data,iterations,board.layoutId??DEFAULT_LAYOUT_ID),")
+          p.write_text(s)
+
+          p=Path('src/engine/transitions.ts')
+          s=p.read_text().replace("const candidates=pool.filter(stat=>(!op.excludeCurrent||stat!==original)&&!used.has(stat));", "const candidates=pool.filter(stat=>stat!==original&&!used.has(stat));")
+          p.write_text(s)
+          PY
+      - name: Commit source patches
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/ui/app.ts src/engine/scoring.ts src/engine/transitions.ts
+          git diff --cached --quiet && exit 0
+          git commit -m "M6A: generalize UI and scoring layout boundaries"
+          git push origin HEAD:agent/m6a-versioned-board-layout
