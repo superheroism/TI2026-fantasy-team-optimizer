@@ -196,7 +196,7 @@ The runtime approximation affects continuation fidelity, not the legal action se
 M5C tests search-only compression of **future fresh-menu transition outcomes** while preserving the root decision boundary, exact menu probabilities, Dota mechanics, and production `t=2` policy. The approximation is an explicit per-call engineering option and is structurally ignored at `t<=2`.
 
 | Schedule | t=3 top-action agreement | Max oracle regret | Mean Kendall τ | Median runtime / current |
-|---|---:|---:|---:|---:|
+|---|---:|---:|---:|
 | High (8→6→4) | 12/12 | 0 | 0.969 | 1.194× |
 | Medium (6→4→2) | 11/12 | 408.9 | 0.962 | 0.959× |
 | Aggressive (4→2→1) | 12/12 | 0 | 0.957 | 0.579× |
@@ -213,42 +213,44 @@ Raw reports: `benchmarks/m5c-depth-calibration.json` and `benchmarks/m5c-four-to
 
 M5D adds deterministic progressive widening to **distant fresh-menu operation evaluation** while leaving the root/current visible menu exact. Every future operation identity retains a value and remains in the exact uniform best-of-three menu operator; operations outside the deepening cap keep their one-spend shallow value.
 
-The frozen candidates were Wide `12→8→4`, Medium `8→5→3`, and Narrow `5→3→2`, with M5C aggressive outcome fidelity `4→2→1` fixed in the background. The widest passing policy rule selected **Wide**.
+The frozen candidates were Wide `12→8→4`, Medium `8→5→3`, and Narrow `5→3→2`. M5D used a deterministic proxy ranking based only on the current post-action state; it did not inspect deeper future outcomes to decide which operations received extra search.
 
-Final frozen calibration and holdout results:
+The persisted calibration showed the following at expected-score `t=3`:
 
-| Gate | Result |
-|---|---:|
-| Calibration top-action agreement | **12/12** |
-| Calibration max regret | **0** |
-| Wide median runtime / oracle | **0.471×** |
-| Wide median runtime / M5C aggressive | **0.756×** |
-| Combined calibration + holdout agreement | **19/20 (95%)** |
-| Combined max regret | **383.53** |
-| Mean normalized regret | **0.050** |
-| Disagreements with oracle gap >1,000 | **0** |
-| Proxy deep winner within shallow top 3 | **24/24** |
+| Policy | Top-action agreement | Max oracle regret | Median runtime / current |
+|---|---:|---:|---:|
+| Wide `12→8→4` | 12/12 | 0 | 0.509× |
+| Medium `8→5→3` | 11/12 | 7.8 | 0.379× |
+| Narrow `5→3→2` | 10/12 | 28.5 | 0.269× |
 
-The sole 20-case disagreement is a permitted near-tie on `holdout-05`; there is no stop/menu bias or disagreement-family concentration. All three M5C interaction sentinels preserve the oracle winner.
+Wide preserved the oracle root action across the frozen calibration set and was therefore the only policy advanced to four-token measurement. Under Aggressive continuation + Wide widening, four of five expected-score `t=4` workloads completed under 60 seconds; trait-heavy remained over the ceiling. Production remained `t<=2`.
 
-The first four-token run exposed an exact scoring hot spot rather than a widening-fidelity failure. Two semantics-preserving fixes—dense prefix-aligned terminal composition and a direct canonical-team title-boost lookup—reduced terminal scoring overhead while retaining compact-vs-descriptive scoring equivalence and alias behavior.
+## M5E target-probability t=3
 
-The authoritative final `t=4` run completed all five required expected-score workloads below 60 seconds:
+M5E extended the engineering-only deep-search experiment to the target-probability objective. The target kernel remained exact; only the previously validated M5C/M5D continuation and widening schedules were composed around it.
 
-| Workload | Wide `t=4` |
-|---|---:|
-| Default | **31.86 s** |
-| Quality-heavy | **36.87 s** |
-| Stat-heavy | **48.22 s** |
-| Trait-heavy | **29.35 s** |
-| Global-quality | **31.36 s** |
+Current-fidelity target `t=3` was computationally severe, with large state/target variation. The package therefore established a frozen oracle/candidate protocol rather than treating a single benchmark as sufficient evidence. Production remained `t<=2`.
 
-**Decision: M5D Outcome A.** Four-token expected-score search is feasible under the frozen M5C-aggressive + M5D-Wide engineering policy. Production nevertheless remains capped at two modeled token spends, with both approximations disabled by default. The next bounded experiment is target-probability `t=3` feasibility; production depth should not change until that path is characterized.
+## M5F exact target-search kernel acceleration
 
-Raw evidence: `benchmarks/m5d-proxy-rank-diagnostics.json`, `benchmarks/m5d-widening-calibration.json`, `benchmarks/m5d-widening-holdout.json`, and `benchmarks/m5d-four-token-benchmark.json`. Full interpretation: `M5D_PROGRESSIVE_ACTION_WIDENING.md`.
+M5F optimized the exact target-search kernel without changing its mathematics or probability semantics. On the canonical frozen target/state, current-fidelity target `t=3` completed in about **167.00 s** and Aggressive + Wide completed in about **58.42 s**; both selected the same root action. The exact-kernel feasibility gate passed, enabling a broader robustness study rather than production exposure.
 
 ## M5G target t=3 robustness
 
-M5G validated the frozen target-probability `t=3` engineering policy across the canonical M5F state plus all eight M5D holdouts at 50k, 55k, and 60k (27 cases). All 27 current-fidelity oracles completed under the 600-second ceiling, but only **15/27** aggressive+Wide candidates completed under the strict 60-second ceiling; 12 timed out. Among the 15 completed pairs, **14/15** agreed on the root action. The completed `holdout-05 @ 60k` case was a non-waivable disagreement: the oracle chose Core → `red-quality-random`, the candidate chose Mid → `red-quality-random`, with a **1.063 percentage-point** oracle top-two gap and **1.063 percentage-point** oracle regret. No completed run exceeded the 6 GiB guard, all 27 t=2 production-isolation controls passed, and the M5F canonical 55k sentinel reproduced.
+M5G ran the frozen 27-case validation set across nine states and `50k / 55k / 60k` thresholds. All 27 current-fidelity oracles completed. Aggressive `4→2→1` + Wide `12→8→4` completed under 60 seconds in only **15/27** cases. Among those 15 comparisons it disagreed once: `holdout-05 @ 60k`, with **1.063 pp** oracle regret, above the frozen `0.25 pp` limit.
 
-**Decision: M5G Outcome B — target t=3 robustness not established.** The policy-fidelity failure independently prevents approval even if runtime is improved. Production remains capped at two modeled token spends; target t=3 is not exposed and t=4 is not started. See `M5G_TARGET_T3_ROBUSTNESS.md` and `benchmarks/m5g-target-t3-robustness.json` for the frozen result and `benchmarks/m5g-target-robustness-fixtures.json` for the corpus definition.
+Oracle target-kernel work ranged from roughly **5.75B to 38.01B scenario checks**, demonstrating large state/threshold heterogeneity. M5G therefore ended Outcome B and motivated adaptive precision: screen all roots cheaply, then selectively refine decision-relevant contenders.
+
+## M5H adaptive target t=3 precision
+
+M5H preregistered eight deterministic adaptive policies built only from the existing M5C continuation and M5D widening schedules. It froze separate calibration and holdout corpora before inspecting results. Each corpus contains nine reachable states crossed with `50k / 55k / 60k`; calibration seed is `2026081501`, holdout seed is `2026081502`.
+
+The authoritative Node 22/Linux calibration completed **27/27 current-fidelity oracles**, retained all 20 future operation identities, stayed below the 6 GiB oracle memory gate, and passed **27/27 t=2 production-isolation controls**.
+
+The fixed M5G baseline completed only **18/27** fresh calibration cases within the guard. On completed cases it agreed with the oracle 14/18; median runtime was **41.88 s**, P90 **52.00 s**, and maximum oracle regret **0.2693 pp**.
+
+No adaptive candidate qualified. Even the most complete candidate, A1, finished only **26/27** cases and had non-waivable root reversals with maximum regret **0.6450 pp**. A2 completed 23/27 with maximum regret **0.2693 pp**; A3 completed 21/27 with maximum regret **0.6450 pp**. Thus the bounded family could not simultaneously satisfy complete sub-60-second execution and the frozen decision-quality gate.
+
+**Decision: M5H Outcome C.** The separately frozen holdout was intentionally **not consumed**, no selected-candidate file was created, target `t=3` remains engineering-only, and production remains `t<=2`. The failure is mixed runtime + policy fidelity rather than semantic/integrity failure.
+
+The recommended next bounded technique is exact reuse of root-specific target-search preparation/evaluation work across screening and refinement passes. The objective should be to recover compute without introducing another fidelity approximation, then reassess adaptive refinement only if exact equivalence and measured headroom justify it. Do not begin target `t=4`.
