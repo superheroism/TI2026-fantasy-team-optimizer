@@ -9,6 +9,7 @@
   "notes": [
     "All schedules reference existing frozen M5C/M5D presets without modification.",
     "Margin 0.0025 = 0.25 percentage points; 0.005 = 0.50 percentage points.",
+    "winner_margin triggers only when the screened top-two margin is <= delta; when triggered, it refines roots within delta of the screened winner up to maxRefined. A clearly separated winner triggers no refinement.",
     "Stop and menu_reroll are eligible under the same contender rule as board actions.",
     "Root/current-menu transitions remain full fidelity and all visible root alternatives are screened."
   ],
