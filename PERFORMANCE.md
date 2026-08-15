@@ -257,23 +257,27 @@ The recommended next bounded technique is exact reuse of root-specific target-se
 
 ## M6A versioned board-layout baseline
 
-M6A measured the 9→15 emblem expansion before attempting new search optimization. Authoritative runner: Node `v22.23.2`, Linux x64; base SHA `b058010829d7b48c5968d2540acf65a40b64f2a7`. Production controls remained `legacy_3`, horizon `<=2`; no new search approximation was introduced, M5H holdout data were not consumed, and neither target `t=3` nor `t=4` was run. The committed artifact is `benchmarks/m6a-layout-comparison.json`.
+M6A generalizes the engine from the legacy 9-emblem board to a versioned 15-emblem layout while preserving production behavior. Both layouts use exactly the same three stat colors — **Red, Green, and Blue** — and each color uses the unchanged `legacy_3` eligible-stat pool.
 
-Five-slot quality redistribution is fully defined in the final M6A model from authoritative project input: choose one uniformly random slot to decrease, then choose two distinct recipients uniformly from the six unordered pairs among the remaining four slots. The other two slots are unchanged. Tier-direction distributions and Tier-I/Tier-V floor/cap waste remain unchanged, and duplicate final states are aggregated. The same implementation reduces exactly to the legacy mechanic on a three-slot banner.
+Five-slot quality redistribution is defined from authoritative project input: choose one uniformly random slot to decrease, then choose two distinct recipients uniformly from the six unordered pairs among the remaining four slots. The other two slots are unchanged. Tier-direction distributions and Tier-I/Tier-V floor/cap waste remain unchanged, and duplicate final states are aggregated. The same implementation reduces exactly to the legacy mechanic on a three-slot banner.
+
+The authoritative corrected Node 22/Linux benchmark was regenerated after removing the erroneous fourth stat-color assumption. It completed all 12 matrix cases with no benchmark errors or timeouts.
 
 | Workload | expanded / legacy optimizer runtime | Interpretation |
 |---|---:|---|
-| stat-heavy `t=1` | 0.24×* | Noisy isolated wall-time result; state counts still increase. |
-| stat-heavy `t=2` | 1.95× | Frontier growth is material at the production horizon. |
-| quality-heavy `t=2` | 4.21× | Largest measured relative expansion. |
-| trait-heavy `t=2` | 2.33× | Repeated-color/all-matching operations enlarge continuation breadth. |
-| global-quality `t=2` | 3.34× | Final apples-to-apples comparison with expanded redistribution enabled. |
-| target-probability `t=2` | 1.93× | Expanded ≈7.48 s vs legacy ≈3.87 s on this runner. |
+| stat-heavy `t=1` | 0.14×* | Noisy isolated wall-time result; state counts increase substantially. |
+| stat-heavy `t=2` | 2.86× | Correctly targeting all repeated Blue/Red/Green slots enlarges the frontier. |
+| quality-heavy `t=2` | 5.48× | Largest measured relative expansion. |
+| trait-heavy `t=2` | 3.26× | Repeated-color/all-matching operations enlarge continuation breadth. |
+| global-quality `t=2` | 4.13× | Includes validated five-slot redistribution. |
+| target-probability `t=2` | 3.09× | Highest absolute-cost workload in the corrected matrix. |
 
 `*` Do not interpret the isolated `t=1` timing as a structural expanded-board speedup. The production-relevant `t=2` runs and state/frontier counters are the useful comparison.
 
-The structural signal is clear. Representative Core green-stat branching remains **5 → 21 reachable outcomes**, while terminal scoring is still approximately flat at roughly 150 ms. Expanded target-probability `t=2` reaches **11,284 terminal entries** and takes about **7.48 s** in the final run. The increased runtime is therefore dominated by transition/frontier growth and downstream unique-state evaluation rather than the five-dimensional scoring kernel itself.
+The structural conclusion strengthens after the correction. Representative Core green-stat branching remains **5 → 21 reachable outcomes**, while the corrected expanded target-probability `t=2` run reaches **17,862 target scalar states**. The dominant cost is transition/frontier growth and downstream unique-state evaluation rather than simply encoding five slots.
 
-The final benchmark completed **12/12** matrix cases with **0 benchmark errors and 0 timeouts**. The one-shot Node 22 finalization workflow also rebuilt generated artifacts and ran the complete test suite successfully after enabling five-slot redistribution; the workflow file was then removed from the branch so it does not become permanent repository machinery. M6A therefore closes **Outcome A**: one versioned engine supports both geometries and all currently known operation semantics while preserving production `legacy_3` behavior.
+The final validation rebuilt generated artifacts, ran the corrected benchmark, and passed the complete **199-test** suite. A targeted audit also verifies that M6A board/stat semantics contain no fourth stat color. Existing unrelated visual-theme uses of the word “purple” are intentionally unaffected because they are UI palette terminology, not emblem/stat semantics.
 
-No M5C/M5D policy was retuned. Production remains `legacy_3` / `t<=2`; the M5H holdout remains untouched; target `t=3` was not resumed and `t=4` was not begun. The next package should profile expanded-board `t=2` frontier containment first while retaining exact target-search work reuse as the other major performance opportunity.
+M6A closes **Outcome A**: one versioned engine supports `legacy_3` and `expanded_5`, all known expanded operation semantics are represented, and stat legality remains the original Red/Green/Blue pools. Production remains `legacy_3` / `t<=2`; the M5H holdout remains untouched; target `t=3` was not resumed and `t=4` was not begun.
+
+The next package should profile expanded-board `t=2` frontier containment first while retaining exact target-search work reuse as the other major performance opportunity.

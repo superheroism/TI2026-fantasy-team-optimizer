@@ -162,7 +162,22 @@ Authoritative output:
 
 - `benchmarks/m6a-layout-comparison.json`
 
-The final comparison must be regenerated after the stat-color correction so its runtime evidence corresponds to the corrected Red/Green/Blue geometry. No performance conclusion from the prior mislabeled-color run is treated as final evidence until that regeneration completes.
+The corrected comparison was generated on Node `v22.23.2`, Linux x64 after removing the erroneous fourth stat-color assumption. It completed all 12 cases with no benchmark error or timeout.
+
+| Workload | Expanded / legacy |
+|---|---:|
+| Stat-heavy `t=1` | 0.14×* |
+| Stat-heavy `t=2` | 2.86× |
+| Quality-heavy `t=2` | 5.48× |
+| Trait-heavy `t=2` | 3.26× |
+| Global-quality `t=2` | 4.13× |
+| Target-probability `t=2` | 3.09× |
+
+`*` The isolated `t=1` wall-time ratio is noisy and should not be interpreted as a structural expanded-board speedup.
+
+The corrected expanded target-probability run reaches **17,862 target scalar states**. Representative Core green-stat one-step branching remains **5 → 21 outcomes**. The stronger runtime expansion relative to the earlier erroneous-color run is expected: Blue-targeted operations now correctly recognize all added Blue slots rather than treating those physical positions as a separate color.
+
+The final validation rebuilt generated artifacts, regenerated this benchmark, passed all **199 tests**, and passed a targeted audit that no fourth stat color remains in M6A board/stat semantics. Visual-theme uses of “purple” remain unrelated UI palette terminology and are not stat colors.
 
 ## Production decision
 
@@ -177,6 +192,6 @@ The expanded layout is fully representable and its known operation mechanics are
 
 ## Outcome
 
-Final classification remains pending regeneration of the authoritative M6A benchmark/test evidence after removal of the erroneous fourth-color assumption. The intended structural outcome is unchanged: one versioned engine, exact legacy compatibility, expanded five-slot geometry using only Red/Green/Blue, and no parallel implementation.
+Final classification: **Outcome A**. Legacy compatibility passes; expanded geometry, codecs, legality, transitions, scoring, caches, and UI paths are layout-aware; both layouts use only Red, Green, and Blue with unchanged eligible-stat pools; five-slot quality redistribution is fully defined and tested; and the corrected Node 22 benchmark/test finalization completed successfully.
 
-Production remains `legacy_3` / `t<=2`. Do not resume target `t=3`, consume the M5H holdout, or begin target `t=4` in M6A.
+Production remains `legacy_3` / `t<=2`. The next package should be selected from the corrected expanded-board frontier profile. Do not resume target `t=3`, consume the M5H holdout, or begin target `t=4` in M6A.
