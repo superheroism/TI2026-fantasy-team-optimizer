@@ -509,3 +509,10 @@ The corrected authoritative Node 22 matrix completed 12/12 cases and the complet
 The dominant effect is frontier/branch growth: representative stat-heavy one-step reachable outcomes remain 5 → 21, while correctly recognizing the added Blue slots substantially increases the operations and future states reachable from Mid/Support. M6A therefore closes as **Outcome A** with exactly three stat colors and one authoritative implementation.
 
 **Sequencing decision:** do not resume experimental target `t=3`, consume the untouched M5H holdout, or begin `t=4` yet. The corrected measurements make expanded-board `t=2` frontier containment the next problem to profile first; exact target-search reuse from M5H remains relevant, but the next package should be selected from the expanded frontier profile rather than assumed in advance.
+---
+
+## M6B — Expanded t=2 frontier containment
+
+M6B closes as **Outcome B**. Exact profiling shows that the 15-emblem `t=2` slowdown is predominantly intrinsic frontier growth rather than a missing aggregation/transposition cache. Existing compact transitions aggregate at banner ID before downstream work; terminal evaluation is canonical BoardStateID-memoized; role-local scoring/target preparation already reuses unchanged banners; and target pair/suffix caches do not capacity-thrash. The expanded target case reaches 17,862 target scalar states and 1.384B exact scenario checks, while pair/suffix cache construction is a small fraction of total target-kernel time.
+
+**Sequencing decision:** do not manufacture another exact cache. The next bounded package should calibrate expanded-board-specific `t=2` approximation candidates against frozen exact expanded oracles before any production change. Do not reuse M5C/M5D/M5H calibration conclusions without fresh expanded-board validation. Production stays `legacy_3` / `t<=2`; do not resume target `t=3`, consume the M5H holdout, or begin target `t=4` yet.
