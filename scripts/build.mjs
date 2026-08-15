@@ -64,6 +64,9 @@ for (const role of ['core', 'mid', 'support']) {
   }
 }
 
+// M6E production thresholds are generated from the frozen M6D certification artifacts.
+execFileSync(process.execPath, [resolve(root, 'scripts/generate-m6e-policy.mjs')], { cwd: root, stdio: 'inherit' });
+
 rmSync(resolve(root, 'build'), { recursive: true, force: true });
 rmSync(resolve(root, 'docs'), { recursive: true, force: true });
 mkdirSync(resolve(root, 'docs/js'), { recursive: true });
