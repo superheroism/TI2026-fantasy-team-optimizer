@@ -15,21 +15,29 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: agent/m6a-versioned-board-layout
-      - name: Correct scoring boundary patch
+      - name: Enforce descriptive adapter invariants
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('src/engine/scoring.ts')
+          p=Path('src/engine/stateEncoding.ts')
           s=p.read_text()
-          s=s.replace("  const corr=selectedCorrelation(banner.role,stats,data);\n  const legacyThree=corr.length===3,L=legacyThree?cholesky3(corr):cholesky(corr);\n  const evaluatedBanner=evaluateBanner(banner);", "  const corr=selectedCorrelation(banner.role,stats,data);\n  const evaluatedBanner=evaluateBanner(banner);")
-          s=s.replace("const key=`${role}|${bannerMechanicsKey(banner,board.layoutId??DEFAULT_LAYOUT_ID)}|${iterations}`;;", "const key=`${role}|${bannerMechanicsKey(banner,layoutId)}|${iterations}`;;")
-          p.write_text(s)
+          old="""export function encodeBannerState(banner:BannerState,layoutId:BoardLayoutId=DEFAULT_LAYOUT_ID):BannerStateID {
+  const slots=boardLayout(layoutId).roles[banner.role];if(banner.emblems.length!==slots.length)throw new Error(`${layoutId}/${banner.role} requires ${slots.length} emblems, got ${banner.emblems.length}.`);
+  return encodeBannerEmblemIds(layoutId,banner.emblems.map((emblem,index)=>encodeEmblemState(banner.role,index,emblem,layoutId)));
+}"""
+          new="""export function encodeBannerState(banner:BannerState,layoutId:BoardLayoutId=DEFAULT_LAYOUT_ID):BannerStateID {
+  const slots=boardLayout(layoutId).roles[banner.role];if(banner.emblems.length!==slots.length)throw new Error(`${layoutId}/${banner.role} requires ${slots.length} emblems, got ${banner.emblems.length}.`);
+  const stats=banner.emblems.map(emblem=>emblem.stat);if(new Set(stats).size!==stats.length)throw new Error(`${layoutId}/${banner.role} contains duplicate stats.`);
+  return encodeBannerEmblemIds(layoutId,banner.emblems.map((emblem,index)=>encodeEmblemState(banner.role,index,emblem,layoutId)));
+}"""
+          if old not in s: raise SystemExit('encodeBannerState patch target not found')
+          p.write_text(s.replace(old,new))
           PY
-      - name: Commit correction
+      - name: Commit invariant
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/engine/scoring.ts
+          git add src/engine/stateEncoding.ts
           git diff --cached --quiet && exit 0
-          git commit -m "M6A: correct scoring layout cache boundary"
+          git commit -m "M6A: validate duplicate stats at board adapter boundary"
           git push origin HEAD:agent/m6a-versioned-board-layout
