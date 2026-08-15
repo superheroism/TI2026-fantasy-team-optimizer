@@ -21,6 +21,7 @@ import {
   getTransitionDiagnostics,
   resetTransitionDiagnostics,
 } from '../docs/js/engine/compactTransitions.js';
+import { enumerateQualityRedistribution } from '../docs/js/engine/transitions.js';
 
 const ROLES=['core','mid','support'];
 const context={selectedTeam:'M6A',expectedSeries:5};
@@ -144,9 +145,49 @@ test('identical mutable emblem states at different physical slots remain positio
   assert.notEqual(slot0Changed,slot2Changed);
 });
 
-test('expanded redistribution is unavailable until authoritative five-slot selection semantics exist',()=>{
-  const id=encodeBannerState(makeExpandedBanner('mid'),'expanded_5');
-  assert.deepEqual(enumerateCompactBannerOperation('mid',id,{id:'redistribute',label:'Redistribute',kind:'quality_redistribution'},true,'expanded_5'),[]);
+test('expanded redistribution chooses one down slot and two of the remaining four uniformly',()=>{
+  const banner=makeExpandedBanner('mid');banner.emblems.forEach(e=>e.qualityTier=3);
+  const before=encodeBannerState(banner,'expanded_5');
+  const op={id:'redistribute',label:'Redistribute',kind:'quality_redistribution'};
+  const outcomes=enumerateCompactBannerOperation('mid',before,op,true,'expanded_5');
+  assert.equal(outcomes.length,240);
+  approx(sumP(outcomes),1);
+  for(const outcome of outcomes){
+    approx(outcome.probability,1/240);
+    const tiers=decodeBannerState('mid',outcome.banner,context,'expanded_5').emblems.map(e=>e.qualityTier);
+    assert.equal(tiers.filter(t=>t<3).length,1);
+    assert.equal(tiers.filter(t=>t>3).length,2);
+    assert.equal(tiers.filter(t=>t===3).length,2);
+  }
+});
+
+test('expanded descriptive and compact redistribution distributions agree exactly',()=>{
+  const board=expandedBoard();board.mid.emblems.forEach(e=>e.qualityTier=3);
+  const op={id:'redistribute',label:'Redistribute',kind:'quality_redistribution'};
+  const descriptive=enumerateQualityRedistribution(board,'mid',op);
+  const compact=enumerateCompactBannerOperation('mid',encodeBannerState(board.mid,'expanded_5'),op,true,'expanded_5');
+  const d=new Map(descriptive.map(x=>[x.board.mid.emblems.map(e=>e.qualityTier).join(','),x.probability]));
+  const c=new Map(compact.map(x=>[decodeBannerState('mid',x.banner,context,'expanded_5').emblems.map(e=>e.qualityTier).join(','),x.probability]));
+  assert.equal(d.size,240);assert.equal(c.size,240);
+  for(const [key,p] of d)approx(c.get(key),p);
+});
+
+test('expanded redistribution aggregates complete floor/cap waste to one unchanged state',()=>{
+  const banner=makeExpandedBanner('support');
+  banner.emblems.forEach((e,index)=>e.qualityTier=index===0?1:5);
+  const op={id:'redistribute-cap',label:'Redistribute',kind:'quality_redistribution'};
+  const outcomes=enumerateCompactBannerOperation('support',encodeBannerState(banner,'expanded_5'),op,true,'expanded_5');
+  approx(sumP(outcomes),1);
+  assert.ok(outcomes.length>0);
+});
+
+test('legacy redistribution remains one down and the other two up with identical combinatorics',()=>{
+  const ids=[0,0,0].map(()=>encodeEmblemComponents(0,3,0));
+  const banner=encodeBannerEmblemIds('legacy_3',ids);
+  const outcomes=enumerateCompactBannerOperation('core',banner,{id:'legacy-r',label:'Redistribute',kind:'quality_redistribution'},true,'legacy_3');
+  assert.equal(outcomes.length,24);
+  approx(sumP(outcomes),1);
+  for(const outcome of outcomes)approx(outcome.probability,1/24);
 });
 
 test('transition cache cannot serve a legacy entry to expanded_5',()=>{
