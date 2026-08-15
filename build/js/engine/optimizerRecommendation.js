@@ -9,8 +9,9 @@ let lastDiagnostics;
 function zeroDiagnostics() {
     return {
         modeledHorizon: 0, descriptiveBoardMaterializations: 0, descriptiveBoardCacheEntries: 0,
-        expectedScalarStates: 0, targetScalarStates: 0, terminalScoringCalls: 0,
+        expectedScalarStates: 0, targetScalarStates: 0, terminalScoringCalls: 0, expectedScoringMs: 0, targetScoringMs: 0,
         expectedBannerMaterializations: 0, expectedBannerCacheEntries: 0, expectedBannerCacheHits: 0, expectedBannerCacheMisses: 0,
+        targetBannerMaterializations: 0, targetBannerCacheEntries: 0, targetBannerCacheHits: 0, targetBannerCacheMisses: 0,
         targetedActionCacheHits: 0, targetedActionCacheMisses: 0, targetedActionCacheBypasses: 0, targetedActionEntries: 0,
         targetedActionRequestsByDepth: {}, targetedActionCacheHitsByDepth: {}, targetedActionCacheMissesByDepth: {}, targetedActionCacheBypassesByDepth: {},
         transitionDistributionCacheHits: 0, transitionDistributionCacheMisses: 0, transitionDistributionCacheBypasses: 0,
