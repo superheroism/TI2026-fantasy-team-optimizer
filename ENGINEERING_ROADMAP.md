@@ -498,7 +498,7 @@ M1 is intentionally limited to making the existing optimizer trustworthy and mea
 
 ## M6A — Versioned board-layout expansion
 
-M6A interrupted the post-M5 deep-search sequence because the client geometry is expanding from three to five emblem slots per role. The engine now treats board geometry as ruleset/version data rather than a search invariant. `legacy_3` preserves the pre-M6A Core `R-G-R`, Mid `R-B-G`, and Support `B-G-B` geometry; `expanded_5` represents Core `R-G-R-G-R`, Mid `R-P-G-R-G`, and Support `P-G-P-G-P`. Purple is a physical slot color mapped to the existing blue-stat legality pool.
+M6A interrupted the post-M5 deep-search sequence because the client geometry is expanding from three to five emblem slots per role. The engine now treats board geometry as ruleset/version data rather than a search invariant. `legacy_3` preserves the pre-M6A Core `R-G-R`, Mid `R-B-G`, and Support `B-G-B` geometry; `expanded_5` represents Core `R-G-R-G-R`, Mid `R-B-G-R-G`, and Support `B-G-B-G-B`. Expanded slots use only the existing Red, Green, and Blue colors and their unchanged legacy stat pools.
 
 Legacy compact IDs retain their original numeric namespace. Expanded board IDs occupy a disjoint versioned namespace, and layout identity is included in transition, scoring, target-preparation, and mechanics caches. The descriptive `BoardState` boundary remains explicit; old unversioned board objects resolve to `legacy_3`. Production remains pinned to `legacy_3` with modeled horizon `<=2`.
 

@@ -1,9 +1,7 @@
-const BLUE_POOL = ['Runes', 'Watchers', 'Wards Placed', 'Smokes Used', 'Camps Stacked', 'Lotuses'];
 export const LEGAL_STAT_POOLS = {
     red: ['Creep Score', 'GPM', 'Deaths', 'Tower Kills', 'Madstone', 'Kills'],
     green: ['Teamfight Participation', 'Tormentor Kills', 'Roshan Kills', 'Stuns', 'Courier Kills', 'First Blood'],
-    blue: BLUE_POOL,
-    purple: BLUE_POOL,
+    blue: ['Runes', 'Watchers', 'Wards Placed', 'Smokes Used', 'Camps Stacked', 'Lotuses'],
 };
 const slots = (colors) => colors.map((color, index) => ({ index, color }));
 export const BOARD_LAYOUTS = {
@@ -19,8 +17,8 @@ export const BOARD_LAYOUTS = {
         id: 'expanded_5',
         roles: {
             core: slots(['red', 'green', 'red', 'green', 'red']),
-            mid: slots(['red', 'purple', 'green', 'red', 'green']),
-            support: slots(['purple', 'green', 'purple', 'green', 'purple']),
+            mid: slots(['red', 'blue', 'green', 'red', 'green']),
+            support: slots(['blue', 'green', 'blue', 'green', 'blue']),
         },
     },
 };
@@ -38,7 +36,7 @@ export const BANNER_COLORS = {
 };
 export function boardLayout(id = DEFAULT_LAYOUT_ID) { return BOARD_LAYOUTS[id]; }
 export function slotDefinitions(id, role) { return BOARD_LAYOUTS[id].roles[role]; }
-export function statPoolColor(color) { return color === 'purple' ? 'blue' : color; }
+export function statPoolColor(color) { return color; }
 export function legalStats(color) { return LEGAL_STAT_POOLS[color]; }
 export function isLegalStat(color, stat) { return LEGAL_STAT_POOLS[color].includes(stat); }
 //# sourceMappingURL=rules.js.map
