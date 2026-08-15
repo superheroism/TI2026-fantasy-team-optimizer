@@ -1,0 +1,54 @@
+name: M5H Freeze Fresh Fixtures
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - agent/m5h-adaptive-target-t3-impl
+    paths:
+      - scripts/generate-m5h-fixtures.mjs
+      - .github/workflows/m5h-freeze-fixtures.yml
+
+permissions:
+  contents: write
+
+jobs:
+  freeze:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/m5h-adaptive-target-t3-impl
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build generated engine artifacts
+        run: npm run build
+
+      - name: Generate both frozen M5H corpora
+        run: node scripts/generate-m5h-fixtures.mjs calibration holdout
+
+      - name: Verify deterministic regeneration
+        run: node scripts/generate-m5h-fixtures.mjs calibration holdout --check
+
+      - name: Commit frozen manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add benchmarks/m5h-target-calibration-fixtures.json benchmarks/m5h-target-holdout-fixtures.json
+          if git diff --cached --quiet; then
+            echo 'Fixture manifests already frozen; nothing to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'M5H: freeze fresh calibration and holdout fixtures'
+          git push origin HEAD:agent/m5h-adaptive-target-t3-impl

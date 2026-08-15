@@ -1,0 +1,1128 @@
+{
+  "schemaVersion": 1,
+  "package": "M5H Adaptive Target-Probability t=3 Precision",
+  "corpus": "calibration",
+  "frozenBeforeCandidateMeasurement": true,
+  "seed": 2026081501,
+  "generator": "scripts/generate-m5h-fixtures.mjs",
+  "algorithm": "Mulberry32 deterministic legal compact-transition replay; four one-step and five two-step states; rejects illegal draws, M5G board IDs, and duplicate final BoardStateIDs.",
+  "thresholds": [
+    50000,
+    55000,
+    60000
+  ],
+  "tokensRemaining": 10,
+  "menuRerollAvailable": true,
+  "objective": "target_probability",
+  "productionHorizon": 2,
+  "experimentHorizon": 3,
+  "fixtures": [
+    {
+      "id": "calibration-01",
+      "generationSeed": 2026081501,
+      "generationAttempt": 1,
+      "reachabilityClass": "one-step",
+      "generationPath": [
+        {
+          "step": 1,
+          "role": "mid",
+          "operationId": "quality-redistribution",
+          "outcomeIndex": 12,
+          "outcomeCount": 24,
+          "beforeBoardStateId": "15394829123847039010",
+          "afterBoardStateId": "15394829498505789010"
+        }
+      ],
+      "boardStateId": "15394829498505789010",
+      "descriptiveBoard": {
+        "core": {
+          "role": "core",
+          "selectedTeam": "LGD Gaming",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "core-0",
+              "position": 0,
+              "color": "red",
+              "stat": "Creep Score",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "core-1",
+              "position": 1,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "core-2",
+              "position": 2,
+              "color": "red",
+              "stat": "GPM",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        },
+        "mid": {
+          "role": "mid",
+          "selectedTeam": "Team Liquid",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "mid-0",
+              "position": 0,
+              "color": "red",
+              "stat": "Creep Score",
+              "qualityTier": 5,
+              "trait": "Fractal"
+            },
+            {
+              "id": "mid-1",
+              "position": 1,
+              "color": "blue",
+              "stat": "Runes",
+              "qualityTier": 1,
+              "trait": "Fractal"
+            },
+            {
+              "id": "mid-2",
+              "position": 2,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 4,
+              "trait": "Fractal"
+            }
+          ]
+        },
+        "support": {
+          "role": "support",
+          "selectedTeam": "LGD Gaming",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "support-0",
+              "position": 0,
+              "color": "blue",
+              "stat": "Watchers",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "support-1",
+              "position": 1,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "support-2",
+              "position": 2,
+              "color": "blue",
+              "stat": "Wards Placed",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        }
+      },
+      "menu": [
+        "blue-trait-last",
+        "quality-increase-one",
+        "red-quality-last"
+      ]
+    },
+    {
+      "id": "calibration-02",
+      "generationSeed": 2026081501,
+      "generationAttempt": 1,
+      "reachabilityClass": "one-step",
+      "generationPath": [
+        {
+          "step": 1,
+          "role": "mid",
+          "operationId": "blue-trait-random",
+          "outcomeIndex": 3,
+          "outcomeCount": 4,
+          "beforeBoardStateId": "15394829123847039010",
+          "afterBoardStateId": "15394829125872039010"
+        }
+      ],
+      "boardStateId": "15394829125872039010",
+      "descriptiveBoard": {
+        "core": {
+          "role": "core",
+          "selectedTeam": "LGD Gaming",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "core-0",
+              "position": 0,
+              "color": "red",
+              "stat": "Creep Score",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "core-1",
+              "position": 1,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "core-2",
+              "position": 2,
+              "color": "red",
+              "stat": "GPM",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        },
+        "mid": {
+          "role": "mid",
+          "selectedTeam": "Team Liquid",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "mid-0",
+              "position": 0,
+              "color": "red",
+              "stat": "Creep Score",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "mid-1",
+              "position": 1,
+              "color": "blue",
+              "stat": "Runes",
+              "qualityTier": 3,
+              "trait": "Benevolent"
+            },
+            {
+              "id": "mid-2",
+              "position": 2,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        },
+        "support": {
+          "role": "support",
+          "selectedTeam": "LGD Gaming",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "support-0",
+              "position": 0,
+              "color": "blue",
+              "stat": "Watchers",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "support-1",
+              "position": 1,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "support-2",
+              "position": 2,
+              "color": "blue",
+              "stat": "Wards Placed",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        }
+      },
+      "menu": [
+        "red-quality-all",
+        "red-trait-all",
+        "blue-stat-all"
+      ]
+    },
+    {
+      "id": "calibration-03",
+      "generationSeed": 2026081501,
+      "generationAttempt": 1,
+      "reachabilityClass": "one-step",
+      "generationPath": [
+        {
+          "step": 1,
+          "role": "support",
+          "operationId": "blue-trait-first",
+          "outcomeIndex": 0,
+          "outcomeCount": 4,
+          "beforeBoardStateId": "15394829123847039010",
+          "afterBoardStateId": "15394840514472039010"
+        }
+      ],
+      "boardStateId": "15394840514472039010",
+      "descriptiveBoard": {
+        "core": {
+          "role": "core",
+          "selectedTeam": "LGD Gaming",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "core-0",
+              "position": 0,
+              "color": "red",
+              "stat": "Creep Score",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "core-1",
+              "position": 1,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "core-2",
+              "position": 2,
+              "color": "red",
+              "stat": "GPM",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        },
+        "mid": {
+          "role": "mid",
+          "selectedTeam": "Team Liquid",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "mid-0",
+              "position": 0,
+              "color": "red",
+              "stat": "Creep Score",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "mid-1",
+              "position": 1,
+              "color": "blue",
+              "stat": "Runes",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "mid-2",
+              "position": 2,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        },
+        "support": {
+          "role": "support",
+          "selectedTeam": "LGD Gaming",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "support-0",
+              "position": 0,
+              "color": "blue",
+              "stat": "Watchers",
+              "qualityTier": 3,
+              "trait": "Friendly"
+            },
+            {
+              "id": "support-1",
+              "position": 1,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "support-2",
+              "position": 2,
+              "color": "blue",
+              "stat": "Wards Placed",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        }
+      },
+      "menu": [
+        "green-quality-all",
+        "red-quality-random",
+        "green-trait-all"
+      ]
+    },
+    {
+      "id": "calibration-04",
+      "generationSeed": 2026081501,
+      "generationAttempt": 1,
+      "reachabilityClass": "one-step",
+      "generationPath": [
+        {
+          "step": 1,
+          "role": "core",
+          "operationId": "red-stat-all",
+          "outcomeIndex": 14,
+          "outcomeCount": 21,
+          "beforeBoardStateId": "15394829123847039010",
+          "afterBoardStateId": "15394829123847601610"
+        }
+      ],
+      "boardStateId": "15394829123847601610",
+      "descriptiveBoard": {
+        "core": {
+          "role": "core",
+          "selectedTeam": "LGD Gaming",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "core-0",
+              "position": 0,
+              "color": "red",
+              "stat": "Madstone",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "core-1",
+              "position": 1,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "core-2",
+              "position": 2,
+              "color": "red",
+              "stat": "Deaths",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        },
+        "mid": {
+          "role": "mid",
+          "selectedTeam": "Team Liquid",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "mid-0",
+              "position": 0,
+              "color": "red",
+              "stat": "Creep Score",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "mid-1",
+              "position": 1,
+              "color": "blue",
+              "stat": "Runes",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "mid-2",
+              "position": 2,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        },
+        "support": {
+          "role": "support",
+          "selectedTeam": "LGD Gaming",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "support-0",
+              "position": 0,
+              "color": "blue",
+              "stat": "Watchers",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "support-1",
+              "position": 1,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "support-2",
+              "position": 2,
+              "color": "blue",
+              "stat": "Wards Placed",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        }
+      },
+      "menu": [
+        "blue-trait-first",
+        "green-stat-first",
+        "red-quality-first"
+      ]
+    },
+    {
+      "id": "calibration-05",
+      "generationSeed": 2026081501,
+      "generationAttempt": 1,
+      "reachabilityClass": "two-step",
+      "generationPath": [
+        {
+          "step": 1,
+          "role": "core",
+          "operationId": "green-stat-random",
+          "outcomeIndex": 4,
+          "outcomeCount": 5,
+          "beforeBoardStateId": "15394829123847039010",
+          "afterBoardStateId": "15394829123847057760"
+        },
+        {
+          "step": 2,
+          "role": "mid",
+          "operationId": "green-stat-first",
+          "outcomeIndex": 3,
+          "outcomeCount": 5,
+          "beforeBoardStateId": "15394829123847057760",
+          "afterBoardStateId": "15394836717597057760"
+        }
+      ],
+      "boardStateId": "15394836717597057760",
+      "descriptiveBoard": {
+        "core": {
+          "role": "core",
+          "selectedTeam": "LGD Gaming",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "core-0",
+              "position": 0,
+              "color": "red",
+              "stat": "Creep Score",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "core-1",
+              "position": 1,
+              "color": "green",
+              "stat": "First Blood",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "core-2",
+              "position": 2,
+              "color": "red",
+              "stat": "GPM",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        },
+        "mid": {
+          "role": "mid",
+          "selectedTeam": "Team Liquid",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "mid-0",
+              "position": 0,
+              "color": "red",
+              "stat": "Creep Score",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "mid-1",
+              "position": 1,
+              "color": "blue",
+              "stat": "Runes",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "mid-2",
+              "position": 2,
+              "color": "green",
+              "stat": "Courier Kills",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        },
+        "support": {
+          "role": "support",
+          "selectedTeam": "LGD Gaming",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "support-0",
+              "position": 0,
+              "color": "blue",
+              "stat": "Watchers",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "support-1",
+              "position": 1,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "support-2",
+              "position": 2,
+              "color": "blue",
+              "stat": "Wards Placed",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        }
+      },
+      "menu": [
+        "green-stat-all",
+        "red-quality-last",
+        "green-stat-random"
+      ]
+    },
+    {
+      "id": "calibration-06",
+      "generationSeed": 2026081501,
+      "generationAttempt": 1,
+      "reachabilityClass": "two-step",
+      "generationPath": [
+        {
+          "step": 1,
+          "role": "support",
+          "operationId": "green-stat-last",
+          "outcomeIndex": 2,
+          "outcomeCount": 5,
+          "beforeBoardStateId": "15394829123847039010",
+          "afterBoardStateId": "15522973655097039010"
+        },
+        {
+          "step": 2,
+          "role": "support",
+          "operationId": "green-stat-random",
+          "outcomeIndex": 3,
+          "outcomeCount": 5,
+          "beforeBoardStateId": "15522973655097039010",
+          "afterBoardStateId": "15565688498847039010"
+        }
+      ],
+      "boardStateId": "15565688498847039010",
+      "descriptiveBoard": {
+        "core": {
+          "role": "core",
+          "selectedTeam": "LGD Gaming",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "core-0",
+              "position": 0,
+              "color": "red",
+              "stat": "Creep Score",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "core-1",
+              "position": 1,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "core-2",
+              "position": 2,
+              "color": "red",
+              "stat": "GPM",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        },
+        "mid": {
+          "role": "mid",
+          "selectedTeam": "Team Liquid",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "mid-0",
+              "position": 0,
+              "color": "red",
+              "stat": "Creep Score",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "mid-1",
+              "position": 1,
+              "color": "blue",
+              "stat": "Runes",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "mid-2",
+              "position": 2,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        },
+        "support": {
+          "role": "support",
+          "selectedTeam": "LGD Gaming",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "support-0",
+              "position": 0,
+              "color": "blue",
+              "stat": "Watchers",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "support-1",
+              "position": 1,
+              "color": "green",
+              "stat": "Courier Kills",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "support-2",
+              "position": 2,
+              "color": "blue",
+              "stat": "Wards Placed",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        }
+      },
+      "menu": [
+        "green-quality-all",
+        "green-stat-first",
+        "red-stat-all"
+      ]
+    },
+    {
+      "id": "calibration-07",
+      "generationSeed": 2026081501,
+      "generationAttempt": 1,
+      "reachabilityClass": "two-step",
+      "generationPath": [
+        {
+          "step": 1,
+          "role": "core",
+          "operationId": "red-stat-all",
+          "outcomeIndex": 6,
+          "outcomeCount": 21,
+          "beforeBoardStateId": "15394829123847039010",
+          "afterBoardStateId": "15394829123848164060"
+        },
+        {
+          "step": 2,
+          "role": "mid",
+          "operationId": "blue-trait-first",
+          "outcomeIndex": 0,
+          "outcomeCount": 4,
+          "beforeBoardStateId": "15394829123848164060",
+          "afterBoardStateId": "15394829124354414060"
+        }
+      ],
+      "boardStateId": "15394829124354414060",
+      "descriptiveBoard": {
+        "core": {
+          "role": "core",
+          "selectedTeam": "LGD Gaming",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "core-0",
+              "position": 0,
+              "color": "red",
+              "stat": "Deaths",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "core-1",
+              "position": 1,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "core-2",
+              "position": 2,
+              "color": "red",
+              "stat": "Tower Kills",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        },
+        "mid": {
+          "role": "mid",
+          "selectedTeam": "Team Liquid",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "mid-0",
+              "position": 0,
+              "color": "red",
+              "stat": "Creep Score",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "mid-1",
+              "position": 1,
+              "color": "blue",
+              "stat": "Runes",
+              "qualityTier": 3,
+              "trait": "Friendly"
+            },
+            {
+              "id": "mid-2",
+              "position": 2,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        },
+        "support": {
+          "role": "support",
+          "selectedTeam": "LGD Gaming",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "support-0",
+              "position": 0,
+              "color": "blue",
+              "stat": "Watchers",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "support-1",
+              "position": 1,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "support-2",
+              "position": 2,
+              "color": "blue",
+              "stat": "Wards Placed",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        }
+      },
+      "menu": [
+        "red-quality-random",
+        "green-stat-random",
+        "red-stat-all"
+      ]
+    },
+    {
+      "id": "calibration-08",
+      "generationSeed": 2026081501,
+      "generationAttempt": 1,
+      "reachabilityClass": "two-step",
+      "generationPath": [
+        {
+          "step": 1,
+          "role": "support",
+          "operationId": "green-trait-all",
+          "outcomeIndex": 0,
+          "outcomeCount": 4,
+          "beforeBoardStateId": "15394829123847039010",
+          "afterBoardStateId": "15396537717597039010"
+        },
+        {
+          "step": 2,
+          "role": "support",
+          "operationId": "blue-trait-random",
+          "outcomeIndex": 7,
+          "outcomeCount": 8,
+          "beforeBoardStateId": "15396537717597039010",
+          "afterBoardStateId": "16421693967597039010"
+        }
+      ],
+      "boardStateId": "16421693967597039010",
+      "descriptiveBoard": {
+        "core": {
+          "role": "core",
+          "selectedTeam": "LGD Gaming",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "core-0",
+              "position": 0,
+              "color": "red",
+              "stat": "Creep Score",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "core-1",
+              "position": 1,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "core-2",
+              "position": 2,
+              "color": "red",
+              "stat": "GPM",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        },
+        "mid": {
+          "role": "mid",
+          "selectedTeam": "Team Liquid",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "mid-0",
+              "position": 0,
+              "color": "red",
+              "stat": "Creep Score",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "mid-1",
+              "position": 1,
+              "color": "blue",
+              "stat": "Runes",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "mid-2",
+              "position": 2,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        },
+        "support": {
+          "role": "support",
+          "selectedTeam": "LGD Gaming",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "support-0",
+              "position": 0,
+              "color": "blue",
+              "stat": "Watchers",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "support-1",
+              "position": 1,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Friendly"
+            },
+            {
+              "id": "support-2",
+              "position": 2,
+              "color": "blue",
+              "stat": "Wards Placed",
+              "qualityTier": 3,
+              "trait": "Benevolent"
+            }
+          ]
+        }
+      },
+      "menu": [
+        "quality-increase-one",
+        "green-stat-all",
+        "green-quality-all"
+      ]
+    },
+    {
+      "id": "calibration-09",
+      "generationSeed": 2026081501,
+      "generationAttempt": 1,
+      "reachabilityClass": "two-step",
+      "generationPath": [
+        {
+          "step": 1,
+          "role": "core",
+          "operationId": "red-quality-last",
+          "outcomeIndex": 1,
+          "outcomeCount": 4,
+          "beforeBoardStateId": "15394829123847039010",
+          "afterBoardStateId": "15394829123846926510"
+        },
+        {
+          "step": 2,
+          "role": "support",
+          "operationId": "green-quality-all",
+          "outcomeIndex": 0,
+          "outcomeCount": 4,
+          "beforeBoardStateId": "15394829123846926510",
+          "afterBoardStateId": "15377743186346926510"
+        }
+      ],
+      "boardStateId": "15377743186346926510",
+      "descriptiveBoard": {
+        "core": {
+          "role": "core",
+          "selectedTeam": "LGD Gaming",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "core-0",
+              "position": 0,
+              "color": "red",
+              "stat": "Creep Score",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "core-1",
+              "position": 1,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "core-2",
+              "position": 2,
+              "color": "red",
+              "stat": "GPM",
+              "qualityTier": 2,
+              "trait": "Fractal"
+            }
+          ]
+        },
+        "mid": {
+          "role": "mid",
+          "selectedTeam": "Team Liquid",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "mid-0",
+              "position": 0,
+              "color": "red",
+              "stat": "Creep Score",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "mid-1",
+              "position": 1,
+              "color": "blue",
+              "stat": "Runes",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "mid-2",
+              "position": 2,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        },
+        "support": {
+          "role": "support",
+          "selectedTeam": "LGD Gaming",
+          "expectedSeries": 5,
+          "emblems": [
+            {
+              "id": "support-0",
+              "position": 0,
+              "color": "blue",
+              "stat": "Watchers",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            },
+            {
+              "id": "support-1",
+              "position": 1,
+              "color": "green",
+              "stat": "Teamfight Participation",
+              "qualityTier": 1,
+              "trait": "Fractal"
+            },
+            {
+              "id": "support-2",
+              "position": 2,
+              "color": "blue",
+              "stat": "Wards Placed",
+              "qualityTier": 3,
+              "trait": "Fractal"
+            }
+          ]
+        }
+      },
+      "menu": [
+        "green-stat-random",
+        "green-trait-all",
+        "red-quality-last"
+      ]
+    }
+  ]
+}
