@@ -13,7 +13,7 @@ import {
 import {
   getTargetDiagnostics, resetTargetDiagnostics, setTargetDiagnosticsEnabled,
 } from '../docs/js/engine/targetProbability.js';
-import { clearTargetSearchOptimizationCaches } from '../docs/js/engine/targetSearch.js';
+import { clearTargetSearchOptimizationCaches, getTargetSearchDiagnostics } from '../docs/js/engine/targetSearch.js';
 
 const M6B_BASE_SHA='a3505bbd25d7cac47d115452b924a2f3f8eda4ae';
 const layoutId=process.argv[2];
@@ -55,7 +55,6 @@ function timed(fn){const t=performance.now(),value=fn();return {value,runtimeMs:
 function operationScope(op){return 'scope' in op?op.scope:(op.kind==='quality_increase'||op.kind==='quality_redistribution'?'all_eligible':'unknown');}
 function countRecord(record){return Object.values(record??{}).reduce((sum,value)=>sum+Number(value||0),0);}
 
-// Clean run-scoped mechanics/search caches before the authoritative timed search.
 clearTransitionCache();resetTransitionDiagnostics();
 clearTargetSearchOptimizationCaches();resetTargetDiagnostics();setTargetDiagnosticsEnabled(true);
 if(global.gc)global.gc();
@@ -66,9 +65,9 @@ const result=optimizer.value;
 const engineDiagnostics=getLastOptimizerEngineDiagnostics();
 const transitionDiagnostics=getTransitionDiagnostics();
 const targetDiagnostics=getTargetDiagnostics();
+const targetSearchDiagnostics=getTargetSearchDiagnostics();
 setTargetDiagnosticsEnabled(false);
 
-// Root-action attribution is deliberately outside the timed optimizer section.
 const initialEngine=boardToEngineState(board);
 const rootActions=[];
 for(const operation of menu){
@@ -116,11 +115,25 @@ const frontier={
   expectedScoringMs:engineDiagnostics.expectedScoringMs,
   targetScoringMs:engineDiagnostics.targetScoringMs,
   targetCandidatePreparationMs:targetDiagnostics.candidatePreparationMs,
+  targetPairSampleBuildMs:targetSearchDiagnostics.pairSampleBuildMs,
+  targetSuffixSummaryBuildMs:targetSearchDiagnostics.suffixSummaryBuildMs,
   targetKernelMs:targetDiagnostics.combinatorialSearchMs,
   targetScenarioChecks:targetDiagnostics.scenarioChecks,
   targetSearchCalls:Object.values(targetDiagnostics.searchCallsByTitlePrefix).reduce((sum,value)=>sum+value,0),
   targetPreparedRoleCacheHits:targetDiagnostics.preparedRoleCacheHits,
   targetPreparedRoleCacheMisses:targetDiagnostics.preparedRoleCacheMisses,
+  targetPairGroupCacheHits:targetSearchDiagnostics.pairGroupCacheHits,
+  targetPairGroupCacheMisses:targetSearchDiagnostics.pairGroupCacheMisses,
+  targetPairSampleCacheHits:targetSearchDiagnostics.pairSampleCacheHits,
+  targetPairSampleCacheMisses:targetSearchDiagnostics.pairSampleCacheMisses,
+  targetPairSampleCacheBuilds:targetSearchDiagnostics.pairSampleCacheBuilds,
+  targetPairCacheResets:targetSearchDiagnostics.pairCacheResets,
+  targetPairCacheEstimatedBytes:targetSearchDiagnostics.pairCacheEstimatedBytes,
+  targetSuffixCacheHits:targetSearchDiagnostics.suffixCacheHits,
+  targetSuffixCacheMisses:targetSearchDiagnostics.suffixCacheMisses,
+  targetSuffixCacheBuilds:targetSearchDiagnostics.suffixCacheBuilds,
+  targetSuffixCacheResets:targetSearchDiagnostics.suffixCacheResets,
+  targetSuffixCacheEstimatedBytes:targetSearchDiagnostics.suffixCacheEstimatedBytes,
   uniquePreparedGroups:targetDiagnostics.uniquePreparedGroups,
   uniquePreparedGroupTuples:targetDiagnostics.uniquePreparedGroupTuples,
   reusedPreparedGroupTuples:targetDiagnostics.reusedPreparedGroupTuples,
@@ -138,9 +151,7 @@ const resultRow={
     score:result.recommendation.expectedFinalScore,
     actionCount:result.ranking.length,
   },
-  frontier,
-  rootActions,
-  engineDiagnostics,targetDiagnostics,transitionDiagnostics,
+  frontier,rootActions,engineDiagnostics,targetDiagnostics,targetSearchDiagnostics,transitionDiagnostics,
   memory:{before:memoryBefore,after:memoryAfter,heapDelta:memoryAfter.heapUsed-memoryBefore.heapUsed,rssDelta:memoryAfter.rss-memoryBefore.rss},
 };
 process.stdout.write(`${JSON.stringify(resultRow)}\n`);
