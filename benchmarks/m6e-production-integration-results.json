@@ -1,13 +1,13 @@
 {
   "m6eBaseSha": "0e287bf38dd3259e21827245c4bd1c0811e48eba",
-  "generatedAt": "2026-08-15T23:42:47.100Z",
+  "generatedAt": "2026-08-15T23:50:38.067Z",
   "environment": {
     "node": "v22.23.2",
     "platform": "linux",
     "arch": "x64",
     "cpus": 4,
-    "cpuModel": "AMD EPYC 7763 64-Core Processor",
-    "totalMemoryGiB": 15.618976593017578
+    "cpuModel": "AMD EPYC 9V74 80-Core Processor",
+    "totalMemoryGiB": 15.614940643310547
   },
   "corpus": {
     "path": "benchmarks/m6e-expanded-production-integration-fixtures.json",
@@ -34,9 +34,9 @@
     "rootActionAgreement": 1,
     "maximumExpectedScoreRegret": 0,
     "maximumTargetProbabilityRegret": 0,
-    "medianRuntimeMs": 4239.333175,
-    "medianSpeedup": 1.6621697436254768,
-    "p90Speedup": 2.8518155601550825,
+    "medianRuntimeMs": 4356.669357000001,
+    "medianSpeedup": 1.6502279664188078,
+    "p90Speedup": 2.8308226815862074,
     "medianStructuralWorkAvoided": 0.4176416729735821,
     "exactFallbackRate": 0.4166666666666667,
     "stageDistribution": {
@@ -45,7 +45,7 @@
       "k6": 0,
       "exact": 0.4166666666666667
     },
-    "maxRSSMiB": 1038.31640625,
+    "maxRSSMiB": 1031.9765625,
     "rows": [
       {
         "caseId": "m6e-exp-stat-clear",
@@ -54,13 +54,13 @@
         "marginClass": "clear",
         "agreement": true,
         "oracleRegret": 0,
-        "runtimeMs": 3178.795979,
-        "exactRuntimeMs": 3140.82192,
-        "speedup": 0.9880539489634229,
+        "runtimeMs": 3154.783171,
+        "exactRuntimeMs": 3345.89343,
+        "speedup": 1.060577937893406,
         "stage": "exact",
         "exactFallback": true,
         "structuralWorkAvoided": 0,
-        "maxRSSMiB": 163.265625
+        "maxRSSMiB": 164.0234375
       },
       {
         "caseId": "m6e-exp-quality-clear",
@@ -69,13 +69,13 @@
         "marginClass": "clear",
         "agreement": true,
         "oracleRegret": 0,
-        "runtimeMs": 1049.309522,
-        "exactRuntimeMs": 3316.126252,
-        "speedup": 3.1602936812003883,
+        "runtimeMs": 1043.580515,
+        "exactRuntimeMs": 3200.5416029999997,
+        "speedup": 3.0668851679355082,
         "stage": "k2",
         "exactFallback": false,
         "structuralWorkAvoided": 0.7599371871626264,
-        "maxRSSMiB": 122.546875
+        "maxRSSMiB": 123.54296875
       },
       {
         "caseId": "m6e-exp-trait-clear",
@@ -84,13 +84,13 @@
         "marginClass": "clear",
         "agreement": true,
         "oracleRegret": 0,
-        "runtimeMs": 2232.8925870000003,
-        "exactRuntimeMs": 3264.303096,
-        "speedup": 1.4619167599036862,
+        "runtimeMs": 2269.058082,
+        "exactRuntimeMs": 3118.026168,
+        "speedup": 1.374150002035955,
         "stage": "k4",
         "exactFallback": false,
         "structuralWorkAvoided": 0.3582644854188324,
-        "maxRSSMiB": 140.3671875
+        "maxRSSMiB": 146.25
       },
       {
         "caseId": "m6e-exp-global-clear",
@@ -99,13 +99,13 @@
         "marginClass": "clear",
         "agreement": true,
         "oracleRegret": 0,
-        "runtimeMs": 1618.8144109999998,
-        "exactRuntimeMs": 3863.0107260000004,
-        "speedup": 2.3863209394174345,
+        "runtimeMs": 1599.717059,
+        "exactRuntimeMs": 3994.762801,
+        "speedup": 2.497168345192973,
         "stage": "k2",
         "exactFallback": false,
         "structuralWorkAvoided": 0.7000222074172774,
-        "maxRSSMiB": 139.765625
+        "maxRSSMiB": 141.6015625
       },
       {
         "caseId": "m6e-exp-mixed-clear",
@@ -114,13 +114,13 @@
         "marginClass": "clear",
         "agreement": true,
         "oracleRegret": 0,
-        "runtimeMs": 1211.3499319999999,
-        "exactRuntimeMs": 2593.081842,
-        "speedup": 2.1406546312498578,
+        "runtimeMs": 1162.52389,
+        "exactRuntimeMs": 2449.2780169999996,
+        "speedup": 2.1068625239176804,
         "stage": "k2",
         "exactFallback": false,
         "structuralWorkAvoided": 0.6124726041044033,
-        "maxRSSMiB": 129.81640625
+        "maxRSSMiB": 128.88671875
       },
       {
         "caseId": "m6e-exp-mixed-close",
@@ -129,13 +129,13 @@
         "marginClass": "close",
         "agreement": true,
         "oracleRegret": 0,
-        "runtimeMs": 4145.665269,
-        "exactRuntimeMs": 4181.9518769999995,
-        "speedup": 1.0087529034896616,
+        "runtimeMs": 4366.450864,
+        "exactRuntimeMs": 4097.936082,
+        "speedup": 0.9385050260810629,
         "stage": "exact",
         "exactFallback": true,
         "structuralWorkAvoided": 0,
-        "maxRSSMiB": 185.88671875
+        "maxRSSMiB": 180.09765625
       },
       {
         "caseId": "m6e-tgt-stat-clear",
@@ -144,13 +144,13 @@
         "marginClass": "clear",
         "agreement": true,
         "oracleRegret": 0,
-        "runtimeMs": 5992.850956,
-        "exactRuntimeMs": 17400.465593,
-        "speedup": 2.9035371846814875,
+        "runtimeMs": 6089.994667000001,
+        "exactRuntimeMs": 17465.467604,
+        "speedup": 2.8678953856299,
         "stage": "k2",
         "exactFallback": false,
         "structuralWorkAvoided": 0.6931169533138798,
-        "maxRSSMiB": 526.03515625
+        "maxRSSMiB": 524.16796875
       },
       {
         "caseId": "m6e-tgt-quality-clear",
@@ -159,13 +159,13 @@
         "marginClass": "clear",
         "agreement": true,
         "oracleRegret": 0,
-        "runtimeMs": 12743.246398,
-        "exactRuntimeMs": 12854.780003,
-        "speedup": 1.0087523698056646,
+        "runtimeMs": 13480.652597,
+        "exactRuntimeMs": 12921.350837999998,
+        "speedup": 0.9585107801736193,
         "stage": "exact",
         "exactFallback": true,
         "structuralWorkAvoided": 0,
-        "maxRSSMiB": 1038.31640625
+        "maxRSSMiB": 1031.9765625
       },
       {
         "caseId": "m6e-tgt-trait-clear",
@@ -174,13 +174,13 @@
         "marginClass": "clear",
         "agreement": true,
         "oracleRegret": 0,
-        "runtimeMs": 7863.204426,
-        "exactRuntimeMs": 7832.972924000001,
-        "speedup": 0.996155320355142,
+        "runtimeMs": 8191.701736,
+        "exactRuntimeMs": 8505.766363,
+        "speedup": 1.038339363067845,
         "stage": "exact",
         "exactFallback": true,
         "structuralWorkAvoided": 0,
-        "maxRSSMiB": 971.79296875
+        "maxRSSMiB": 976.2109375
       },
       {
         "caseId": "m6e-tgt-global-clear",
@@ -189,13 +189,13 @@
         "marginClass": "clear",
         "agreement": true,
         "oracleRegret": 0,
-        "runtimeMs": 4333.001081,
-        "exactRuntimeMs": 10209.12126,
-        "speedup": 2.3561317131367683,
+        "runtimeMs": 4346.88785,
+        "exactRuntimeMs": 10341.772503999999,
+        "speedup": 2.3791210771632856,
         "stage": "k2",
         "exactFallback": false,
         "structuralWorkAvoided": 0.5965337681088144,
-        "maxRSSMiB": 536.6484375
+        "maxRSSMiB": 530.16796875
       },
       {
         "caseId": "m6e-tgt-mixed-clear",
@@ -204,13 +204,13 @@
         "marginClass": "clear",
         "agreement": true,
         "oracleRegret": 0,
-        "runtimeMs": 8395.152613,
-        "exactRuntimeMs": 15635.323026,
-        "speedup": 1.8624227273472675,
+        "runtimeMs": 8272.94619,
+        "exactRuntimeMs": 15936.225311,
+        "speedup": 1.9263059308016603,
         "stage": "k4",
         "exactFallback": false,
         "structuralWorkAvoided": 0.47701886052833187,
-        "maxRSSMiB": 655.13671875
+        "maxRSSMiB": 659.01171875
       },
       {
         "caseId": "m6e-tgt-mixed-close",
@@ -219,13 +219,13 @@
         "marginClass": "close",
         "agreement": true,
         "oracleRegret": 0,
-        "runtimeMs": 11554.132195999999,
-        "exactRuntimeMs": 11471.292415,
-        "speedup": 0.9928302896665249,
+        "runtimeMs": 11615.569319,
+        "exactRuntimeMs": 11589.405359,
+        "speedup": 0.9977475094606683,
         "stage": "exact",
         "exactFallback": true,
         "structuralWorkAvoided": 0,
-        "maxRSSMiB": 983.31640625
+        "maxRSSMiB": 984.08984375
       }
     ]
   },
@@ -245,7 +245,7 @@
       },
       "exact": {
         "mode": "exact",
-        "runtimeMs": 3140.82192,
+        "runtimeMs": 3345.89343,
         "selectedKey": "menu_reroll",
         "selectedUtility": 75973.5859122179,
         "ranking": [
@@ -303,7 +303,7 @@
           "expectedScalarStates": 18520,
           "targetScalarStates": 0,
           "terminalScoringCalls": 18520,
-          "expectedScoringMs": 2784.653971000027,
+          "expectedScoringMs": 2997.0356350000066,
           "targetScoringMs": 0,
           "expectedBannerMaterializations": 5924,
           "expectedBannerCacheEntries": 5924,
@@ -424,14 +424,14 @@
             "vEntries": 78,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 3139.2477000000003
+            "elapsedMs": 3344.395569
           },
           "menuOperator": {
             "calls": 78,
             "uniformCalls": 78,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.1999969999990867
+            "operatorMs": 1.287717999999586
           }
         },
         "transition": {
@@ -440,7 +440,7 @@
           "uniqueTransitionCalculations": 1600,
           "outcomesBeforeAggregation": 39770,
           "outcomesAfterAggregation": 39770,
-          "transitionGenerationMs": 41.63314300000758
+          "transitionGenerationMs": 39.52550399999444
         },
         "target": {
           "boardCacheHits": 0,
@@ -580,24 +580,24 @@
           "before": {
             "heapUsed": 10105760,
             "heapTotal": 27893760,
-            "rss": 66772992,
+            "rss": 66928640,
             "external": 1773172,
-            "maxRSS": 65448
+            "maxRSS": 65584
           },
           "after": {
-            "heapUsed": 83813720,
+            "heapUsed": 70760664,
             "heapTotal": 105857024,
-            "rss": 171012096,
+            "rss": 172552192,
             "external": 5655416,
-            "maxRSS": 167004
+            "maxRSS": 168508
           },
-          "maxRSS": 167004,
-          "rssDelta": 104239104
+          "maxRSS": 168508,
+          "rssDelta": 105623552
         }
       },
       "production": {
         "mode": "production",
-        "runtimeMs": 3178.795979,
+        "runtimeMs": 3154.783171,
         "selectedKey": "menu_reroll",
         "selectedUtility": 75973.5859122179,
         "ranking": [
@@ -655,7 +655,7 @@
           "expectedScalarStates": 18520,
           "targetScalarStates": 0,
           "terminalScoringCalls": 18520,
-          "expectedScoringMs": 2849.910345999994,
+          "expectedScoringMs": 2823.12051000002,
           "targetScoringMs": 0,
           "expectedBannerMaterializations": 5924,
           "expectedBannerCacheEntries": 5924,
@@ -761,14 +761,14 @@
             "vEntries": 78,
             "qEntries": 0,
             "actionEntries": 0,
-            "elapsedMs": 3176.868919
+            "elapsedMs": 3152.988022
           },
           "menuOperator": {
             "calls": 78,
             "uniformCalls": 78,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.191305000001023
+            "operatorMs": 1.456374000000494
           },
           "adaptiveRefinement": {
             "policyId": "adaptive-tight",
@@ -823,7 +823,7 @@
           "uniqueTransitionCalculations": 1600,
           "outcomesBeforeAggregation": 39770,
           "outcomesAfterAggregation": 39770,
-          "transitionGenerationMs": 43.22044200000326
+          "transitionGenerationMs": 42.03475499999851
         },
         "target": {
           "boardCacheHits": 0,
@@ -961,21 +961,21 @@
         },
         "memory": {
           "before": {
-            "heapUsed": 10105840,
-            "heapTotal": 27893760,
-            "rss": 66273280,
+            "heapUsed": 10105768,
+            "heapTotal": 28155904,
+            "rss": 66752512,
             "external": 1773172,
-            "maxRSS": 65012
+            "maxRSS": 65364
           },
           "after": {
-            "heapUsed": 73632408,
-            "heapTotal": 105070592,
-            "rss": 171196416,
+            "heapUsed": 75786976,
+            "heapTotal": 105332736,
+            "rss": 171991040,
             "external": 5655416,
-            "maxRSS": 167184
+            "maxRSS": 167960
           },
-          "maxRSS": 167184,
-          "rssDelta": 104923136
+          "maxRSS": 167960,
+          "rssDelta": 105238528
         }
       }
     },
@@ -994,7 +994,7 @@
       },
       "exact": {
         "mode": "exact",
-        "runtimeMs": 3316.126252,
+        "runtimeMs": 3200.5416029999997,
         "selectedKey": "menu_reroll",
         "selectedUtility": 97348.61688450107,
         "ranking": [
@@ -1057,7 +1057,7 @@
           "expectedScalarStates": 20378,
           "targetScalarStates": 0,
           "terminalScoringCalls": 20378,
-          "expectedScoringMs": 2949.4563140000114,
+          "expectedScoringMs": 2838.5457630000005,
           "targetScoringMs": 0,
           "expectedBannerMaterializations": 6111,
           "expectedBannerCacheEntries": 6111,
@@ -1178,14 +1178,14 @@
             "vEntries": 91,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 3314.614231
+            "elapsedMs": 3199.0284779999997
           },
           "menuOperator": {
             "calls": 91,
             "uniformCalls": 91,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.4178950000006125
+            "operatorMs": 1.4480670000006626
           }
         },
         "transition": {
@@ -1194,7 +1194,7 @@
           "uniqueTransitionCalculations": 1860,
           "outcomesBeforeAggregation": 53165,
           "outcomesAfterAggregation": 51889,
-          "transitionGenerationMs": 48.62690399999616
+          "transitionGenerationMs": 45.94178000000008
         },
         "target": {
           "boardCacheHits": 0,
@@ -1332,26 +1332,26 @@
         },
         "memory": {
           "before": {
-            "heapUsed": 10105560,
-            "heapTotal": 27893760,
-            "rss": 66707456,
+            "heapUsed": 10105704,
+            "heapTotal": 27631616,
+            "rss": 66834432,
             "external": 1773172,
-            "maxRSS": 65388
+            "maxRSS": 65528
           },
           "after": {
-            "heapUsed": 89741208,
-            "heapTotal": 110313472,
-            "rss": 177688576,
+            "heapUsed": 78833352,
+            "heapTotal": 110575616,
+            "rss": 175509504,
             "external": 5655416,
-            "maxRSS": 173524
+            "maxRSS": 171396
           },
-          "maxRSS": 173524,
-          "rssDelta": 110981120
+          "maxRSS": 171396,
+          "rssDelta": 108675072
         }
       },
       "production": {
         "mode": "production",
-        "runtimeMs": 1049.309522,
+        "runtimeMs": 1043.580515,
         "selectedKey": "menu_reroll",
         "selectedUtility": 97348.61688450107,
         "ranking": [
@@ -1414,7 +1414,7 @@
           "expectedScalarStates": 4892,
           "targetScalarStates": 0,
           "terminalScoringCalls": 4892,
-          "expectedScoringMs": 809.332068999999,
+          "expectedScoringMs": 799.9652990000077,
           "targetScoringMs": 0,
           "expectedBannerMaterializations": 1697,
           "expectedBannerCacheEntries": 1697,
@@ -1522,14 +1522,14 @@
             "vEntries": 21,
             "qEntries": 0,
             "actionEntries": 0,
-            "elapsedMs": 1047.41451
+            "elapsedMs": 1041.7972450000002
           },
           "menuOperator": {
             "calls": 21,
             "uniformCalls": 21,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 0.4917540000000713
+            "operatorMs": 0.4977969999999914
           },
           "adaptiveRefinement": {
             "policyId": "adaptive-tight",
@@ -1557,7 +1557,7 @@
           "uniqueTransitionCalculations": 460,
           "outcomesBeforeAggregation": 11983,
           "outcomesAfterAggregation": 11751,
-          "transitionGenerationMs": 20.66365399999802
+          "transitionGenerationMs": 20.316153000000384
         },
         "target": {
           "boardCacheHits": 0,
@@ -1695,21 +1695,21 @@
         },
         "memory": {
           "before": {
-            "heapUsed": 10105640,
-            "heapTotal": 27893760,
-            "rss": 66732032,
+            "heapUsed": 10105088,
+            "heapTotal": 27369472,
+            "rss": 66723840,
             "external": 1773172,
-            "maxRSS": 65368
+            "maxRSS": 65352
           },
           "after": {
-            "heapUsed": 35107464,
+            "heapUsed": 38545304,
             "heapTotal": 64774144,
-            "rss": 128499712,
+            "rss": 129544192,
             "external": 5655416,
-            "maxRSS": 125488
+            "maxRSS": 126508
           },
-          "maxRSS": 125488,
-          "rssDelta": 61767680
+          "maxRSS": 126508,
+          "rssDelta": 62820352
         }
       }
     },
@@ -1728,7 +1728,7 @@
       },
       "exact": {
         "mode": "exact",
-        "runtimeMs": 3264.303096,
+        "runtimeMs": 3118.026168,
         "selectedKey": "board:blue-trait-all:support",
         "selectedUtility": 77290.15492089672,
         "ranking": [
@@ -1786,7 +1786,7 @@
           "expectedScalarStates": 18277,
           "targetScalarStates": 0,
           "terminalScoringCalls": 18277,
-          "expectedScoringMs": 2933.455388,
+          "expectedScoringMs": 2788.335946000031,
           "targetScoringMs": 0,
           "expectedBannerMaterializations": 5951,
           "expectedBannerCacheEntries": 5951,
@@ -1907,14 +1907,14 @@
             "vEntries": 77,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 3262.711084
+            "elapsedMs": 3116.528977
           },
           "menuOperator": {
             "calls": 77,
             "uniformCalls": 77,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.2841679999959297
+            "operatorMs": 1.285954000001766
           }
         },
         "transition": {
@@ -1923,7 +1923,7 @@
           "uniqueTransitionCalculations": 1580,
           "outcomesBeforeAggregation": 39351,
           "outcomesAfterAggregation": 39351,
-          "transitionGenerationMs": 41.07513199999849
+          "transitionGenerationMs": 39.76552000000055
         },
         "target": {
           "boardCacheHits": 0,
@@ -2061,26 +2061,26 @@
         },
         "memory": {
           "before": {
-            "heapUsed": 10105384,
-            "heapTotal": 27369472,
-            "rss": 66756608,
+            "heapUsed": 10106248,
+            "heapTotal": 27893760,
+            "rss": 66895872,
             "external": 1773172,
-            "maxRSS": 65472
+            "maxRSS": 65536
           },
           "after": {
-            "heapUsed": 84269592,
-            "heapTotal": 105594880,
-            "rss": 171843584,
+            "heapUsed": 71769336,
+            "heapTotal": 106381312,
+            "rss": 172052480,
             "external": 5655416,
-            "maxRSS": 167816
+            "maxRSS": 168148
           },
-          "maxRSS": 167816,
-          "rssDelta": 105086976
+          "maxRSS": 168148,
+          "rssDelta": 105156608
         }
       },
       "production": {
         "mode": "production",
-        "runtimeMs": 2232.8925870000003,
+        "runtimeMs": 2269.058082,
         "selectedKey": "board:blue-trait-all:support",
         "selectedUtility": 77290.15492089672,
         "ranking": [
@@ -2138,7 +2138,7 @@
           "expectedScalarStates": 11729,
           "targetScalarStates": 0,
           "terminalScoringCalls": 11729,
-          "expectedScoringMs": 1942.9121740000144,
+          "expectedScoringMs": 1986.109460999997,
           "targetScoringMs": 0,
           "expectedBannerMaterializations": 3931,
           "expectedBannerCacheEntries": 3931,
@@ -2244,14 +2244,14 @@
             "vEntries": 49,
             "qEntries": 0,
             "actionEntries": 0,
-            "elapsedMs": 2231.021902
+            "elapsedMs": 2267.211335
           },
           "menuOperator": {
             "calls": 49,
             "uniformCalls": 49,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 0.974207999999976
+            "operatorMs": 0.9696889999993914
           },
           "adaptiveRefinement": {
             "policyId": "adaptive-tight",
@@ -2288,7 +2288,7 @@
           "uniqueTransitionCalculations": 1020,
           "outcomesBeforeAggregation": 24619,
           "outcomesAfterAggregation": 24619,
-          "transitionGenerationMs": 32.80667099999485
+          "transitionGenerationMs": 29.338371000000222
         },
         "target": {
           "boardCacheHits": 0,
@@ -2428,19 +2428,19 @@
           "before": {
             "heapUsed": 10106256,
             "heapTotal": 27893760,
-            "rss": 66985984,
+            "rss": 66760704,
             "external": 1773172,
-            "maxRSS": 65624
+            "maxRSS": 65448
           },
           "after": {
-            "heapUsed": 59048000,
-            "heapTotal": 82124800,
-            "rss": 146759680,
+            "heapUsed": 56647152,
+            "heapTotal": 82649088,
+            "rss": 153354240,
             "external": 5655416,
-            "maxRSS": 143736
+            "maxRSS": 149760
           },
-          "maxRSS": 143736,
-          "rssDelta": 79773696
+          "maxRSS": 149760,
+          "rssDelta": 86593536
         }
       }
     },
@@ -2459,7 +2459,7 @@
       },
       "exact": {
         "mode": "exact",
-        "runtimeMs": 3863.0107260000004,
+        "runtimeMs": 3994.762801,
         "selectedKey": "board:red-quality-all:core",
         "selectedUtility": 67533.43422448898,
         "ranking": [
@@ -2522,7 +2522,7 @@
           "expectedScalarStates": 22515,
           "targetScalarStates": 0,
           "terminalScoringCalls": 22515,
-          "expectedScoringMs": 3460.712334999983,
+          "expectedScoringMs": 3607.263300999989,
           "targetScoringMs": 0,
           "expectedBannerMaterializations": 7068,
           "expectedBannerCacheEntries": 7068,
@@ -2643,14 +2643,14 @@
             "vEntries": 96,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 3861.429283
+            "elapsedMs": 3993.323908
           },
           "menuOperator": {
             "calls": 96,
             "uniformCalls": 96,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.5563030000008666
+            "operatorMs": 1.534060000002171
           }
         },
         "transition": {
@@ -2659,7 +2659,7 @@
           "uniqueTransitionCalculations": 1960,
           "outcomesBeforeAggregation": 63169,
           "outcomesAfterAggregation": 62331,
-          "transitionGenerationMs": 57.078007999995066
+          "transitionGenerationMs": 55.71657300000015
         },
         "target": {
           "boardCacheHits": 0,
@@ -2797,26 +2797,26 @@
         },
         "memory": {
           "before": {
-            "heapUsed": 10106456,
-            "heapTotal": 27631616,
-            "rss": 66809856,
+            "heapUsed": 10106360,
+            "heapTotal": 28155904,
+            "rss": 66818048,
             "external": 1773172,
-            "maxRSS": 65500
+            "maxRSS": 65524
           },
           "after": {
-            "heapUsed": 80096544,
-            "heapTotal": 115589120,
-            "rss": 180998144,
+            "heapUsed": 82311856,
+            "heapTotal": 116637696,
+            "rss": 184229888,
             "external": 5655416,
-            "maxRSS": 176756
+            "maxRSS": 179912
           },
-          "maxRSS": 176756,
-          "rssDelta": 114188288
+          "maxRSS": 179912,
+          "rssDelta": 117411840
         }
       },
       "production": {
         "mode": "production",
-        "runtimeMs": 1618.8144109999998,
+        "runtimeMs": 1599.717059,
         "selectedKey": "board:red-quality-all:core",
         "selectedUtility": 67533.43422448898,
         "ranking": [
@@ -2879,7 +2879,7 @@
           "expectedScalarStates": 6754,
           "targetScalarStates": 0,
           "terminalScoringCalls": 6754,
-          "expectedScoringMs": 1369.5787829999897,
+          "expectedScoringMs": 1347.8382909999998,
           "targetScoringMs": 0,
           "expectedBannerMaterializations": 2796,
           "expectedBannerCacheEntries": 2796,
@@ -2985,14 +2985,14 @@
             "vEntries": 25,
             "qEntries": 0,
             "actionEntries": 0,
-            "elapsedMs": 1616.9111739999998
+            "elapsedMs": 1597.93467
           },
           "menuOperator": {
             "calls": 25,
             "uniformCalls": 25,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 0.6995819999992818
+            "operatorMs": 0.5965049999994108
           },
           "adaptiveRefinement": {
             "policyId": "adaptive-tight",
@@ -3020,7 +3020,7 @@
           "uniqueTransitionCalculations": 540,
           "outcomesBeforeAggregation": 15888,
           "outcomesAfterAggregation": 15698,
-          "transitionGenerationMs": 21.255575000000164
+          "transitionGenerationMs": 20.33697600000059
         },
         "target": {
           "boardCacheHits": 0,
@@ -3159,20 +3159,20 @@
         "memory": {
           "before": {
             "heapUsed": 10106464,
-            "heapTotal": 27893760,
-            "rss": 66572288,
+            "heapTotal": 27631616,
+            "rss": 66818048,
             "external": 1773172,
-            "maxRSS": 65204
+            "maxRSS": 65488
           },
           "after": {
-            "heapUsed": 45782664,
-            "heapTotal": 78880768,
-            "rss": 145313792,
+            "heapUsed": 54778312,
+            "heapTotal": 78618624,
+            "rss": 146960384,
             "external": 5655416,
-            "maxRSS": 143120
+            "maxRSS": 145000
           },
-          "maxRSS": 143120,
-          "rssDelta": 78741504
+          "maxRSS": 145000,
+          "rssDelta": 80142336
         }
       }
     },
@@ -3191,7 +3191,7 @@
       },
       "exact": {
         "mode": "exact",
-        "runtimeMs": 2593.081842,
+        "runtimeMs": 2449.2780169999996,
         "selectedKey": "board:red-trait-all:core",
         "selectedUtility": 106233.33586702707,
         "ranking": [
@@ -3254,7 +3254,7 @@
           "expectedScalarStates": 15057,
           "targetScalarStates": 0,
           "terminalScoringCalls": 15057,
-          "expectedScoringMs": 2296.222574999995,
+          "expectedScoringMs": 2169.441312000008,
           "targetScoringMs": 0,
           "expectedBannerMaterializations": 4735,
           "expectedBannerCacheEntries": 4735,
@@ -3375,14 +3375,14 @@
             "vEntries": 67,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 2591.570071
+            "elapsedMs": 2447.830092
           },
           "menuOperator": {
             "calls": 67,
             "uniformCalls": 67,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.1353830000008998
+            "operatorMs": 1.1512050000003455
           }
         },
         "transition": {
@@ -3391,7 +3391,7 @@
           "uniqueTransitionCalculations": 1380,
           "outcomesBeforeAggregation": 24330,
           "outcomesAfterAggregation": 20688,
-          "transitionGenerationMs": 33.83011499999333
+          "transitionGenerationMs": 30.070998000007393
         },
         "target": {
           "boardCacheHits": 0,
@@ -3529,26 +3529,26 @@
         },
         "memory": {
           "before": {
-            "heapUsed": 10105624,
-            "heapTotal": 27893760,
-            "rss": 66265088,
+            "heapUsed": 10105528,
+            "heapTotal": 28155904,
+            "rss": 66998272,
             "external": 1773172,
-            "maxRSS": 64936
+            "maxRSS": 65684
           },
           "after": {
-            "heapUsed": 62818424,
-            "heapTotal": 90234880,
-            "rss": 158863360,
+            "heapUsed": 57951920,
+            "heapTotal": 90497024,
+            "rss": 155279360,
             "external": 5655416,
-            "maxRSS": 155140
+            "maxRSS": 151640
           },
-          "maxRSS": 155140,
-          "rssDelta": 92598272
+          "maxRSS": 151640,
+          "rssDelta": 88281088
         }
       },
       "production": {
         "mode": "production",
-        "runtimeMs": 1211.3499319999999,
+        "runtimeMs": 1162.52389,
         "selectedKey": "board:red-trait-all:core",
         "selectedUtility": 106233.33586702707,
         "ranking": [
@@ -3611,7 +3611,7 @@
           "expectedScalarStates": 5835,
           "targetScalarStates": 0,
           "terminalScoringCalls": 5835,
-          "expectedScoringMs": 996.5593149999944,
+          "expectedScoringMs": 939.9283269999963,
           "targetScoringMs": 0,
           "expectedBannerMaterializations": 2093,
           "expectedBannerCacheEntries": 2093,
@@ -3717,14 +3717,14 @@
             "vEntries": 25,
             "qEntries": 0,
             "actionEntries": 0,
-            "elapsedMs": 1209.426698
+            "elapsedMs": 1160.7467179999999
           },
           "menuOperator": {
             "calls": 25,
             "uniformCalls": 25,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 0.5637889999999288
+            "operatorMs": 0.5053349999998318
           },
           "adaptiveRefinement": {
             "policyId": "adaptive-tight",
@@ -3752,7 +3752,7 @@
           "uniqueTransitionCalculations": 540,
           "outcomesBeforeAggregation": 9202,
           "outcomesAfterAggregation": 7852,
-          "transitionGenerationMs": 20.158644000002937
+          "transitionGenerationMs": 18.27496600000046
         },
         "target": {
           "boardCacheHits": 0,
@@ -3890,21 +3890,21 @@
         },
         "memory": {
           "before": {
-            "heapUsed": 10105632,
-            "heapTotal": 27631616,
-            "rss": 66924544,
+            "heapUsed": 10105704,
+            "heapTotal": 27893760,
+            "rss": 66629632,
             "external": 1773172,
-            "maxRSS": 65596
+            "maxRSS": 65356
           },
           "after": {
-            "heapUsed": 38348328,
-            "heapTotal": 68190208,
-            "rss": 135749632,
+            "heapUsed": 42746272,
+            "heapTotal": 68452352,
+            "rss": 134684672,
             "external": 5655416,
-            "maxRSS": 132932
+            "maxRSS": 131980
           },
-          "maxRSS": 132932,
-          "rssDelta": 68825088
+          "maxRSS": 131980,
+          "rssDelta": 68055040
         }
       }
     },
@@ -3923,7 +3923,7 @@
       },
       "exact": {
         "mode": "exact",
-        "runtimeMs": 4181.9518769999995,
+        "runtimeMs": 4097.936082,
         "selectedKey": "board:green-quality-all:support",
         "selectedUtility": 64002.77580770081,
         "ranking": [
@@ -3991,7 +3991,7 @@
           "expectedScalarStates": 25431,
           "targetScalarStates": 0,
           "terminalScoringCalls": 25431,
-          "expectedScoringMs": 3775.98425400001,
+          "expectedScoringMs": 3698.685064000021,
           "targetScoringMs": 0,
           "expectedBannerMaterializations": 7857,
           "expectedBannerCacheEntries": 7857,
@@ -4112,14 +4112,14 @@
             "vEntries": 109,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 4180.400602000001
+            "elapsedMs": 4096.401586
           },
           "menuOperator": {
             "calls": 109,
             "uniformCalls": 109,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 2.205704000001731
+            "operatorMs": 1.7499269999998432
           }
         },
         "transition": {
@@ -4128,7 +4128,7 @@
           "uniqueTransitionCalculations": 2220,
           "outcomesBeforeAggregation": 72630,
           "outcomesAfterAggregation": 70026,
-          "transitionGenerationMs": 63.872372000007545
+          "transitionGenerationMs": 58.19322700000356
         },
         "target": {
           "boardCacheHits": 0,
@@ -4266,26 +4266,26 @@
         },
         "memory": {
           "before": {
-            "heapUsed": 10106616,
-            "heapTotal": 27631616,
-            "rss": 66813952,
+            "heapUsed": 10106544,
+            "heapTotal": 27893760,
+            "rss": 67051520,
             "external": 1773172,
-            "maxRSS": 65504
+            "maxRSS": 65676
           },
           "after": {
-            "heapUsed": 94611144,
-            "heapTotal": 122404864,
-            "rss": 187916288,
+            "heapUsed": 100375680,
+            "heapTotal": 122142720,
+            "rss": 189452288,
             "external": 5655416,
-            "maxRSS": 183512
+            "maxRSS": 185012
           },
-          "maxRSS": 183512,
-          "rssDelta": 121102336
+          "maxRSS": 185012,
+          "rssDelta": 122400768
         }
       },
       "production": {
         "mode": "production",
-        "runtimeMs": 4145.665269,
+        "runtimeMs": 4366.450864,
         "selectedKey": "board:green-quality-all:support",
         "selectedUtility": 64002.77580770081,
         "ranking": [
@@ -4353,7 +4353,7 @@
           "expectedScalarStates": 25431,
           "targetScalarStates": 0,
           "terminalScoringCalls": 25431,
-          "expectedScoringMs": 3728.4379230000054,
+          "expectedScoringMs": 3958.913168999938,
           "targetScoringMs": 0,
           "expectedBannerMaterializations": 7857,
           "expectedBannerCacheEntries": 7857,
@@ -4459,14 +4459,14 @@
             "vEntries": 109,
             "qEntries": 0,
             "actionEntries": 0,
-            "elapsedMs": 4143.7614109999995
+            "elapsedMs": 4364.622585
           },
           "menuOperator": {
             "calls": 109,
             "uniformCalls": 109,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.8491129999991927
+            "operatorMs": 1.8356130000035478
           },
           "adaptiveRefinement": {
             "policyId": "adaptive-tight",
@@ -4521,7 +4521,7 @@
           "uniqueTransitionCalculations": 2220,
           "outcomesBeforeAggregation": 72630,
           "outcomesAfterAggregation": 70026,
-          "transitionGenerationMs": 63.34747000000337
+          "transitionGenerationMs": 61.424530999995
         },
         "target": {
           "boardCacheHits": 0,
@@ -4661,19 +4661,19 @@
           "before": {
             "heapUsed": 10106624,
             "heapTotal": 27893760,
-            "rss": 66867200,
+            "rss": 66973696,
             "external": 1773172,
-            "maxRSS": 65500
+            "maxRSS": 65640
           },
           "after": {
-            "heapUsed": 88012512,
-            "heapTotal": 122667008,
-            "rss": 194916352,
+            "heapUsed": 100371840,
+            "heapTotal": 122142720,
+            "rss": 188846080,
             "external": 5655416,
-            "maxRSS": 190348
+            "maxRSS": 184420
           },
-          "maxRSS": 190348,
-          "rssDelta": 128049152
+          "maxRSS": 184420,
+          "rssDelta": 121872384
         }
       }
     },
@@ -4693,7 +4693,7 @@
       },
       "exact": {
         "mode": "exact",
-        "runtimeMs": 17400.465593,
+        "runtimeMs": 17465.467604,
         "selectedKey": "menu_reroll",
         "selectedUtility": 0.7080043859649123,
         "ranking": [
@@ -4751,8 +4751,8 @@
           "expectedScalarStates": 231,
           "targetScalarStates": 18520,
           "terminalScoringCalls": 18751,
-          "expectedScoringMs": 123.50467700000942,
-          "targetScoringMs": 16848.773794000135,
+          "expectedScoringMs": 129.3966189999886,
+          "targetScoringMs": 16929.156138999922,
           "expectedBannerMaterializations": 234,
           "expectedBannerCacheEntries": 234,
           "expectedBannerCacheHits": 459,
@@ -4872,14 +4872,14 @@
             "vEntries": 78,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 17398.883719999998
+            "elapsedMs": 17463.992867999998
           },
           "menuOperator": {
             "calls": 78,
             "uniformCalls": 78,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.5261950000004845
+            "operatorMs": 1.4513640000087662
           }
         },
         "transition": {
@@ -4888,7 +4888,7 @@
           "uniqueTransitionCalculations": 1600,
           "outcomesBeforeAggregation": 39770,
           "outcomesAfterAggregation": 39770,
-          "transitionGenerationMs": 55.9694550000207
+          "transitionGenerationMs": 49.37904700001309
         },
         "target": {
           "boardCacheHits": 0,
@@ -4981,8 +4981,8 @@
           "survivingPairSampleBuilds": 1410543,
           "thirdCandidatesVisited": 6077270,
           "maxThirdCandidatesVisited": 12,
-          "candidatePreparationMs": 1194.9471350003873,
-          "combinatorialSearchMs": 10180.962570000018
+          "candidatePreparationMs": 1152.0102940000047,
+          "combinatorialSearchMs": 10281.999461000005
         },
         "targetSearch": {
           "candidateSets": [
@@ -5076,33 +5076,33 @@
           "suffixCacheBuilds": 14664,
           "suffixCacheResets": 0,
           "suffixCacheEstimatedBytes": 25662592,
-          "candidatePreparationMs": 1194.9471350003873,
-          "pairSampleBuildMs": 189.47473099962414,
-          "suffixSummaryBuildMs": 201.60030200008052,
-          "combinatorialSearchMs": 10180.962570000018
+          "candidatePreparationMs": 1152.0102940000047,
+          "pairSampleBuildMs": 193.20973099930143,
+          "suffixSummaryBuildMs": 100.52478700000466,
+          "combinatorialSearchMs": 10281.999461000005
         },
         "memory": {
           "before": {
             "heapUsed": 10105856,
             "heapTotal": 27893760,
-            "rss": 66871296,
+            "rss": 66854912,
             "external": 1773172,
-            "maxRSS": 65516
+            "maxRSS": 65484
           },
           "after": {
-            "heapUsed": 466207696,
-            "heapTotal": 504176640,
-            "rss": 1164943360,
-            "external": 405168112,
-            "maxRSS": 1137640
+            "heapUsed": 469146552,
+            "heapTotal": 503128064,
+            "rss": 1164873728,
+            "external": 405189232,
+            "maxRSS": 1137572
           },
-          "maxRSS": 1137640,
-          "rssDelta": 1098072064
+          "maxRSS": 1137572,
+          "rssDelta": 1098018816
         }
       },
       "production": {
         "mode": "production",
-        "runtimeMs": 5992.850956,
+        "runtimeMs": 6089.994667000001,
         "selectedKey": "menu_reroll",
         "selectedUtility": 0.7080043859649123,
         "ranking": [
@@ -5160,8 +5160,8 @@
           "expectedScalarStates": 231,
           "targetScalarStates": 6060,
           "terminalScoringCalls": 6291,
-          "expectedScoringMs": 102.58254000000073,
-          "targetScoringMs": 5605.6386439999815,
+          "expectedScoringMs": 111.94054300000033,
+          "targetScoringMs": 5694.9482830000115,
           "expectedBannerMaterializations": 234,
           "expectedBannerCacheEntries": 234,
           "expectedBannerCacheHits": 459,
@@ -5266,14 +5266,14 @@
             "vEntries": 25,
             "qEntries": 0,
             "actionEntries": 0,
-            "elapsedMs": 5990.951136
+            "elapsedMs": 6088.064055
           },
           "menuOperator": {
             "calls": 25,
             "uniformCalls": 25,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 0.549410000000762
+            "operatorMs": 0.5891089999981887
           },
           "adaptiveRefinement": {
             "policyId": "adaptive-tight",
@@ -5301,7 +5301,7 @@
           "uniqueTransitionCalculations": 540,
           "outcomesBeforeAggregation": 14563,
           "outcomesAfterAggregation": 14563,
-          "transitionGenerationMs": 26.325210999992294
+          "transitionGenerationMs": 28.220878000002955
         },
         "target": {
           "boardCacheHits": 0,
@@ -5391,8 +5391,8 @@
           "survivingPairSampleBuilds": 452408,
           "thirdCandidatesVisited": 2008459,
           "maxThirdCandidatesVisited": 12,
-          "candidatePreparationMs": 349.17813999998435,
-          "combinatorialSearchMs": 3485.931204
+          "candidatePreparationMs": 343.99362199997347,
+          "combinatorialSearchMs": 3548.399504999984
         },
         "targetSearch": {
           "candidateSets": [
@@ -5483,28 +5483,28 @@
           "suffixCacheBuilds": 8424,
           "suffixCacheResets": 0,
           "suffixCacheEstimatedBytes": 14627328,
-          "candidatePreparationMs": 349.17813999998435,
-          "pairSampleBuildMs": 67.28983400026863,
-          "suffixSummaryBuildMs": 61.81318199999305,
-          "combinatorialSearchMs": 3485.931204
+          "candidatePreparationMs": 343.99362199997347,
+          "pairSampleBuildMs": 64.87870300001615,
+          "suffixSummaryBuildMs": 59.26573500001189,
+          "combinatorialSearchMs": 3548.399504999984
         },
         "memory": {
           "before": {
-            "heapUsed": 10105864,
+            "heapUsed": 10104928,
             "heapTotal": 27631616,
-            "rss": 66809856,
+            "rss": 66924544,
             "external": 1773172,
-            "maxRSS": 65512
+            "maxRSS": 65648
           },
           "after": {
-            "heapUsed": 193777840,
-            "heapTotal": 229285888,
-            "rss": 551587840,
+            "heapUsed": 207700224,
+            "heapTotal": 229548032,
+            "rss": 549629952,
             "external": 177668488,
-            "maxRSS": 538660
+            "maxRSS": 536748
           },
-          "maxRSS": 538660,
-          "rssDelta": 484777984
+          "maxRSS": 536748,
+          "rssDelta": 482705408
         }
       }
     },
@@ -5524,7 +5524,7 @@
       },
       "exact": {
         "mode": "exact",
-        "runtimeMs": 12854.780003,
+        "runtimeMs": 12921.350837999998,
         "selectedKey": "stop",
         "selectedUtility": 1,
         "ranking": [
@@ -5587,8 +5587,8 @@
           "expectedScalarStates": 143,
           "targetScalarStates": 17896,
           "terminalScoringCalls": 18039,
-          "expectedScoringMs": 81.9975809999878,
-          "targetScoringMs": 12354.338946000093,
+          "expectedScoringMs": 81.67935899999819,
+          "targetScoringMs": 12429.860691000033,
           "expectedBannerMaterializations": 145,
           "expectedBannerCacheEntries": 145,
           "expectedBannerCacheHits": 284,
@@ -5708,14 +5708,14 @@
             "vEntries": 79,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 12853.223709
+            "elapsedMs": 12919.889031
           },
           "menuOperator": {
             "calls": 79,
             "uniformCalls": 79,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.549986999997941
+            "operatorMs": 1.6042389999963689
           }
         },
         "transition": {
@@ -5724,7 +5724,7 @@
           "uniqueTransitionCalculations": 1620,
           "outcomesBeforeAggregation": 46499,
           "outcomesAfterAggregation": 45375,
-          "transitionGenerationMs": 65.06785699997465
+          "transitionGenerationMs": 61.64493999998328
         },
         "target": {
           "boardCacheHits": 0,
@@ -5806,8 +5806,8 @@
           "survivingPairSampleBuilds": 1756429,
           "thirdCandidatesVisited": 6888712,
           "maxThirdCandidatesVisited": 16,
-          "candidatePreparationMs": 1020.308545000055,
-          "combinatorialSearchMs": 6328.9667519998675
+          "candidatePreparationMs": 927.2214609999081,
+          "combinatorialSearchMs": 6466.677191999792
         },
         "targetSearch": {
           "candidateSets": [
@@ -5890,33 +5890,33 @@
           "suffixCacheBuilds": 19000,
           "suffixCacheResets": 0,
           "suffixCacheEstimatedBytes": 33743104,
-          "candidatePreparationMs": 1020.308545000055,
-          "pairSampleBuildMs": 227.93596900054987,
-          "suffixSummaryBuildMs": 129.2046519999741,
-          "combinatorialSearchMs": 6328.9667519998675
+          "candidatePreparationMs": 927.2214609999081,
+          "pairSampleBuildMs": 226.1348300005862,
+          "suffixSummaryBuildMs": 152.60429699987526,
+          "combinatorialSearchMs": 6466.677191999792
         },
         "memory": {
           "before": {
-            "heapUsed": 10105184,
-            "heapTotal": 27369472,
-            "rss": 66564096,
+            "heapUsed": 10105728,
+            "heapTotal": 27893760,
+            "rss": 66686976,
             "external": 1773172,
-            "maxRSS": 65208
+            "maxRSS": 65344
           },
           "after": {
-            "heapUsed": 442541784,
-            "heapTotal": 471638016,
-            "rss": 1085652992,
-            "external": 375025144,
-            "maxRSS": 1060208
+            "heapUsed": 436478680,
+            "heapTotal": 472162304,
+            "rss": 1084547072,
+            "external": 375012088,
+            "maxRSS": 1059128
           },
-          "maxRSS": 1060208,
-          "rssDelta": 1019088896
+          "maxRSS": 1059128,
+          "rssDelta": 1017860096
         }
       },
       "production": {
         "mode": "production",
-        "runtimeMs": 12743.246398,
+        "runtimeMs": 13480.652597,
         "selectedKey": "stop",
         "selectedUtility": 1,
         "ranking": [
@@ -5979,8 +5979,8 @@
           "expectedScalarStates": 143,
           "targetScalarStates": 17896,
           "terminalScoringCalls": 18039,
-          "expectedScoringMs": 72.14025300000009,
-          "targetScoringMs": 12242.086988999994,
+          "expectedScoringMs": 69.66638899999958,
+          "targetScoringMs": 12953.46753299982,
           "expectedBannerMaterializations": 145,
           "expectedBannerCacheEntries": 145,
           "expectedBannerCacheHits": 284,
@@ -6087,14 +6087,14 @@
             "vEntries": 79,
             "qEntries": 0,
             "actionEntries": 0,
-            "elapsedMs": 12741.302486
+            "elapsedMs": 13478.80541
           },
           "menuOperator": {
             "calls": 79,
             "uniformCalls": 79,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.4385230000002593
+            "operatorMs": 1.5892260000057377
           },
           "adaptiveRefinement": {
             "policyId": "adaptive-tight",
@@ -6149,7 +6149,7 @@
           "uniqueTransitionCalculations": 1620,
           "outcomesBeforeAggregation": 46499,
           "outcomesAfterAggregation": 45375,
-          "transitionGenerationMs": 61.419372999996426
+          "transitionGenerationMs": 64.75190900003003
         },
         "target": {
           "boardCacheHits": 0,
@@ -6231,8 +6231,8 @@
           "survivingPairSampleBuilds": 1756413,
           "thirdCandidatesVisited": 6888712,
           "maxThirdCandidatesVisited": 16,
-          "candidatePreparationMs": 959.8178140000834,
-          "combinatorialSearchMs": 6275.216360999819
+          "candidatePreparationMs": 1130.9431920000184,
+          "combinatorialSearchMs": 6555.497938000079
         },
         "targetSearch": {
           "candidateSets": [
@@ -6315,28 +6315,28 @@
           "suffixCacheBuilds": 19000,
           "suffixCacheResets": 0,
           "suffixCacheEstimatedBytes": 33743104,
-          "candidatePreparationMs": 959.8178140000834,
-          "pairSampleBuildMs": 229.71895399950932,
-          "suffixSummaryBuildMs": 122.64396999998621,
-          "combinatorialSearchMs": 6275.216360999819
+          "candidatePreparationMs": 1130.9431920000184,
+          "pairSampleBuildMs": 237.19240800072131,
+          "suffixSummaryBuildMs": 120.37643600003673,
+          "combinatorialSearchMs": 6555.497938000079
         },
         "memory": {
           "before": {
-            "heapUsed": 10105712,
-            "heapTotal": 27893760,
-            "rss": 66703360,
+            "heapUsed": 10105736,
+            "heapTotal": 27631616,
+            "rss": 66887680,
             "external": 1773172,
-            "maxRSS": 65324
+            "maxRSS": 65580
           },
           "after": {
-            "heapUsed": 441294512,
-            "heapTotal": 474259456,
-            "rss": 1088753664,
-            "external": 375011320,
-            "maxRSS": 1063236
+            "heapUsed": 442309472,
+            "heapTotal": 473997312,
+            "rss": 1082105856,
+            "external": 375017464,
+            "maxRSS": 1056744
           },
-          "maxRSS": 1063236,
-          "rssDelta": 1022050304
+          "maxRSS": 1056744,
+          "rssDelta": 1015218176
         }
       }
     },
@@ -6356,7 +6356,7 @@
       },
       "exact": {
         "mode": "exact",
-        "runtimeMs": 7832.972924000001,
+        "runtimeMs": 8505.766363,
         "selectedKey": "stop",
         "selectedUtility": 1,
         "ranking": [
@@ -6414,8 +6414,8 @@
           "expectedScalarStates": 196,
           "targetScalarStates": 17513,
           "terminalScoringCalls": 17709,
-          "expectedScoringMs": 109.62714399999751,
-          "targetScoringMs": 7369.506694999919,
+          "expectedScoringMs": 116.21275100000466,
+          "targetScoringMs": 7975.761316999958,
           "expectedBannerMaterializations": 199,
           "expectedBannerCacheEntries": 199,
           "expectedBannerCacheHits": 389,
@@ -6535,14 +6535,14 @@
             "vEntries": 77,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 7831.3945380000005
+            "elapsedMs": 8504.135903
           },
           "menuOperator": {
             "calls": 77,
             "uniformCalls": 77,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.0573209999993196
+            "operatorMs": 1.3462670000008075
           }
         },
         "transition": {
@@ -6551,7 +6551,7 @@
           "uniqueTransitionCalculations": 1580,
           "outcomesBeforeAggregation": 28054,
           "outcomesAfterAggregation": 24104,
-          "transitionGenerationMs": 48.17687499997237
+          "transitionGenerationMs": 60.633314000012405
         },
         "target": {
           "boardCacheHits": 0,
@@ -6634,8 +6634,8 @@
           "survivingPairSampleBuilds": 210861,
           "thirdCandidatesVisited": 1058582,
           "maxThirdCandidatesVisited": 12,
-          "candidatePreparationMs": 1176.9763829999777,
-          "combinatorialSearchMs": 1090.3444720000311
+          "candidatePreparationMs": 1232.3032650000441,
+          "combinatorialSearchMs": 1295.6148240000339
         },
         "targetSearch": {
           "candidateSets": [
@@ -6719,33 +6719,33 @@
           "suffixCacheBuilds": 13472,
           "suffixCacheResets": 0,
           "suffixCacheEstimatedBytes": 23989136,
-          "candidatePreparationMs": 1176.9763829999777,
-          "pairSampleBuildMs": 24.442006999872376,
-          "suffixSummaryBuildMs": 89.17413699998133,
-          "combinatorialSearchMs": 1090.3444720000311
+          "candidatePreparationMs": 1232.3032650000441,
+          "pairSampleBuildMs": 25.557396000143683,
+          "suffixSummaryBuildMs": 90.2674129999385,
+          "combinatorialSearchMs": 1295.6148240000339
         },
         "memory": {
           "before": {
             "heapUsed": 10106240,
             "heapTotal": 27893760,
-            "rss": 66523136,
+            "rss": 66736128,
             "external": 1773172,
-            "maxRSS": 65156
+            "maxRSS": 65404
           },
           "after": {
-            "heapUsed": 425827328,
-            "heapTotal": 454369280,
-            "rss": 1017262080,
-            "external": 341186240,
-            "maxRSS": 993420
+            "heapUsed": 422991952,
+            "heapTotal": 457252864,
+            "rss": 1020280832,
+            "external": 341175104,
+            "maxRSS": 996368
           },
-          "maxRSS": 993420,
-          "rssDelta": 950738944
+          "maxRSS": 996368,
+          "rssDelta": 953544704
         }
       },
       "production": {
         "mode": "production",
-        "runtimeMs": 7863.204426,
+        "runtimeMs": 8191.701736,
         "selectedKey": "stop",
         "selectedUtility": 1,
         "ranking": [
@@ -6803,8 +6803,8 @@
           "expectedScalarStates": 196,
           "targetScalarStates": 17513,
           "terminalScoringCalls": 17709,
-          "expectedScoringMs": 95.12721099999945,
-          "targetScoringMs": 7392.680282,
+          "expectedScoringMs": 96.37154700000048,
+          "targetScoringMs": 7715.072946000051,
           "expectedBannerMaterializations": 199,
           "expectedBannerCacheEntries": 199,
           "expectedBannerCacheHits": 389,
@@ -6909,14 +6909,14 @@
             "vEntries": 77,
             "qEntries": 0,
             "actionEntries": 0,
-            "elapsedMs": 7861.31242
+            "elapsedMs": 8189.887360000001
           },
           "menuOperator": {
             "calls": 77,
             "uniformCalls": 77,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.1698079999973743
+            "operatorMs": 1.1429129999999077
           },
           "adaptiveRefinement": {
             "policyId": "adaptive-tight",
@@ -6971,7 +6971,7 @@
           "uniqueTransitionCalculations": 1580,
           "outcomesBeforeAggregation": 28054,
           "outcomesAfterAggregation": 24104,
-          "transitionGenerationMs": 51.791036000005334
+          "transitionGenerationMs": 50.67136300000533
         },
         "target": {
           "boardCacheHits": 0,
@@ -7054,8 +7054,8 @@
           "survivingPairSampleBuilds": 210861,
           "thirdCandidatesVisited": 1058582,
           "maxThirdCandidatesVisited": 12,
-          "candidatePreparationMs": 1181.0896080000284,
-          "combinatorialSearchMs": 1119.137625000048
+          "candidatePreparationMs": 1244.1394600000244,
+          "combinatorialSearchMs": 1219.580322999952
         },
         "targetSearch": {
           "candidateSets": [
@@ -7139,28 +7139,28 @@
           "suffixCacheBuilds": 13472,
           "suffixCacheResets": 0,
           "suffixCacheEstimatedBytes": 23989136,
-          "candidatePreparationMs": 1181.0896080000284,
-          "pairSampleBuildMs": 26.57009799990999,
-          "suffixSummaryBuildMs": 86.05825200004256,
-          "combinatorialSearchMs": 1119.137625000048
+          "candidatePreparationMs": 1244.1394600000244,
+          "pairSampleBuildMs": 31.59318499979929,
+          "suffixSummaryBuildMs": 96.1266789999473,
+          "combinatorialSearchMs": 1219.580322999952
         },
         "memory": {
           "before": {
-            "heapUsed": 10106248,
-            "heapTotal": 27893760,
-            "rss": 66535424,
+            "heapUsed": 10105368,
+            "heapTotal": 27631616,
+            "rss": 67067904,
             "external": 1773172,
-            "maxRSS": 65152
+            "maxRSS": 65776
           },
           "after": {
-            "heapUsed": 425047328,
-            "heapTotal": 456204288,
-            "rss": 1018998784,
-            "external": 341196608,
-            "maxRSS": 995116
+            "heapUsed": 415254128,
+            "heapTotal": 458039296,
+            "rss": 1023631360,
+            "external": 341171648,
+            "maxRSS": 999640
           },
-          "maxRSS": 995116,
-          "rssDelta": 952463360
+          "maxRSS": 999640,
+          "rssDelta": 956563456
         }
       }
     },
@@ -7180,7 +7180,7 @@
       },
       "exact": {
         "mode": "exact",
-        "runtimeMs": 10209.12126,
+        "runtimeMs": 10341.772503999999,
         "selectedKey": "board:red-quality-all:mid",
         "selectedUtility": 0.018403539230019493,
         "ranking": [
@@ -7243,8 +7243,8 @@
           "expectedScalarStates": 1149,
           "targetScalarStates": 22515,
           "terminalScoringCalls": 23664,
-          "expectedScoringMs": 617.2221179999993,
-          "targetScoringMs": 9119.331041999927,
+          "expectedScoringMs": 617.9269330000043,
+          "targetScoringMs": 9250.08313199996,
           "expectedBannerMaterializations": 1152,
           "expectedBannerCacheEntries": 1152,
           "expectedBannerCacheHits": 2295,
@@ -7364,14 +7364,14 @@
             "vEntries": 96,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 10207.640137
+            "elapsedMs": 10340.251048
           },
           "menuOperator": {
             "calls": 96,
             "uniformCalls": 96,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.5201649999959272
+            "operatorMs": 1.7454109999958973
           }
         },
         "transition": {
@@ -7380,7 +7380,7 @@
           "uniqueTransitionCalculations": 1960,
           "outcomesBeforeAggregation": 63169,
           "outcomesAfterAggregation": 62331,
-          "transitionGenerationMs": 77.85088500000347
+          "transitionGenerationMs": 72.05913499998144
         },
         "target": {
           "boardCacheHits": 0,
@@ -7462,8 +7462,8 @@
           "survivingPairSampleBuilds": 6388,
           "thirdCandidatesVisited": 26812,
           "maxThirdCandidatesVisited": 16,
-          "candidatePreparationMs": 1189.1372009999166,
-          "combinatorialSearchMs": 1309.2647040001948
+          "candidatePreparationMs": 1326.0507139998776,
+          "combinatorialSearchMs": 1273.3950309995782
         },
         "targetSearch": {
           "candidateSets": [
@@ -7546,33 +7546,33 @@
           "suffixCacheBuilds": 15696,
           "suffixCacheResets": 0,
           "suffixCacheEstimatedBytes": 27989264,
-          "candidatePreparationMs": 1189.1372009999166,
-          "pairSampleBuildMs": 0.9034419999991883,
-          "suffixSummaryBuildMs": 160.67757900000777,
-          "combinatorialSearchMs": 1309.2647040001948
+          "candidatePreparationMs": 1326.0507139998776,
+          "pairSampleBuildMs": 0.9277860000527767,
+          "suffixSummaryBuildMs": 232.68378499999346,
+          "combinatorialSearchMs": 1273.3950309995782
         },
         "memory": {
           "before": {
-            "heapUsed": 10106360,
-            "heapTotal": 27369472,
-            "rss": 66805760,
+            "heapUsed": 10106984,
+            "heapTotal": 27893760,
+            "rss": 66924544,
             "external": 1773172,
-            "maxRSS": 65456
+            "maxRSS": 65588
           },
           "after": {
-            "heapUsed": 513017432,
-            "heapTotal": 555040768,
-            "rss": 1207320576,
+            "heapUsed": 524530904,
+            "heapTotal": 554254336,
+            "rss": 1209585664,
             "external": 400594752,
-            "maxRSS": 1179024
+            "maxRSS": 1181236
           },
-          "maxRSS": 1179024,
-          "rssDelta": 1140514816
+          "maxRSS": 1181236,
+          "rssDelta": 1142661120
         }
       },
       "production": {
         "mode": "production",
-        "runtimeMs": 4333.001081,
+        "runtimeMs": 4346.88785,
         "selectedKey": "board:red-quality-all:mid",
         "selectedUtility": 0.018403539230019493,
         "ranking": [
@@ -7635,8 +7635,8 @@
           "expectedScalarStates": 1149,
           "targetScalarStates": 6562,
           "terminalScoringCalls": 7711,
-          "expectedScoringMs": 619.258634000002,
-          "targetScoringMs": 3436.016788000028,
+          "expectedScoringMs": 630.5908869999951,
+          "targetScoringMs": 3424.739708000006,
           "expectedBannerMaterializations": 1152,
           "expectedBannerCacheEntries": 1152,
           "expectedBannerCacheHits": 2295,
@@ -7743,14 +7743,14 @@
             "vEntries": 24,
             "qEntries": 0,
             "actionEntries": 0,
-            "elapsedMs": 4331.024106
+            "elapsedMs": 4345.048125
           },
           "menuOperator": {
             "calls": 24,
             "uniformCalls": 24,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 0.6261269999990873
+            "operatorMs": 0.6046079999996437
           },
           "adaptiveRefinement": {
             "policyId": "adaptive-tight",
@@ -7778,7 +7778,7 @@
           "uniqueTransitionCalculations": 520,
           "outcomesBeforeAggregation": 15038,
           "outcomesAfterAggregation": 14780,
-          "transitionGenerationMs": 26.64715400000108
+          "transitionGenerationMs": 30.711257999999248
         },
         "target": {
           "boardCacheHits": 0,
@@ -7860,8 +7860,8 @@
           "survivingPairSampleBuilds": 3032,
           "thirdCandidatesVisited": 12152,
           "maxThirdCandidatesVisited": 16,
-          "candidatePreparationMs": 464.52205399995165,
-          "combinatorialSearchMs": 417.97821299999487
+          "candidatePreparationMs": 451.20199300001525,
+          "combinatorialSearchMs": 415.395084000006
         },
         "targetSearch": {
           "candidateSets": [
@@ -7944,28 +7944,28 @@
           "suffixCacheBuilds": 3480,
           "suffixCacheResets": 0,
           "suffixCacheEstimatedBytes": 6230880,
-          "candidatePreparationMs": 464.52205399995165,
-          "pairSampleBuildMs": 0.6291020000096523,
-          "suffixSummaryBuildMs": 28.86097400000051,
-          "combinatorialSearchMs": 417.97821299999487
+          "candidatePreparationMs": 451.20199300001525,
+          "pairSampleBuildMs": 0.6292460000216806,
+          "suffixSummaryBuildMs": 28.277569999998747,
+          "combinatorialSearchMs": 415.395084000006
         },
         "memory": {
           "before": {
             "heapUsed": 10106992,
-            "heapTotal": 27631616,
-            "rss": 66932736,
+            "heapTotal": 27893760,
+            "rss": 66994176,
             "external": 1773172,
-            "maxRSS": 65644
+            "maxRSS": 65708
           },
           "after": {
-            "heapUsed": 221590960,
+            "heapUsed": 221350616,
             "heapTotal": 256188416,
-            "rss": 562716672,
+            "rss": 555921408,
             "external": 162351656,
-            "maxRSS": 549528
+            "maxRSS": 542892
           },
-          "maxRSS": 549528,
-          "rssDelta": 495783936
+          "maxRSS": 542892,
+          "rssDelta": 488927232
         }
       }
     },
@@ -7985,7 +7985,7 @@
       },
       "exact": {
         "mode": "exact",
-        "runtimeMs": 15635.323026,
+        "runtimeMs": 15936.225311,
         "selectedKey": "board:quality-increase-one:mid",
         "selectedUtility": 0.41254858065302147,
         "ranking": [
@@ -8048,8 +8048,8 @@
           "expectedScalarStates": 154,
           "targetScalarStates": 19221,
           "terminalScoringCalls": 19375,
-          "expectedScoringMs": 79.69963299999296,
-          "targetScoringMs": 15105.275976000103,
+          "expectedScoringMs": 81.3619820000003,
+          "targetScoringMs": 15429.986677000054,
           "expectedBannerMaterializations": 157,
           "expectedBannerCacheEntries": 157,
           "expectedBannerCacheHits": 305,
@@ -8169,14 +8169,14 @@
             "vEntries": 84,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 15633.801126
+            "elapsedMs": 15934.691546
           },
           "menuOperator": {
             "calls": 84,
             "uniformCalls": 84,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.790391999993517
+            "operatorMs": 1.6149210000016865
           }
         },
         "transition": {
@@ -8185,7 +8185,7 @@
           "uniqueTransitionCalculations": 1720,
           "outcomesBeforeAggregation": 42666,
           "outcomesAfterAggregation": 42666,
-          "transitionGenerationMs": 67.0101020000078
+          "transitionGenerationMs": 59.8312870000054
         },
         "target": {
           "boardCacheHits": 0,
@@ -8277,8 +8277,8 @@
           "survivingPairSampleBuilds": 589680,
           "thirdCandidatesVisited": 3282032,
           "maxThirdCandidatesVisited": 12,
-          "candidatePreparationMs": 1107.7010260000545,
-          "combinatorialSearchMs": 8301.36058300011
+          "candidatePreparationMs": 1040.890047000214,
+          "combinatorialSearchMs": 8623.470854000294
         },
         "targetSearch": {
           "candidateSets": [
@@ -8371,33 +8371,33 @@
           "suffixCacheBuilds": 20632,
           "suffixCacheResets": 0,
           "suffixCacheEstimatedBytes": 36371904,
-          "candidatePreparationMs": 1107.7010260000545,
-          "pairSampleBuildMs": 82.04055000020361,
-          "suffixSummaryBuildMs": 161.89910600002202,
-          "combinatorialSearchMs": 8301.36058300011
+          "candidatePreparationMs": 1040.890047000214,
+          "pairSampleBuildMs": 72.9033409999137,
+          "suffixSummaryBuildMs": 299.11442600000817,
+          "combinatorialSearchMs": 8623.470854000294
         },
         "memory": {
           "before": {
-            "heapUsed": 10106104,
-            "heapTotal": 28155904,
-            "rss": 66711552,
+            "heapUsed": 10106200,
+            "heapTotal": 27893760,
+            "rss": 66854912,
             "external": 1773172,
-            "maxRSS": 65420
+            "maxRSS": 65492
           },
           "after": {
-            "heapUsed": 463320480,
-            "heapTotal": 505757696,
-            "rss": 1149272064,
-            "external": 391656808,
-            "maxRSS": 1122336
+            "heapUsed": 471872952,
+            "heapTotal": 504438784,
+            "rss": 1144340480,
+            "external": 391647592,
+            "maxRSS": 1117520
           },
-          "maxRSS": 1122336,
-          "rssDelta": 1082560512
+          "maxRSS": 1117520,
+          "rssDelta": 1077485568
         }
       },
       "production": {
         "mode": "production",
-        "runtimeMs": 8395.152613,
+        "runtimeMs": 8272.94619,
         "selectedKey": "board:quality-increase-one:mid",
         "selectedUtility": 0.41254858065302147,
         "ranking": [
@@ -8460,8 +8460,8 @@
           "expectedScalarStates": 154,
           "targetScalarStates": 9943,
           "terminalScoringCalls": 10097,
-          "expectedScoringMs": 72.50302200000007,
-          "targetScoringMs": 7980.554459000016,
+          "expectedScoringMs": 70.33381199999991,
+          "targetScoringMs": 7874.84100099999,
           "expectedBannerMaterializations": 157,
           "expectedBannerCacheEntries": 157,
           "expectedBannerCacheHits": 305,
@@ -8566,14 +8566,14 @@
             "vEntries": 43,
             "qEntries": 0,
             "actionEntries": 0,
-            "elapsedMs": 8393.26773
+            "elapsedMs": 8271.159174
           },
           "menuOperator": {
             "calls": 43,
             "uniformCalls": 43,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 0.8364950000001272
+            "operatorMs": 0.7859719999994468
           },
           "adaptiveRefinement": {
             "policyId": "adaptive-tight",
@@ -8610,7 +8610,7 @@
           "uniqueTransitionCalculations": 900,
           "outcomesBeforeAggregation": 22487,
           "outcomesAfterAggregation": 22487,
-          "transitionGenerationMs": 34.86489699999012
+          "transitionGenerationMs": 33.10146099997601
         },
         "target": {
           "boardCacheHits": 0,
@@ -8701,8 +8701,8 @@
           "survivingPairSampleBuilds": 309736,
           "thirdCandidatesVisited": 1865761,
           "maxThirdCandidatesVisited": 12,
-          "candidatePreparationMs": 549.2529030000169,
-          "combinatorialSearchMs": 4510.96765200008
+          "candidatePreparationMs": 552.6384499999324,
+          "combinatorialSearchMs": 4395.23615700004
         },
         "targetSearch": {
           "candidateSets": [
@@ -8794,28 +8794,28 @@
           "suffixCacheBuilds": 13792,
           "suffixCacheResets": 0,
           "suffixCacheEstimatedBytes": 24189056,
-          "candidatePreparationMs": 549.2529030000169,
-          "pairSampleBuildMs": 42.22690799990761,
-          "suffixSummaryBuildMs": 105.3067339999692,
-          "combinatorialSearchMs": 4510.96765200008
+          "candidatePreparationMs": 552.6384499999324,
+          "pairSampleBuildMs": 41.76847399985738,
+          "suffixSummaryBuildMs": 106.18382700001135,
+          "combinatorialSearchMs": 4395.23615700004
         },
         "memory": {
           "before": {
-            "heapUsed": 10106208,
-            "heapTotal": 27893760,
-            "rss": 66744320,
+            "heapUsed": 10106136,
+            "heapTotal": 28155904,
+            "rss": 66879488,
             "external": 1773172,
-            "maxRSS": 65400
+            "maxRSS": 65516
           },
           "after": {
-            "heapUsed": 261897256,
-            "heapTotal": 298876928,
-            "rss": 686960640,
-            "external": 223441160,
-            "maxRSS": 670860
+            "heapUsed": 261693400,
+            "heapTotal": 298352640,
+            "rss": 691023872,
+            "external": 223411592,
+            "maxRSS": 674828
           },
-          "maxRSS": 670860,
-          "rssDelta": 620216320
+          "maxRSS": 674828,
+          "rssDelta": 624144384
         }
       }
     },
@@ -8835,7 +8835,7 @@
       },
       "exact": {
         "mode": "exact",
-        "runtimeMs": 11471.292415,
+        "runtimeMs": 11589.405359,
         "selectedKey": "stop",
         "selectedUtility": 1,
         "ranking": [
@@ -8893,8 +8893,8 @@
           "expectedScalarStates": 191,
           "targetScalarStates": 16555,
           "terminalScoringCalls": 16746,
-          "expectedScoringMs": 99.75249500000274,
-          "targetScoringMs": 10968.498443000015,
+          "expectedScoringMs": 101.60842900000011,
+          "targetScoringMs": 11095.827908999998,
           "expectedBannerMaterializations": 193,
           "expectedBannerCacheEntries": 193,
           "expectedBannerCacheHits": 380,
@@ -9014,14 +9014,14 @@
             "vEntries": 71,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 11469.718687999999
+            "elapsedMs": 11587.944844
           },
           "menuOperator": {
             "calls": 71,
             "uniformCalls": 71,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.353462999995486
+            "operatorMs": 1.3724059999995006
           }
         },
         "transition": {
@@ -9030,7 +9030,7 @@
           "uniqueTransitionCalculations": 1460,
           "outcomesBeforeAggregation": 41148,
           "outcomesAfterAggregation": 40800,
-          "transitionGenerationMs": 62.28281799998615
+          "transitionGenerationMs": 50.02802700002002
         },
         "target": {
           "boardCacheHits": 0,
@@ -9115,8 +9115,8 @@
           "survivingPairSampleBuilds": 1933843,
           "thirdCandidatesVisited": 5979196,
           "maxThirdCandidatesVisited": 16,
-          "candidatePreparationMs": 1077.7072040000605,
-          "combinatorialSearchMs": 5049.257743000149
+          "candidatePreparationMs": 848.7744430000341,
+          "combinatorialSearchMs": 5421.647372999961
         },
         "targetSearch": {
           "candidateSets": [
@@ -9202,33 +9202,33 @@
           "suffixCacheBuilds": 12688,
           "suffixCacheResets": 0,
           "suffixCacheEstimatedBytes": 22477376,
-          "candidatePreparationMs": 1077.7072040000605,
-          "pairSampleBuildMs": 249.63924299913842,
-          "suffixSummaryBuildMs": 82.0584960000711,
-          "combinatorialSearchMs": 5049.257743000149
+          "candidatePreparationMs": 848.7744430000341,
+          "pairSampleBuildMs": 251.56599900083336,
+          "suffixSummaryBuildMs": 434.1865930000283,
+          "combinatorialSearchMs": 5421.647372999961
         },
         "memory": {
           "before": {
             "heapUsed": 10106152,
             "heapTotal": 27893760,
-            "rss": 66514944,
+            "rss": 66887680,
             "external": 1773172,
-            "maxRSS": 65164
+            "maxRSS": 65604
           },
           "after": {
-            "heapUsed": 424327288,
-            "heapTotal": 454328320,
-            "rss": 1031503872,
-            "external": 349254360,
-            "maxRSS": 1007328
+            "heapUsed": 423415648,
+            "heapTotal": 454066176,
+            "rss": 1032507392,
+            "external": 349252056,
+            "maxRSS": 1008308
           },
-          "maxRSS": 1007328,
-          "rssDelta": 964988928
+          "maxRSS": 1008308,
+          "rssDelta": 965619712
         }
       },
       "production": {
         "mode": "production",
-        "runtimeMs": 11554.132195999999,
+        "runtimeMs": 11615.569319,
         "selectedKey": "stop",
         "selectedUtility": 1,
         "ranking": [
@@ -9286,8 +9286,8 @@
           "expectedScalarStates": 191,
           "targetScalarStates": 16555,
           "terminalScoringCalls": 16746,
-          "expectedScoringMs": 94.04359199999982,
-          "targetScoringMs": 11059.291039000074,
+          "expectedScoringMs": 88.96865399999984,
+          "targetScoringMs": 11113.452313000016,
           "expectedBannerMaterializations": 193,
           "expectedBannerCacheEntries": 193,
           "expectedBannerCacheHits": 380,
@@ -9394,14 +9394,14 @@
             "vEntries": 71,
             "qEntries": 0,
             "actionEntries": 0,
-            "elapsedMs": 11552.224331
+            "elapsedMs": 11613.722133000001
           },
           "menuOperator": {
             "calls": 71,
             "uniformCalls": 71,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.2531279999991511
+            "operatorMs": 1.2959319999977197
           },
           "adaptiveRefinement": {
             "policyId": "adaptive-tight",
@@ -9456,7 +9456,7 @@
           "uniqueTransitionCalculations": 1460,
           "outcomesBeforeAggregation": 41148,
           "outcomesAfterAggregation": 40800,
-          "transitionGenerationMs": 59.45851300004634
+          "transitionGenerationMs": 49.14697100001109
         },
         "target": {
           "boardCacheHits": 0,
@@ -9541,8 +9541,8 @@
           "survivingPairSampleBuilds": 1933654,
           "thirdCandidatesVisited": 5979196,
           "maxThirdCandidatesVisited": 16,
-          "candidatePreparationMs": 1075.8464629998987,
-          "combinatorialSearchMs": 5104.09810300007
+          "candidatePreparationMs": 1106.4477789999669,
+          "combinatorialSearchMs": 5179.157652999942
         },
         "targetSearch": {
           "candidateSets": [
@@ -9628,28 +9628,28 @@
           "suffixCacheBuilds": 12688,
           "suffixCacheResets": 0,
           "suffixCacheEstimatedBytes": 22477376,
-          "candidatePreparationMs": 1075.8464629998987,
-          "pairSampleBuildMs": 251.85496099966406,
-          "suffixSummaryBuildMs": 98.45318500000249,
-          "combinatorialSearchMs": 5104.09810300007
+          "candidatePreparationMs": 1106.4477789999669,
+          "pairSampleBuildMs": 253.57790700026248,
+          "suffixSummaryBuildMs": 109.79365599998465,
+          "combinatorialSearchMs": 5179.157652999942
         },
         "memory": {
           "before": {
             "heapUsed": 10106160,
-            "heapTotal": 27893760,
-            "rss": 66580480,
+            "heapTotal": 27631616,
+            "rss": 66895872,
             "external": 1773172,
-            "maxRSS": 65224
+            "maxRSS": 65584
           },
           "after": {
-            "heapUsed": 415813584,
-            "heapTotal": 454328320,
-            "rss": 1031081984,
+            "heapUsed": 425044344,
+            "heapTotal": 453279744,
+            "rss": 1031892992,
             "external": 349232856,
-            "maxRSS": 1006916
+            "maxRSS": 1007708
           },
-          "maxRSS": 1006916,
-          "rssDelta": 964501504
+          "maxRSS": 1007708,
+          "rssDelta": 964997120
         }
       }
     }
