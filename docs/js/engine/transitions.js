@@ -1,4 +1,4 @@
-import { DEFAULT_LAYOUT_ID, legalStats } from '../domain/rules.js';
+import { legalStats } from '../domain/rules.js';
 const QUALITY_TIERS = [1, 2, 3, 4, 5];
 const TRAITS = ['Fractal', 'Friendly', 'Vampiric', 'Unique', 'Benevolent'];
 function cloneBoard(board) {
@@ -166,27 +166,45 @@ export function enumerateQualityIncrease(board, role, op) {
     }
     return aggregate(out);
 }
-/** Verified only for legacy_3: one slot decreases and the other two increase. */
+function choosePairs(indices) {
+    const pairs = [];
+    for (let i = 0; i < indices.length; i++)
+        for (let j = i + 1; j < indices.length; j++)
+            pairs.push([indices[i], indices[j]]);
+    return pairs;
+}
+/** Randomly choose one slot to decrease and two distinct remaining slots to increase. */
 export function enumerateQualityRedistribution(board, role, op) {
     if (op.kind !== 'quality_redistribution')
         return [];
-    if ((board.layoutId ?? DEFAULT_LAYOUT_ID) !== 'legacy_3')
+    const count = board[role].emblems.length;
+    if (count < 3)
         return [];
     const out = [];
-    for (let downIdx = 0; downIdx < 3; downIdx++) {
-        const recurse = (idx, next, p) => {
-            if (idx >= 3) {
-                out.push({ board: next, probability: p, note: `Randomly selected slot ${downIdx + 1} to decrease; the other two increase.` });
-                return;
-            }
-            const current = next[role].emblems[idx].qualityTier, direction = idx === downIdx ? 'decrease' : 'increase';
-            for (const x of directionalTierOutcomes(current, direction)) {
-                const copy = cloneBoard(next);
-                copy[role].emblems[idx] = { ...copy[role].emblems[idx], qualityTier: x.tier };
-                recurse(idx + 1, copy, p * x.probability);
-            }
-        };
-        recurse(0, cloneBoard(board), 1 / 3);
+    for (let downIdx = 0; downIdx < count; downIdx++) {
+        const remaining = Array.from({ length: count }, (_, i) => i).filter(i => i !== downIdx);
+        const recipientPairs = choosePairs(remaining);
+        for (const recipients of recipientPairs) {
+            const recipientSet = new Set(recipients);
+            const recurse = (idx, next, p) => {
+                if (idx >= count) {
+                    out.push({ board: next, probability: p, note: `Randomly selected slot ${downIdx + 1} to decrease; slots ${recipients[0] + 1} and ${recipients[1] + 1} increase.` });
+                    return;
+                }
+                const current = next[role].emblems[idx].qualityTier;
+                const direction = idx === downIdx ? 'decrease' : recipientSet.has(idx) ? 'increase' : null;
+                if (!direction) {
+                    recurse(idx + 1, next, p);
+                    return;
+                }
+                for (const x of directionalTierOutcomes(current, direction)) {
+                    const copy = cloneBoard(next);
+                    copy[role].emblems[idx] = { ...copy[role].emblems[idx], qualityTier: x.tier };
+                    recurse(idx + 1, copy, p * x.probability);
+                }
+            };
+            recurse(0, cloneBoard(board), (1 / count) * (1 / recipientPairs.length));
+        }
     }
     return aggregate(out);
 }

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-15T18:19:03.994Z",
+  "generatedAt": "2026-08-15T21:25:21.066Z",
   "baseSha": "b058010829d7b48c5968d2540acf65a40b64f2a7",
   "runtime": {
     "node": "v22.23.2",
@@ -17,7 +17,7 @@
     "targetT3Run": false,
     "targetT4Run": false
   },
-  "timeoutMs": 150000,
+  "timeoutMs": 180000,
   "runs": [
     {
       "layoutId": "legacy_3",
@@ -32,18 +32,18 @@
       },
       "codec": {
         "iterations": 20000,
-        "runtimeMs": 93.12721199999999,
-        "perOperationUs": 4.656360599999999
+        "runtimeMs": 72.58162999999999,
+        "perOperationUs": 3.6290814999999994
       },
       "terminalScoring": {
-        "runtimeMs": 147.11606899999998,
+        "runtimeMs": 152.60033099999998,
         "expected": 52286.88030811379
       },
       "transition": {
         "operationId": "green-stat-all",
         "role": "core",
-        "coldMs": 0.9933130000000006,
-        "warmMs": 0.02753199999995104,
+        "coldMs": 0.6913780000000429,
+        "warmMs": 0.015820000000019263,
         "reachableOutcomes": 5,
         "probability": 1,
         "coldDiagnostics": {
@@ -52,7 +52,7 @@
           "uniqueTransitionCalculations": 1,
           "outcomesBeforeAggregation": 5,
           "outcomesAfterAggregation": 5,
-          "transitionGenerationMs": 0.7957430000000159
+          "transitionGenerationMs": 0.5642129999999952
         },
         "warmDiagnostics": {
           "cacheHits": 1,
@@ -64,7 +64,7 @@
         }
       },
       "optimizer": {
-        "runtimeMs": 79.31341600000002,
+        "runtimeMs": 418.22743599999995,
         "recommendation": "Best Current Setup",
         "utility": 52286.88030811379,
         "score": 52286.88030811379,
@@ -180,7 +180,7 @@
             "vEntries": 0,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 77.86527999999998
+            "elapsedMs": 417.04403700000006
           },
           "menuOperator": {
             "calls": 0,
@@ -193,21 +193,21 @@
       },
       "memory": {
         "before": {
-          "heapUsed": 11672792,
-          "heapTotal": 29466624,
-          "rss": 87121920,
-          "external": 5655988,
-          "maxRSS": 85276
+          "heapUsed": 11708128,
+          "heapTotal": 29990912,
+          "rss": 89546752,
+          "external": 5655604,
+          "maxRSS": 88600
         },
         "after": {
-          "heapUsed": 16689864,
-          "heapTotal": 29728768,
-          "rss": 94601216,
+          "heapUsed": 17114152,
+          "heapTotal": 29990912,
+          "rss": 95907840,
           "external": 5655416,
-          "maxRSS": 92384
+          "maxRSS": 93660
         },
-        "heapDelta": 5017072,
-        "rssDelta": 7479296
+        "heapDelta": 5406024,
+        "rssDelta": 6361088
       },
       "status": "completed"
     },
@@ -224,18 +224,18 @@
       },
       "codec": {
         "iterations": 20000,
-        "runtimeMs": 114.91488700000001,
-        "perOperationUs": 5.74574435
+        "runtimeMs": 99.841658,
+        "perOperationUs": 4.9920829
       },
       "terminalScoring": {
-        "runtimeMs": 150.854942,
+        "runtimeMs": 146.47073200000003,
         "expected": 73808.15092534921
       },
       "transition": {
         "operationId": "green-stat-all",
         "role": "core",
-        "coldMs": 1.2356980000000135,
-        "warmMs": 0.02191099999998869,
+        "coldMs": 1.217852999999991,
+        "warmMs": 0.02664100000004055,
         "reachableOutcomes": 21,
         "probability": 1.0000000000000002,
         "coldDiagnostics": {
@@ -244,7 +244,7 @@
           "uniqueTransitionCalculations": 1,
           "outcomesBeforeAggregation": 21,
           "outcomesAfterAggregation": 21,
-          "transitionGenerationMs": 1.0951640000000111
+          "transitionGenerationMs": 1.0292200000000093
         },
         "warmDiagnostics": {
           "cacheHits": 1,
@@ -256,7 +256,7 @@
         }
       },
       "optimizer": {
-        "runtimeMs": 96.506935,
+        "runtimeMs": 98.79186099999998,
         "recommendation": "Best Current Setup",
         "utility": 73808.15092534924,
         "score": 73808.15092534924,
@@ -372,7 +372,7 @@
             "vEntries": 0,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 95.42492500000003
+            "elapsedMs": 97.61752899999999
           },
           "menuOperator": {
             "calls": 0,
@@ -385,21 +385,21 @@
       },
       "memory": {
         "before": {
-          "heapUsed": 11712000,
-          "heapTotal": 29728768,
-          "rss": 87121920,
-          "external": 5655988,
-          "maxRSS": 87876
+          "heapUsed": 11723784,
+          "heapTotal": 29990912,
+          "rss": 84930560,
+          "external": 5655604,
+          "maxRSS": 85624
         },
         "after": {
-          "heapUsed": 15311944,
-          "heapTotal": 30515200,
-          "rss": 95346688,
+          "heapUsed": 17754120,
+          "heapTotal": 30777344,
+          "rss": 93667328,
           "external": 5655416,
-          "maxRSS": 93112
+          "maxRSS": 91472
         },
-        "heapDelta": 3599944,
-        "rssDelta": 8224768
+        "heapDelta": 6030336,
+        "rssDelta": 8736768
       },
       "status": "completed"
     },
@@ -416,18 +416,18 @@
       },
       "codec": {
         "iterations": 20000,
-        "runtimeMs": 92.14908700000001,
-        "perOperationUs": 4.607454350000001
+        "runtimeMs": 72.83485000000002,
+        "perOperationUs": 3.641742500000001
       },
       "terminalScoring": {
-        "runtimeMs": 149.368053,
+        "runtimeMs": 148.068641,
         "expected": 52286.88030811379
       },
       "transition": {
         "operationId": "green-stat-all",
         "role": "core",
-        "coldMs": 0.9995549999999866,
-        "warmMs": 0.023463999999989937,
+        "coldMs": 0.6907150000000115,
+        "warmMs": 0.016501000000005206,
         "reachableOutcomes": 5,
         "probability": 1,
         "coldDiagnostics": {
@@ -436,7 +436,7 @@
           "uniqueTransitionCalculations": 1,
           "outcomesBeforeAggregation": 5,
           "outcomesAfterAggregation": 5,
-          "transitionGenerationMs": 0.8132159999999544
+          "transitionGenerationMs": 0.5677239999999983
         },
         "warmDiagnostics": {
           "cacheHits": 1,
@@ -448,7 +448,7 @@
         }
       },
       "optimizer": {
-        "runtimeMs": 996.828808,
+        "runtimeMs": 942.2255810000001,
         "recommendation": "Reroll operation menu",
         "utility": 55159.68659772894,
         "score": 52286.88030811379,
@@ -579,34 +579,34 @@
             "vEntries": 50,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 995.298397
+            "elapsedMs": 941.121472
           },
           "menuOperator": {
             "calls": 50,
             "uniformCalls": 50,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 0.8217989999998281
+            "operatorMs": 0.7389379999992229
           }
         }
       },
       "memory": {
         "before": {
-          "heapUsed": 11704448,
+          "heapUsed": 11708768,
           "heapTotal": 29728768,
-          "rss": 91086848,
-          "external": 5655604,
-          "maxRSS": 89172
+          "rss": 85196800,
+          "external": 5655988,
+          "maxRSS": 86588
         },
         "after": {
-          "heapUsed": 47314112,
-          "heapTotal": 66617344,
-          "rss": 130097152,
+          "heapUsed": 45784584,
+          "heapTotal": 66879488,
+          "rss": 130187264,
           "external": 5655416,
-          "maxRSS": 127048
+          "maxRSS": 127136
         },
-        "heapDelta": 35609664,
-        "rssDelta": 39010304
+        "heapDelta": 34075816,
+        "rssDelta": 44990464
       },
       "status": "completed"
     },
@@ -623,18 +623,18 @@
       },
       "codec": {
         "iterations": 20000,
-        "runtimeMs": 115.381051,
-        "perOperationUs": 5.76905255
+        "runtimeMs": 100.296569,
+        "perOperationUs": 5.01482845
       },
       "terminalScoring": {
-        "runtimeMs": 150.70140500000002,
+        "runtimeMs": 150.85395200000002,
         "expected": 73808.15092534921
       },
       "transition": {
         "operationId": "green-stat-all",
         "role": "core",
-        "coldMs": 0.9129330000000095,
-        "warmMs": 0.017112000000054195,
+        "coldMs": 1.0824889999999527,
+        "warmMs": 0.017333000000007814,
         "reachableOutcomes": 21,
         "probability": 1.0000000000000002,
         "coldDiagnostics": {
@@ -643,7 +643,7 @@
           "uniqueTransitionCalculations": 1,
           "outcomesBeforeAggregation": 21,
           "outcomesAfterAggregation": 21,
-          "transitionGenerationMs": 0.7745729999999753
+          "transitionGenerationMs": 0.9447000000000116
         },
         "warmDiagnostics": {
           "cacheHits": 1,
@@ -655,22 +655,22 @@
         }
       },
       "optimizer": {
-        "runtimeMs": 1753.936506,
+        "runtimeMs": 1840.7333689999998,
         "recommendation": "Reroll operation menu",
-        "utility": 75103.38120931131,
+        "utility": 75374.77461915664,
         "score": 73808.15092534924,
         "actionCount": 7,
         "engineDiagnostics": {
           "modeledHorizon": 2,
           "descriptiveBoardMaterializations": 0,
           "descriptiveBoardCacheEntries": 1,
-          "expectedScalarStates": 10112,
+          "expectedScalarStates": 11576,
           "targetScalarStates": 0,
-          "terminalScoringCalls": 10112,
-          "expectedBannerMaterializations": 3310,
-          "expectedBannerCacheEntries": 3310,
-          "expectedBannerCacheHits": 27023,
-          "expectedBannerCacheMisses": 3310,
+          "terminalScoringCalls": 11576,
+          "expectedBannerMaterializations": 3814,
+          "expectedBannerCacheEntries": 3814,
+          "expectedBannerCacheHits": 30911,
+          "expectedBannerCacheMisses": 3814,
           "targetBannerMaterializations": 0,
           "targetBannerCacheEntries": 0,
           "targetBannerCacheHits": 0,
@@ -721,15 +721,15 @@
             "2": 9
           },
           "transitionOutcomesBeforeCompressionByDepth": {
-            "0": 32180
+            "0": 77198
           },
           "transitionOutcomesAfterCompressionByDepth": {
-            "0": 13541
+            "0": 15005
           },
           "valueFunction": {
             "terminalCacheHits": 3466,
-            "terminalCacheMisses": 10077,
-            "vCalls": 13543,
+            "terminalCacheMisses": 11541,
+            "vCalls": 15007,
             "vCacheHits": 1,
             "vCacheMisses": 61,
             "qCalls": 1,
@@ -740,7 +740,7 @@
             "actionCacheMisses": 3,
             "actionCacheBypasses": 1220,
             "uniqueStatesByDepth": {
-              "0": 10067,
+              "0": 11531,
               "1": 61
             },
             "uniqueQStatesByDepth": {
@@ -751,7 +751,7 @@
               "2": 3
             },
             "vCallsByDepth": {
-              "0": 13481,
+              "0": 14945,
               "1": 62
             },
             "vCacheHitsByDepth": {
@@ -782,38 +782,38 @@
               "1": 1220,
               "2": 3
             },
-            "terminalEntries": 10078,
+            "terminalEntries": 11542,
             "vEntries": 61,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 1752.881367
+            "elapsedMs": 1839.5602390000001
           },
           "menuOperator": {
             "calls": 61,
             "uniformCalls": 61,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.019809999999552
+            "operatorMs": 0.9838239999995153
           }
         }
       },
       "memory": {
         "before": {
-          "heapUsed": 11718096,
-          "heapTotal": 29466624,
-          "rss": 84262912,
+          "heapUsed": 11731560,
+          "heapTotal": 29990912,
+          "rss": 85245952,
           "external": 5655604,
-          "maxRSS": 84800
+          "maxRSS": 86560
         },
         "after": {
-          "heapUsed": 58176848,
-          "heapTotal": 77848576,
-          "rss": 140595200,
+          "heapUsed": 58288888,
+          "heapTotal": 85712896,
+          "rss": 146980864,
           "external": 5655416,
-          "maxRSS": 137300
+          "maxRSS": 143536
         },
-        "heapDelta": 46458752,
-        "rssDelta": 56332288
+        "heapDelta": 46557328,
+        "rssDelta": 61734912
       },
       "status": "completed"
     },
@@ -830,18 +830,18 @@
       },
       "codec": {
         "iterations": 20000,
-        "runtimeMs": 89.72301499999999,
-        "perOperationUs": 4.486150749999999
+        "runtimeMs": 74.671562,
+        "perOperationUs": 3.7335780999999995
       },
       "terminalScoring": {
-        "runtimeMs": 152.795173,
+        "runtimeMs": 122.69843599999999,
         "expected": 52286.88030811379
       },
       "transition": {
         "operationId": "quality-increase-one",
         "role": "core",
-        "coldMs": 0.4737890000000107,
-        "warmMs": 0.019345999999984542,
+        "coldMs": 0.4269100000000208,
+        "warmMs": 0.01994799999999941,
         "reachableOutcomes": 6,
         "probability": 0.9999999999999999,
         "coldDiagnostics": {
@@ -850,7 +850,7 @@
           "uniqueTransitionCalculations": 1,
           "outcomesBeforeAggregation": 6,
           "outcomesAfterAggregation": 6,
-          "transitionGenerationMs": 0.343954999999994
+          "transitionGenerationMs": 0.29865999999998394
         },
         "warmDiagnostics": {
           "cacheHits": 1,
@@ -862,7 +862,7 @@
         }
       },
       "optimizer": {
-        "runtimeMs": 616.0148670000001,
+        "runtimeMs": 625.8472830000001,
         "recommendation": "CORE → Reroll Quality for Red Emblems",
         "utility": 60560.497614831875,
         "score": 57912.35649178181,
@@ -993,34 +993,34 @@
             "vEntries": 39,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 614.502349
+            "elapsedMs": 624.682099
           },
           "menuOperator": {
             "calls": 39,
             "uniformCalls": 39,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.2895920000005958
+            "operatorMs": 0.6079390000001013
           }
         }
       },
       "memory": {
         "before": {
-          "heapUsed": 11706912,
+          "heapUsed": 11695152,
           "heapTotal": 29728768,
-          "rss": 88133632,
-          "external": 5655988,
-          "maxRSS": 86288
+          "rss": 86425600,
+          "external": 5656756,
+          "maxRSS": 85912
         },
         "after": {
-          "heapUsed": 37314648,
-          "heapTotal": 59006976,
-          "rss": 123068416,
+          "heapUsed": 25821360,
+          "heapTotal": 59269120,
+          "rss": 124174336,
           "external": 5655416,
-          "maxRSS": 120184
+          "maxRSS": 121264
         },
-        "heapDelta": 25607736,
-        "rssDelta": 34934784
+        "heapDelta": 14126208,
+        "rssDelta": 37748736
       },
       "status": "completed"
     },
@@ -1037,18 +1037,18 @@
       },
       "codec": {
         "iterations": 20000,
-        "runtimeMs": 111.055586,
-        "perOperationUs": 5.5527793
+        "runtimeMs": 99.46502100000001,
+        "perOperationUs": 4.97325105
       },
       "terminalScoring": {
-        "runtimeMs": 152.58252299999998,
+        "runtimeMs": 145.42012200000002,
         "expected": 73808.15092534921
       },
       "transition": {
         "operationId": "quality-increase-one",
         "role": "core",
-        "coldMs": 0.5294430000000148,
-        "warmMs": 0.02081900000001724,
+        "coldMs": 0.4920020000000136,
+        "warmMs": 0.015099000000020624,
         "reachableOutcomes": 10,
         "probability": 1,
         "coldDiagnostics": {
@@ -1057,7 +1057,7 @@
           "uniqueTransitionCalculations": 1,
           "outcomesBeforeAggregation": 10,
           "outcomesAfterAggregation": 10,
-          "transitionGenerationMs": 0.3893510000000333
+          "transitionGenerationMs": 0.35306100000002516
         },
         "warmDiagnostics": {
           "cacheHits": 1,
@@ -1069,22 +1069,22 @@
         }
       },
       "optimizer": {
-        "runtimeMs": 2325.6353719999997,
+        "runtimeMs": 2632.7598940000003,
         "recommendation": "MID → Randomly increase one Quality",
-        "utility": 77105.77337329231,
+        "utility": 77319.88321970416,
         "score": 75803.49269408608,
         "actionCount": 10,
         "engineDiagnostics": {
           "modeledHorizon": 2,
           "descriptiveBoardMaterializations": 0,
           "descriptiveBoardCacheEntries": 1,
-          "expectedScalarStates": 14420,
+          "expectedScalarStates": 16242,
           "targetScalarStates": 0,
-          "terminalScoringCalls": 14420,
-          "expectedBannerMaterializations": 4593,
-          "expectedBannerCacheEntries": 4593,
-          "expectedBannerCacheHits": 38664,
-          "expectedBannerCacheMisses": 4593,
+          "terminalScoringCalls": 16242,
+          "expectedBannerMaterializations": 4975,
+          "expectedBannerCacheEntries": 4975,
+          "expectedBannerCacheHits": 43748,
+          "expectedBannerCacheMisses": 4975,
           "targetBannerMaterializations": 0,
           "targetBannerCacheEntries": 0,
           "targetBannerCacheHits": 0,
@@ -1135,15 +1135,15 @@
             "2": 9
           },
           "transitionOutcomesBeforeCompressionByDepth": {
-            "0": 47925
+            "0": 116634
           },
           "transitionOutcomesAfterCompressionByDepth": {
-            "0": 20198
+            "0": 22382
           },
           "valueFunction": {
-            "terminalCacheHits": 5789,
-            "terminalCacheMisses": 14411,
-            "vCalls": 20200,
+            "terminalCacheHits": 6151,
+            "terminalCacheMisses": 16233,
+            "vCalls": 22384,
             "vCacheHits": 1,
             "vCacheMisses": 91,
             "qCalls": 1,
@@ -1154,7 +1154,7 @@
             "actionCacheMisses": 3,
             "actionCacheBypasses": 1820,
             "uniqueStatesByDepth": {
-              "0": 14411,
+              "0": 16233,
               "1": 91
             },
             "uniqueQStatesByDepth": {
@@ -1165,7 +1165,7 @@
               "2": 3
             },
             "vCallsByDepth": {
-              "0": 20108,
+              "0": 22292,
               "1": 92
             },
             "vCacheHitsByDepth": {
@@ -1196,38 +1196,38 @@
               "1": 1820,
               "2": 3
             },
-            "terminalEntries": 14412,
+            "terminalEntries": 16234,
             "vEntries": 91,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 2324.198996
+            "elapsedMs": 2631.3706110000003
           },
           "menuOperator": {
             "calls": 91,
             "uniformCalls": 91,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.5867170000021815
+            "operatorMs": 1.436651999998844
           }
         }
       },
       "memory": {
         "before": {
-          "heapUsed": 11702136,
+          "heapUsed": 11705648,
           "heapTotal": 29728768,
-          "rss": 87027712,
-          "external": 5656180,
-          "maxRSS": 86676
+          "rss": 88514560,
+          "external": 5655796,
+          "maxRSS": 88424
         },
         "after": {
-          "heapUsed": 59372160,
-          "heapTotal": 86032384,
-          "rss": 149901312,
+          "heapUsed": 67256008,
+          "heapTotal": 94945280,
+          "rss": 166551552,
           "external": 5655416,
-          "maxRSS": 146388
+          "maxRSS": 162648
         },
-        "heapDelta": 47670024,
-        "rssDelta": 62873600
+        "heapDelta": 55550360,
+        "rssDelta": 78036992
       },
       "status": "completed"
     },
@@ -1244,18 +1244,18 @@
       },
       "codec": {
         "iterations": 20000,
-        "runtimeMs": 90.417506,
-        "perOperationUs": 4.5208753
+        "runtimeMs": 80.134543,
+        "perOperationUs": 4.00672715
       },
       "terminalScoring": {
-        "runtimeMs": 143.987091,
+        "runtimeMs": 166.154694,
         "expected": 52286.88030811379
       },
       "transition": {
         "operationId": "green-trait-all",
         "role": "core",
-        "coldMs": 0.49602100000004157,
-        "warmMs": 0.01589000000001306,
+        "coldMs": 0.7004929999999945,
+        "warmMs": 0.022082000000011703,
         "reachableOutcomes": 4,
         "probability": 1,
         "coldDiagnostics": {
@@ -1264,7 +1264,7 @@
           "uniqueTransitionCalculations": 1,
           "outcomesBeforeAggregation": 4,
           "outcomesAfterAggregation": 4,
-          "transitionGenerationMs": 0.36616700000001856
+          "transitionGenerationMs": 0.5154360000000224
         },
         "warmDiagnostics": {
           "cacheHits": 1,
@@ -1276,7 +1276,7 @@
         }
       },
       "optimizer": {
-        "runtimeMs": 875.7907319999999,
+        "runtimeMs": 929.793514,
         "recommendation": "SUPPORT → Reroll Trait for Blue Emblems",
         "utility": 56404.22845130415,
         "score": 53919.36601789001,
@@ -1407,34 +1407,34 @@
             "vEntries": 45,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 874.6199750000001
+            "elapsedMs": 928.38243
           },
           "menuOperator": {
             "calls": 45,
             "uniformCalls": 45,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 0.8051009999999792
+            "operatorMs": 0.7407499999993092
           }
         }
       },
       "memory": {
         "before": {
-          "heapUsed": 11719960,
-          "heapTotal": 29466624,
-          "rss": 84844544,
-          "external": 5655988,
-          "maxRSS": 84840
+          "heapUsed": 11697264,
+          "heapTotal": 29728768,
+          "rss": 87666688,
+          "external": 5655796,
+          "maxRSS": 87488
         },
         "after": {
-          "heapUsed": 30676608,
+          "heapUsed": 31436152,
           "heapTotal": 65044480,
-          "rss": 130289664,
+          "rss": 132333568,
           "external": 5655416,
-          "maxRSS": 127236
+          "maxRSS": 129232
         },
-        "heapDelta": 18956648,
-        "rssDelta": 45445120
+        "heapDelta": 19738888,
+        "rssDelta": 44666880
       },
       "status": "completed"
     },
@@ -1451,18 +1451,18 @@
       },
       "codec": {
         "iterations": 20000,
-        "runtimeMs": 112.611035,
-        "perOperationUs": 5.63055175
+        "runtimeMs": 111.08945500000002,
+        "perOperationUs": 5.55447275
       },
       "terminalScoring": {
-        "runtimeMs": 142.84335499999997,
+        "runtimeMs": 155.95173599999998,
         "expected": 73808.15092534921
       },
       "transition": {
         "operationId": "green-trait-all",
         "role": "core",
-        "coldMs": 0.6041940000000068,
-        "warmMs": 0.01632000000000744,
+        "coldMs": 0.7547640000000229,
+        "warmMs": 0.021870999999975993,
         "reachableOutcomes": 16,
         "probability": 1,
         "coldDiagnostics": {
@@ -1471,7 +1471,7 @@
           "uniqueTransitionCalculations": 1,
           "outcomesBeforeAggregation": 16,
           "outcomesAfterAggregation": 16,
-          "transitionGenerationMs": 0.42946600000004764
+          "transitionGenerationMs": 0.513261
         },
         "warmDiagnostics": {
           "cacheHits": 1,
@@ -1483,22 +1483,22 @@
         }
       },
       "optimizer": {
-        "runtimeMs": 1917.8833870000003,
+        "runtimeMs": 2163.780847,
         "recommendation": "CORE → Reroll Trait for Red Emblems",
-        "utility": 76767.20169497418,
+        "utility": 77054.56066773178,
         "score": 75453.79957918273,
         "actionCount": 7,
         "engineDiagnostics": {
           "modeledHorizon": 2,
           "descriptiveBoardMaterializations": 0,
           "descriptiveBoardCacheEntries": 1,
-          "expectedScalarStates": 10293,
+          "expectedScalarStates": 11757,
           "targetScalarStates": 0,
-          "terminalScoringCalls": 10293,
-          "expectedBannerMaterializations": 3571,
-          "expectedBannerCacheEntries": 3571,
-          "expectedBannerCacheHits": 27305,
-          "expectedBannerCacheMisses": 3571,
+          "terminalScoringCalls": 11757,
+          "expectedBannerMaterializations": 4075,
+          "expectedBannerCacheEntries": 4075,
+          "expectedBannerCacheHits": 31193,
+          "expectedBannerCacheMisses": 4075,
           "targetBannerMaterializations": 0,
           "targetBannerCacheEntries": 0,
           "targetBannerCacheHits": 0,
@@ -1549,15 +1549,15 @@
             "2": 9
           },
           "transitionOutcomesBeforeCompressionByDepth": {
-            "0": 32153
+            "0": 77171
           },
           "transitionOutcomesAfterCompressionByDepth": {
-            "0": 13541
+            "0": 15005
           },
           "valueFunction": {
             "terminalCacheHits": 3295,
-            "terminalCacheMisses": 10248,
-            "vCalls": 13543,
+            "terminalCacheMisses": 11712,
+            "vCalls": 15007,
             "vCacheHits": 1,
             "vCacheMisses": 61,
             "qCalls": 1,
@@ -1568,7 +1568,7 @@
             "actionCacheMisses": 3,
             "actionCacheBypasses": 1220,
             "uniqueStatesByDepth": {
-              "0": 10225,
+              "0": 11689,
               "1": 61
             },
             "uniqueQStatesByDepth": {
@@ -1579,7 +1579,7 @@
               "2": 3
             },
             "vCallsByDepth": {
-              "0": 13481,
+              "0": 14945,
               "1": 62
             },
             "vCacheHitsByDepth": {
@@ -1610,38 +1610,38 @@
               "1": 1220,
               "2": 3
             },
-            "terminalEntries": 10249,
+            "terminalEntries": 11713,
             "vEntries": 61,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 1916.780838
+            "elapsedMs": 2162.4569549999997
           },
           "menuOperator": {
             "calls": 61,
             "uniformCalls": 61,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.0647819999985586
+            "operatorMs": 1.1122130000009633
           }
         }
       },
       "memory": {
         "before": {
-          "heapUsed": 11695576,
-          "heapTotal": 29466624,
-          "rss": 86130688,
-          "external": 5656180,
-          "maxRSS": 85612
+          "heapUsed": 11677872,
+          "heapTotal": 29990912,
+          "rss": 88690688,
+          "external": 5655604,
+          "maxRSS": 86876
         },
         "after": {
-          "heapUsed": 60904432,
-          "heapTotal": 79683584,
-          "rss": 145805312,
+          "heapUsed": 62083576,
+          "heapTotal": 87547904,
+          "rss": 153198592,
           "external": 5655416,
-          "maxRSS": 142388
+          "maxRSS": 149608
         },
-        "heapDelta": 49208856,
-        "rssDelta": 59674624
+        "heapDelta": 50405704,
+        "rssDelta": 64507904
       },
       "status": "completed"
     },
@@ -1658,18 +1658,18 @@
       },
       "codec": {
         "iterations": 20000,
-        "runtimeMs": 91.906531,
-        "perOperationUs": 4.59532655
+        "runtimeMs": 70.56661199999999,
+        "perOperationUs": 3.5283306
       },
       "terminalScoring": {
-        "runtimeMs": 129.10895800000003,
+        "runtimeMs": 138.47762799999998,
         "expected": 52286.88030811379
       },
       "transition": {
         "operationId": "quality-increase-one",
         "role": "core",
-        "coldMs": 0.49214299999999866,
-        "warmMs": 0.015418999999951666,
+        "coldMs": 0.6255019999999831,
+        "warmMs": 0.020258000000012544,
         "reachableOutcomes": 6,
         "probability": 0.9999999999999999,
         "coldDiagnostics": {
@@ -1678,7 +1678,7 @@
           "uniqueTransitionCalculations": 1,
           "outcomesBeforeAggregation": 6,
           "outcomesAfterAggregation": 6,
-          "transitionGenerationMs": 0.3623399999999606
+          "transitionGenerationMs": 0.43819100000001754
         },
         "warmDiagnostics": {
           "cacheHits": 1,
@@ -1690,7 +1690,7 @@
         }
       },
       "optimizer": {
-        "runtimeMs": 911.392578,
+        "runtimeMs": 892.9044919999999,
         "recommendation": "MID → Randomly increase two Qualities and reduce one",
         "utility": 61867.56749895643,
         "score": 59216.72849851402,
@@ -1821,34 +1821,34 @@
             "vEntries": 61,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 910.274891
+            "elapsedMs": 891.4892199999999
           },
           "menuOperator": {
             "calls": 61,
             "uniformCalls": 61,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.0336950000005913
+            "operatorMs": 0.7749330000001464
           }
         }
       },
       "memory": {
         "before": {
-          "heapUsed": 11696888,
-          "heapTotal": 29728768,
-          "rss": 84750336,
-          "external": 5656180,
-          "maxRSS": 83796
+          "heapUsed": 11688784,
+          "heapTotal": 29466624,
+          "rss": 87846912,
+          "external": 5655988,
+          "maxRSS": 87564
         },
         "after": {
-          "heapUsed": 32633096,
+          "heapUsed": 37380368,
           "heapTotal": 65830912,
-          "rss": 131055616,
+          "rss": 131125248,
           "external": 5655416,
-          "maxRSS": 127984
+          "maxRSS": 128052
         },
-        "heapDelta": 20936208,
-        "rssDelta": 46305280
+        "heapDelta": 25691584,
+        "rssDelta": 43278336
       },
       "status": "completed"
     },
@@ -1865,18 +1865,18 @@
       },
       "codec": {
         "iterations": 20000,
-        "runtimeMs": 114.17462800000001,
-        "perOperationUs": 5.7087314000000005
+        "runtimeMs": 95.848451,
+        "perOperationUs": 4.79242255
       },
       "terminalScoring": {
-        "runtimeMs": 151.32466699999998,
+        "runtimeMs": 148.12223200000003,
         "expected": 73808.15092534921
       },
       "transition": {
         "operationId": "quality-increase-one",
         "role": "core",
-        "coldMs": 0.7852530000000115,
-        "warmMs": 0.02876400000002377,
+        "coldMs": 0.5048970000000281,
+        "warmMs": 0.014967999999953463,
         "reachableOutcomes": 10,
         "probability": 1,
         "coldDiagnostics": {
@@ -1885,7 +1885,7 @@
           "uniqueTransitionCalculations": 1,
           "outcomesBeforeAggregation": 10,
           "outcomesAfterAggregation": 10,
-          "transitionGenerationMs": 0.5908490000000484
+          "transitionGenerationMs": 0.3811640000000125
         },
         "warmDiagnostics": {
           "cacheHits": 1,
@@ -1897,22 +1897,22 @@
         }
       },
       "optimizer": {
-        "runtimeMs": 1756.176633,
-        "recommendation": "MID → Randomly increase one Quality",
-        "utility": 77105.77337329231,
-        "score": 75803.49269408608,
-        "actionCount": 8,
+        "runtimeMs": 2979.790935,
+        "recommendation": "MID → Randomly increase two Qualities and reduce one",
+        "utility": 78361.41837220124,
+        "score": 77047.97170803229,
+        "actionCount": 11,
         "engineDiagnostics": {
           "modeledHorizon": 2,
           "descriptiveBoardMaterializations": 0,
           "descriptiveBoardCacheEntries": 1,
-          "expectedScalarStates": 10665,
+          "expectedScalarStates": 19179,
           "targetScalarStates": 0,
-          "terminalScoringCalls": 10665,
-          "expectedBannerMaterializations": 3330,
-          "expectedBannerCacheEntries": 3330,
-          "expectedBannerCacheHits": 28662,
-          "expectedBannerCacheMisses": 3330,
+          "terminalScoringCalls": 19179,
+          "expectedBannerMaterializations": 5988,
+          "expectedBannerCacheEntries": 5988,
+          "expectedBannerCacheHits": 51546,
+          "expectedBannerCacheMisses": 5988,
           "targetBannerMaterializations": 0,
           "targetBannerCacheEntries": 0,
           "targetBannerCacheHits": 0,
@@ -1937,70 +1937,70 @@
             "operationEvaluationsAvoided": 0,
             "wideningAvoidanceRate": 0
           },
-          "targetedActionCacheHits": 6,
+          "targetedActionCacheHits": 9,
           "targetedActionCacheMisses": 9,
-          "targetedActionCacheBypasses": 4020,
+          "targetedActionCacheBypasses": 6180,
           "targetedActionEntries": 9,
           "targetedActionRequestsByDepth": {
-            "1": 4020,
-            "2": 15
+            "1": 6180,
+            "2": 18
           },
           "targetedActionCacheHitsByDepth": {
-            "2": 6
+            "2": 9
           },
           "targetedActionCacheMissesByDepth": {
             "2": 9
           },
           "targetedActionCacheBypassesByDepth": {
-            "1": 4020
+            "1": 6180
           },
           "transitionDistributionCacheHits": 9,
           "transitionDistributionCacheMisses": 9,
-          "transitionDistributionCacheBypasses": 4020,
+          "transitionDistributionCacheBypasses": 6180,
           "transitionDistributionEntries": 9,
           "transitionEvaluationsByDepth": {
-            "1": 4020,
+            "1": 6180,
             "2": 9
           },
           "transitionOutcomesBeforeCompressionByDepth": {
-            "0": 35230
+            "0": 131712
           },
           "transitionOutcomesAfterCompressionByDepth": {
-            "0": 14873
+            "0": 25322
           },
           "valueFunction": {
-            "terminalCacheHits": 4211,
-            "terminalCacheMisses": 10664,
-            "vCalls": 14875,
+            "terminalCacheHits": 6515,
+            "terminalCacheMisses": 18809,
+            "vCalls": 25324,
             "vCacheHits": 1,
-            "vCacheMisses": 67,
+            "vCacheMisses": 103,
             "qCalls": 1,
             "qCacheHits": 0,
             "qCacheMisses": 1,
-            "actionCalls": 1343,
+            "actionCalls": 2063,
             "actionCacheHits": 0,
             "actionCacheMisses": 3,
-            "actionCacheBypasses": 1340,
+            "actionCacheBypasses": 2060,
             "uniqueStatesByDepth": {
-              "0": 10664,
-              "1": 67
+              "0": 18804,
+              "1": 103
             },
             "uniqueQStatesByDepth": {
               "2": 1
             },
             "uniqueActionStatesByDepth": {
-              "1": 1340,
+              "1": 2060,
               "2": 3
             },
             "vCallsByDepth": {
-              "0": 14807,
-              "1": 68
+              "0": 25220,
+              "1": 104
             },
             "vCacheHitsByDepth": {
               "1": 1
             },
             "vCacheMissesByDepth": {
-              "1": 67
+              "1": 103
             },
             "qCallsByDepth": {
               "2": 1
@@ -2010,7 +2010,7 @@
               "2": 1
             },
             "actionCallsByDepth": {
-              "1": 1340,
+              "1": 2060,
               "2": 3
             },
             "actionCacheHitsByDepth": {},
@@ -2018,44 +2018,44 @@
               "2": 3
             },
             "actionCacheBypassesByDepth": {
-              "1": 1340
+              "1": 2060
             },
             "actionEvaluationsByDepth": {
-              "1": 1340,
+              "1": 2060,
               "2": 3
             },
-            "terminalEntries": 10665,
-            "vEntries": 67,
+            "terminalEntries": 18810,
+            "vEntries": 103,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 1754.745848
+            "elapsedMs": 2978.680434
           },
           "menuOperator": {
-            "calls": 67,
-            "uniformCalls": 67,
+            "calls": 103,
+            "uniformCalls": 103,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.1600310000005152
+            "operatorMs": 1.4088739999990594
           }
         }
       },
       "memory": {
         "before": {
-          "heapUsed": 11708304,
-          "heapTotal": 29990912,
-          "rss": 86728704,
-          "external": 5656180,
-          "maxRSS": 86028
+          "heapUsed": 11708112,
+          "heapTotal": 29728768,
+          "rss": 88432640,
+          "external": 5655604,
+          "maxRSS": 86640
         },
         "after": {
-          "heapUsed": 44090296,
-          "heapTotal": 78372864,
-          "rss": 142503936,
+          "heapUsed": 80743256,
+          "heapTotal": 106110976,
+          "rss": 174870528,
           "external": 5655416,
-          "maxRSS": 139164
+          "maxRSS": 170772
         },
-        "heapDelta": 32381992,
-        "rssDelta": 55775232
+        "heapDelta": 69035144,
+        "rssDelta": 86437888
       },
       "status": "completed"
     },
@@ -2072,18 +2072,18 @@
       },
       "codec": {
         "iterations": 20000,
-        "runtimeMs": 94.08792299999999,
-        "perOperationUs": 4.70439615
+        "runtimeMs": 75.075135,
+        "perOperationUs": 3.7537567500000004
       },
       "terminalScoring": {
-        "runtimeMs": 154.79993699999997,
+        "runtimeMs": 147.14794,
         "expected": 52286.88030811379
       },
       "transition": {
         "operationId": "green-stat-all",
         "role": "core",
-        "coldMs": 0.6958750000000009,
-        "warmMs": 0.016441000000043005,
+        "coldMs": 0.698030000000017,
+        "warmMs": 0.01708200000001625,
         "reachableOutcomes": 5,
         "probability": 1,
         "coldDiagnostics": {
@@ -2092,7 +2092,7 @@
           "uniqueTransitionCalculations": 1,
           "outcomesBeforeAggregation": 5,
           "outcomesAfterAggregation": 5,
-          "transitionGenerationMs": 0.5573059999999828
+          "transitionGenerationMs": 0.5645609999999692
         },
         "warmDiagnostics": {
           "cacheHits": 1,
@@ -2104,7 +2104,7 @@
         }
       },
       "optimizer": {
-        "runtimeMs": 4117.9735,
+        "runtimeMs": 3872.493046,
         "recommendation": "CORE → Reroll Quality for Red Emblems",
         "utility": 0.8660000786833985,
         "score": 57912.35649178181,
@@ -2235,34 +2235,34 @@
             "vEntries": 48,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 4116.533008
+            "elapsedMs": 3871.3258419999997
           },
           "menuOperator": {
             "calls": 48,
             "uniformCalls": 48,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 0.8471669999984215
+            "operatorMs": 0.7423349999992297
           }
         }
       },
       "memory": {
         "before": {
-          "heapUsed": 11705448,
+          "heapUsed": 11711584,
           "heapTotal": 29990912,
-          "rss": 88735744,
-          "external": 5655988,
-          "maxRSS": 88584
+          "rss": 86130688,
+          "external": 5656756,
+          "maxRSS": 86532
         },
         "after": {
-          "heapUsed": 148635024,
+          "heapUsed": 138175712,
           "heapTotal": 173621248,
-          "rss": 430985216,
-          "external": 133351736,
-          "maxRSS": 420884
+          "rss": 427028480,
+          "external": 133290296,
+          "maxRSS": 417020
         },
-        "heapDelta": 136929576,
-        "rssDelta": 342249472
+        "heapDelta": 126464128,
+        "rssDelta": 340897792
       },
       "status": "completed"
     },
@@ -2279,18 +2279,18 @@
       },
       "codec": {
         "iterations": 20000,
-        "runtimeMs": 123.935778,
-        "perOperationUs": 6.1967889000000005
+        "runtimeMs": 100.46790499999999,
+        "perOperationUs": 5.023395249999999
       },
       "terminalScoring": {
-        "runtimeMs": 169.673577,
+        "runtimeMs": 145.254233,
         "expected": 73808.15092534921
       },
       "transition": {
         "operationId": "green-stat-all",
         "role": "core",
-        "coldMs": 0.9428980000000138,
-        "warmMs": 0.023704000000009273,
+        "coldMs": 1.2556109999999876,
+        "warmMs": 0.02513699999997243,
         "reachableOutcomes": 21,
         "probability": 1.0000000000000002,
         "coldDiagnostics": {
@@ -2299,7 +2299,7 @@
           "uniqueTransitionCalculations": 1,
           "outcomesBeforeAggregation": 21,
           "outcomesAfterAggregation": 21,
-          "transitionGenerationMs": 0.8026460000000384
+          "transitionGenerationMs": 1.073159999999973
         },
         "warmDiagnostics": {
           "cacheHits": 1,
@@ -2311,9 +2311,9 @@
         }
       },
       "optimizer": {
-        "runtimeMs": 6753.611757,
+        "runtimeMs": 7483.142134000001,
         "recommendation": "MID → Reroll Quality for Red Emblems",
-        "utility": 0.3280604669225146,
+        "utility": 0.34333519889132547,
         "score": 75607.88956395735,
         "actionCount": 7,
         "engineDiagnostics": {
@@ -2321,16 +2321,16 @@
           "descriptiveBoardMaterializations": 0,
           "descriptiveBoardCacheEntries": 1,
           "expectedScalarStates": 143,
-          "targetScalarStates": 9885,
-          "terminalScoringCalls": 10028,
+          "targetScalarStates": 11292,
+          "terminalScoringCalls": 11435,
           "expectedBannerMaterializations": 146,
           "expectedBannerCacheEntries": 146,
           "expectedBannerCacheHits": 283,
           "expectedBannerCacheMisses": 146,
-          "targetBannerMaterializations": 3083,
-          "targetBannerCacheEntries": 3083,
-          "targetBannerCacheHits": 26569,
-          "targetBannerCacheMisses": 3083,
+          "targetBannerMaterializations": 3530,
+          "targetBannerCacheEntries": 3530,
+          "targetBannerCacheHits": 30343,
+          "targetBannerCacheMisses": 3530,
           "continuationFidelity": {
             "id": "current",
             "description": "Current-fidelity continuation: retain configured fresh-menu strata at every recursive depth.",
@@ -2377,15 +2377,15 @@
             "2": 9
           },
           "transitionOutcomesBeforeCompressionByDepth": {
-            "0": 32183
+            "0": 78345
           },
           "transitionOutcomesAfterCompressionByDepth": {
-            "0": 13538
+            "0": 15002
           },
           "valueFunction": {
-            "terminalCacheHits": 3664,
-            "terminalCacheMisses": 9876,
-            "vCalls": 13540,
+            "terminalCacheHits": 3721,
+            "terminalCacheMisses": 11283,
+            "vCalls": 15004,
             "vCacheHits": 1,
             "vCacheMisses": 61,
             "qCalls": 1,
@@ -2396,7 +2396,7 @@
             "actionCacheMisses": 3,
             "actionCacheBypasses": 1220,
             "uniqueStatesByDepth": {
-              "0": 9877,
+              "0": 11284,
               "1": 61
             },
             "uniqueQStatesByDepth": {
@@ -2407,7 +2407,7 @@
               "2": 3
             },
             "vCallsByDepth": {
-              "0": 13478,
+              "0": 14942,
               "1": 62
             },
             "vCacheHitsByDepth": {
@@ -2438,38 +2438,38 @@
               "1": 1220,
               "2": 3
             },
-            "terminalEntries": 9877,
+            "terminalEntries": 11284,
             "vEntries": 61,
             "qEntries": 1,
             "actionEntries": 3,
-            "elapsedMs": 6752.200841000001
+            "elapsedMs": 7481.727686
           },
           "menuOperator": {
             "calls": 61,
             "uniformCalls": 61,
             "overrideCalls": 0,
             "explicitMenusScanned": 0,
-            "operatorMs": 1.0904449999962935
+            "operatorMs": 2.984560999999644
           }
         }
       },
       "memory": {
         "before": {
-          "heapUsed": 11708080,
-          "heapTotal": 29728768,
-          "rss": 89133056,
-          "external": 5655988,
-          "maxRSS": 89136
+          "heapUsed": 11730520,
+          "heapTotal": 29466624,
+          "rss": 89305088,
+          "external": 5655796,
+          "maxRSS": 89892
         },
         "after": {
-          "heapUsed": 217352960,
-          "heapTotal": 250445824,
-          "rss": 572841984,
-          "external": 177709960,
-          "maxRSS": 559416
+          "heapUsed": 249018744,
+          "heapTotal": 282697728,
+          "rss": 645124096,
+          "external": 204332256,
+          "maxRSS": 630004
         },
-        "heapDelta": 205644880,
-        "rssDelta": 483708928
+        "heapDelta": 237288224,
+        "rssDelta": 555819008
       },
       "status": "completed"
     }
@@ -2480,7 +2480,7 @@
       "horizon": 1,
       "legacyStatus": "completed",
       "expandedStatus": "completed",
-      "optimizerRuntimeRatioExpandedVsLegacy": 1.2167794538064023,
+      "optimizerRuntimeRatioExpandedVsLegacy": 0.23621563889940494,
       "legacy": {
         "layoutId": "legacy_3",
         "case": "stat_heavy",
@@ -2494,18 +2494,18 @@
         },
         "codec": {
           "iterations": 20000,
-          "runtimeMs": 93.12721199999999,
-          "perOperationUs": 4.656360599999999
+          "runtimeMs": 72.58162999999999,
+          "perOperationUs": 3.6290814999999994
         },
         "terminalScoring": {
-          "runtimeMs": 147.11606899999998,
+          "runtimeMs": 152.60033099999998,
           "expected": 52286.88030811379
         },
         "transition": {
           "operationId": "green-stat-all",
           "role": "core",
-          "coldMs": 0.9933130000000006,
-          "warmMs": 0.02753199999995104,
+          "coldMs": 0.6913780000000429,
+          "warmMs": 0.015820000000019263,
           "reachableOutcomes": 5,
           "probability": 1,
           "coldDiagnostics": {
@@ -2514,7 +2514,7 @@
             "uniqueTransitionCalculations": 1,
             "outcomesBeforeAggregation": 5,
             "outcomesAfterAggregation": 5,
-            "transitionGenerationMs": 0.7957430000000159
+            "transitionGenerationMs": 0.5642129999999952
           },
           "warmDiagnostics": {
             "cacheHits": 1,
@@ -2526,7 +2526,7 @@
           }
         },
         "optimizer": {
-          "runtimeMs": 79.31341600000002,
+          "runtimeMs": 418.22743599999995,
           "recommendation": "Best Current Setup",
           "utility": 52286.88030811379,
           "score": 52286.88030811379,
@@ -2642,7 +2642,7 @@
               "vEntries": 0,
               "qEntries": 1,
               "actionEntries": 3,
-              "elapsedMs": 77.86527999999998
+              "elapsedMs": 417.04403700000006
             },
             "menuOperator": {
               "calls": 0,
@@ -2655,21 +2655,21 @@
         },
         "memory": {
           "before": {
-            "heapUsed": 11672792,
-            "heapTotal": 29466624,
-            "rss": 87121920,
-            "external": 5655988,
-            "maxRSS": 85276
+            "heapUsed": 11708128,
+            "heapTotal": 29990912,
+            "rss": 89546752,
+            "external": 5655604,
+            "maxRSS": 88600
           },
           "after": {
-            "heapUsed": 16689864,
-            "heapTotal": 29728768,
-            "rss": 94601216,
+            "heapUsed": 17114152,
+            "heapTotal": 29990912,
+            "rss": 95907840,
             "external": 5655416,
-            "maxRSS": 92384
+            "maxRSS": 93660
           },
-          "heapDelta": 5017072,
-          "rssDelta": 7479296
+          "heapDelta": 5406024,
+          "rssDelta": 6361088
         },
         "status": "completed"
       },
@@ -2686,18 +2686,18 @@
         },
         "codec": {
           "iterations": 20000,
-          "runtimeMs": 114.91488700000001,
-          "perOperationUs": 5.74574435
+          "runtimeMs": 99.841658,
+          "perOperationUs": 4.9920829
         },
         "terminalScoring": {
-          "runtimeMs": 150.854942,
+          "runtimeMs": 146.47073200000003,
           "expected": 73808.15092534921
         },
         "transition": {
           "operationId": "green-stat-all",
           "role": "core",
-          "coldMs": 1.2356980000000135,
-          "warmMs": 0.02191099999998869,
+          "coldMs": 1.217852999999991,
+          "warmMs": 0.02664100000004055,
           "reachableOutcomes": 21,
           "probability": 1.0000000000000002,
           "coldDiagnostics": {
@@ -2706,7 +2706,7 @@
             "uniqueTransitionCalculations": 1,
             "outcomesBeforeAggregation": 21,
             "outcomesAfterAggregation": 21,
-            "transitionGenerationMs": 1.0951640000000111
+            "transitionGenerationMs": 1.0292200000000093
           },
           "warmDiagnostics": {
             "cacheHits": 1,
@@ -2718,7 +2718,7 @@
           }
         },
         "optimizer": {
-          "runtimeMs": 96.506935,
+          "runtimeMs": 98.79186099999998,
           "recommendation": "Best Current Setup",
           "utility": 73808.15092534924,
           "score": 73808.15092534924,
@@ -2834,7 +2834,7 @@
               "vEntries": 0,
               "qEntries": 1,
               "actionEntries": 3,
-              "elapsedMs": 95.42492500000003
+              "elapsedMs": 97.61752899999999
             },
             "menuOperator": {
               "calls": 0,
@@ -2847,21 +2847,21 @@
         },
         "memory": {
           "before": {
-            "heapUsed": 11712000,
-            "heapTotal": 29728768,
-            "rss": 87121920,
-            "external": 5655988,
-            "maxRSS": 87876
+            "heapUsed": 11723784,
+            "heapTotal": 29990912,
+            "rss": 84930560,
+            "external": 5655604,
+            "maxRSS": 85624
           },
           "after": {
-            "heapUsed": 15311944,
-            "heapTotal": 30515200,
-            "rss": 95346688,
+            "heapUsed": 17754120,
+            "heapTotal": 30777344,
+            "rss": 93667328,
             "external": 5655416,
-            "maxRSS": 93112
+            "maxRSS": 91472
           },
-          "heapDelta": 3599944,
-          "rssDelta": 8224768
+          "heapDelta": 6030336,
+          "rssDelta": 8736768
         },
         "status": "completed"
       }
@@ -2871,7 +2871,7 @@
       "horizon": 2,
       "legacyStatus": "completed",
       "expandedStatus": "completed",
-      "optimizerRuntimeRatioExpandedVsLegacy": 1.7595162699190372,
+      "optimizerRuntimeRatioExpandedVsLegacy": 1.9536015643370646,
       "legacy": {
         "layoutId": "legacy_3",
         "case": "stat_heavy",
@@ -2885,18 +2885,18 @@
         },
         "codec": {
           "iterations": 20000,
-          "runtimeMs": 92.14908700000001,
-          "perOperationUs": 4.607454350000001
+          "runtimeMs": 72.83485000000002,
+          "perOperationUs": 3.641742500000001
         },
         "terminalScoring": {
-          "runtimeMs": 149.368053,
+          "runtimeMs": 148.068641,
           "expected": 52286.88030811379
         },
         "transition": {
           "operationId": "green-stat-all",
           "role": "core",
-          "coldMs": 0.9995549999999866,
-          "warmMs": 0.023463999999989937,
+          "coldMs": 0.6907150000000115,
+          "warmMs": 0.016501000000005206,
           "reachableOutcomes": 5,
           "probability": 1,
           "coldDiagnostics": {
@@ -2905,7 +2905,7 @@
             "uniqueTransitionCalculations": 1,
             "outcomesBeforeAggregation": 5,
             "outcomesAfterAggregation": 5,
-            "transitionGenerationMs": 0.8132159999999544
+            "transitionGenerationMs": 0.5677239999999983
           },
           "warmDiagnostics": {
             "cacheHits": 1,
@@ -2917,7 +2917,7 @@
           }
         },
         "optimizer": {
-          "runtimeMs": 996.828808,
+          "runtimeMs": 942.2255810000001,
           "recommendation": "Reroll operation menu",
           "utility": 55159.68659772894,
           "score": 52286.88030811379,
@@ -3048,34 +3048,34 @@
               "vEntries": 50,
               "qEntries": 1,
               "actionEntries": 3,
-              "elapsedMs": 995.298397
+              "elapsedMs": 941.121472
             },
             "menuOperator": {
               "calls": 50,
               "uniformCalls": 50,
               "overrideCalls": 0,
               "explicitMenusScanned": 0,
-              "operatorMs": 0.8217989999998281
+              "operatorMs": 0.7389379999992229
             }
           }
         },
         "memory": {
           "before": {
-            "heapUsed": 11704448,
+            "heapUsed": 11708768,
             "heapTotal": 29728768,
-            "rss": 91086848,
-            "external": 5655604,
-            "maxRSS": 89172
+            "rss": 85196800,
+            "external": 5655988,
+            "maxRSS": 86588
           },
           "after": {
-            "heapUsed": 47314112,
-            "heapTotal": 66617344,
-            "rss": 130097152,
+            "heapUsed": 45784584,
+            "heapTotal": 66879488,
+            "rss": 130187264,
             "external": 5655416,
-            "maxRSS": 127048
+            "maxRSS": 127136
           },
-          "heapDelta": 35609664,
-          "rssDelta": 39010304
+          "heapDelta": 34075816,
+          "rssDelta": 44990464
         },
         "status": "completed"
       },
@@ -3092,18 +3092,18 @@
         },
         "codec": {
           "iterations": 20000,
-          "runtimeMs": 115.381051,
-          "perOperationUs": 5.76905255
+          "runtimeMs": 100.296569,
+          "perOperationUs": 5.01482845
         },
         "terminalScoring": {
-          "runtimeMs": 150.70140500000002,
+          "runtimeMs": 150.85395200000002,
           "expected": 73808.15092534921
         },
         "transition": {
           "operationId": "green-stat-all",
           "role": "core",
-          "coldMs": 0.9129330000000095,
-          "warmMs": 0.017112000000054195,
+          "coldMs": 1.0824889999999527,
+          "warmMs": 0.017333000000007814,
           "reachableOutcomes": 21,
           "probability": 1.0000000000000002,
           "coldDiagnostics": {
@@ -3112,7 +3112,7 @@
             "uniqueTransitionCalculations": 1,
             "outcomesBeforeAggregation": 21,
             "outcomesAfterAggregation": 21,
-            "transitionGenerationMs": 0.7745729999999753
+            "transitionGenerationMs": 0.9447000000000116
           },
           "warmDiagnostics": {
             "cacheHits": 1,
@@ -3124,22 +3124,22 @@
           }
         },
         "optimizer": {
-          "runtimeMs": 1753.936506,
+          "runtimeMs": 1840.7333689999998,
           "recommendation": "Reroll operation menu",
-          "utility": 75103.38120931131,
+          "utility": 75374.77461915664,
           "score": 73808.15092534924,
           "actionCount": 7,
           "engineDiagnostics": {
             "modeledHorizon": 2,
             "descriptiveBoardMaterializations": 0,
             "descriptiveBoardCacheEntries": 1,
-            "expectedScalarStates": 10112,
+            "expectedScalarStates": 11576,
             "targetScalarStates": 0,
-            "terminalScoringCalls": 10112,
-            "expectedBannerMaterializations": 3310,
-            "expectedBannerCacheEntries": 3310,
-            "expectedBannerCacheHits": 27023,
-            "expectedBannerCacheMisses": 3310,
+            "terminalScoringCalls": 11576,
+            "expectedBannerMaterializations": 3814,
+            "expectedBannerCacheEntries": 3814,
+            "expectedBannerCacheHits": 30911,
+            "expectedBannerCacheMisses": 3814,
             "targetBannerMaterializations": 0,
             "targetBannerCacheEntries": 0,
             "targetBannerCacheHits": 0,
@@ -3190,15 +3190,15 @@
               "2": 9
             },
             "transitionOutcomesBeforeCompressionByDepth": {
-              "0": 32180
+              "0": 77198
             },
             "transitionOutcomesAfterCompressionByDepth": {
-              "0": 13541
+              "0": 15005
             },
             "valueFunction": {
               "terminalCacheHits": 3466,
-              "terminalCacheMisses": 10077,
-              "vCalls": 13543,
+              "terminalCacheMisses": 11541,
+              "vCalls": 15007,
               "vCacheHits": 1,
               "vCacheMisses": 61,
               "qCalls": 1,
@@ -3209,7 +3209,7 @@
               "actionCacheMisses": 3,
               "actionCacheBypasses": 1220,
               "uniqueStatesByDepth": {
-                "0": 10067,
+                "0": 11531,
                 "1": 61
               },
               "uniqueQStatesByDepth": {
@@ -3220,7 +3220,7 @@
                 "2": 3
               },
               "vCallsByDepth": {
-                "0": 13481,
+                "0": 14945,
                 "1": 62
               },
               "vCacheHitsByDepth": {
@@ -3251,38 +3251,38 @@
                 "1": 1220,
                 "2": 3
               },
-              "terminalEntries": 10078,
+              "terminalEntries": 11542,
               "vEntries": 61,
               "qEntries": 1,
               "actionEntries": 3,
-              "elapsedMs": 1752.881367
+              "elapsedMs": 1839.5602390000001
             },
             "menuOperator": {
               "calls": 61,
               "uniformCalls": 61,
               "overrideCalls": 0,
               "explicitMenusScanned": 0,
-              "operatorMs": 1.019809999999552
+              "operatorMs": 0.9838239999995153
             }
           }
         },
         "memory": {
           "before": {
-            "heapUsed": 11718096,
-            "heapTotal": 29466624,
-            "rss": 84262912,
+            "heapUsed": 11731560,
+            "heapTotal": 29990912,
+            "rss": 85245952,
             "external": 5655604,
-            "maxRSS": 84800
+            "maxRSS": 86560
           },
           "after": {
-            "heapUsed": 58176848,
-            "heapTotal": 77848576,
-            "rss": 140595200,
+            "heapUsed": 58288888,
+            "heapTotal": 85712896,
+            "rss": 146980864,
             "external": 5655416,
-            "maxRSS": 137300
+            "maxRSS": 143536
           },
-          "heapDelta": 46458752,
-          "rssDelta": 56332288
+          "heapDelta": 46557328,
+          "rssDelta": 61734912
         },
         "status": "completed"
       }
@@ -3292,7 +3292,7 @@
       "horizon": 2,
       "legacyStatus": "completed",
       "expandedStatus": "completed",
-      "optimizerRuntimeRatioExpandedVsLegacy": 3.7752909817353473,
+      "optimizerRuntimeRatioExpandedVsLegacy": 4.206712988158806,
       "legacy": {
         "layoutId": "legacy_3",
         "case": "quality_heavy",
@@ -3306,18 +3306,18 @@
         },
         "codec": {
           "iterations": 20000,
-          "runtimeMs": 89.72301499999999,
-          "perOperationUs": 4.486150749999999
+          "runtimeMs": 74.671562,
+          "perOperationUs": 3.7335780999999995
         },
         "terminalScoring": {
-          "runtimeMs": 152.795173,
+          "runtimeMs": 122.69843599999999,
           "expected": 52286.88030811379
         },
         "transition": {
           "operationId": "quality-increase-one",
           "role": "core",
-          "coldMs": 0.4737890000000107,
-          "warmMs": 0.019345999999984542,
+          "coldMs": 0.4269100000000208,
+          "warmMs": 0.01994799999999941,
           "reachableOutcomes": 6,
           "probability": 0.9999999999999999,
           "coldDiagnostics": {
@@ -3326,7 +3326,7 @@
             "uniqueTransitionCalculations": 1,
             "outcomesBeforeAggregation": 6,
             "outcomesAfterAggregation": 6,
-            "transitionGenerationMs": 0.343954999999994
+            "transitionGenerationMs": 0.29865999999998394
           },
           "warmDiagnostics": {
             "cacheHits": 1,
@@ -3338,7 +3338,7 @@
           }
         },
         "optimizer": {
-          "runtimeMs": 616.0148670000001,
+          "runtimeMs": 625.8472830000001,
           "recommendation": "CORE → Reroll Quality for Red Emblems",
           "utility": 60560.497614831875,
           "score": 57912.35649178181,
@@ -3469,34 +3469,34 @@
               "vEntries": 39,
               "qEntries": 1,
               "actionEntries": 3,
-              "elapsedMs": 614.502349
+              "elapsedMs": 624.682099
             },
             "menuOperator": {
               "calls": 39,
               "uniformCalls": 39,
               "overrideCalls": 0,
               "explicitMenusScanned": 0,
-              "operatorMs": 1.2895920000005958
+              "operatorMs": 0.6079390000001013
             }
           }
         },
         "memory": {
           "before": {
-            "heapUsed": 11706912,
+            "heapUsed": 11695152,
             "heapTotal": 29728768,
-            "rss": 88133632,
-            "external": 5655988,
-            "maxRSS": 86288
+            "rss": 86425600,
+            "external": 5656756,
+            "maxRSS": 85912
           },
           "after": {
-            "heapUsed": 37314648,
-            "heapTotal": 59006976,
-            "rss": 123068416,
+            "heapUsed": 25821360,
+            "heapTotal": 59269120,
+            "rss": 124174336,
             "external": 5655416,
-            "maxRSS": 120184
+            "maxRSS": 121264
           },
-          "heapDelta": 25607736,
-          "rssDelta": 34934784
+          "heapDelta": 14126208,
+          "rssDelta": 37748736
         },
         "status": "completed"
       },
@@ -3513,18 +3513,18 @@
         },
         "codec": {
           "iterations": 20000,
-          "runtimeMs": 111.055586,
-          "perOperationUs": 5.5527793
+          "runtimeMs": 99.46502100000001,
+          "perOperationUs": 4.97325105
         },
         "terminalScoring": {
-          "runtimeMs": 152.58252299999998,
+          "runtimeMs": 145.42012200000002,
           "expected": 73808.15092534921
         },
         "transition": {
           "operationId": "quality-increase-one",
           "role": "core",
-          "coldMs": 0.5294430000000148,
-          "warmMs": 0.02081900000001724,
+          "coldMs": 0.4920020000000136,
+          "warmMs": 0.015099000000020624,
           "reachableOutcomes": 10,
           "probability": 1,
           "coldDiagnostics": {
@@ -3533,7 +3533,7 @@
             "uniqueTransitionCalculations": 1,
             "outcomesBeforeAggregation": 10,
             "outcomesAfterAggregation": 10,
-            "transitionGenerationMs": 0.3893510000000333
+            "transitionGenerationMs": 0.35306100000002516
           },
           "warmDiagnostics": {
             "cacheHits": 1,
@@ -3545,22 +3545,22 @@
           }
         },
         "optimizer": {
-          "runtimeMs": 2325.6353719999997,
+          "runtimeMs": 2632.7598940000003,
           "recommendation": "MID → Randomly increase one Quality",
-          "utility": 77105.77337329231,
+          "utility": 77319.88321970416,
           "score": 75803.49269408608,
           "actionCount": 10,
           "engineDiagnostics": {
             "modeledHorizon": 2,
             "descriptiveBoardMaterializations": 0,
             "descriptiveBoardCacheEntries": 1,
-            "expectedScalarStates": 14420,
+            "expectedScalarStates": 16242,
             "targetScalarStates": 0,
-            "terminalScoringCalls": 14420,
-            "expectedBannerMaterializations": 4593,
-            "expectedBannerCacheEntries": 4593,
-            "expectedBannerCacheHits": 38664,
-            "expectedBannerCacheMisses": 4593,
+            "terminalScoringCalls": 16242,
+            "expectedBannerMaterializations": 4975,
+            "expectedBannerCacheEntries": 4975,
+            "expectedBannerCacheHits": 43748,
+            "expectedBannerCacheMisses": 4975,
             "targetBannerMaterializations": 0,
             "targetBannerCacheEntries": 0,
             "targetBannerCacheHits": 0,
@@ -3611,15 +3611,15 @@
               "2": 9
             },
             "transitionOutcomesBeforeCompressionByDepth": {
-              "0": 47925
+              "0": 116634
             },
             "transitionOutcomesAfterCompressionByDepth": {
-              "0": 20198
+              "0": 22382
             },
             "valueFunction": {
-              "terminalCacheHits": 5789,
-              "terminalCacheMisses": 14411,
-              "vCalls": 20200,
+              "terminalCacheHits": 6151,
+              "terminalCacheMisses": 16233,
+              "vCalls": 22384,
               "vCacheHits": 1,
               "vCacheMisses": 91,
               "qCalls": 1,
@@ -3630,7 +3630,7 @@
               "actionCacheMisses": 3,
               "actionCacheBypasses": 1820,
               "uniqueStatesByDepth": {
-                "0": 14411,
+                "0": 16233,
                 "1": 91
               },
               "uniqueQStatesByDepth": {
@@ -3641,7 +3641,7 @@
                 "2": 3
               },
               "vCallsByDepth": {
-                "0": 20108,
+                "0": 22292,
                 "1": 92
               },
               "vCacheHitsByDepth": {
@@ -3672,38 +3672,38 @@
                 "1": 1820,
                 "2": 3
               },
-              "terminalEntries": 14412,
+              "terminalEntries": 16234,
               "vEntries": 91,
               "qEntries": 1,
               "actionEntries": 3,
-              "elapsedMs": 2324.198996
+              "elapsedMs": 2631.3706110000003
             },
             "menuOperator": {
               "calls": 91,
               "uniformCalls": 91,
               "overrideCalls": 0,
               "explicitMenusScanned": 0,
-              "operatorMs": 1.5867170000021815
+              "operatorMs": 1.436651999998844
             }
           }
         },
         "memory": {
           "before": {
-            "heapUsed": 11702136,
+            "heapUsed": 11705648,
             "heapTotal": 29728768,
-            "rss": 87027712,
-            "external": 5656180,
-            "maxRSS": 86676
+            "rss": 88514560,
+            "external": 5655796,
+            "maxRSS": 88424
           },
           "after": {
-            "heapUsed": 59372160,
-            "heapTotal": 86032384,
-            "rss": 149901312,
+            "heapUsed": 67256008,
+            "heapTotal": 94945280,
+            "rss": 166551552,
             "external": 5655416,
-            "maxRSS": 146388
+            "maxRSS": 162648
           },
-          "heapDelta": 47670024,
-          "rssDelta": 62873600
+          "heapDelta": 55550360,
+          "rssDelta": 78036992
         },
         "status": "completed"
       }
@@ -3713,7 +3713,7 @@
       "horizon": 2,
       "legacyStatus": "completed",
       "expandedStatus": "completed",
-      "optimizerRuntimeRatioExpandedVsLegacy": 2.1898877402141776,
+      "optimizerRuntimeRatioExpandedVsLegacy": 2.327162767237802,
       "legacy": {
         "layoutId": "legacy_3",
         "case": "trait_heavy",
@@ -3727,18 +3727,18 @@
         },
         "codec": {
           "iterations": 20000,
-          "runtimeMs": 90.417506,
-          "perOperationUs": 4.5208753
+          "runtimeMs": 80.134543,
+          "perOperationUs": 4.00672715
         },
         "terminalScoring": {
-          "runtimeMs": 143.987091,
+          "runtimeMs": 166.154694,
           "expected": 52286.88030811379
         },
         "transition": {
           "operationId": "green-trait-all",
           "role": "core",
-          "coldMs": 0.49602100000004157,
-          "warmMs": 0.01589000000001306,
+          "coldMs": 0.7004929999999945,
+          "warmMs": 0.022082000000011703,
           "reachableOutcomes": 4,
           "probability": 1,
           "coldDiagnostics": {
@@ -3747,7 +3747,7 @@
             "uniqueTransitionCalculations": 1,
             "outcomesBeforeAggregation": 4,
             "outcomesAfterAggregation": 4,
-            "transitionGenerationMs": 0.36616700000001856
+            "transitionGenerationMs": 0.5154360000000224
           },
           "warmDiagnostics": {
             "cacheHits": 1,
@@ -3759,7 +3759,7 @@
           }
         },
         "optimizer": {
-          "runtimeMs": 875.7907319999999,
+          "runtimeMs": 929.793514,
           "recommendation": "SUPPORT → Reroll Trait for Blue Emblems",
           "utility": 56404.22845130415,
           "score": 53919.36601789001,
@@ -3890,34 +3890,34 @@
               "vEntries": 45,
               "qEntries": 1,
               "actionEntries": 3,
-              "elapsedMs": 874.6199750000001
+              "elapsedMs": 928.38243
             },
             "menuOperator": {
               "calls": 45,
               "uniformCalls": 45,
               "overrideCalls": 0,
               "explicitMenusScanned": 0,
-              "operatorMs": 0.8051009999999792
+              "operatorMs": 0.7407499999993092
             }
           }
         },
         "memory": {
           "before": {
-            "heapUsed": 11719960,
-            "heapTotal": 29466624,
-            "rss": 84844544,
-            "external": 5655988,
-            "maxRSS": 84840
+            "heapUsed": 11697264,
+            "heapTotal": 29728768,
+            "rss": 87666688,
+            "external": 5655796,
+            "maxRSS": 87488
           },
           "after": {
-            "heapUsed": 30676608,
+            "heapUsed": 31436152,
             "heapTotal": 65044480,
-            "rss": 130289664,
+            "rss": 132333568,
             "external": 5655416,
-            "maxRSS": 127236
+            "maxRSS": 129232
           },
-          "heapDelta": 18956648,
-          "rssDelta": 45445120
+          "heapDelta": 19738888,
+          "rssDelta": 44666880
         },
         "status": "completed"
       },
@@ -3934,18 +3934,18 @@
         },
         "codec": {
           "iterations": 20000,
-          "runtimeMs": 112.611035,
-          "perOperationUs": 5.63055175
+          "runtimeMs": 111.08945500000002,
+          "perOperationUs": 5.55447275
         },
         "terminalScoring": {
-          "runtimeMs": 142.84335499999997,
+          "runtimeMs": 155.95173599999998,
           "expected": 73808.15092534921
         },
         "transition": {
           "operationId": "green-trait-all",
           "role": "core",
-          "coldMs": 0.6041940000000068,
-          "warmMs": 0.01632000000000744,
+          "coldMs": 0.7547640000000229,
+          "warmMs": 0.021870999999975993,
           "reachableOutcomes": 16,
           "probability": 1,
           "coldDiagnostics": {
@@ -3954,7 +3954,7 @@
             "uniqueTransitionCalculations": 1,
             "outcomesBeforeAggregation": 16,
             "outcomesAfterAggregation": 16,
-            "transitionGenerationMs": 0.42946600000004764
+            "transitionGenerationMs": 0.513261
           },
           "warmDiagnostics": {
             "cacheHits": 1,
@@ -3966,22 +3966,22 @@
           }
         },
         "optimizer": {
-          "runtimeMs": 1917.8833870000003,
+          "runtimeMs": 2163.780847,
           "recommendation": "CORE → Reroll Trait for Red Emblems",
-          "utility": 76767.20169497418,
+          "utility": 77054.56066773178,
           "score": 75453.79957918273,
           "actionCount": 7,
           "engineDiagnostics": {
             "modeledHorizon": 2,
             "descriptiveBoardMaterializations": 0,
             "descriptiveBoardCacheEntries": 1,
-            "expectedScalarStates": 10293,
+            "expectedScalarStates": 11757,
             "targetScalarStates": 0,
-            "terminalScoringCalls": 10293,
-            "expectedBannerMaterializations": 3571,
-            "expectedBannerCacheEntries": 3571,
-            "expectedBannerCacheHits": 27305,
-            "expectedBannerCacheMisses": 3571,
+            "terminalScoringCalls": 11757,
+            "expectedBannerMaterializations": 4075,
+            "expectedBannerCacheEntries": 4075,
+            "expectedBannerCacheHits": 31193,
+            "expectedBannerCacheMisses": 4075,
             "targetBannerMaterializations": 0,
             "targetBannerCacheEntries": 0,
             "targetBannerCacheHits": 0,
@@ -4032,15 +4032,15 @@
               "2": 9
             },
             "transitionOutcomesBeforeCompressionByDepth": {
-              "0": 32153
+              "0": 77171
             },
             "transitionOutcomesAfterCompressionByDepth": {
-              "0": 13541
+              "0": 15005
             },
             "valueFunction": {
               "terminalCacheHits": 3295,
-              "terminalCacheMisses": 10248,
-              "vCalls": 13543,
+              "terminalCacheMisses": 11712,
+              "vCalls": 15007,
               "vCacheHits": 1,
               "vCacheMisses": 61,
               "qCalls": 1,
@@ -4051,7 +4051,7 @@
               "actionCacheMisses": 3,
               "actionCacheBypasses": 1220,
               "uniqueStatesByDepth": {
-                "0": 10225,
+                "0": 11689,
                 "1": 61
               },
               "uniqueQStatesByDepth": {
@@ -4062,7 +4062,7 @@
                 "2": 3
               },
               "vCallsByDepth": {
-                "0": 13481,
+                "0": 14945,
                 "1": 62
               },
               "vCacheHitsByDepth": {
@@ -4093,38 +4093,38 @@
                 "1": 1220,
                 "2": 3
               },
-              "terminalEntries": 10249,
+              "terminalEntries": 11713,
               "vEntries": 61,
               "qEntries": 1,
               "actionEntries": 3,
-              "elapsedMs": 1916.780838
+              "elapsedMs": 2162.4569549999997
             },
             "menuOperator": {
               "calls": 61,
               "uniformCalls": 61,
               "overrideCalls": 0,
               "explicitMenusScanned": 0,
-              "operatorMs": 1.0647819999985586
+              "operatorMs": 1.1122130000009633
             }
           }
         },
         "memory": {
           "before": {
-            "heapUsed": 11695576,
-            "heapTotal": 29466624,
-            "rss": 86130688,
-            "external": 5656180,
-            "maxRSS": 85612
+            "heapUsed": 11677872,
+            "heapTotal": 29990912,
+            "rss": 88690688,
+            "external": 5655604,
+            "maxRSS": 86876
           },
           "after": {
-            "heapUsed": 60904432,
-            "heapTotal": 79683584,
-            "rss": 145805312,
+            "heapUsed": 62083576,
+            "heapTotal": 87547904,
+            "rss": 153198592,
             "external": 5655416,
-            "maxRSS": 142388
+            "maxRSS": 149608
           },
-          "heapDelta": 49208856,
-          "rssDelta": 59674624
+          "heapDelta": 50405704,
+          "rssDelta": 64507904
         },
         "status": "completed"
       }
@@ -4134,7 +4134,7 @@
       "horizon": 2,
       "legacyStatus": "completed",
       "expandedStatus": "completed",
-      "optimizerRuntimeRatioExpandedVsLegacy": 1.9269156622427532,
+      "optimizerRuntimeRatioExpandedVsLegacy": 3.33718887260341,
       "legacy": {
         "layoutId": "legacy_3",
         "case": "global_quality",
@@ -4148,18 +4148,18 @@
         },
         "codec": {
           "iterations": 20000,
-          "runtimeMs": 91.906531,
-          "perOperationUs": 4.59532655
+          "runtimeMs": 70.56661199999999,
+          "perOperationUs": 3.5283306
         },
         "terminalScoring": {
-          "runtimeMs": 129.10895800000003,
+          "runtimeMs": 138.47762799999998,
           "expected": 52286.88030811379
         },
         "transition": {
           "operationId": "quality-increase-one",
           "role": "core",
-          "coldMs": 0.49214299999999866,
-          "warmMs": 0.015418999999951666,
+          "coldMs": 0.6255019999999831,
+          "warmMs": 0.020258000000012544,
           "reachableOutcomes": 6,
           "probability": 0.9999999999999999,
           "coldDiagnostics": {
@@ -4168,7 +4168,7 @@
             "uniqueTransitionCalculations": 1,
             "outcomesBeforeAggregation": 6,
             "outcomesAfterAggregation": 6,
-            "transitionGenerationMs": 0.3623399999999606
+            "transitionGenerationMs": 0.43819100000001754
           },
           "warmDiagnostics": {
             "cacheHits": 1,
@@ -4180,7 +4180,7 @@
           }
         },
         "optimizer": {
-          "runtimeMs": 911.392578,
+          "runtimeMs": 892.9044919999999,
           "recommendation": "MID → Randomly increase two Qualities and reduce one",
           "utility": 61867.56749895643,
           "score": 59216.72849851402,
@@ -4311,34 +4311,34 @@
               "vEntries": 61,
               "qEntries": 1,
               "actionEntries": 3,
-              "elapsedMs": 910.274891
+              "elapsedMs": 891.4892199999999
             },
             "menuOperator": {
               "calls": 61,
               "uniformCalls": 61,
               "overrideCalls": 0,
               "explicitMenusScanned": 0,
-              "operatorMs": 1.0336950000005913
+              "operatorMs": 0.7749330000001464
             }
           }
         },
         "memory": {
           "before": {
-            "heapUsed": 11696888,
-            "heapTotal": 29728768,
-            "rss": 84750336,
-            "external": 5656180,
-            "maxRSS": 83796
+            "heapUsed": 11688784,
+            "heapTotal": 29466624,
+            "rss": 87846912,
+            "external": 5655988,
+            "maxRSS": 87564
           },
           "after": {
-            "heapUsed": 32633096,
+            "heapUsed": 37380368,
             "heapTotal": 65830912,
-            "rss": 131055616,
+            "rss": 131125248,
             "external": 5655416,
-            "maxRSS": 127984
+            "maxRSS": 128052
           },
-          "heapDelta": 20936208,
-          "rssDelta": 46305280
+          "heapDelta": 25691584,
+          "rssDelta": 43278336
         },
         "status": "completed"
       },
@@ -4355,18 +4355,18 @@
         },
         "codec": {
           "iterations": 20000,
-          "runtimeMs": 114.17462800000001,
-          "perOperationUs": 5.7087314000000005
+          "runtimeMs": 95.848451,
+          "perOperationUs": 4.79242255
         },
         "terminalScoring": {
-          "runtimeMs": 151.32466699999998,
+          "runtimeMs": 148.12223200000003,
           "expected": 73808.15092534921
         },
         "transition": {
           "operationId": "quality-increase-one",
           "role": "core",
-          "coldMs": 0.7852530000000115,
-          "warmMs": 0.02876400000002377,
+          "coldMs": 0.5048970000000281,
+          "warmMs": 0.014967999999953463,
           "reachableOutcomes": 10,
           "probability": 1,
           "coldDiagnostics": {
@@ -4375,7 +4375,7 @@
             "uniqueTransitionCalculations": 1,
             "outcomesBeforeAggregation": 10,
             "outcomesAfterAggregation": 10,
-            "transitionGenerationMs": 0.5908490000000484
+            "transitionGenerationMs": 0.3811640000000125
           },
           "warmDiagnostics": {
             "cacheHits": 1,
@@ -4387,22 +4387,22 @@
           }
         },
         "optimizer": {
-          "runtimeMs": 1756.176633,
-          "recommendation": "MID → Randomly increase one Quality",
-          "utility": 77105.77337329231,
-          "score": 75803.49269408608,
-          "actionCount": 8,
+          "runtimeMs": 2979.790935,
+          "recommendation": "MID → Randomly increase two Qualities and reduce one",
+          "utility": 78361.41837220124,
+          "score": 77047.97170803229,
+          "actionCount": 11,
           "engineDiagnostics": {
             "modeledHorizon": 2,
             "descriptiveBoardMaterializations": 0,
             "descriptiveBoardCacheEntries": 1,
-            "expectedScalarStates": 10665,
+            "expectedScalarStates": 19179,
             "targetScalarStates": 0,
-            "terminalScoringCalls": 10665,
-            "expectedBannerMaterializations": 3330,
-            "expectedBannerCacheEntries": 3330,
-            "expectedBannerCacheHits": 28662,
-            "expectedBannerCacheMisses": 3330,
+            "terminalScoringCalls": 19179,
+            "expectedBannerMaterializations": 5988,
+            "expectedBannerCacheEntries": 5988,
+            "expectedBannerCacheHits": 51546,
+            "expectedBannerCacheMisses": 5988,
             "targetBannerMaterializations": 0,
             "targetBannerCacheEntries": 0,
             "targetBannerCacheHits": 0,
@@ -4427,70 +4427,70 @@
               "operationEvaluationsAvoided": 0,
               "wideningAvoidanceRate": 0
             },
-            "targetedActionCacheHits": 6,
+            "targetedActionCacheHits": 9,
             "targetedActionCacheMisses": 9,
-            "targetedActionCacheBypasses": 4020,
+            "targetedActionCacheBypasses": 6180,
             "targetedActionEntries": 9,
             "targetedActionRequestsByDepth": {
-              "1": 4020,
-              "2": 15
+              "1": 6180,
+              "2": 18
             },
             "targetedActionCacheHitsByDepth": {
-              "2": 6
+              "2": 9
             },
             "targetedActionCacheMissesByDepth": {
               "2": 9
             },
             "targetedActionCacheBypassesByDepth": {
-              "1": 4020
+              "1": 6180
             },
             "transitionDistributionCacheHits": 9,
             "transitionDistributionCacheMisses": 9,
-            "transitionDistributionCacheBypasses": 4020,
+            "transitionDistributionCacheBypasses": 6180,
             "transitionDistributionEntries": 9,
             "transitionEvaluationsByDepth": {
-              "1": 4020,
+              "1": 6180,
               "2": 9
             },
             "transitionOutcomesBeforeCompressionByDepth": {
-              "0": 35230
+              "0": 131712
             },
             "transitionOutcomesAfterCompressionByDepth": {
-              "0": 14873
+              "0": 25322
             },
             "valueFunction": {
-              "terminalCacheHits": 4211,
-              "terminalCacheMisses": 10664,
-              "vCalls": 14875,
+              "terminalCacheHits": 6515,
+              "terminalCacheMisses": 18809,
+              "vCalls": 25324,
               "vCacheHits": 1,
-              "vCacheMisses": 67,
+              "vCacheMisses": 103,
               "qCalls": 1,
               "qCacheHits": 0,
               "qCacheMisses": 1,
-              "actionCalls": 1343,
+              "actionCalls": 2063,
               "actionCacheHits": 0,
               "actionCacheMisses": 3,
-              "actionCacheBypasses": 1340,
+              "actionCacheBypasses": 2060,
               "uniqueStatesByDepth": {
-                "0": 10664,
-                "1": 67
+                "0": 18804,
+                "1": 103
               },
               "uniqueQStatesByDepth": {
                 "2": 1
               },
               "uniqueActionStatesByDepth": {
-                "1": 1340,
+                "1": 2060,
                 "2": 3
               },
               "vCallsByDepth": {
-                "0": 14807,
-                "1": 68
+                "0": 25220,
+                "1": 104
               },
               "vCacheHitsByDepth": {
                 "1": 1
               },
               "vCacheMissesByDepth": {
-                "1": 67
+                "1": 103
               },
               "qCallsByDepth": {
                 "2": 1
@@ -4500,7 +4500,7 @@
                 "2": 1
               },
               "actionCallsByDepth": {
-                "1": 1340,
+                "1": 2060,
                 "2": 3
               },
               "actionCacheHitsByDepth": {},
@@ -4508,44 +4508,44 @@
                 "2": 3
               },
               "actionCacheBypassesByDepth": {
-                "1": 1340
+                "1": 2060
               },
               "actionEvaluationsByDepth": {
-                "1": 1340,
+                "1": 2060,
                 "2": 3
               },
-              "terminalEntries": 10665,
-              "vEntries": 67,
+              "terminalEntries": 18810,
+              "vEntries": 103,
               "qEntries": 1,
               "actionEntries": 3,
-              "elapsedMs": 1754.745848
+              "elapsedMs": 2978.680434
             },
             "menuOperator": {
-              "calls": 67,
-              "uniformCalls": 67,
+              "calls": 103,
+              "uniformCalls": 103,
               "overrideCalls": 0,
               "explicitMenusScanned": 0,
-              "operatorMs": 1.1600310000005152
+              "operatorMs": 1.4088739999990594
             }
           }
         },
         "memory": {
           "before": {
-            "heapUsed": 11708304,
-            "heapTotal": 29990912,
-            "rss": 86728704,
-            "external": 5656180,
-            "maxRSS": 86028
+            "heapUsed": 11708112,
+            "heapTotal": 29728768,
+            "rss": 88432640,
+            "external": 5655604,
+            "maxRSS": 86640
           },
           "after": {
-            "heapUsed": 44090296,
-            "heapTotal": 78372864,
-            "rss": 142503936,
+            "heapUsed": 80743256,
+            "heapTotal": 106110976,
+            "rss": 174870528,
             "external": 5655416,
-            "maxRSS": 139164
+            "maxRSS": 170772
           },
-          "heapDelta": 32381992,
-          "rssDelta": 55775232
+          "heapDelta": 69035144,
+          "rssDelta": 86437888
         },
         "status": "completed"
       }
@@ -4555,7 +4555,7 @@
       "horizon": 2,
       "legacyStatus": "completed",
       "expandedStatus": "completed",
-      "optimizerRuntimeRatioExpandedVsLegacy": 1.6400328358111094,
+      "optimizerRuntimeRatioExpandedVsLegacy": 1.9323836208639638,
       "legacy": {
         "layoutId": "legacy_3",
         "case": "target_probability",
@@ -4569,18 +4569,18 @@
         },
         "codec": {
           "iterations": 20000,
-          "runtimeMs": 94.08792299999999,
-          "perOperationUs": 4.70439615
+          "runtimeMs": 75.075135,
+          "perOperationUs": 3.7537567500000004
         },
         "terminalScoring": {
-          "runtimeMs": 154.79993699999997,
+          "runtimeMs": 147.14794,
           "expected": 52286.88030811379
         },
         "transition": {
           "operationId": "green-stat-all",
           "role": "core",
-          "coldMs": 0.6958750000000009,
-          "warmMs": 0.016441000000043005,
+          "coldMs": 0.698030000000017,
+          "warmMs": 0.01708200000001625,
           "reachableOutcomes": 5,
           "probability": 1,
           "coldDiagnostics": {
@@ -4589,7 +4589,7 @@
             "uniqueTransitionCalculations": 1,
             "outcomesBeforeAggregation": 5,
             "outcomesAfterAggregation": 5,
-            "transitionGenerationMs": 0.5573059999999828
+            "transitionGenerationMs": 0.5645609999999692
           },
           "warmDiagnostics": {
             "cacheHits": 1,
@@ -4601,7 +4601,7 @@
           }
         },
         "optimizer": {
-          "runtimeMs": 4117.9735,
+          "runtimeMs": 3872.493046,
           "recommendation": "CORE → Reroll Quality for Red Emblems",
           "utility": 0.8660000786833985,
           "score": 57912.35649178181,
@@ -4732,34 +4732,34 @@
               "vEntries": 48,
               "qEntries": 1,
               "actionEntries": 3,
-              "elapsedMs": 4116.533008
+              "elapsedMs": 3871.3258419999997
             },
             "menuOperator": {
               "calls": 48,
               "uniformCalls": 48,
               "overrideCalls": 0,
               "explicitMenusScanned": 0,
-              "operatorMs": 0.8471669999984215
+              "operatorMs": 0.7423349999992297
             }
           }
         },
         "memory": {
           "before": {
-            "heapUsed": 11705448,
+            "heapUsed": 11711584,
             "heapTotal": 29990912,
-            "rss": 88735744,
-            "external": 5655988,
-            "maxRSS": 88584
+            "rss": 86130688,
+            "external": 5656756,
+            "maxRSS": 86532
           },
           "after": {
-            "heapUsed": 148635024,
+            "heapUsed": 138175712,
             "heapTotal": 173621248,
-            "rss": 430985216,
-            "external": 133351736,
-            "maxRSS": 420884
+            "rss": 427028480,
+            "external": 133290296,
+            "maxRSS": 417020
           },
-          "heapDelta": 136929576,
-          "rssDelta": 342249472
+          "heapDelta": 126464128,
+          "rssDelta": 340897792
         },
         "status": "completed"
       },
@@ -4776,18 +4776,18 @@
         },
         "codec": {
           "iterations": 20000,
-          "runtimeMs": 123.935778,
-          "perOperationUs": 6.1967889000000005
+          "runtimeMs": 100.46790499999999,
+          "perOperationUs": 5.023395249999999
         },
         "terminalScoring": {
-          "runtimeMs": 169.673577,
+          "runtimeMs": 145.254233,
           "expected": 73808.15092534921
         },
         "transition": {
           "operationId": "green-stat-all",
           "role": "core",
-          "coldMs": 0.9428980000000138,
-          "warmMs": 0.023704000000009273,
+          "coldMs": 1.2556109999999876,
+          "warmMs": 0.02513699999997243,
           "reachableOutcomes": 21,
           "probability": 1.0000000000000002,
           "coldDiagnostics": {
@@ -4796,7 +4796,7 @@
             "uniqueTransitionCalculations": 1,
             "outcomesBeforeAggregation": 21,
             "outcomesAfterAggregation": 21,
-            "transitionGenerationMs": 0.8026460000000384
+            "transitionGenerationMs": 1.073159999999973
           },
           "warmDiagnostics": {
             "cacheHits": 1,
@@ -4808,9 +4808,9 @@
           }
         },
         "optimizer": {
-          "runtimeMs": 6753.611757,
+          "runtimeMs": 7483.142134000001,
           "recommendation": "MID → Reroll Quality for Red Emblems",
-          "utility": 0.3280604669225146,
+          "utility": 0.34333519889132547,
           "score": 75607.88956395735,
           "actionCount": 7,
           "engineDiagnostics": {
@@ -4818,16 +4818,16 @@
             "descriptiveBoardMaterializations": 0,
             "descriptiveBoardCacheEntries": 1,
             "expectedScalarStates": 143,
-            "targetScalarStates": 9885,
-            "terminalScoringCalls": 10028,
+            "targetScalarStates": 11292,
+            "terminalScoringCalls": 11435,
             "expectedBannerMaterializations": 146,
             "expectedBannerCacheEntries": 146,
             "expectedBannerCacheHits": 283,
             "expectedBannerCacheMisses": 146,
-            "targetBannerMaterializations": 3083,
-            "targetBannerCacheEntries": 3083,
-            "targetBannerCacheHits": 26569,
-            "targetBannerCacheMisses": 3083,
+            "targetBannerMaterializations": 3530,
+            "targetBannerCacheEntries": 3530,
+            "targetBannerCacheHits": 30343,
+            "targetBannerCacheMisses": 3530,
             "continuationFidelity": {
               "id": "current",
               "description": "Current-fidelity continuation: retain configured fresh-menu strata at every recursive depth.",
@@ -4874,15 +4874,15 @@
               "2": 9
             },
             "transitionOutcomesBeforeCompressionByDepth": {
-              "0": 32183
+              "0": 78345
             },
             "transitionOutcomesAfterCompressionByDepth": {
-              "0": 13538
+              "0": 15002
             },
             "valueFunction": {
-              "terminalCacheHits": 3664,
-              "terminalCacheMisses": 9876,
-              "vCalls": 13540,
+              "terminalCacheHits": 3721,
+              "terminalCacheMisses": 11283,
+              "vCalls": 15004,
               "vCacheHits": 1,
               "vCacheMisses": 61,
               "qCalls": 1,
@@ -4893,7 +4893,7 @@
               "actionCacheMisses": 3,
               "actionCacheBypasses": 1220,
               "uniqueStatesByDepth": {
-                "0": 9877,
+                "0": 11284,
                 "1": 61
               },
               "uniqueQStatesByDepth": {
@@ -4904,7 +4904,7 @@
                 "2": 3
               },
               "vCallsByDepth": {
-                "0": 13478,
+                "0": 14942,
                 "1": 62
               },
               "vCacheHitsByDepth": {
@@ -4935,38 +4935,38 @@
                 "1": 1220,
                 "2": 3
               },
-              "terminalEntries": 9877,
+              "terminalEntries": 11284,
               "vEntries": 61,
               "qEntries": 1,
               "actionEntries": 3,
-              "elapsedMs": 6752.200841000001
+              "elapsedMs": 7481.727686
             },
             "menuOperator": {
               "calls": 61,
               "uniformCalls": 61,
               "overrideCalls": 0,
               "explicitMenusScanned": 0,
-              "operatorMs": 1.0904449999962935
+              "operatorMs": 2.984560999999644
             }
           }
         },
         "memory": {
           "before": {
-            "heapUsed": 11708080,
-            "heapTotal": 29728768,
-            "rss": 89133056,
-            "external": 5655988,
-            "maxRSS": 89136
+            "heapUsed": 11730520,
+            "heapTotal": 29466624,
+            "rss": 89305088,
+            "external": 5655796,
+            "maxRSS": 89892
           },
           "after": {
-            "heapUsed": 217352960,
-            "heapTotal": 250445824,
-            "rss": 572841984,
-            "external": 177709960,
-            "maxRSS": 559416
+            "heapUsed": 249018744,
+            "heapTotal": 282697728,
+            "rss": 645124096,
+            "external": 204332256,
+            "maxRSS": 630004
           },
-          "heapDelta": 205644880,
-          "rssDelta": 483708928
+          "heapDelta": 237288224,
+          "rssDelta": 555819008
         },
         "status": "completed"
       }

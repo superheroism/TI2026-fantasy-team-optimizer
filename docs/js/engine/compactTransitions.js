@@ -75,7 +75,6 @@ function enumerateStatReroll(layoutId, role, banner, op, uniformFallback) {
                 return;
             }
             const index = choice.indices[depth], original = originals.get(index);
-            // Preserve the verified legacy mechanic: a rerolled stat always changes, irrespective of the descriptive flag.
             const candidates = pool.filter(stat => stat !== original && !used.has(stat)), weighted = weightedCandidates(op, candidates, uniformFallback), totalWeight = weighted.reduce((sum, [, weight]) => sum + weight, 0);
             if (totalWeight <= 0)
                 return;
@@ -131,19 +130,35 @@ function enumerateQualityIncrease(layoutId, banner, op) {
     }
     return aggregate(out);
 }
+function choosePairs(indices) { const pairs = []; for (let i = 0; i < indices.length; i++)
+    for (let j = i + 1; j < indices.length; j++)
+        pairs.push([indices[i], indices[j]]); return pairs; }
 function enumerateQualityRedistribution(layoutId, banner, op) {
     if (op.kind !== 'quality_redistribution')
         return [];
-    if (layoutId !== 'legacy_3')
+    const source = decodeBannerEmblemIds(banner, layoutId), count = source.length;
+    if (count < 3)
         return [];
-    const source = decodeBannerEmblemIds(banner, layoutId), out = [];
-    for (let downIndex = 0; downIndex < source.length; downIndex++) {
-        const recurse = (index, ids, probability) => { if (index >= source.length) {
-            out.push({ banner: bannerId(layoutId, ids), probability, note: `Randomly selected slot ${downIndex + 1} to decrease; the other two increase.` });
-            return;
-        } const currentId = ids[index], quality = emblemQualityTier(currentId), stat = emblemStatIndex(currentId), trait = emblemTraitIndex(currentId), direction = index === downIndex ? 'decrease' : 'increase'; for (const next of directionalTierOutcomes(quality, direction))
-            recurse(index + 1, withSlot(ids, index, encodeEmblemComponents(stat, next.tier, trait)), probability * next.probability); };
-        recurse(0, source, 1 / source.length);
+    const out = [];
+    for (let downIndex = 0; downIndex < count; downIndex++) {
+        const remaining = Array.from({ length: count }, (_, index) => index).filter(index => index !== downIndex), recipientPairs = choosePairs(remaining);
+        for (const recipients of recipientPairs) {
+            const recipientSet = new Set(recipients);
+            const recurse = (index, ids, probability) => {
+                if (index >= source.length) {
+                    out.push({ banner: bannerId(layoutId, ids), probability, note: `Randomly selected slot ${downIndex + 1} to decrease; slots ${recipients[0] + 1} and ${recipients[1] + 1} increase.` });
+                    return;
+                }
+                const currentId = ids[index], quality = emblemQualityTier(currentId), stat = emblemStatIndex(currentId), trait = emblemTraitIndex(currentId), direction = index === downIndex ? 'decrease' : recipientSet.has(index) ? 'increase' : null;
+                if (!direction) {
+                    recurse(index + 1, ids, probability);
+                    return;
+                }
+                for (const next of directionalTierOutcomes(quality, direction))
+                    recurse(index + 1, withSlot(ids, index, encodeEmblemComponents(stat, next.tier, trait)), probability * next.probability);
+            };
+            recurse(0, source, (1 / count) * (1 / recipientPairs.length));
+        }
     }
     return aggregate(out);
 }
