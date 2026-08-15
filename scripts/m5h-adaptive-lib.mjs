@@ -127,29 +127,22 @@ function boardActionDescriptor(operation, banner) {
   };
 }
 
-function rootDescriptors(state, screenRuntime) {
+function rootDescriptors(state, initialEngine, screenRuntime) {
   const roots = [{ key: 'stop', action: { kind: 'stop' } }];
   for (const operation of state.menu) {
     for (const banner of OPTIMIZER_ROLES) {
-      if (!screenRuntime.transitionsFor(screenRuntime.__initialEngine, banner, operation).length) continue;
+      if (!screenRuntime.transitionsFor(initialEngine, banner, operation).length) continue;
       roots.push(boardActionDescriptor(operation, banner));
     }
   }
-  if (state.tokensRemaining > 0) roots.push({ key: 'menu_reroll', action: { kind: 'menu_reroll' } });
+  roots.push({ key: 'menu_reroll', action: { kind: 'menu_reroll' } });
   return roots;
 }
 
 function evaluateRootUtility(root, runtime, initialEngine, stopUtility, horizon) {
   if (root.action.kind === 'stop') return stopUtility;
-  if (root.action.kind === 'menu_reroll') {
-    if (statefulTokensAfter(horizon) === 0) return stopUtility;
-    return runtime.valueFunction.V(initialEngine, Math.max(0, horizon - 1));
-  }
+  if (root.action.kind === 'menu_reroll') return runtime.valueFunction.V(initialEngine, horizon - 1);
   return runtime.targetedContinuation(initialEngine, root.operation, root.banner, horizon, 'current_menu').value;
-}
-
-function statefulTokensAfter(horizon) {
-  return Math.max(0, horizon - 1);
 }
 
 function evaluateRootWithAttribution(pass, root, runtime, terminal, initialEngine, stopUtility, horizon, triggerReason) {
@@ -173,9 +166,11 @@ function evaluateRootWithAttribution(pass, root, runtime, terminal, initialEngin
 
 export function runAdaptiveTargetSearch(state, data, candidate, options = {}) {
   const uniformStatFallback = options.uniformStatFallback ?? true;
-  const modeledHorizon = Math.max(3, Math.floor(options.modeledHorizon ?? 3));
+  const modeledHorizon = Math.floor(options.modeledHorizon ?? 3);
   if (state.objective !== 'target_probability') throw new Error('M5H adaptive search is target-probability only.');
   if (modeledHorizon !== 3) throw new Error('M5H adaptive search is frozen to experimental horizon t=3.');
+  if (state.tokensRemaining < 3) throw new Error('M5H t=3 experiment requires at least three remaining tokens.');
+  if (!state.menuRerollAvailable) throw new Error('M5H frozen corpus requires menu reroll availability.');
 
   const terminal = createTerminalSearchRuntime(state, data);
   const initialEngine = terminal.initialEngine;
@@ -190,16 +185,14 @@ export function runAdaptiveTargetSearch(state, data, candidate, options = {}) {
   terminal.seedCurrent(current);
 
   const screen = createRuntime(state, data, terminal, uniformStatFallback, candidate.screen, modeledHorizon);
-  screen.__initialEngine = initialEngine;
   const refine = createRuntime(state, data, terminal, uniformStatFallback, candidate.refine, modeledHorizon);
-  refine.__initialEngine = initialEngine;
 
   const initialization = {
     targetKernel: clone(getTargetSearchDiagnostics()),
     terminal: clone(terminal.diagnostics()),
   };
 
-  const roots = rootDescriptors(state, screen);
+  const roots = rootDescriptors(state, initialEngine, screen);
   const passRecords = [];
   const rows = [];
 
@@ -242,9 +235,7 @@ export function runAdaptiveTargetSearch(state, data, candidate, options = {}) {
     finalUtility: row.finalUtility,
     refinementTriggerReason: row.refinementTriggerReason,
   }));
-
-  const screenRanked = stableRank(rows, 'screenedUtility');
-  const screenWinner = screenRanked[0];
+  const screenWinner = stableRank(rows, 'screenedUtility')[0];
   const finalWinner = ranked[0];
   const finalRowsByKey = new Map(ranked.map((row) => [row.key, row]));
 
