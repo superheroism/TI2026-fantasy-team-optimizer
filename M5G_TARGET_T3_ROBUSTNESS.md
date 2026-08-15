@@ -45,33 +45,33 @@ The principal substantive failures are:
 
 | Fixture | Target | Oracle status | Oracle winner | Oracle s | Candidate status | Candidate winner | Candidate s | Oracle regret | Kendall τ | Top-3 |
 |---|---:|---|---|---:|---|---|---:|---:|---:|---:|
-| canonical-default | 50k | completed | board_action\|red-quality-all\|core | 185.72 | completed | board_action\|red-quality-all\|core | 58.80 | 0.000 pp | 1 | 3/3 |
-| canonical-default | 55k | completed | board_action\|red-quality-all\|core | 198.28 | timeout | — | 60.20 | — | — | — |
-| canonical-default | 60k | completed | board_action\|red-quality-all\|core | 153.70 | completed | board_action\|red-quality-all\|core | 59.26 | 0.000 pp | 1 | 3/3 |
-| holdout-01 | 50k | completed | board_action\|blue-quality-all\|support | 305.49 | timeout | — | 60.17 | — | — | — |
-| holdout-01 | 55k | completed | board_action\|blue-quality-all\|support | 223.97 | timeout | — | 60.18 | — | — | — |
-| holdout-01 | 60k | completed | board_action\|blue-quality-all\|support | 156.36 | completed | board_action\|blue-quality-all\|support | 58.87 | 0.000 pp | 1 | 3/3 |
+| canonical-default | 50k | completed | board_action|red-quality-all|core | 185.72 | completed | board_action|red-quality-all|core | 58.80 | 0.000 pp | 1 | 3/3 |
+| canonical-default | 55k | completed | board_action|red-quality-all|core | 198.28 | timeout | — | 60.20 | — | — | — |
+| canonical-default | 60k | completed | board_action|red-quality-all|core | 153.70 | completed | board_action|red-quality-all|core | 59.26 | 0.000 pp | 1 | 3/3 |
+| holdout-01 | 50k | completed | board_action|blue-quality-all|support | 305.49 | timeout | — | 60.17 | — | — | — |
+| holdout-01 | 55k | completed | board_action|blue-quality-all|support | 223.97 | timeout | — | 60.18 | — | — | — |
+| holdout-01 | 60k | completed | board_action|blue-quality-all|support | 156.36 | completed | board_action|blue-quality-all|support | 58.87 | 0.000 pp | 1 | 3/3 |
 | holdout-02 | 50k | completed | stop | 66.85 | completed | stop | 16.53 | 0.000 pp | 1 | 3/3 |
-| holdout-02 | 55k | completed | board_action\|quality-increase-one\|mid | 105.79 | completed | board_action\|quality-increase-one\|mid | 32.10 | 0.000 pp | 1 | 3/3 |
-| holdout-02 | 60k | completed | board_action\|quality-increase-one\|mid | 102.58 | completed | board_action\|quality-increase-one\|mid | 37.41 | 0.000 pp | 1 | 3/3 |
-| holdout-03 | 50k | completed | board_action\|red-trait-all\|mid | 136.05 | completed | board_action\|red-trait-all\|mid | 39.92 | 0.000 pp | 0.8333333333333334 | 2/3 |
-| holdout-03 | 55k | completed | board_action\|green-quality-all\|mid | 170.82 | completed | board_action\|green-quality-all\|mid | 58.09 | 0.000 pp | 1 | 3/3 |
-| holdout-03 | 60k | completed | board_action\|green-quality-all\|mid | 145.69 | completed | board_action\|green-quality-all\|mid | 52.89 | 0.000 pp | 0.8333333333333334 | 2/3 |
-| holdout-04 | 50k | completed | board_action\|red-quality-last\|mid | 210.45 | timeout | — | 60.13 | — | — | — |
-| holdout-04 | 55k | completed | board_action\|red-quality-last\|mid | 173.26 | timeout | — | 60.21 | — | — | — |
-| holdout-04 | 60k | completed | board_action\|red-quality-last\|mid | 128.51 | completed | board_action\|red-quality-last\|mid | 54.64 | 0.000 pp | 1 | 3/3 |
-| holdout-05 | 50k | completed | board_action\|red-quality-random\|mid | 192.36 | timeout | — | 60.18 | — | — | — |
-| holdout-05 | 55k | completed | board_action\|red-quality-random\|mid | 201.17 | timeout | — | 60.18 | — | — | — |
-| holdout-05 | 60k | completed | board_action\|red-quality-random\|core | 134.32 | completed | board_action\|red-quality-random\|mid | 48.62 | 1.063 pp | 0.9285714285714286 | 3/3 |
-| holdout-06 | 50k | completed | board_action\|quality-redistribution\|mid | 256.59 | timeout | — | 60.18 | — | — | — |
-| holdout-06 | 55k | completed | board_action\|quality-redistribution\|mid | 280.59 | timeout | — | 60.18 | — | — | — |
-| holdout-06 | 60k | completed | board_action\|quality-redistribution\|mid | 239.85 | timeout | — | 60.24 | — | — | — |
-| holdout-07 | 50k | completed | board_action\|blue-trait-all\|mid | 189.55 | timeout | — | 60.20 | — | — | — |
-| holdout-07 | 55k | completed | board_action\|blue-trait-all\|mid | 175.78 | timeout | — | 60.20 | — | — | — |
-| holdout-07 | 60k | completed | board_action\|blue-trait-all\|mid | 127.34 | completed | board_action\|blue-trait-all\|mid | 51.10 | 0.000 pp | 1 | 3/3 |
-| holdout-08 | 50k | completed | board_action\|red-quality-all\|core | 144.00 | completed | board_action\|red-quality-all\|core | 58.84 | 0.000 pp | 1 | 3/3 |
-| holdout-08 | 55k | completed | board_action\|red-quality-all\|core | 122.73 | completed | board_action\|red-quality-all\|core | 45.85 | 0.000 pp | 0.9285714285714286 | 3/3 |
-| holdout-08 | 60k | completed | board_action\|red-quality-all\|core | 73.06 | completed | board_action\|red-quality-all\|core | 27.98 | 0.000 pp | 1 | 3/3 |
+| holdout-02 | 55k | completed | board_action|quality-increase-one|mid | 105.79 | completed | board_action|quality-increase-one|mid | 32.10 | 0.000 pp | 1 | 3/3 |
+| holdout-02 | 60k | completed | board_action|quality-increase-one|mid | 102.58 | completed | board_action|quality-increase-one|mid | 37.41 | 0.000 pp | 1 | 3/3 |
+| holdout-03 | 50k | completed | board_action|red-trait-all|mid | 136.05 | completed | board_action|red-trait-all|mid | 39.92 | 0.000 pp | 0.8333333333333334 | 2/3 |
+| holdout-03 | 55k | completed | board_action|green-quality-all|mid | 170.82 | completed | board_action|green-quality-all|mid | 58.09 | 0.000 pp | 1 | 3/3 |
+| holdout-03 | 60k | completed | board_action|green-quality-all|mid | 145.69 | completed | board_action|green-quality-all|mid | 52.89 | 0.000 pp | 0.8333333333333334 | 2/3 |
+| holdout-04 | 50k | completed | board_action|red-quality-last|mid | 210.45 | timeout | — | 60.13 | — | — | — |
+| holdout-04 | 55k | completed | board_action|red-quality-last|mid | 173.26 | timeout | — | 60.21 | — | — | — |
+| holdout-04 | 60k | completed | board_action|red-quality-last|mid | 128.51 | completed | board_action|red-quality-last|mid | 54.64 | 0.000 pp | 1 | 3/3 |
+| holdout-05 | 50k | completed | board_action|red-quality-random|mid | 192.36 | timeout | — | 60.18 | — | — | — |
+| holdout-05 | 55k | completed | board_action|red-quality-random|mid | 201.17 | timeout | — | 60.18 | — | — | — |
+| holdout-05 | 60k | completed | board_action|red-quality-random|core | 134.32 | completed | board_action|red-quality-random|mid | 48.62 | 1.063 pp | 0.9285714285714286 | 3/3 |
+| holdout-06 | 50k | completed | board_action|quality-redistribution|mid | 256.59 | timeout | — | 60.18 | — | — | — |
+| holdout-06 | 55k | completed | board_action|quality-redistribution|mid | 280.59 | timeout | — | 60.18 | — | — | — |
+| holdout-06 | 60k | completed | board_action|quality-redistribution|mid | 239.85 | timeout | — | 60.24 | — | — | — |
+| holdout-07 | 50k | completed | board_action|blue-trait-all|mid | 189.55 | timeout | — | 60.20 | — | — | — |
+| holdout-07 | 55k | completed | board_action|blue-trait-all|mid | 175.78 | timeout | — | 60.20 | — | — | — |
+| holdout-07 | 60k | completed | board_action|blue-trait-all|mid | 127.34 | completed | board_action|blue-trait-all|mid | 51.10 | 0.000 pp | 1 | 3/3 |
+| holdout-08 | 50k | completed | board_action|red-quality-all|core | 144.00 | completed | board_action|red-quality-all|core | 58.84 | 0.000 pp | 1 | 3/3 |
+| holdout-08 | 55k | completed | board_action|red-quality-all|core | 122.73 | completed | board_action|red-quality-all|core | 45.85 | 0.000 pp | 0.9285714285714286 | 3/3 |
+| holdout-08 | 60k | completed | board_action|red-quality-all|core | 73.06 | completed | board_action|red-quality-all|core | 27.98 | 0.000 pp | 1 | 3/3 |
 
 ## Policy quality
 
@@ -137,23 +137,55 @@ The frozen aggregate `memoryUnder6Gb` check is false because timed-out candidate
 
 | Fixture | Oracle 50k → 55k → 60k | Candidate 50k → 55k → 60k |
 |---|---|---|
-| canonical-default | board_action\|red-quality-all\|core → board_action\|red-quality-all\|core → board_action\|red-quality-all\|core | board_action\|red-quality-all\|core → [timeout] → board_action\|red-quality-all\|core |
-| holdout-01 | board_action\|blue-quality-all\|support → board_action\|blue-quality-all\|support → board_action\|blue-quality-all\|support | [timeout] → [timeout] → board_action\|blue-quality-all\|support |
-| holdout-02 | stop → board_action\|quality-increase-one\|mid → board_action\|quality-increase-one\|mid | stop → board_action\|quality-increase-one\|mid → board_action\|quality-increase-one\|mid |
-| holdout-03 | board_action\|red-trait-all\|mid → board_action\|green-quality-all\|mid → board_action\|green-quality-all\|mid | board_action\|red-trait-all\|mid → board_action\|green-quality-all\|mid → board_action\|green-quality-all\|mid |
-| holdout-04 | board_action\|red-quality-last\|mid → board_action\|red-quality-last\|mid → board_action\|red-quality-last\|mid | [timeout] → [timeout] → board_action\|red-quality-last\|mid |
-| holdout-05 | board_action\|red-quality-random\|mid → board_action\|red-quality-random\|mid → board_action\|red-quality-random\|core | [timeout] → [timeout] → board_action\|red-quality-random\|mid |
-| holdout-06 | board_action\|quality-redistribution\|mid → board_action\|quality-redistribution\|mid → board_action\|quality-redistribution\|mid | [timeout] → [timeout] → [timeout] |
-| holdout-07 | board_action\|blue-trait-all\|mid → board_action\|blue-trait-all\|mid → board_action\|blue-trait-all\|mid | [timeout] → [timeout] → board_action\|blue-trait-all\|mid |
-| holdout-08 | board_action\|red-quality-all\|core → board_action\|red-quality-all\|core → board_action\|red-quality-all\|core | board_action\|red-quality-all\|core → board_action\|red-quality-all\|core → board_action\|red-quality-all\|core |
+| canonical-default | board_action|red-quality-all|core → board_action|red-quality-all|core → board_action|red-quality-all|core | board_action|red-quality-all|core → [timeout] → board_action|red-quality-all|core |
+| holdout-01 | board_action|blue-quality-all|support → board_action|blue-quality-all|support → board_action|blue-quality-all|support | [timeout] → [timeout] → board_action|blue-quality-all|support |
+| holdout-02 | stop → board_action|quality-increase-one|mid → board_action|quality-increase-one|mid | stop → board_action|quality-increase-one|mid → board_action|quality-increase-one|mid |
+| holdout-03 | board_action|red-trait-all|mid → board_action|green-quality-all|mid → board_action|green-quality-all|mid | board_action|red-trait-all|mid → board_action|green-quality-all|mid → board_action|green-quality-all|mid |
+| holdout-04 | board_action|red-quality-last|mid → board_action|red-quality-last|mid → board_action|red-quality-last|mid | [timeout] → [timeout] → board_action|red-quality-last|mid |
+| holdout-05 | board_action|red-quality-random|mid → board_action|red-quality-random|mid → board_action|red-quality-random|core | [timeout] → [timeout] → board_action|red-quality-random|mid |
+| holdout-06 | board_action|quality-redistribution|mid → board_action|quality-redistribution|mid → board_action|quality-redistribution|mid | [timeout] → [timeout] → [timeout] |
+| holdout-07 | board_action|blue-trait-all|mid → board_action|blue-trait-all|mid → board_action|blue-trait-all|mid | [timeout] → [timeout] → board_action|blue-trait-all|mid |
+| holdout-08 | board_action|red-quality-all|core → board_action|red-quality-all|core → board_action|red-quality-all|core | board_action|red-quality-all|core → board_action|red-quality-all|core → board_action|red-quality-all|core |
 
 All nine oracle threshold triplets satisfy target-probability monotonicity. Complete candidate triplets for `holdout-02`, `holdout-03`, and `holdout-08` also satisfy monotonicity. The frozen candidate monotonicity gate cannot validate the remaining fixtures because at least one threshold timed out.
 
 ## Target-kernel / state-dependent work
 
-Per-case target-kernel diagnostics are retained in `benchmarks/m5g-target-t3-robustness.json`, including candidate counts, branch counts, scenario checks, suffix-bound activity, pair/suffix cache activity, preparation time, and combinatorial-search time for every completed run. Raw verbose outputs remain available as GitHub Actions artifacts from run `31890281254`.
+The exact-kernel diagnostics confirm that runtime variation is strongly state- and threshold-dependent rather than a single constant multiplier. The table below reports total target-kernel scenario checks and combinatorial target-search time for each completed oracle/candidate. Timed-out candidates intentionally have no completed-run kernel summary.
 
-The runtime pattern is therefore measurable without modifying the kernel, but M5G does not optimize it.
+| Case | Oracle checks (B) | Oracle kernel s | Candidate checks (B) | Candidate kernel s |
+|---|---:|---:|---:|---:|
+| canonical-default-50k | 20.46 | 143.5 | 6.95 | 45.8 |
+| canonical-default-55k | 25.98 | 158.4 | — | — |
+| canonical-default-60k | 20.63 | 115.7 | 8.46 | 46.4 |
+| holdout-01-50k | 38.01 | 256.3 | — | — |
+| holdout-01-55k | 29.69 | 181.7 | — | — |
+| holdout-01-60k | 16.50 | 108.0 | 7.01 | 42.8 |
+| holdout-02-50k | 5.75 | 46.0 | 1.25 | 9.7 |
+| holdout-02-55k | 12.53 | 84.6 | 3.72 | 24.5 |
+| holdout-02-60k | 14.48 | 81.8 | 5.11 | 30.2 |
+| holdout-03-50k | 15.19 | 103.4 | 4.16 | 29.6 |
+| holdout-03-55k | 22.96 | 136.8 | 7.81 | 47.2 |
+| holdout-03-60k | 19.09 | 107.8 | 7.39 | 42.3 |
+| holdout-04-50k | 24.35 | 167.7 | — | — |
+| holdout-04-55k | 25.85 | 134.6 | — | — |
+| holdout-04-60k | 16.29 | 86.8 | 7.21 | 38.0 |
+| holdout-05-50k | 19.46 | 142.6 | — | — |
+| holdout-05-55000 | 23.34 | 153.4 | — | — |
+| holdout-05-60000 | 18.37 | 92.3 | 7.52 | 36.0 |
+| holdout-06-50000 | 27.58 | 197.2 | — | — |
+| holdout-06-55000 | 33.39 | 219.1 | — | — |
+| holdout-06-60000 | 26.75 | 181.8 | — | — |
+| holdout-07-50000 | 23.46 | 150.6 | — | — |
+| holdout-07-55000 | 25.48 | 136.7 | — | — |
+| holdout-07-60000 | 17.63 | 88.2 | 7.62 | 37.1 |
+| holdout-08-50000 | 21.19 | 114.1 | 8.63 | 47.8 |
+| holdout-08-55000 | 17.68 | 91.8 | 7.25 | 35.1 |
+| holdout-08-60000 | 9.16 | 45.0 | 3.86 | 18.8 |
+
+The heaviest oracle was `holdout-01 @ 50k` at 38.01 billion scenario checks; the lightest was `holdout-02 @ 50k` at 5.75 billion. The candidate reduces work substantially when it completes, but the 60-second failures span several fixtures and both 50k/55k targets, so there is no single threshold-only failure cluster.
+
+Full candidate-count, branch, pair/triple, suffix-bound, cache, preparation-time, DP/search, transition, and menu diagnostics remain preserved in the raw GitHub Actions case artifacts from run `31890281254`. The committed aggregate retains every field needed to reproduce the Markdown summary tables.
 
 ## Failure classification
 
