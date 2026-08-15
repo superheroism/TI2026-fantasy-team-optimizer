@@ -1,0 +1,92 @@
+{
+  "generatedAt": "2026-08-15T22:50:23Z",
+  "evidenceSource": {
+    "workflowRunId": 31912908836,
+    "jobId": 95080548920,
+    "node": "22.23.2",
+    "platform": "ubuntu-24.04",
+    "recoveredFromImmutableActionsLog": true,
+    "note": "The benchmark completed successfully. Its full workspace result file was not uploaded because a later documentation grep guard failed; this compact result preserves the logged calibration decision metrics without rerunning calibration or holdout."
+  },
+  "m6cBaseSha": "42a1a7ec7553e7d6df5f4d3c5576417fcdbbb35a",
+  "phase": "calibration",
+  "corpusPath": "benchmarks/m6c-expanded-calibration-fixtures.json",
+  "selection": "root-k2",
+  "calibrationOutcome": "candidate_qualified",
+  "candidates": [
+    {
+      "policy": {"id":"root-k2","maxRefinedBoardActions":2},
+      "qualifies": true,
+      "summary": {
+        "completionRate": 1,
+        "rootActionAgreement": 1,
+        "meanOracleRegret": 0,
+        "medianOracleRegret": 0,
+        "p90OracleRegret": 0,
+        "maximumOracleRegret": 0,
+        "maximumExpectedScoreOracleRegret": 0,
+        "maximumTargetProbabilityOracleRegret": 0,
+        "meanAbsoluteSelectedUtilityError": 0,
+        "medianSpeedup": 2.780812645179636,
+        "p90Speedup": 3.3891475581007473,
+        "medianStructuralWorkAvoided": 0.7124544680028229
+      }
+    },
+    {
+      "policy": {"id":"root-k4","maxRefinedBoardActions":4},
+      "qualifies": true,
+      "summary": {
+        "completionRate": 1,
+        "rootActionAgreement": 1,
+        "meanOracleRegret": 0,
+        "medianOracleRegret": 0,
+        "p90OracleRegret": 0,
+        "maximumOracleRegret": 0,
+        "maximumExpectedScoreOracleRegret": 0,
+        "maximumTargetProbabilityOracleRegret": 0,
+        "meanAbsoluteSelectedUtilityError": 0,
+        "medianSpeedup": 1.7320173243796948,
+        "p90Speedup": 1.9846624437069393,
+        "medianStructuralWorkAvoided": 0.443561476267436
+      }
+    },
+    {
+      "policy": {"id":"root-k6","maxRefinedBoardActions":6},
+      "qualifies": false,
+      "summary": {
+        "completionRate": 1,
+        "rootActionAgreement": 1,
+        "meanOracleRegret": 0,
+        "medianOracleRegret": 0,
+        "p90OracleRegret": 0,
+        "maximumOracleRegret": 0,
+        "maximumExpectedScoreOracleRegret": 0,
+        "maximumTargetProbabilityOracleRegret": 0,
+        "meanAbsoluteSelectedUtilityError": 0,
+        "medianSpeedup": 1.2541574809658005,
+        "p90Speedup": 1.4512129755283643,
+        "medianStructuralWorkAvoided": 0.17351448222121296
+      }
+    }
+  ],
+  "selectedCandidateCases": [
+    {"caseId":"cal-exp-stat-base","objective":"expected_score","operationFamily":"stat","agreement":true,"oracleRegret":0,"runnerUpGap":27.62700200722611,"speedup":2.6729668860474454,"structuralWorkAvoided":0.672840172786177},
+    {"caseId":"cal-exp-quality-base","objective":"expected_score","operationFamily":"quality","agreement":true,"oracleRegret":0,"runnerUpGap":265.54541494314617,"speedup":3.0753012069183354,"structuralWorkAvoided":0.7610597719229257},
+    {"caseId":"cal-exp-trait-base","objective":"expected_score","operationFamily":"trait","agreement":true,"oracleRegret":0,"runnerUpGap":113.72018469568866,"speedup":2.715525458879374,"structuralWorkAvoided":0.6706229830990538},
+    {"caseId":"cal-exp-global-base","objective":"expected_score","operationFamily":"global_quality","agreement":true,"oracleRegret":0,"runnerUpGap":424.9655074597831,"speedup":2.615602283908342,"structuralWorkAvoided":0.7195419718784204},
+    {"caseId":"cal-exp-stat-permuted","objective":"expected_score","operationFamily":"stat","agreement":true,"oracleRegret":0,"runnerUpGap":663.2889139398612,"speedup":2.537074761132945,"structuralWorkAvoided":0.6724510757919775},
+    {"caseId":"cal-exp-quality-inverted","objective":"expected_score","operationFamily":"quality","agreement":true,"oracleRegret":0,"runnerUpGap":159.42967060999945,"speedup":3.2479977280584884,"structuralWorkAvoided":0.7599862596918245},
+    {"caseId":"cal-exp-global-capped","objective":"expected_score","operationFamily":"global_quality","agreement":true,"oracleRegret":0,"runnerUpGap":51.74997672114114,"speedup":6.103722415567828,"structuralWorkAvoided":0.924785612196284},
+    {"caseId":"cal-exp-mixed-permuted","objective":"expected_score","operationFamily":"mixed","agreement":true,"oracleRegret":0,"runnerUpGap":566.6485832514663,"speedup":2.595064721920248,"structuralWorkAvoided":0.6700204544198132},
+    {"caseId":"cal-tgt-stat-72000","objective":"target_probability","operationFamily":"stat","agreement":true,"oracleRegret":0,"runnerUpGap":0.0607593201754385,"speedup":3.0097156334244146,"structuralWorkAvoided":0.7083539120822008},
+    {"caseId":"cal-tgt-mixed-80000","objective":"target_probability","operationFamily":"mixed","agreement":true,"oracleRegret":0,"runnerUpGap":0.006829084429824606,"speedup":2.4756091008014685,"structuralWorkAvoided":0.6138119776315404},
+    {"caseId":"cal-tgt-quality-88000","objective":"target_probability","operationFamily":"quality","agreement":true,"oracleRegret":0,"runnerUpGap":0.0007812500000000666,"speedup":3.5302973881430066,"structuralWorkAvoided":0.7291711744579681},
+    {"caseId":"cal-tgt-repeat-76000","objective":"target_probability","operationFamily":"mixed","agreement":true,"oracleRegret":0,"runnerUpGap":0.07062869304337238,"speedup":2.601259519485128,"structuralWorkAvoided":0.6415462099530105},
+    {"caseId":"cal-tgt-global-82000","objective":"target_probability","operationFamily":"global_quality","agreement":true,"oracleRegret":0,"runnerUpGap":0,"speedup":3.2462580718585556,"structuralWorkAvoided":0.7634009820624856},
+    {"caseId":"cal-tgt-trait-86000","objective":"target_probability","operationFamily":"trait","agreement":true,"oracleRegret":0,"runnerUpGap":0,"speedup":2.6200438311956527,"structuralWorkAvoided":0.6313601017900761},
+    {"caseId":"cal-exp-mixed-capped","objective":"expected_score","operationFamily":"mixed","agreement":true,"oracleRegret":0,"runnerUpGap":735.6865373309702,"speedup":2.8460998314798975,"structuralWorkAvoided":0.7259034761445562},
+    {"caseId":"cal-exp-mixed-low","objective":"expected_score","operationFamily":"mixed","agreement":true,"oracleRegret":0,"runnerUpGap":566.6485832514663,"speedup":3.05160641515787,"structuralWorkAvoided":0.7165550239234451}
+  ],
+  "production": {"layoutId":"legacy_3","maxModeledHorizon":2,"expandedApproximationEnabled":false},
+  "semantics": {"m5hHoldoutConsumed":false,"targetT3Run":false,"targetT4Run":false,"scenarioFidelityChanged":false}
+}

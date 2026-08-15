@@ -1,0 +1,27 @@
+{
+  "m6cBaseSha": "42a1a7ec7553e7d6df5f4d3c5576417fcdbbb35a",
+  "layoutId": "expanded_5",
+  "horizon": 2,
+  "family": "adaptive_root_refinement",
+  "description": "All legal root board actions receive exact one-step screening. Menu reroll and stop remain represented. Only the top K board actions by objective-specific one-step utility receive exact second-token continuation; unrefined roots stop after the first action.",
+  "candidates": [
+    {"id":"root-k2","maxRefinedBoardActions":2},
+    {"id":"root-k4","maxRefinedBoardActions":4},
+    {"id":"root-k6","maxRefinedBoardActions":6}
+  ],
+  "decisionMarginBins": {
+    "expected_score": {"closeMax":100,"mediumMax":500},
+    "target_probability": {"closeMax":0.005,"mediumMax":0.02}
+  },
+  "acceptance": {
+    "minimumCompletionRate": 1.0,
+    "minimumRootActionAgreement": 0.94,
+    "maximumExpectedScoreOracleRegret": 100,
+    "maximumTargetProbabilityOracleRegret": 0.005,
+    "minimumMedianSpeedup": 1.30,
+    "minimumP90Speedup": 1.50,
+    "minimumMedianStructuralWorkAvoided": 0.20
+  },
+  "selectionRule": "Among qualifying candidates, select highest median speedup; break ties by higher root-action agreement, then lower maximum oracle regret, then candidate id.",
+  "productionEnabled": false
+}
