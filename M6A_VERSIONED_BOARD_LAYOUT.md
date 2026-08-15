@@ -1,6 +1,6 @@
 # M6A — Versioned Board Layout Architecture
 
-**Status:** implementation / validation  
+**Status:** complete — Outcome B  
 **Base:** `b058010829d7b48c5968d2540acf65a40b64f2a7`  
 **Production default:** `legacy_3`, modeled horizon `<= 2`
 
@@ -144,7 +144,7 @@ M6A adds expanded-layout tests for:
 - explicit expanded redistribution unavailability;
 - transition-cache isolation across layouts.
 
-Authoritative Node 22 CI and benchmark evidence is recorded in the final section once the branch benchmark completes.
+Authoritative Node 22 validation completed the full 12-case layout matrix with zero errors or timeouts. The expanded/legacy optimizer-runtime ratios were 1.22× for stat-heavy `t=1`; and at `t=2`, 1.76× stat-heavy, 3.78× quality-heavy, 2.19× trait-heavy, 1.93× global-quality, and 1.64× target-probability. Representative stat-heavy transition branching rose from 5 to 21 outcomes while terminal scoring stayed approximately flat, identifying frontier growth as the primary expansion cost.
 
 ## Performance measurement
 
@@ -172,4 +172,4 @@ The expanded layout is a representable, testable rules geometry behind the same 
 
 ## Outcome
 
-Final classification is **Outcome B** if the architecture/legacy gates pass while five-slot quality-redistribution semantics remain unverified. It becomes Outcome A only if authoritative client evidence resolves that operation within M6A without guessing.
+Final classification: **Outcome B**. Architecture, compatibility, expanded-layout, and benchmark gates pass, while five-slot quality-redistribution target-selection semantics remain unverified and are therefore disabled for `expanded_5`. Production remains `legacy_3` / `t<=2`.

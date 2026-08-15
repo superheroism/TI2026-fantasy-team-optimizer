@@ -254,3 +254,23 @@ No adaptive candidate qualified. Even the most complete candidate, A1, finished 
 **Decision: M5H Outcome C.** The separately frozen holdout was intentionally **not consumed**, so no holdout aggregate or selected-candidate file exists. Target `t=3` remains engineering-only, and production remains `t<=2`. The failure is mixed runtime + policy fidelity rather than semantic/integrity failure.
 
 The recommended next bounded technique is exact reuse of root-specific target-search preparation/evaluation work across screening and refinement passes. The objective should be to recover compute without introducing another fidelity approximation, then reassess adaptive refinement only if exact equivalence and measured headroom justify it. Do not begin target `t=4`.
+
+
+## M6A versioned board-layout baseline
+
+M6A measured the 9→15 emblem expansion before attempting new search optimization. Authoritative runner: Node `v22.23.2`, Linux x64; base SHA `b058010829d7b48c5968d2540acf65a40b64f2a7`. Production controls remained `legacy_3`, horizon `<=2`; no new search approximation was introduced, M5H holdout data were not consumed, and neither target `t=3` nor `t=4` was run. The committed artifact is `benchmarks/m6a-layout-comparison.json`.
+
+| Workload | expanded / legacy optimizer runtime | Interpretation |
+|---|---:|---|
+| stat-heavy `t=1` | 1.22× | One-step overhead remains modest despite more reachable outcomes. |
+| stat-heavy `t=2` | 1.76× | Frontier growth is material at the production horizon. |
+| quality-heavy `t=2` | 3.78× | Largest measured relative expansion; random/global quality exposes many more five-slot states. |
+| trait-heavy `t=2` | 2.19× | Repeated-color/all-matching operations enlarge continuation breadth. |
+| global-quality `t=2` | 1.93× | Not perfectly apples-to-apples because unresolved expanded redistribution is intentionally unavailable. |
+| target-probability `t=2` | 1.64× | Expanded run ≈6.75 s vs legacy ≈4.12 s on this runner. |
+
+The stat-heavy `t=1` probe makes the source of growth concrete: a representative Core green-stat transition increased from **5 reachable outcomes** on `legacy_3` to **21** on `expanded_5`, while terminal scoring remained approximately flat (~147 ms legacy vs ~151 ms expanded in the same benchmark process). Codec round-trip cost increased modestly (~4.66 µs to ~5.75 µs per encode/decode loop). This points away from the N-dimensional scoring kernel as the primary problem and toward transition branching, unique compact states, and downstream terminal evaluations.
+
+Target-probability `t=2` completed on both layouts after layout identity was propagated through the target candidate-preparation cache. The expanded run used about **9,885 target scalar states** and completed in **~6.75 s**; the legacy comparison completed in **~4.12 s**. This remains the highest absolute-cost workload in the matrix, so the exact-reuse opportunity identified by M5H is still important even though the immediate 9→15 expansion also creates substantial expected-score frontier growth.
+
+The benchmark completed **12/12** matrix cases with **0 errors and 0 timeouts**. M6A therefore establishes a usable expanded-board baseline rather than a performance workaround. No M5C/M5D policy was retuned.

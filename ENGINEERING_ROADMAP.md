@@ -492,3 +492,18 @@ M1 is intentionally limited to making the existing optimizer trustworthy and mea
 4. Existing tests remain green.
 5. Target-probability mode jointly chooses the free roster/title that maximizes `P(score >= target)`.
 6. Benchmarks produce repeatable cold/warm measurements suitable for later M2–M6 comparisons.
+
+
+---
+
+## M6A — Versioned board-layout expansion
+
+M6A interrupted the post-M5 deep-search sequence because the client geometry is expanding from three to five emblem slots per role. The engine now treats board geometry as ruleset/version data rather than a search invariant. `legacy_3` preserves the pre-M6A Core `R-G-R`, Mid `R-B-G`, and Support `B-G-B` geometry; `expanded_5` represents Core `R-G-R-G-R`, Mid `R-P-G-R-G`, and Support `P-G-P-G-P`. Purple is a physical slot color mapped to the existing blue-stat legality pool.
+
+Legacy compact IDs retain their original numeric namespace. Expanded board IDs occupy a disjoint versioned namespace, and layout identity is included in transition, scoring, target-preparation, and mechanics caches. The descriptive `BoardState` boundary remains explicit; old unversioned board objects resolve to `legacy_3`. Production remains pinned to `legacy_3` with modeled horizon `<=2`.
+
+The authoritative M6A Node 22 matrix completed 12/12 cases with no errors or timeouts. Relative to `legacy_3`, `expanded_5` optimizer runtime was 1.22× at stat-heavy `t=1`, then 1.76× stat-heavy, 3.78× quality-heavy, 2.19× trait-heavy, 1.93× global-quality, and 1.64× target-probability at `t=2`. The dominant effect is frontier/branch growth rather than terminal-scoring cost: for the representative stat-heavy one-step transition, reachable outcomes rose from 5 to 21 while terminal scoring stayed roughly flat.
+
+One expanded mechanic remains deliberately unresolved: the verified three-slot quality-redistribution rule decreases one slot and increases the other two, but current evidence does not define how the two increases are selected from four remaining slots on a five-slot banner. `expanded_5` therefore leaves that operation unavailable rather than guessing. This makes M6A **Outcome B** while preserving full legacy behavior.
+
+**Sequencing decision:** do not resume experimental target `t=3`, consume the untouched M5H holdout, or begin `t=4` yet. The new measurements make expanded-board `t=2` frontier containment the next problem to profile first; exact target-search reuse from M5H remains relevant, especially because target `t=2` still has the highest absolute cost in the M6A matrix, but the next package should be selected from the expanded frontier profile rather than assumed in advance.
