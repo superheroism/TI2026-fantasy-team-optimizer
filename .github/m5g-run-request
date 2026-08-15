@@ -1,3 +1,4 @@
 M5G_BASE_SHA=a138a7b968350e97261c2631c8298521d07b72d4
 corpus=9x3-frozen
 policy=aggressive-4-2-1+wide-12-8-4
+sentinel_timeout=deterministic-only-600s
