@@ -1,0 +1,1 @@
+Expanded browser acceptance fixture ground truth is documented in `SCREENSHOT_OCR_EXPANDED_FIXTURE_2026-08-16.md`. Browser validation remains required before merge. Deterministic CI covers build/type/lint/import behavior; live Tesseract.js field recovery is browser-authoritative.
