@@ -54,7 +54,7 @@ function responseSchema(body) {
   return {
     type: 'object',
     additionalProperties: false,
-    required: ['layoutId', 'banners', 'operationIds', 'fieldConfidence', 'warnings'],
+    required: ['layoutId', 'banners', 'operationIds', 'tokensRemaining', 'fieldConfidence', 'warnings'],
     properties: {
       layoutId: { type: 'string', enum: ['legacy_3', 'expanded_5'] },
       banners: {
@@ -99,7 +99,7 @@ function outputText(response) {
 function prompt(body) {
   const teams = ROLES.map(role => `${role.toUpperCase()}: ${(body.teamsByRole[role] ?? []).join(' | ')}`).join('\n');
   const actions = body.actions.map(action => `${action.id}: ${action.label}`).join('\n');
-  return `Read this Dota 2 TI 2026 Fantasy client screenshot and reconstruct only the visible optimizer state.\n\nDetermine whether every banner has 3 emblems (legacy_3) or 5 emblems (expanded_5). For Core, Mid, and Support read each emblem from left/top to right/bottom in canonical position order and return color, stat, quality tier, and trait. Read the selected team for each banner. Read the three offered reroll actions and map each to exactly one supplied action id. Read roll tokens only if visibly shown; otherwise return null.\n\nDo not infer obscured or unreadable text. When uncertain, choose the closest allowed categorical value only when the visual evidence is strong enough to identify it, assign confidence below 0.90, and add a warning. Use confidence 0.98+ only for plainly legible fields.\n\nAllowed teams by role:\n${teams}\n\nAllowed action catalogue:\n${actions}\n\nCanonical slot colors are a validation signal, not permission to invent missing cards. The full screenshot is authoritative.`;
+  return `Read this Dota 2 TI 2026 Fantasy client screenshot and reconstruct only the visible optimizer state.\n\nDetermine whether every banner has 3 emblems (legacy_3) or 5 emblems (expanded_5). For Core, Mid, and Support read each emblem in canonical position order and return color, stat, quality tier, and trait. Read the selected team for each banner. Read the three offered reroll actions and map each to exactly one supplied action id. Read roll tokens only if visibly shown; otherwise return null.\n\nDo not invent obscured or unreadable values. For each field that is not plainly legible, add a fieldConfidence entry below 0.90 and a warning. Use these exact confidence path forms so the UI can highlight the affected board element: banners.core.selectedTeam, banners.mid.selectedTeam, banners.support.selectedTeam, banners.<role>.emblems.<zero-based-index>.stat, banners.<role>.emblems.<zero-based-index>.qualityTier, banners.<role>.emblems.<zero-based-index>.trait, operationIds.<index>, tokensRemaining, or layoutId. Confidence 0.98+ is reserved for plainly legible fields.\n\nAllowed teams by role:\n${teams}\n\nAllowed action catalogue:\n${actions}\n\nCanonical slot colors are a validation signal, not permission to invent missing cards. The full screenshot is authoritative.`;
 }
 
 export default async function handler(req, res) {
@@ -107,7 +107,12 @@ export default async function handler(req, res) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return json(res, 503, { error: 'OPENAI_API_KEY is not configured on the screenshot parser service.' });
 
-  const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+  let body;
+  try {
+    body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+  } catch {
+    return json(res, 400, { error: 'Request body is not valid JSON.' });
+  }
   if (!validRequest(body)) return json(res, 400, { error: 'Invalid screenshot import request.' });
   for (const role of ROLES) {
     if (!Array.isArray(body.teamsByRole[role]) || body.teamsByRole[role].length === 0) return json(res, 400, { error: `Missing ${role} team catalogue.` });
@@ -147,7 +152,12 @@ export default async function handler(req, res) {
   const response = await upstream.json();
   const text = outputText(response);
   if (!text) return json(res, 502, { error: 'Vision model returned no structured output.' });
-  const parsed = JSON.parse(text);
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return json(res, 502, { error: 'Vision model returned invalid structured output.' });
+  }
   if (parsed.tokensRemaining === null) delete parsed.tokensRemaining;
   return json(res, 200, parsed);
 }
