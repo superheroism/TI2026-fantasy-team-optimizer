@@ -39,8 +39,6 @@ export function recommendNextAction(state, data, uniformStatFallback = true, sea
     const horizon = state.tokensRemaining <= 0 ? 0 : Math.max(1, Math.min(state.tokensRemaining, requestedHorizon));
     const layoutId = state.board.layoutId ?? 'legacy_3';
     let adaptiveFallbackReason;
-    // Production defaults route expanded_5 t=2 through the M6D-certified policy.
-    // Any explicit engineering horizon override preserves the historical exact-oracle path.
     if (layoutId === 'expanded_5' && horizon === 2 && searchOptions.modeledHorizonOverride === undefined && !searchOptions.engineeringForceExact) {
         if (isCertifiedExpandedT2PolicyValid(CERTIFIED_EXPANDED_T2_POLICY)) {
             try {
@@ -75,7 +73,7 @@ export function recommendNextAction(state, data, uniformStatFallback = true, sea
     terminal.seedCurrent(current);
     valueFunction.seedTerminalUtility(initialEngine, stopUtility);
     const rows = [{
-            action: { kind: 'stop' }, expectedFinalUtility: stopUtility, expectedFinalScore: current.expected,
+            action: { kind: 'stop' }, expectedFinalUtility: stopUtility, expectedFinalScore: current.expected, pImprove: 0,
             tokensAfter: state.tokensRemaining, assetAtRisk: 'none', confidence: current.confidence, status: 'evaluated',
             note: 'Preserves the board; free team-by-role selection is re-optimized.',
         }];
@@ -120,13 +118,14 @@ export function recommendNextAction(state, data, uniformStatFallback = true, sea
         if (state.menuRerollAvailable) {
             const nextTokens = state.tokensRemaining - 1;
             if (nextTokens === 0) {
-                rows.push({ action: { kind: 'menu_reroll' }, expectedFinalUtility: stopUtility, expectedFinalScore: current.expected, tokensAfter: 0,
+                rows.push({ action: { kind: 'menu_reroll' }, expectedFinalUtility: stopUtility, expectedFinalScore: current.expected, pImprove: 0, tokensAfter: 0,
                     assetAtRisk: 'last token; board preserved', confidence: current.confidence, status: 'evaluated',
                     note: 'Fresh menu cannot be acted on with 0 tokens remaining.' });
             }
             else {
                 const ev = valueFunction.V(initialEngine, Math.max(0, horizon - 1));
-                rows.push({ action: { kind: 'menu_reroll' }, expectedFinalUtility: ev, expectedFinalScore: current.expected, tokensAfter: nextTokens,
+                const pImprove = continuation.freshMenuImprovementProbability(initialEngine, Math.max(0, horizon - 1));
+                rows.push({ action: { kind: 'menu_reroll' }, expectedFinalUtility: ev, expectedFinalScore: current.expected, pImprove, tokensAfter: nextTokens,
                     assetAtRisk: '1 token; board preserved', confidence: current.confidence, status: 'evaluated',
                     note: menuModel.mode === 'known_uniform'
                         ? `Fresh menu is a uniform draw of 3 distinct actions from 20; expectation uses the exact combinatorial operator equivalent to ${TOTAL_UNIFORM_MENUS.toLocaleString()} menus.`
