@@ -32,6 +32,12 @@ async function runtime() { if (window.Tesseract)
 } const s = document.createElement('script'); s.src = OCR_CDN; s.async = true; s.dataset.localOcr = '1'; s.onload = () => ok(); s.onerror = () => no(new Error('Local OCR failed to load.')); document.head.appendChild(s); }); if (!window.Tesseract)
     throw new Error('Local OCR runtime is unavailable.'); return window.Tesseract; }
 async function getWorker() { workerPromise ??= (async () => { const T = await runtime(), w = await T.createWorker('eng'); await w.setParameters({ tessedit_pageseg_mode: '3' }); return w; })(); return await workerPromise; }
+export async function diagnoseLocalScreenshotOcr(file) {
+    const img = await decode(file), w = await getWorker(), started = performance.now();
+    const r = await w.recognize(file, {}, { tsv: true });
+    const rawText = r.data.text ?? '', rawTsv = r.data.tsv ?? '', words = parse(rawTsv);
+    return { sourceWidth: img.naturalWidth, sourceHeight: img.naturalHeight, fileType: file.type, fileBytes: file.size, elapsedMs: performance.now() - started, textLength: rawText.length, tsvLength: rawTsv.length, tsvLines: rawTsv ? rawTsv.split(/\r?\n/).length : 0, parsedWordCount: words.length, sampleText: rawText.replace(/\s+/g, ' ').trim().slice(0, 500), sampleWords: words.slice(0, 30).map(x => x.text) };
+}
 export async function warmLocalScreenshotOcr() { await getWorker(); }
 async function decode(file) { if (!file.type.startsWith('image/'))
     throw new Error('Choose an image screenshot (PNG, JPEG, or WebP).'); return await new Promise((ok, no) => { const i = new Image(), u = URL.createObjectURL(file); i.onload = () => { URL.revokeObjectURL(u); ok(i); }; i.onerror = () => { URL.revokeObjectURL(u); no(new Error('The selected screenshot could not be decoded.')); }; i.src = u; }); }

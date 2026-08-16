@@ -10,7 +10,7 @@ const LOCALIZE_MAX=1100, EXTRACT_MAX=1440, DIRECT_NATIVE_MAX_PIXELS=2_000_000;
 interface Word { text:string; confidence:number; left:number; top:number; width:number; height:number; lineKey:string; }
 interface Pass { words:Word[]; elapsedMs:number; width:number; height:number; }
 interface Rect { left:number;top:number;width:number;height:number; }
-interface Worker { recognize(image:HTMLCanvasElement,options?:Record<string,unknown>,output?:Record<string,boolean>):Promise<{data:{tsv?:string}}>; setParameters(params:Record<string,unknown>):Promise<unknown>; }
+interface Worker { recognize(image:HTMLCanvasElement|File,options?:Record<string,unknown>,output?:Record<string,boolean>):Promise<{data:{text?:string;tsv?:string}}>; setParameters(params:Record<string,unknown>):Promise<unknown>; }
 interface Tess { createWorker(language?:string):Promise<Worker>; }
 declare global { interface Window { Tesseract?:Tess; } }
 export interface LocalScreenshotOcrMetrics { sourceWidth:number;sourceHeight:number;localizationWidth:number;localizationHeight:number;extractionWidth:number;extractionHeight:number;localizationMs:number;extractionMs:number;totalMs:number;croppedPixelFraction:number; }
@@ -25,6 +25,13 @@ const cx=(w:Word)=>w.left+w.width/2,cy=(w:Word)=>w.top+w.height/2,text=(ws:reado
 function groups(ws:readonly Word[]):Map<string,Word[]>{const m=new Map<string,Word[]>();for(const w of ws){const r=m.get(w.lineKey)??[];r.push(w);m.set(w.lineKey,r);}return m;}
 async function runtime():Promise<Tess>{if(window.Tesseract)return window.Tesseract;await new Promise<void>((ok,no)=>{const old=document.querySelector<HTMLScriptElement>('script[data-local-ocr]');if(old){old.addEventListener('load',()=>ok(),{once:true});old.addEventListener('error',()=>no(new Error('Local OCR failed to load.')),{once:true});return;}const s=document.createElement('script');s.src=OCR_CDN;s.async=true;s.dataset.localOcr='1';s.onload=()=>ok();s.onerror=()=>no(new Error('Local OCR failed to load.'));document.head.appendChild(s);});if(!window.Tesseract)throw new Error('Local OCR runtime is unavailable.');return window.Tesseract;}
 async function getWorker():Promise<Worker>{workerPromise??=(async()=>{const T=await runtime(),w=await T.createWorker('eng');await w.setParameters({tessedit_pageseg_mode:'3'});return w;})();return await workerPromise;}
+export interface BrowserOcrDiagnostic { sourceWidth:number;sourceHeight:number;fileType:string;fileBytes:number;elapsedMs:number;textLength:number;tsvLength:number;tsvLines:number;parsedWordCount:number;sampleText:string;sampleWords:string[]; }
+export async function diagnoseLocalScreenshotOcr(file:File):Promise<BrowserOcrDiagnostic>{
+ const img=await decode(file),w=await getWorker(),started=performance.now();
+ const r=await w.recognize(file,{}, {tsv:true});
+ const rawText=r.data.text??'',rawTsv=r.data.tsv??'',words=parse(rawTsv);
+ return {sourceWidth:img.naturalWidth,sourceHeight:img.naturalHeight,fileType:file.type,fileBytes:file.size,elapsedMs:performance.now()-started,textLength:rawText.length,tsvLength:rawTsv.length,tsvLines:rawTsv?rawTsv.split(/\r?\n/).length:0,parsedWordCount:words.length,sampleText:rawText.replace(/\s+/g,' ').trim().slice(0,500),sampleWords:words.slice(0,30).map(x=>x.text)};
+}
 export async function warmLocalScreenshotOcr():Promise<void>{await getWorker();}
 async function decode(file:File):Promise<HTMLImageElement>{if(!file.type.startsWith('image/'))throw new Error('Choose an image screenshot (PNG, JPEG, or WebP).');return await new Promise((ok,no)=>{const i=new Image(),u=URL.createObjectURL(file);i.onload=()=>{URL.revokeObjectURL(u);ok(i);};i.onerror=()=>{URL.revokeObjectURL(u);no(new Error('The selected screenshot could not be decoded.'));};i.src=u;});}
 function canvas(i:HTMLImageElement,max:number,c?:Rect):HTMLCanvasElement{const s=c??{left:0,top:0,width:i.naturalWidth,height:i.naturalHeight},k=Math.min(1,max/Math.max(s.width,s.height)),o=document.createElement('canvas');o.width=Math.max(1,Math.round(s.width*k));o.height=Math.max(1,Math.round(s.height*k));const x=o.getContext('2d');if(!x)throw new Error('Canvas image processing is unavailable.');x.drawImage(i,s.left,s.top,s.width,s.height,0,0,o.width,o.height);return o;}
