@@ -1,0 +1,28 @@
+name: M6G diagnostic
+on:
+  push:
+    branches: [agent/m6g-ui-application-decomposition]
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Capture typecheck
+        shell: bash
+        run: |
+          set +e
+          npm run typecheck > m6g-typecheck.txt 2>&1
+          code=$?
+          echo "$code" > m6g-typecheck-exit.txt
+          exit 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m6g-typecheck
+          path: |
+            m6g-typecheck.txt
+            m6g-typecheck-exit.txt
