@@ -6,32 +6,50 @@ function setStatus(text, kind = 'idle') {
     status.textContent = text;
     status.dataset.kind = kind;
 }
-function reviewPaths(result) {
-    return result.lowConfidenceFields.map(field => field.path);
+function reviewPaths(result) { return result.lowConfidenceFields.map(field => field.path); }
+function clearActionReviewHighlights() {
+    document.querySelectorAll('.op-card.screenshot-review-target-operation').forEach(card => card.classList.remove('screenshot-review-target-operation'));
+}
+function applyActionReviewHighlights(paths) {
+    clearActionReviewHighlights();
+    for (const path of paths) {
+        const match = path.match(/^operationIds\.(\d+)$/) ?? path.match(/^operationIds\[(\d+)\]$/);
+        if (!match)
+            continue;
+        const index = Number(match[1]);
+        if (!Number.isInteger(index))
+            continue;
+        document.querySelector(`.op-card[data-op="${index}"]`)?.classList.add('screenshot-review-target-operation');
+    }
+}
+function clearAllReviewHighlights() {
+    clearScreenshotReviewHighlights();
+    clearActionReviewHighlights();
 }
 export function bindScreenshotImport(state, callbacks) {
     const button = $('#screenshot-import');
     const input = $('#screenshot-file');
     const optimize = $('#optimize');
-    const applyImport = (result) => {
+    const applyImport = (result, elapsedMs) => {
         state.importScreenshot(result.board, result.menu, result.tokensRemaining);
         callbacks.renderStructure();
         callbacks.afterApply();
         const paths = reviewPaths(result);
         applyScreenshotReviewHighlights(paths);
+        applyActionReviewHighlights(paths);
+        const elapsed = elapsedMs < 1000 ? `${Math.round(elapsedMs)} ms` : `${(elapsedMs / 1000).toFixed(1)} s`;
         if (result.requiresReview) {
             const count = Math.max(paths.length, result.warnings.length);
-            setStatus(`Imported board and actions · review ${count} flagged field${count === 1 ? '' : 's'} outlined in red before optimizing.`, 'error');
+            setStatus(`Imported in ${elapsed} · review ${count} flagged field${count === 1 ? '' : 's'} outlined in red before optimizing.`, 'error');
         }
         else {
-            setStatus(`Imported ${result.board.core.emblems.length}-emblem board and three actions.`, 'success');
+            setStatus(`Imported ${result.board.core.emblems.length}-emblem board and three actions in ${elapsed}.`, 'success');
         }
     };
     optimize.addEventListener('click', () => {
-        clearScreenshotReviewHighlights();
-        if ($('#screenshot-import-status').dataset.kind === 'error') {
+        clearAllReviewHighlights();
+        if ($('#screenshot-import-status').dataset.kind === 'error')
             setStatus('Imported screenshot confirmed by optimization.', 'success');
-        }
     }, { capture: true });
     button.addEventListener('click', () => input.click());
     input.addEventListener('change', async () => {
@@ -47,12 +65,13 @@ export function bindScreenshotImport(state, callbacks) {
         button.disabled = true;
         button.textContent = 'Reading Screenshot…';
         setStatus('Reading board, teams, emblems, and available actions…', 'working');
+        const started = performance.now();
         try {
             const raw = await requestScreenshotImport(file, data);
-            applyImport(validateScreenshotImport(raw, data, state.board));
+            applyImport(validateScreenshotImport(raw, data, state.board, state.menu), performance.now() - started);
         }
         catch (error) {
-            clearScreenshotReviewHighlights();
+            clearAllReviewHighlights();
             setStatus(error instanceof Error ? error.message : String(error), 'error');
         }
         finally {

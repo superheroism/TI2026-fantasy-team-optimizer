@@ -45,17 +45,10 @@ function asConfidence(value) {
     return fields;
 }
 export function screenshotImportRequest(fileDataUrl, data) {
-    const teamsByRole = Object.fromEntries(ROLES.map(role => [
-        role,
-        [...new Set(data.players.filter(player => player.role === role).map(player => player.team))].sort(),
-    ]));
-    return {
-        imageDataUrl: fileDataUrl,
-        teamsByRole,
-        actions: ACTION_CATALOG.map(action => ({ id: action.id, label: action.label })),
-    };
+    const teamsByRole = Object.fromEntries(ROLES.map(role => [role, [...new Set(data.players.filter(player => player.role === role).map(player => player.team))].sort()]));
+    return { imageDataUrl: fileDataUrl, teamsByRole, actions: ACTION_CATALOG.map(action => ({ id: action.id, label: action.label })) };
 }
-export function validateScreenshotImport(raw, data, currentBoard) {
+export function validateScreenshotImport(raw, data, currentBoard, currentMenu) {
     assertRecord(raw, 'Screenshot import');
     const layoutId = asLayoutId(raw.layoutId);
     assertRecord(raw.banners, 'Screenshot banners');
@@ -69,9 +62,8 @@ export function validateScreenshotImport(raw, data, currentBoard) {
         if (!Array.isArray(rawEmblems))
             throw new Error(`${role} emblems are missing.`);
         const slots = layout.roles[role];
-        if (rawEmblems.length !== slots.length) {
+        if (rawEmblems.length !== slots.length)
             throw new Error(`${role} has ${rawEmblems.length} parsed emblems but ${layoutId} requires ${slots.length}.`);
-        }
         const emblems = slots.map((slot, index) => {
             const candidate = rawEmblems[index];
             assertRecord(candidate, `${role} emblem ${index + 1}`);
@@ -79,59 +71,48 @@ export function validateScreenshotImport(raw, data, currentBoard) {
                 throw new Error(`${role} emblem ${index + 1} has the wrong position.`);
             if (candidate.color !== slot.color)
                 throw new Error(`${role} emblem ${index + 1} color conflicts with the ${layoutId} layout.`);
-            if (typeof candidate.stat !== 'string' || !isLegalStat(slot.color, candidate.stat)) {
+            if (typeof candidate.stat !== 'string' || !isLegalStat(slot.color, candidate.stat))
                 throw new Error(`${role} emblem ${index + 1} returned an illegal ${slot.color} stat.`);
-            }
-            const emblem = {
-                id: `${role}-${slot.index}`,
-                position: slot.index,
-                color: slot.color,
-                stat: candidate.stat,
-                qualityTier: asQualityTier(candidate.qualityTier, `${role} emblem ${index + 1}`),
-                trait: asTrait(candidate.trait, `${role} emblem ${index + 1}`),
-            };
-            return emblem;
+            return { id: `${role}-${slot.index}`, position: slot.index, color: slot.color, stat: candidate.stat, qualityTier: asQualityTier(candidate.qualityTier, `${role} emblem ${index + 1}`), trait: asTrait(candidate.trait, `${role} emblem ${index + 1}`) };
         });
-        board[role] = {
-            role,
-            selectedTeam,
-            expectedSeries: currentBoard[role].expectedSeries,
-            emblems,
-        };
+        board[role] = { role, selectedTeam, expectedSeries: currentBoard[role].expectedSeries, emblems };
     }
     if (layoutId !== 'legacy_3')
         board.layoutId = layoutId;
     if (!Array.isArray(raw.operationIds) || raw.operationIds.length !== 3)
-        throw new Error('Screenshot parser must return exactly three offered actions.');
-    const ids = raw.operationIds.map(value => {
+        throw new Error('Screenshot parser must return exactly three offered-action slots.');
+    const fieldConfidence = asConfidence(raw.fieldConfidence);
+    const warnings = Array.isArray(raw.warnings) ? raw.warnings.filter((warning) => typeof warning === 'string' && warning.trim().length > 0) : [];
+    const resolvedIds = [];
+    raw.operationIds.forEach((value, index) => {
+        if (value === null) {
+            resolvedIds.push(currentMenu[index].id);
+            if (!fieldConfidence.some(field => field.path === `operationIds.${index}`))
+                fieldConfidence.push({ path: `operationIds.${index}`, confidence: 0 });
+            warnings.push(`Action ${index + 1} was not visible; existing action preserved until reviewed.`);
+            return;
+        }
         if (typeof value !== 'string' || !ACTION_BY_ID.has(value))
             throw new Error(`Screenshot parser returned unknown action: ${String(value)}.`);
-        return value;
+        resolvedIds.push(value);
     });
-    if (new Set(ids).size !== 3)
+    const visibleIds = raw.operationIds.filter((value) => typeof value === 'string');
+    if (new Set(visibleIds).size !== visibleIds.length)
         throw new Error('Screenshot parser returned duplicate offered actions.');
-    const menu = ids.map(id => cloneAction(ACTION_BY_ID.get(id)));
+    const menu = resolvedIds.map(id => cloneAction(ACTION_BY_ID.get(id)));
     let tokensRemaining;
     if (raw.tokensRemaining !== undefined) {
         if (!Number.isInteger(raw.tokensRemaining) || Number(raw.tokensRemaining) < 0)
             throw new Error('Screenshot parser returned an invalid token count.');
         tokensRemaining = Number(raw.tokensRemaining);
     }
-    const warnings = Array.isArray(raw.warnings) ? raw.warnings.filter((warning) => typeof warning === 'string' && warning.trim().length > 0) : [];
-    const fieldConfidence = asConfidence(raw.fieldConfidence);
     const lowConfidenceFields = fieldConfidence.filter(field => field.confidence < REVIEW_THRESHOLD);
-    const result = {
-        board,
-        menu,
-        warnings,
-        lowConfidenceFields,
-        requiresReview: warnings.length > 0 || lowConfidenceFields.length > 0,
-    };
+    const result = { board, menu, warnings, lowConfidenceFields, requiresReview: warnings.length > 0 || lowConfidenceFields.length > 0 };
     if (tokensRemaining !== undefined)
         result.tokensRemaining = tokensRemaining;
     return result;
 }
-export async function fileToScreenshotDataUrl(file, maxDimension = 2200) {
+export async function fileToScreenshotDataUrl(file, maxDimension = 1800) {
     if (!file.type.startsWith('image/'))
         throw new Error('Choose an image screenshot (PNG, JPEG, or WebP).');
     const source = await new Promise((resolve, reject) => {
@@ -149,21 +130,15 @@ export async function fileToScreenshotDataUrl(file, maxDimension = 2200) {
     if (!context)
         throw new Error('Canvas image processing is unavailable in this browser.');
     context.drawImage(source, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/jpeg', 0.92);
+    return canvas.toDataURL('image/jpeg', 0.9);
 }
 export async function requestScreenshotImport(file, data) {
     const endpoint = document.querySelector('meta[name="screenshot-import-endpoint"]')?.content || '/api/screenshot-import';
     const imageDataUrl = await fileToScreenshotDataUrl(file);
-    const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(screenshotImportRequest(imageDataUrl, data)),
-    });
+    const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(screenshotImportRequest(imageDataUrl, data)) });
     if (!response.ok) {
         const detail = await response.text().catch(() => '');
-        throw new Error(response.status === 404
-            ? 'Screenshot recognition endpoint is not deployed for this site.'
-            : `Screenshot recognition failed (${response.status})${detail ? `: ${detail.slice(0, 240)}` : '.'}`);
+        throw new Error(response.status === 404 ? 'Screenshot recognition endpoint is not deployed for this site.' : `Screenshot recognition failed (${response.status})${detail ? `: ${detail.slice(0, 240)}` : '.'}`);
     }
     return await response.json();
 }
