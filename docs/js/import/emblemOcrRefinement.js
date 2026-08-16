@@ -46,6 +46,7 @@ else
     raw.fieldConfidence.push({ path, confidence }); }
 /** Retry only uncertain stat titles using tiny source-resolution emblem-title crops. */
 export async function refineUncertainEmblemStats(file, data, raw) {
+    void data;
     const layout = BOARD_LAYOUTS[raw.layoutId], targets = [];
     for (const role of ROLES)
         for (let i = 0; i < layout.roles[role].length; i++) {
@@ -59,7 +60,8 @@ export async function refineUncertainEmblemStats(file, data, raw) {
     const tierWords = words.filter(x => sim(x.text, 'TIER') >= .62), xs = cluster(tierWords.map(cx), Math.max(20, src.naturalWidth * .035));
     if (xs.length < 3)
         return raw;
-    // Three right-side TIER columns are more stable than arbitrary screenshot bounds.
+    // The left edge of each emblem card is anchored by its TIER label. Three TIER x-clusters
+    // are substantially more stable than arbitrary screenshot bounds or player-art geometry.
     const centers = xs.slice(-3).sort((a, b) => a - b), roleCenter = { core: centers[0], mid: centers[1], support: centers[2] };
     const allRows = cluster(tierWords.map(cy), Math.max(9, src.naturalHeight * .012));
     const expected = raw.layoutId === 'expanded_5' ? 5 : 3;
@@ -72,8 +74,9 @@ export async function refineUncertainEmblemStats(file, data, raw) {
         const x = roleCenter[t.role], y = rows[t.index];
         if (x === undefined || y === undefined)
             continue;
-        // Stat title sits left of the TIER label in the same emblem card. Keep native pixels; no upscale.
-        const left = Math.max(0, x - spacing * .47), top = Math.max(0, y - pitch * .48), right = Math.min(src.naturalWidth, x - spacing * .08), bottom = Math.min(src.naturalHeight, y + pitch * .18);
+        // Live screenshots show TIER near the card's left edge; the stat title is above it and
+        // extends to the right. Crop that title band from native source pixels without upscaling.
+        const left = Math.max(0, x - spacing * .035), top = Math.max(0, y - pitch * .43), right = Math.min(src.naturalWidth, x + spacing * .37), bottom = Math.min(src.naturalHeight, y - pitch * .06);
         if (right - left < 20 || bottom - top < 12)
             continue;
         const r = await w.recognize(canvas(src, left, top, right - left, bottom - top), { tessedit_pageseg_mode: '6' }, { tsv: true }), rw = parse(r.data.tsv), s = rw.sort((a, b) => a.top - b.top || a.left - b.left).map(x => x.text).join(' ');
