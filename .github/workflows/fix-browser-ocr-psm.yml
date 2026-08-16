@@ -1,0 +1,49 @@
+name: Fix browser OCR page segmentation
+on:
+  push:
+    branches: [agent/screenshot-ocr-live-validation]
+permissions:
+  contents: write
+jobs:
+  fix:
+    if: "!contains(github.event.head_commit.message, '[browser-psm]')"
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/screenshot-ocr-live-validation
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - name: Apply PSM fix
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('src/import/localScreenshotOcr.ts')
+          s=p.read_text()
+          s=s.replace("interface Worker { recognize(image:HTMLCanvasElement,options?:Record<string,unknown>,output?:Record<string,boolean>):Promise<{data:{tsv?:string}}>; }", "interface Worker { recognize(image:HTMLCanvasElement,options?:Record<string,unknown>,output?:Record<string,boolean>):Promise<{data:{tsv?:string}}>; setParameters(params:Record<string,unknown>):Promise<unknown>; }")
+          old="async function getWorker():Promise<Worker>{workerPromise??=(async()=>{const T=await runtime();return await T.createWorker('eng');})();return await workerPromise;}"
+          new="async function getWorker():Promise<Worker>{workerPromise??=(async()=>{const T=await runtime(),w=await T.createWorker('eng');await w.setParameters({tessedit_pageseg_mode:'3'});return w;})();return await workerPromise;}"
+          if old not in s: raise SystemExit('getWorker pattern not found')
+          s=s.replace(old,new)
+          p.write_text(s)
+
+          p=Path('src/import/emblemOcrRefinement.ts')
+          s=p.read_text()
+          s=s.replace("interface Worker{recognize(image:HTMLCanvasElement,options?:Record<string,unknown>,output?:Record<string,boolean>):Promise<{data:{tsv?:string}}>;}", "interface Worker{recognize(image:HTMLCanvasElement,options?:Record<string,unknown>,output?:Record<string,boolean>):Promise<{data:{tsv?:string}}>;setParameters(params:Record<string,unknown>):Promise<unknown>;}")
+          old="async function worker():Promise<Worker>{workerPromise??=(async()=>{const T=(window as unknown as {Tesseract?:Tess}).Tesseract;if(!T)throw new Error('Local OCR runtime is unavailable for emblem refinement.');return await T.createWorker('eng');})();return workerPromise;}"
+          new="async function worker():Promise<Worker>{workerPromise??=(async()=>{const T=(window as unknown as {Tesseract?:Tess}).Tesseract;if(!T)throw new Error('Local OCR runtime is unavailable for emblem refinement.');const w=await T.createWorker('eng');await w.setParameters({tessedit_pageseg_mode:'6'});return w;})();return workerPromise;}"
+          if old not in s: raise SystemExit('refinement worker pattern not found')
+          s=s.replace(old,new)
+          p.write_text(s)
+          PY
+      - run: npm run build
+      - name: Commit fix and generated outputs
+        run: |
+          rm .github/workflows/fix-browser-ocr-psm.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/import/localScreenshotOcr.ts src/import/emblemOcrRefinement.ts build docs .github/workflows/fix-browser-ocr-psm.yml
+          git commit -m "Fix browser OCR page segmentation [browser-psm]"
+          git push origin HEAD:agent/screenshot-ocr-live-validation
