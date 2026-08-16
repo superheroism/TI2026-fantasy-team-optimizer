@@ -1,0 +1,40 @@
+name: v1 version finalize
+
+on:
+  push:
+    branches:
+      - agent/v1-release
+    paths:
+      - .github/workflows/v1-version-finalize.yml
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/v1-release
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Set release version
+        run: npm version 1.0.0 --no-git-tag-version
+      - name: Final release gate
+        run: |
+          npm run format:check
+          npm run test:ci
+      - name: Commit version and remove temporary workflow
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git rm .github/workflows/v1-version-finalize.yml
+          git add package.json package-lock.json
+          git commit -m "set version 1.0.0"
+          git push
