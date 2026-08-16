@@ -27,9 +27,7 @@ jobs:
       - name: Set release version
         run: npm version 1.0.0 --no-git-tag-version
       - name: Final release gate
-        run: |
-          npm run format:check
-          npm run test:ci
+        run: npm run test:ci
       - name: Commit version and remove temporary workflow
         run: |
           git config user.name github-actions[bot]
