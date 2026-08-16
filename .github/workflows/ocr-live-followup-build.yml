@@ -1,0 +1,40 @@
+name: OCR live follow-up branch build
+
+on:
+  push:
+    branches:
+      - agent/ocr-live-followup
+    paths:
+      - scripts/apply-ocr-live-followup.py
+      - .github/workflows/ocr-live-followup-build.yml
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Apply browser-evidence follow-up
+        run: python scripts/apply-ocr-live-followup.py
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+      - run: node --test tests/ocr-domain-match.test.mjs tests/screenshot-import.test.mjs
+      - name: Commit source, generated artifacts, evidence, and remove temporary harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm scripts/apply-ocr-live-followup.py .github/workflows/ocr-live-followup-build.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m 'Refine unresolved screenshot OCR fields at native resolution'
+          git push origin HEAD:agent/ocr-live-followup
