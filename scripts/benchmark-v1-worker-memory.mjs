@@ -17,6 +17,35 @@ try{
   const page=await browser.newPage();
   await page.goto(`http://127.0.0.1:${port}/`,{waitUntil:'networkidle0'});
 
+  // Dedicated workers are child targets of the page and are not exposed as top-level
+  // browser targets in all Chromium/Puppeteer combinations. Attach through the page's
+  // Target domain and forward CDP commands to the worker session explicitly.
+  const pageSession=await page.target().createCDPSession();
+  let workerSessionId=null,workerTargetUrl=null,commandSequence=0;
+  const pendingCommands=new Map();
+  pageSession.on('Target.attachedToTarget',event=>{
+    if(event.targetInfo.type==='worker'&&event.targetInfo.url.includes('optimizer.worker')){
+      workerSessionId=event.sessionId;workerTargetUrl=event.targetInfo.url;
+    }
+  });
+  pageSession.on('Target.receivedMessageFromTarget',event=>{
+    if(event.sessionId!==workerSessionId)return;
+    let message;try{message=JSON.parse(event.message);}catch{return;}
+    if(!message.id)return;
+    const pending=pendingCommands.get(message.id);if(!pending)return;
+    pendingCommands.delete(message.id);
+    if(message.error)pending.reject(new Error(`${message.error.code}: ${message.error.message}`));
+    else pending.resolve(message.result??{});
+  });
+  await pageSession.send('Target.setAutoAttach',{autoAttach:true,waitForDebuggerOnStart:false,flatten:false});
+  async function waitForWorker(){for(let i=0;i<100&&!workerSessionId;i++)await sleep(50);if(!workerSessionId)throw new Error('Optimizer worker child target was not attached within 5 seconds.');}
+  async function workerSend(method,params={}){
+    await waitForWorker();const id=++commandSequence;
+    const response=new Promise((resolve,reject)=>pendingCommands.set(id,{resolve,reject}));
+    await pageSession.send('Target.sendMessageToTarget',{sessionId:workerSessionId,message:JSON.stringify({id,method,params})});
+    return response;
+  }
+
   await page.evaluate(async()=>{
     const [{OptimizerWorkerClient},{defaultBoard},{ACTION_BY_ID,cloneAction},{BOARD_LAYOUTS}]=await Promise.all([
       import('/js/ui/optimizerClient.js'),import('/js/data/defaultState.js'),import('/js/data/actionCatalog.js'),import('/js/domain/rules.js')
@@ -58,25 +87,18 @@ try{
     };
   });
 
-  let workerSession=null;
-  let workerTargetUrl=null;
+  let heapProfilerEnabled=false;
   const samples=[];
   for(let i=0;i<requestCount;i++){
     const run=await page.evaluate(index=>globalThis.__v1MemorySoak.run(index),i);
-    if(!workerSession){
-      const target=await browser.waitForTarget(t=>t.type()==='worker'&&t.url().includes('optimizer.worker'),{timeout:5000});
-      workerTargetUrl=target.url();
-      workerSession=await target.createCDPSession();
-      await workerSession.send('Runtime.enable');
-      await workerSession.send('HeapProfiler.enable');
-    }
-    await workerSession.send('HeapProfiler.collectGarbage');
-    const heap=await workerSession.send('Runtime.getHeapUsage');
+    if(!heapProfilerEnabled){await workerSend('Runtime.enable');await workerSend('HeapProfiler.enable');heapProfilerEnabled=true;}
+    await workerSend('HeapProfiler.collectGarbage');
+    const heap=await workerSend('Runtime.getHeapUsage');
     samples.push({request:i+1,...run,workerUsedHeapBytes:heap.usedSize,workerTotalHeapBytes:heap.totalSize});
     console.log(`${i+1}/${requestCount} ${run.layout} ${run.objective} t=${run.tokens} worker=${(heap.usedSize/1048576).toFixed(1)} MiB wall=${run.wallMs.toFixed(0)} ms`);
   }
   await page.evaluate(()=>globalThis.__v1MemorySoak.dispose());
-  await workerSession?.detach();
+  await pageSession.detach();
   await browser.close();
 
   const retained=samples.slice(warmupCount).map(x=>x.workerUsedHeapBytes);
