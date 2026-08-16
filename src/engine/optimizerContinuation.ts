@@ -63,6 +63,7 @@ export interface ContinuationRuntime {
   readonly menuModel:MenuModel;
   transitionsFor(engine:EngineState,role:Role,operation:OfferedOperation):readonly EngineTransition[];
   targetedContinuation(engine:EngineState,operation:OfferedOperation,role:Role,tokensRemaining:number,phase:ValueActionPhase):TargetedContinuation;
+  freshMenuImprovementProbability(engine:EngineState,tokensRemaining:number):number;
   diagnostics():ContinuationDiagnostics;
 }
 
@@ -114,6 +115,7 @@ export function createContinuationRuntime(
   const missesByDepth=new Map<number,number>(),bypassesByDepth=new Map<number,number>();
   const transitionEvaluationsByDepth=new Map<number,number>();
   const outcomesBeforeByDepth=new Map<number,number>(),outcomesAfterByDepth=new Map<number,number>();
+  const freshMenuImproveMemo=new Map<string,number>();
   let valueFunction:FiniteHorizonValueFunction<EngineState,OfferedOperation,OptimizerState['menu']>;
 
   const targetedContinuation=(
@@ -191,8 +193,18 @@ export function createContinuationRuntime(
     actionValue:(engine,operation,tokensRemaining,phase)=>wideningRuntime
       ?wideningRuntime.evaluate(engine,operation,tokensRemaining,phase)
       :fullActionValue(engine,operation,tokensRemaining,phase),
-    freshMenuExpectedUtility:(_engine,_tokensRemaining,baseline,operationValues)=>menuModel.expectedFreshMenuUtility(operationValues,baseline),
+    freshMenuExpectedUtility:(engine,tokensRemaining,baseline,operationValues)=>{
+      freshMenuImproveMemo.set(`${engine.id}|${tokensRemaining}`,menuModel.freshMenuImprovementProbability(operationValues,terminal.searchUtility(engine)));
+      return menuModel.expectedFreshMenuUtility(operationValues,baseline);
+    },
   });
+
+  const freshMenuImprovementProbability=(engine:EngineState,tokensRemaining:number):number=>{
+    const t=Math.max(0,tokensRemaining);
+    if(t<=0)return 0;
+    valueFunction.V(engine,t);
+    return freshMenuImproveMemo.get(`${engine.id}|${t}`)??0;
+  };
 
   const diagnostics=():ContinuationDiagnostics=>({
     continuationFidelity:fidelity,
@@ -206,5 +218,5 @@ export function createContinuationRuntime(
     transitionOutcomesAfterCompressionByDepth:depthRecord(outcomesAfterByDepth),
   });
 
-  return {valueFunction,menuModel,transitionsFor,targetedContinuation,diagnostics};
+  return {valueFunction,menuModel,transitionsFor,targetedContinuation,freshMenuImprovementProbability,diagnostics};
 }
