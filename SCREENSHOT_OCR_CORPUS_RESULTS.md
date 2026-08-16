@@ -39,15 +39,16 @@ The branch now addresses the failure mechanisms found by the corpus:
 3. **Native/crop-first policy retained.** Normal-size screenshots use native OCR once. Large screenshots use a low-resolution localization copy, then map extraction back to original pixels. No image is upscaled.
 4. **Dedicated action-strip path.** `REROLL OPERATIONS` / `ROLL TOKENS` anchor the strip. Each of the three action-card regions is evaluated independently; weak whole-board OCR is retried on the corresponding original-resolution source crop and fuzzy-matched against the closed 20-action catalog.
 5. **Token extraction.** The same action region now parses an integer token count when visible.
-6. **Failure remains review-safe.** Missing/unreadable action regions still return `null` with confidence 0, preserving current action values and red review outlines rather than fabricating values.
+6. **Targeted emblem-stat retry.** Stat fields below the review-confidence threshold are re-read from small source-resolution emblem title crops and matched only against the legal same-color stat pool; clean first-pass stat reads are not reprocessed.
+7. **Failure remains review-safe.** Missing/unreadable action or emblem regions remain explicitly low-confidence rather than fabricated.
 
 ## Build and contract validation
 
-The implementation typechecks and lints under the repository's strict TypeScript configuration. Generated `build/` and `docs/` artifacts were regenerated from source. A deterministic corpus contract test now verifies both layouts are represented, action-visible/absent cases are represented, emblem counts match the declared layout, token ground truth includes 4 and 5, and all six visible action IDs/labels remain synchronized with the canonical `ACTION_CATALOG`.
+The implementation typechecks and lints under the repository's strict TypeScript configuration. Generated `build/` and `docs/` artifacts, including the targeted emblem OCR refinement module, were regenerated from source on 2026-08-16. A deterministic corpus contract test verifies both layouts are represented, action-visible/absent cases are represented, emblem counts match the declared layout, token ground truth includes 4 and 5, and all six visible action IDs/labels remain synchronized with the canonical `ACTION_CATALOG`.
 
 ## Remaining verification
 
-The six screenshots themselves are not committed as binary test fixtures, so repository CI cannot truthfully claim image-level OCR accuracy from the JSON labels alone. The next live corpus pass must feed the six actual images through the browser OCR path and record:
+The six screenshots themselves are not committed as binary test fixtures, so repository CI cannot truthfully claim image-level OCR accuracy from the JSON labels alone. Live corpus passes should feed the six actual images through the browser OCR path and record:
 
 - exact layout;
 - exact teams where roster mapping is valid;
@@ -57,4 +58,4 @@ The six screenshots themselves are not committed as binary test fixtures, so rep
 - false-high-confidence errors;
 - cold/warm latency and analyzed-pixel fraction.
 
-Until that live pass is completed, the geometry/action implementation should be treated as **implemented and compile/contract-verified, not accuracy-certified**. Threshold tuning should follow the live pass rather than precede it.
+The geometry/action implementation and targeted stat retry are implemented and compile/contract-verified. Image-level accuracy remains a live regression metric rather than a repository-CI claim.
