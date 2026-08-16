@@ -42,7 +42,7 @@ export interface ScreenshotFieldConfidence {
   path:string;
   confidence:number;
   reason?:ScreenshotEvidenceClass;
-  components?:ScreenshotConfidenceComponents;
+  components?:ScreenshotConfidenceComponents|undefined;
 }
 export interface ScreenshotConfidenceEvidence {
   resolved:boolean;
