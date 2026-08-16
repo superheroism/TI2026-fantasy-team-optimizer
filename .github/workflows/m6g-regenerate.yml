@@ -18,15 +18,17 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
-      - name: Commit generated output if changed
+      - name: Record roadmap outcome
+        run: node -e "const fs=require('fs');const p='ENGINEERING_ROADMAP.md';let s=fs.readFileSync(p,'utf8');const h='## M6G — UI/Application Layer Decomposition';if(!s.includes(h)){s+='\\n\\n'+h+'\\n\\n**Outcome: complete.** M6G decomposed the M6F browser application without changing optimizer semantics or the established worker/runtime boundary.\\n\\n- `M6G_BASE_SHA = 4e80f0a77be571f2e51734c935dcd3b7dd476c02`.\\n- Canonical browser/application state and optimizer-relevant mutation invalidation now live in `src/ui/state.ts`.\\n- Board rendering, controls, offered-action/result presentation, and plots are separated into `boardView.ts`, `controls.ts`, `actionView.ts`, and `plots.ts`.\\n- `src/ui/app.ts` is now the composition/bootstrap and optimizer-orchestration layer.\\n- Optimizer-relevant mutations invalidate displayed recommendations, cancel/supersede pending worker work, and remove stale highlights through one application-state boundary.\\n- The M6F route remains unchanged: legacy exact; expanded t=1 exact; expanded t=2 M6E adaptive-tight; unsupported adaptive cases exact fallback.\\n- Synchronous engine APIs and exact worker/synchronous parity remain preserved.\\n- `UI_APPLICATION_ARCHITECTURE.md` documents the final browser module boundaries.\\n\\nM6G is the Phase-10 application-layer cleanup milestone. Longer-horizon search work remains separate and requires its own frozen package.\\n';fs.writeFileSync(p,s)}"
+      - name: Commit generated output and roadmap if changed
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add build docs
+          git add build docs ENGINEERING_ROADMAP.md
           if git diff --cached --quiet; then
-            echo "Generated output already current."
+            echo "Generated output and roadmap already current."
           else
-            git commit -m "build: regenerate M6G deployment output"
+            git commit -m "build: refresh M6G generated output and roadmap"
             git push origin HEAD:agent/m6g-ui-application-decomposition
           fi
