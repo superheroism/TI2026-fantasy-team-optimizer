@@ -24,7 +24,7 @@ function parse(tsv) { if (!tsv)
 } return out; }
 const cx = (w) => w.left + w.width / 2, cy = (w) => w.top + w.height / 2;
 async function worker() { workerPromise ??= (async () => { const T = window.Tesseract; if (!T)
-    throw new Error('Local OCR runtime is unavailable for emblem refinement.'); return await T.createWorker('eng'); })(); return workerPromise; }
+    throw new Error('Local OCR runtime is unavailable for emblem refinement.'); const w = await T.createWorker('eng'); await w.setParameters({ tessedit_pageseg_mode: '6' }); return w; })(); return workerPromise; }
 async function image(file) { return await new Promise((ok, no) => { const i = new Image(), u = URL.createObjectURL(file); i.onload = () => { URL.revokeObjectURL(u); ok(i); }; i.onerror = () => { URL.revokeObjectURL(u); no(new Error('Could not decode screenshot for emblem refinement.')); }; i.src = u; }); }
 function canvas(i, left = 0, top = 0, width = i.naturalWidth, height = i.naturalHeight) { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(width)); c.height = Math.max(1, Math.round(height)); const x = c.getContext('2d'); if (!x)
     throw new Error('Canvas unavailable.'); x.drawImage(i, left, top, width, height, 0, 0, c.width, c.height); return c; }
