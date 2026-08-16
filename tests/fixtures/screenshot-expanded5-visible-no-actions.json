@@ -6,7 +6,7 @@
       "selectedTeam": "Team Vision",
       "emblems": [
         { "position": 0, "color": "red", "stat": "GPM", "qualityTier": 4, "trait": "Fractal" },
-        { "position": 1, "color": "green", "stat": "Teamfight Participation", "qualityTier": 4, "trait": "Vampiric" },
+        { "position": 1, "color": "green", "stat": "Teamfight Participation", "qualityTier": 3, "trait": "Vampiric" },
         { "position": 2, "color": "red", "stat": "Creep Score", "qualityTier": 5, "trait": "Vampiric" },
         { "position": 3, "color": "green", "stat": "Roshan Kills", "qualityTier": 3, "trait": "Unique" },
         { "position": 4, "color": "red", "stat": "Tower Kills", "qualityTier": 2, "trait": "Fractal" }
