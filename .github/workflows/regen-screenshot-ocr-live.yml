@@ -1,0 +1,27 @@
+name: Regenerate screenshot OCR live artifacts
+on:
+  push:
+    branches: [agent/screenshot-ocr-live-validation]
+permissions:
+  contents: write
+jobs:
+  regenerate:
+    if: "!contains(github.event.head_commit.message, '[generated-ocr-live]')"
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/screenshot-ocr-live-validation
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run build
+      - name: Commit generated outputs and remove temporary workflow
+        run: |
+          rm .github/workflows/regen-screenshot-ocr-live.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add build docs .github/workflows/regen-screenshot-ocr-live.yml
+          git commit -m "Regenerate live screenshot OCR artifacts [generated-ocr-live]"
+          git push origin HEAD:agent/screenshot-ocr-live-validation
