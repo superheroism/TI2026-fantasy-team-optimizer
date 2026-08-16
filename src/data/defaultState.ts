@@ -1,18 +1,58 @@
-import type { BoardState, EmblemState, MenuState, Role, SlotColor, StatName } from '../domain/types.js';
-import { BANNER_COLORS } from '../domain/rules.js';
+import type { BannerEmblems, BoardLayoutId, BoardState, EmblemState, MenuState, Role, SlotColor, StatName } from '../domain/types.js';
+import { BOARD_LAYOUTS, DEFAULT_LAYOUT_ID, isLegalStat } from '../domain/rules.js';
 import { ACTION_BY_ID, cloneAction } from './actionCatalog.js';
 
-const defaults: Record<Role, StatName[]> = {
-  core:['Creep Score','Teamfight Participation','GPM'],
-  mid:['Creep Score','Runes','Teamfight Participation'],
-  support:['Watchers','Teamfight Participation','Wards Placed']
+/** Deterministic legal defaults for every canonical slot in both supported layouts. */
+export const DEFAULT_STATS_BY_ROLE:Readonly<Record<Role,readonly StatName[]>> = {
+  core:['Creep Score','Teamfight Participation','GPM','Stuns','Deaths'],
+  mid:['Creep Score','Runes','Teamfight Participation','GPM','Stuns'],
+  support:['Watchers','Teamfight Participation','Wards Placed','Stuns','Smokes Used'],
 };
 const teamDefaults:Record<Role,string>={core:'LGD Gaming',mid:'Team Liquid',support:'LGD Gaming'};
-function emblem(role:Role, position:0|1|2, color:SlotColor):EmblemState { return {id:`${role}-${position}`,position,color,stat:defaults[role][position]!,qualityTier:3,trait:'Fractal'}; }
-export const defaultBoard:BoardState = {
-  core:{role:'core',selectedTeam:teamDefaults.core,expectedSeries:5,emblems:BANNER_COLORS.core.map((c,i)=>emblem('core',i as 0|1|2,c)) as [EmblemState,EmblemState,EmblemState]},
-  mid:{role:'mid',selectedTeam:teamDefaults.mid,expectedSeries:5,emblems:BANNER_COLORS.mid.map((c,i)=>emblem('mid',i as 0|1|2,c)) as [EmblemState,EmblemState,EmblemState]},
-  support:{role:'support',selectedTeam:teamDefaults.support,expectedSeries:5,emblems:BANNER_COLORS.support.map((c,i)=>emblem('support',i as 0|1|2,c)) as [EmblemState,EmblemState,EmblemState]},
-};
+
+function defaultEmblem(role:Role,position:number,color:SlotColor):EmblemState {
+  const stat=DEFAULT_STATS_BY_ROLE[role][position];
+  if(!stat||!isLegalStat(color,stat))throw new Error(`Missing legal default for ${role} slot ${position+1} (${color}).`);
+  return {id:`${role}-${position}`,position,color,stat,qualityTier:3,trait:'Fractal'};
+}
+
+export function resolvedLayoutId(board:Pick<BoardState,'layoutId'>):BoardLayoutId {
+  return board.layoutId??DEFAULT_LAYOUT_ID;
+}
+
+export function createDefaultBoard(layoutId:BoardLayoutId=DEFAULT_LAYOUT_ID):BoardState {
+  const layout=BOARD_LAYOUTS[layoutId];
+  const roleBanner=(role:Role)=>({
+    role,
+    selectedTeam:teamDefaults[role],
+    expectedSeries:5,
+    emblems:layout.roles[role].map(slot=>defaultEmblem(role,slot.index,slot.color)) as BannerEmblems,
+  });
+  const board:BoardState={core:roleBanner('core'),mid:roleBanner('mid'),support:roleBanner('support')};
+  // Preserve the pre-M6A descriptive legacy shape while expanded boards carry explicit identity.
+  if(layoutId!=='legacy_3')board.layoutId=layoutId;
+  return board;
+}
+
+export function convertBoardLayout(source:BoardState,targetLayoutId:BoardLayoutId):BoardState {
+  const layout=BOARD_LAYOUTS[targetLayoutId];
+  const convertRole=(role:Role)=>{
+    const current=source[role];
+    const emblems=layout.roles[role].map(slot=>{
+      const existing=current.emblems[slot.index];
+      if(existing){
+        if(existing.color!==slot.color)throw new Error(`Canonical color mismatch at ${role} slot ${slot.index+1}.`);
+        return structuredClone(existing);
+      }
+      return defaultEmblem(role,slot.index,slot.color);
+    }) as BannerEmblems;
+    return {role,selectedTeam:current.selectedTeam,expectedSeries:current.expectedSeries,emblems};
+  };
+  const converted:BoardState={core:convertRole('core'),mid:convertRole('mid'),support:convertRole('support')};
+  if(targetLayoutId!=='legacy_3')converted.layoutId=targetLayoutId;
+  return converted;
+}
+
+export const defaultBoard:BoardState=createDefaultBoard();
 const action = (id:string) => cloneAction(ACTION_BY_ID.get(id)!);
 export const defaultMenu:MenuState=[action('green-stat-all'),action('red-quality-all'),action('blue-trait-all')];

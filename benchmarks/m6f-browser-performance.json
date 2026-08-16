@@ -1,0 +1,200 @@
+{
+  "m6fBaseSha": "cf03a20e601242810e4101415eb4989a8cae646c",
+  "capturedAt": "2026-08-16T00:22:34.052Z",
+  "runtime": {
+    "node": "v22.23.2",
+    "chrome": "/usr/bin/google-chrome"
+  },
+  "measurementNotes": [
+    "mainThreadLongTaskMs uses the browser Long Tasks API; optimizer computation occurs in the worker",
+    "performance.memory measures the page isolate and may not include the worker isolate; worker wall time is reported separately",
+    "cold uses a newly constructed worker client; warm and repeat runs reuse the same worker/model load"
+  ],
+  "cases": [
+    {
+      "caseId": "legacy-expected",
+      "layout": "legacy_3",
+      "objective": "expected_score",
+      "expectFallback": false,
+      "cold": {
+        "label": "cold",
+        "wallMs": 795.7999999999956,
+        "optimizerWallMs": 702,
+        "transferRoundTripMs": 795.6999999999971,
+        "mainThreadLongTaskMs": 0,
+        "maxLongTaskMs": 0,
+        "heapBefore": 5307057,
+        "heapPeak": 5322783,
+        "heapAfter": 5373731,
+        "payloadBytes": 1702,
+        "searchMode": "exact",
+        "adaptiveFallbacks": 0,
+        "policyId": null
+      },
+      "warm": {
+        "label": "warm",
+        "wallMs": 28.299999999995634,
+        "optimizerWallMs": 27.599999999998545,
+        "transferRoundTripMs": 28.299999999995634,
+        "mainThreadLongTaskMs": 0,
+        "maxLongTaskMs": 0,
+        "heapBefore": 5383121,
+        "heapPeak": 5383737,
+        "heapAfter": 5399437,
+        "payloadBytes": 1702,
+        "searchMode": "exact",
+        "adaptiveFallbacks": 0,
+        "policyId": null
+      },
+      "repeatedRunHeapGrowthBytes": 45760
+    },
+    {
+      "caseId": "legacy-target",
+      "layout": "legacy_3",
+      "objective": "target_probability",
+      "expectFallback": false,
+      "cold": {
+        "label": "cold",
+        "wallMs": 2414.5,
+        "optimizerWallMs": 2335.9000000000015,
+        "transferRoundTripMs": 2414.5,
+        "mainThreadLongTaskMs": 0,
+        "maxLongTaskMs": 0,
+        "heapBefore": 5475853,
+        "heapPeak": 5483885,
+        "heapAfter": 5503713,
+        "payloadBytes": 1724,
+        "searchMode": "exact",
+        "adaptiveFallbacks": 0,
+        "policyId": null
+      },
+      "warm": {
+        "label": "warm",
+        "wallMs": 892.7999999999956,
+        "optimizerWallMs": 892.4000000000015,
+        "transferRoundTripMs": 892.7999999999956,
+        "mainThreadLongTaskMs": 0,
+        "maxLongTaskMs": 0,
+        "heapBefore": 5515369,
+        "heapPeak": 5527617,
+        "heapAfter": 5543097,
+        "payloadBytes": 1724,
+        "searchMode": "exact",
+        "adaptiveFallbacks": 0,
+        "policyId": null
+      },
+      "repeatedRunHeapGrowthBytes": 52756
+    },
+    {
+      "caseId": "expanded-expected",
+      "layout": "expanded_5",
+      "objective": "expected_score",
+      "expectFallback": false,
+      "cold": {
+        "label": "cold",
+        "wallMs": 900.2000000000044,
+        "optimizerWallMs": 783.6999999999971,
+        "transferRoundTripMs": 900.2000000000044,
+        "mainThreadLongTaskMs": 0,
+        "maxLongTaskMs": 0,
+        "heapBefore": 5639109,
+        "heapPeak": 5642473,
+        "heapAfter": 5662001,
+        "payloadBytes": 2255,
+        "searchMode": "expanded_t2_adaptive",
+        "adaptiveFallbacks": 0,
+        "policyId": "adaptive-tight"
+      },
+      "warm": {
+        "label": "warm",
+        "wallMs": 41.80000000000291,
+        "optimizerWallMs": 41.5,
+        "transferRoundTripMs": 41.700000000004366,
+        "mainThreadLongTaskMs": 0,
+        "maxLongTaskMs": 0,
+        "heapBefore": 5669484,
+        "heapPeak": 5670064,
+        "heapAfter": 5685992,
+        "payloadBytes": 2255,
+        "searchMode": "expanded_t2_adaptive",
+        "adaptiveFallbacks": 0,
+        "policyId": "adaptive-tight"
+      },
+      "repeatedRunHeapGrowthBytes": 43602
+    },
+    {
+      "caseId": "expanded-target",
+      "layout": "expanded_5",
+      "objective": "target_probability",
+      "expectFallback": false,
+      "cold": {
+        "label": "cold",
+        "wallMs": 7717.799999999996,
+        "optimizerWallMs": 7658.700000000004,
+        "transferRoundTripMs": 7717.799999999996,
+        "mainThreadLongTaskMs": 0,
+        "maxLongTaskMs": 0,
+        "heapBefore": 5763084,
+        "heapPeak": 5785168,
+        "heapAfter": 5802716,
+        "payloadBytes": 2287,
+        "searchMode": "expanded_t2_adaptive",
+        "adaptiveFallbacks": 0,
+        "policyId": "adaptive-tight"
+      },
+      "warm": {
+        "label": "warm",
+        "wallMs": 4483.300000000003,
+        "optimizerWallMs": 4483.099999999991,
+        "transferRoundTripMs": 4483.300000000003,
+        "mainThreadLongTaskMs": 0,
+        "maxLongTaskMs": 0,
+        "heapBefore": 5826151,
+        "heapPeak": 5839523,
+        "heapAfter": 5856215,
+        "payloadBytes": 2287,
+        "searchMode": "expanded_t2_adaptive",
+        "adaptiveFallbacks": 0,
+        "policyId": "adaptive-tight"
+      },
+      "repeatedRunHeapGrowthBytes": -478383
+    },
+    {
+      "caseId": "expanded-exact-fallback",
+      "layout": "expanded_5",
+      "objective": "expected_score",
+      "expectFallback": true,
+      "cold": {
+        "label": "cold",
+        "wallMs": 2782.800000000003,
+        "optimizerWallMs": 2683.300000000003,
+        "transferRoundTripMs": 2782.800000000003,
+        "mainThreadLongTaskMs": 0,
+        "maxLongTaskMs": 0,
+        "heapBefore": 5447554,
+        "heapPeak": 5456325,
+        "heapAfter": 5473577,
+        "payloadBytes": 2334,
+        "searchMode": "expanded_t2_adaptive_exact_fallback",
+        "adaptiveFallbacks": 0,
+        "policyId": "adaptive-tight"
+      },
+      "warm": {
+        "label": "warm",
+        "wallMs": 149.5,
+        "optimizerWallMs": 149.3000000000029,
+        "transferRoundTripMs": 149.5,
+        "mainThreadLongTaskMs": 0,
+        "maxLongTaskMs": 0,
+        "heapBefore": 5485859,
+        "heapPeak": 5486623,
+        "heapAfter": 5502799,
+        "payloadBytes": 2334,
+        "searchMode": "expanded_t2_adaptive_exact_fallback",
+        "adaptiveFallbacks": 0,
+        "policyId": "adaptive-tight"
+      },
+      "repeatedRunHeapGrowthBytes": 44720
+    }
+  ]
+}

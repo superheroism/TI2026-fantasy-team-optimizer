@@ -540,3 +540,13 @@ The production route validates the committed M6D certification artifacts at buil
 The authoritative Node 22/Linux 12-case integration corpus achieved **100% root-action agreement**, **0 maximum expected-score regret**, and **0 maximum target-probability regret** versus exact. Median speedup was **1.66×**, P90 speedup **2.85×**, median structural work avoided **41.8%**, and exact fallback **41.7%**. The lower median speedup than M6D's 2.52× holdout result is explained by corpus mix: M6E intentionally contains more ambiguous integration cases and falls back exactly in 5/12 cases, which run near exact cost. No policy retuning occurred.
 
 **Sequencing decision:** stop after M6E. Do not automatically resume target `t=3`, begin `t=4`, consume the untouched M5H holdout, or begin another optimization milestone. Any next package must be separately proposed and frozen.
+
+## M6F outcome — board-layout UI and worker boundary
+
+M6F completes the production boundary opened by M6A–M6E. The browser UI now exposes both supported canonical board layouts through one 3/5-emblem selector while retaining the three-emblem default. Layout construction and conversion are driven by `BOARD_LAYOUTS`; the UI does not duplicate slot-color geometry. Internally, 3 Emblems maps to `legacy_3` and 5 Emblems maps to `expanded_5`, but those identifiers remain implementation detail rather than normal product copy.
+
+The optimizer is now invoked through `OptimizerWorkerClient → optimizer.worker → existing engine APIs`. Synchronous engine entry points remain intact for Node tests, benchmarks, and engineering tools. Active stale searches are cancelled by terminating the worker; request ids provide a second deterministic stale-response guard. Idle workers are reused so model loading and startup are amortized.
+
+End-to-end regression coverage proves exact worker/synchronous recommendation parity, canonical 3↔5 conversion semantics, no token/menu mutation on layout changes, legacy routing preservation, and expanded t=2 routing through the frozen M6E `adaptive-tight` policy with existing exact fallback semantics. M6F makes **no changes** to M6D/M6E search configuration or t=2 semantics.
+
+Browser measurements are recorded in `benchmarks/m6f-browser-performance.json` and summarized in `PERFORMANCE.md`. With this product/runtime integration complete, M6F stops; longer-horizon search remains a separate future milestone.
