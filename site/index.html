@@ -4,8 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="dark light">
+  <meta name="screenshot-import-endpoint" content="/api/screenshot-import">
   <title>Dota 2 Fantasy Optimizer</title>
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./screenshot-import.css">
 </head>
 <body data-theme="dark">
 <header class="site-header">
@@ -35,11 +37,23 @@
 
   <section class="workspace-section board-workspace">
     <div class="section-bar">
-      <div class="board-section-title"><div><p class="eyebrow">CURRENT BOARD</p><h2>Replicate Your Three War Banners</h2></div><div class="layout-control"><span>BANNER LAYOUT</span><div class="layout-segmented" role="group" aria-label="Banner layout"><button type="button" data-layout-slots="3" class="active" aria-pressed="true">3 Emblems</button><button type="button" data-layout-slots="5" aria-pressed="false">5 Emblems</button></div></div></div>
-      <small>Team is selectable · attached players are fixed · Stat / Tier / Trait are editable · percentages are derived</small>
+      <div class="board-section-title">
+        <div><p class="eyebrow">CURRENT BOARD</p><h2>Replicate Your Three War Banners</h2></div>
+        <div class="board-tools">
+          <div class="layout-control"><span>BANNER LAYOUT</span><div class="layout-segmented" role="group" aria-label="Banner layout"><button type="button" data-layout-slots="3" class="active" aria-pressed="true">3 Emblems</button><button type="button" data-layout-slots="5" aria-pressed="false">5 Emblems</button></div></div>
+          <div class="screenshot-control"><span>SCREENSHOT</span><button id="screenshot-import" type="button">Import Screenshot</button><input id="screenshot-file" type="file" accept="image/png,image/jpeg,image/webp" hidden></div>
+        </div>
+      </div>
+      <small id="screenshot-import-status" data-kind="idle">Team is selectable · attached players are fixed · Stat / Tier / Trait are editable · percentages are derived</small>
     </div>
     <div id="board" class="board"></div>
   </section>
+
+  <dialog id="screenshot-review-dialog" class="screenshot-review-dialog">
+    <div class="screenshot-review-head"><div><p class="eyebrow">SCREENSHOT IMPORT</p><h3>Review uncertain fields</h3></div><small>Nothing is applied until you confirm.</small></div>
+    <div id="screenshot-review-body" class="screenshot-review-body"></div>
+    <div class="screenshot-review-actions"><button id="screenshot-review-cancel" type="button">Cancel</button><button id="screenshot-review-apply" class="primary" type="button">Apply Board</button></div>
+  </dialog>
 
   <section id="action-console" class="panel action-console">
     <div class="panel-head console-head">
