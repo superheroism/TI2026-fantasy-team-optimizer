@@ -1,5 +1,4 @@
-import type { DataBundle, MenuState, Role } from '../domain/types.js';
-import { ACTION_BY_ID } from '../data/actionCatalog.js';
+import type { DataBundle, Role } from '../domain/types.js';
 import { displayTeamName } from '../data/ti2026Rosters.js';
 import { escapeHtml } from './boardView.js';
 import type { ApplicationState } from './state.js';
@@ -100,8 +99,4 @@ export function bindScreenshotImport(state: ApplicationState, callbacks: Screens
     pending = null;
     setStatus('Screenshot import cancelled.', 'idle');
   });
-}
-
-export function operationLabel(id: string): string {
-  return ACTION_BY_ID.get(id)?.label ?? id;
 }
