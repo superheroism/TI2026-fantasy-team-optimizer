@@ -6,20 +6,85 @@ import { diagnoseLocalScreenshotOcr, warmLocalScreenshotOcr } from '../import/lo
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string): T => document.querySelector(selector) as T;
 export interface ScreenshotImportCallbacks { getData:()=>DataBundle|undefined;renderStructure:()=>void;afterApply:()=>void; }
-function setStatus(text:string,kind:'idle'|'working'|'success'|'error'='idle'):void{const status=$('#screenshot-import-status');status.textContent=text;status.dataset.kind=kind;}
-function reviewPaths(result:ValidatedScreenshotImport):string[]{return result.lowConfidenceFields.map(field=>field.path);}
-function removeDiagnostic():void{document.querySelector('#screenshot-ocr-diagnostic')?.remove();}
-function showDiagnostic(value:unknown):void{removeDiagnostic();const host=$('#screenshot-import-status').parentElement;if(!host)return;const details=document.createElement('details');details.id='screenshot-ocr-diagnostic';details.open=true;const summary=document.createElement('summary');summary.textContent='OCR diagnostic';const pre=document.createElement('pre');pre.style.whiteSpace='pre-wrap';pre.style.wordBreak='break-word';pre.textContent=JSON.stringify(value,null,2);const copy=document.createElement('button');copy.type='button';copy.textContent='Copy diagnostic';copy.addEventListener('click',()=>void navigator.clipboard?.writeText(pre.textContent??''));details.append(summary,copy,pre);host.appendChild(details);}
 
-function clearActionReviewHighlights():void{document.querySelectorAll<HTMLElement>('.op-card.screenshot-review-target-operation').forEach(card=>card.classList.remove('screenshot-review-target-operation'));}
-function applyActionReviewHighlights(paths:readonly string[]):void{clearActionReviewHighlights();for(const path of paths){const match=path.match(/^operationIds\.(\d+)$/)??path.match(/^operationIds\[(\d+)\]$/);if(!match)continue;const index=Number(match[1]);if(Number.isInteger(index))document.querySelector<HTMLElement>(`.op-card[data-op="${index}"]`)?.classList.add('screenshot-review-target-operation');}}
-function clearAllReviewHighlights():void{clearScreenshotReviewHighlights();clearActionReviewHighlights();}
-export function bindScreenshotImport(state:ApplicationState,callbacks:ScreenshotImportCallbacks):void{
- const button=$<HTMLButtonElement>('#screenshot-import'),input=$<HTMLInputElement>('#screenshot-file'),optimize=$<HTMLButtonElement>('#optimize');
- const prewarm=()=>{void warmLocalScreenshotOcr().catch(()=>undefined);};
- button.addEventListener('pointerenter',prewarm,{once:true});button.addEventListener('focus',prewarm,{once:true});
- const applyImport=(result:ValidatedScreenshotImport,elapsedMs:number):void=>{state.importScreenshot(result.board,result.menu,result.tokensRemaining);callbacks.renderStructure();callbacks.afterApply();const paths=reviewPaths(result);applyScreenshotReviewHighlights(paths);applyActionReviewHighlights(paths);const elapsed=elapsedMs<1000?`${Math.round(elapsedMs)} ms`:`${(elapsedMs/1000).toFixed(1)} s`;if(result.requiresReview){const count=Math.max(paths.length,result.warnings.length);setStatus(`Imported in ${elapsed} · review ${count} flagged field${count===1?'':'s'} outlined in red before optimizing.`,'error');}else setStatus(`Imported ${result.board.core.emblems.length}-emblem board and three actions in ${elapsed}.`,'success');};
- optimize.addEventListener('click',()=>{clearAllReviewHighlights();if($('#screenshot-import-status').dataset.kind==='error')setStatus('Imported screenshot confirmed by optimization.','success');},{capture:true});
- button.addEventListener('click',()=>input.click());
- input.addEventListener('change',async()=>{const file=input.files?.[0];input.value='';if(!file)return;const data=callbacks.getData();if(!data){setStatus('Tournament model is still loading.','error');return;}button.disabled=true;button.textContent='Reading Screenshot…';removeDiagnostic();setStatus('Local OCR: locating board and reading visible fields…','working');const started=performance.now();try{const raw=await requestScreenshotImport(file,data);const validated=validateScreenshotImport(raw,data,state.board,state.menu);applyImport(validated,performance.now()-started);if(validated.requiresReview){const productionDiagnostic=getLastLocalOcrMetrics();if(productionDiagnostic)showDiagnostic(productionDiagnostic);else{try{showDiagnostic(await diagnoseLocalScreenshotOcr(file));}catch(diagError){showDiagnostic({diagnosticError:String(diagError)});}}}}catch(error){clearAllReviewHighlights();setStatus(error instanceof Error?error.message:String(error),'error');const productionDiagnostic=getLastLocalOcrMetrics();if(productionDiagnostic)showDiagnostic({importError:String(error),...productionDiagnostic});else{try{showDiagnostic({importError:String(error),browserOcr:await diagnoseLocalScreenshotOcr(file)});}catch(diagError){showDiagnostic({importError:String(error),diagnosticError:String(diagError)});}}}finally{button.disabled=false;button.textContent='Import Screenshot';}});
+let latestDiagnosticJson:string|undefined;
+let diagnosticToastTimer:number|undefined;
+
+function setStatus(text:string,kind:'idle'|'working'|'success'|'error'='idle'):void { const status=$('#screenshot-import-status');status.textContent=text;status.dataset.kind=kind; }
+function reviewPaths(result:ValidatedScreenshotImport):string[] { return result.lowConfidenceFields.map(field=>field.path); }
+
+export async function copyDiagnosticJson(json:string,writeText:((value:string)=>Promise<void>)|undefined):Promise<boolean> {
+  if(!writeText) return false;
+  try{await writeText(json);return true;}catch{return false;}
+}
+function clearDiagnostic(button:HTMLButtonElement,toast:HTMLElement):void {
+  latestDiagnosticJson=undefined;
+  button.disabled=true;
+  button.hidden=true;
+  toast.hidden=true;
+  if(diagnosticToastTimer!==undefined){window.clearTimeout(diagnosticToastTimer);diagnosticToastTimer=undefined;}
+}
+function setDiagnostic(value:unknown,button:HTMLButtonElement):void {
+  latestDiagnosticJson=JSON.stringify(value,null,2);
+  button.hidden=false;
+  button.disabled=false;
+}
+function showDiagnosticToast(toast:HTMLElement,text:string,kind:'success'|'error'):void {
+  toast.textContent=text;
+  toast.dataset.kind=kind;
+  toast.hidden=false;
+  if(diagnosticToastTimer!==undefined) window.clearTimeout(diagnosticToastTimer);
+  diagnosticToastTimer=window.setTimeout(()=>{toast.hidden=true;diagnosticToastTimer=undefined;},1800);
+}
+function clearActionReviewHighlights():void { document.querySelectorAll<HTMLElement>('.op-select.screenshot-review-target-operation').forEach(select=>select.classList.remove('screenshot-review-target-operation')); }
+function applyActionReviewHighlights(paths:readonly string[]):void {
+  clearActionReviewHighlights();
+  for(const path of paths){
+    const match=path.match(/^operationIds\.(\d+)$/)??path.match(/^operationIds\[(\d+)\]$/); if(!match) continue;
+    const index=Number(match[1]); if(Number.isInteger(index)) document.querySelector<HTMLElement>(`.op-select[data-opfield="action"][aria-label="Action ${index+1}"]`)?.classList.add('screenshot-review-target-operation');
+  }
+}
+function clearTokenReviewHighlight():void { $('#tokens')?.classList.remove('screenshot-review-target-token'); }
+function applyTokenReviewHighlight(paths:readonly string[]):void { clearTokenReviewHighlight();if(paths.some(path=>path==='tokensRemaining')) $('#tokens')?.classList.add('screenshot-review-target-token'); }
+function clearAllReviewHighlights():void { clearScreenshotReviewHighlights();clearActionReviewHighlights();clearTokenReviewHighlight(); }
+
+export function bindScreenshotImport(state:ApplicationState,callbacks:ScreenshotImportCallbacks):void {
+  const button=$<HTMLButtonElement>('#screenshot-import'),input=$<HTMLInputElement>('#screenshot-file'),optimize=$<HTMLButtonElement>('#optimize'),diagnosticButton=$<HTMLButtonElement>('#screenshot-ocr-diagnostic-copy'),diagnosticToast=$('#screenshot-ocr-diagnostic-toast');
+  clearDiagnostic(diagnosticButton,diagnosticToast);
+  const prewarm=()=>{void warmLocalScreenshotOcr().catch(()=>undefined);};
+  button.addEventListener('pointerenter',prewarm,{once:true});button.addEventListener('focus',prewarm,{once:true});
+  diagnosticButton.addEventListener('click',async()=>{
+    if(!latestDiagnosticJson)return;
+    const writeText=navigator.clipboard?.writeText?.bind(navigator.clipboard);
+    const copied=await copyDiagnosticJson(latestDiagnosticJson,writeText);
+    showDiagnosticToast(diagnosticToast,copied?'Copied!':'Copy failed',copied?'success':'error');
+  });
+  const applyImport=(result:ValidatedScreenshotImport,elapsedMs:number):void=>{
+    state.importScreenshot(result.board,result.menu,result.tokensRemaining);callbacks.renderStructure();callbacks.afterApply();
+    const paths=reviewPaths(result);applyScreenshotReviewHighlights(paths);applyActionReviewHighlights(paths);applyTokenReviewHighlight(paths);
+    const elapsed=elapsedMs<1000?`${Math.round(elapsedMs)} ms`:`${(elapsedMs/1000).toFixed(1)} s`;
+    if(result.requiresReview){const count=paths.length;setStatus(`Imported in ${elapsed} · review ${count} flagged field${count===1?'':'s'} outlined in red before optimizing.`,'error');}
+    else setStatus(`Imported ${result.board.core.emblems.length}-emblem board and three actions in ${elapsed}.`,'success');
+  };
+  optimize.addEventListener('click',()=>{clearAllReviewHighlights();if($('#screenshot-import-status').dataset.kind==='error')setStatus('Imported screenshot confirmed by optimization.','success');},{capture:true});
+  button.addEventListener('click',()=>input.click());
+  input.addEventListener('change',async()=>{
+    const file=input.files?.[0];input.value='';if(!file)return;
+    const data=callbacks.getData();if(!data){setStatus('Tournament model is still loading.','error');return;}
+    button.disabled=true;button.textContent='Reading Screenshot…';clearDiagnostic(diagnosticButton,diagnosticToast);setStatus('Local OCR: locating board and reading visible fields…','working');
+    const started=performance.now();
+    try{
+      const raw=await requestScreenshotImport(file,data),validated=validateScreenshotImport(raw,data,state.board,state.menu),productionDiagnostic=getLastLocalOcrMetrics();
+      if(productionDiagnostic)setDiagnostic(productionDiagnostic,diagnosticButton);
+      applyImport(validated,performance.now()-started);
+    }catch(error){
+      clearAllReviewHighlights();setStatus(error instanceof Error?error.message:String(error),'error');
+      const productionDiagnostic=getLastLocalOcrMetrics();
+      if(productionDiagnostic)setDiagnostic({importError:String(error),...productionDiagnostic},diagnosticButton);
+      else{
+        try{setDiagnostic({importError:String(error),browserOcr:await diagnoseLocalScreenshotOcr(file)},diagnosticButton);}
+        catch(diagError){setDiagnostic({importError:String(error),diagnosticError:String(diagError)},diagnosticButton);}
+      }
+    }finally{button.disabled=false;button.textContent='Import Screenshot';}
+  });
 }

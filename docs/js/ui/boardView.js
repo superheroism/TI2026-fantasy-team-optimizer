@@ -75,8 +75,8 @@ export function clearRecommendationHighlights(root = document) {
     root.querySelectorAll('.client-row.recommended-target-element').forEach(element => element.classList.remove('recommended-target-element'));
 }
 export function clearScreenshotReviewHighlights(root = document) {
-    root.querySelectorAll('.banner.screenshot-review-target').forEach(element => element.classList.remove('screenshot-review-target'));
     root.querySelectorAll('.emblem.screenshot-review-target-emblem').forEach(element => element.classList.remove('screenshot-review-target-emblem'));
+    root.querySelectorAll('.team-select.screenshot-review-target-team').forEach(element => element.classList.remove('screenshot-review-target-team'));
 }
 export function applyScreenshotReviewHighlights(paths) {
     clearScreenshotReviewHighlights();
@@ -87,7 +87,10 @@ export function applyScreenshotReviewHighlights(paths) {
         const banner = document.querySelector(`.banner[data-banner-role="${role}"]`);
         if (!banner)
             continue;
-        banner.classList.add('screenshot-review-target');
+        if (path === `banners.${role}.selectedTeam`) {
+            banner.querySelector(`.team-select[data-role="${role}"]`)?.classList.add('screenshot-review-target-team');
+            continue;
+        }
         const match = path.match(/emblems\.(\d+)/) ?? path.match(/emblems\[(\d+)\]/);
         if (!match)
             continue;

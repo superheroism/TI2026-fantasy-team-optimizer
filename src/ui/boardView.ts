@@ -83,8 +83,8 @@ export function clearRecommendationHighlights(root: ParentNode = document): void
 }
 
 export function clearScreenshotReviewHighlights(root: ParentNode = document): void {
-  root.querySelectorAll<HTMLElement>('.banner.screenshot-review-target').forEach(element => element.classList.remove('screenshot-review-target'));
   root.querySelectorAll<HTMLElement>('.emblem.screenshot-review-target-emblem').forEach(element => element.classList.remove('screenshot-review-target-emblem'));
+  root.querySelectorAll<HTMLElement>('.team-select.screenshot-review-target-team').forEach(element => element.classList.remove('screenshot-review-target-team'));
 }
 
 export function applyScreenshotReviewHighlights(paths: readonly string[]): void {
@@ -94,7 +94,10 @@ export function applyScreenshotReviewHighlights(paths: readonly string[]): void 
     if (!role) continue;
     const banner = document.querySelector<HTMLElement>(`.banner[data-banner-role="${role}"]`);
     if (!banner) continue;
-    banner.classList.add('screenshot-review-target');
+    if (path === `banners.${role}.selectedTeam`) {
+      banner.querySelector<HTMLElement>(`.team-select[data-role="${role}"]`)?.classList.add('screenshot-review-target-team');
+      continue;
+    }
     const match = path.match(/emblems\.(\d+)/) ?? path.match(/emblems\[(\d+)\]/);
     if (!match) continue;
     const index = Number(match[1]);
