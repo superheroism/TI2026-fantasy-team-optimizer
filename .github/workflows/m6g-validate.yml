@@ -1,0 +1,18 @@
+name: M6G validate
+on:
+  push:
+    branches: [agent/m6g-ui-application-decomposition]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Full CI-equivalent suite
+        run: npm run test:ci
+      - name: Browser smoke
+        run: node scripts/smoke-m6g-browser.mjs
