@@ -6,52 +6,56 @@ Fixture: user-supplied 1536×650 TI 2026 expanded-five screenshot represented by
 
 ## Objective
 
-Choose a useful OCR working resolution without ever upscaling the uploaded image. The production parser uses a low-resolution localization pass, crops the relevant board area in source coordinates, and then performs extraction on the crop at `min(native size, extraction cap)`.
+Minimize OCR latency and memory without sacrificing final normalized import accuracy. Uploaded images are never upscaled. The preferred order is: preserve native pixels, eliminate irrelevant pixels by cropping, and only downscale when the relevant crop itself is large enough to justify it.
 
 ## Environment
 
-Exploratory benchmark used local Tesseract 5.3.4 / pytesseract on Linux against the supplied screenshot. Browser production uses Tesseract.js 6 (WASM), so absolute wall-clock times are not directly interchangeable; the resolution/accuracy trend is the decision signal. Production also caches the OCR worker across imports.
+Exploratory benchmark used local Tesseract 5.5 / pytesseract on Linux against the supplied screenshot. Browser production uses Tesseract.js 6 (WASM), so absolute wall-clock times are not directly interchangeable; relative strategy/resolution trends are the decision signal. Production caches the OCR worker across imports.
 
-## Whole-image recognition sweep
+## Resolution sweep
 
-| Long edge | OCR time | Canonical anchor/stat/trait strings found |
-|---:|---:|---:|
-| 1536 | 1.04 s | 17 / 17 |
-| 1500 | 0.87 s | 15 / 17 |
-| 1472 | 0.92 s | 15 / 17 |
-| **1440** | **0.96 s** | **16 / 17** |
-| 1408 | 0.99 s | 15 / 17 |
-| 1400 | 0.98 s | 15 / 17 |
-| 1380 | 0.92 s | 16 / 17 |
-| 1366 | 0.96 s | 16 / 17 |
-| 1280 | 0.86 s | 14 / 17 |
-| 1024 | 0.49 s | 8 / 17 |
-| 768 | 0.26 s | 4 / 17 |
-| 640 | 0.13 s | 2 / 17 |
+Raw OCR is sensitive to rasterization. The same screenshot was tested at multiple long-edge resolutions.
 
-## Structured emblem-row sweep
+| Long edge | OCR time | Tier rows localized | Raw exact emblem fields* | Final normalized emblem fields |
+|---:|---:|---:|---:|---:|
+| **1536 native** | ~1.02 s | 15 / 15 | 34 / 45 | **45 / 45** |
+| 1500 | ~0.87 s | — | — | **45 / 45** |
+| 1472 | ~0.92 s | — | — | 43 / 45 |
+| **1440** | ~0.92 s | 15 / 15 | 42 / 45 | **45 / 45** |
+| 1408 | ~0.99 s | — | — | 42 / 45 |
+| **1400** | ~0.98 s | — | — | **45 / 45** |
+| 1380 | ~0.92 s | — | — | 42 / 45 |
+| 1366 | ~0.85 s | 13 / 15 | 14 / 45 | 43 / 45 |
+| 1280 | ~0.88 s | 15 / 15 | 29 / 45 | 40 / 45 |
+| 1152 | ~0.77 s | 12 / 15 | 18 / 45 | 38 / 45 |
+| 1024 | ~0.61 s | 6 / 15 | 2 / 45 | 24 / 45 |
 
-The same OCR output was grouped by banner and `TIER` row and compared against the 15-emblem ground truth. This is deliberately stricter than general OCR-string recall.
-
-| Long edge | OCR time | Tier rows localized | Exact visible emblem fields* |
-|---:|---:|---:|---:|
-| 1536 | 1.02 s | 15 / 15 | 34 / 45 |
-| **1440** | **0.92 s** | **15 / 15** | **42 / 45** |
-| 1366 | 0.85 s | 13 / 15 | 14 / 45 |
-| 1280 | 0.88 s | 15 / 15 | 29 / 45 |
-| 1152 | 0.77 s | 12 / 15 | 18 / 45 |
-| 1024 | 0.61 s | 6 / 15 | 2 / 45 |
-
-`*` stat, tier text, and trait text before domain-aware fuzzy normalization. The production parser performs constrained stat/trait matching and quality-bonus cross-checking, so this raw OCR measure is intentionally conservative.
+`*` stat, tier text, and trait text before deterministic domain normalization. Final normalization uses the legal color-specific stat pool, closed-vocabulary stat/trait matching, and quality-bonus/tier cross-checks.
 
 The fixture correction discovered during this pass is important: Core → Teamfight is Tier III (`+60%` quality), not Tier IV. The committed ground truth was corrected before treating it as an accuracy gate.
 
-## Production decision
+## Native single-pass strategy benchmark
 
-- Localization pass cap: **1100 px** long edge. This pass only needs robust structural anchors (`CORE`, `MID`, `SUPPORT`, repeated `TIER` rows) and is not used as final field text.
-- Extraction pass cap: **1440 px** long edge, but only after source-coordinate cropping.
-- Never upscale: `scale = min(1, cap / nativeDimension)` for both passes.
-- Reuse one Tesseract.js worker across imports; prewarm it when the user hovers/focuses the Import Screenshot button.
+The supplied screenshot is 1536×650, approximately 1.0 MP. Its detected relevant crop is approximately 1475×637, or 94.1% of the source. Because cropping removes only ~5.9% of this already-tight screenshot, a separate localization OCR pass followed by a second extraction OCR pass duplicates most work.
+
+Three-run medians on the supplied image:
+
+| Strategy component | Median OCR time |
+|---|---:|
+| 1100px localization copy | 0.620 s |
+| 1440px extraction crop | 1.100 s |
+| **Current two-pass total** | **~1.720 s** |
+| **Single native 1536px pass** | **0.944 s** |
+
+The native single-pass strategy is therefore about **45% faster** on this fixture while retaining the previously measured **45/45 final normalized emblem accuracy**. It also avoids an additional 1100×465 localization canvas and 1440×622 extraction canvas. Raw RGBA canvas storage for those two derivatives is roughly 5.6 MB combined; the single-pass path instead needs only the native ~4.0 MB canvas in addition to the decoded source and OCR runtime allocations.
+
+## Production strategy
+
+- **Small/tight screenshots (≤2 MP):** OCR once at native resolution. Use recognized anchor/word geometry to localize the board and filter/rebase those same OCR words into the detected crop. Do not run a second OCR pass.
+- **Large screenshots (>2 MP):** create a downscaled localization-only copy (max 1100px long edge), map the detected crop back to original source coordinates, then crop the original pixels.
+- **Large relevant crops:** downscale only when the resulting source-pixel crop remains computationally excessive. The 1440px extraction cap remains a safeguard for this path, not a default normalization target.
+- Never upscale and never stretch X and Y independently.
+- Reuse one Tesseract.js worker across imports and prewarm it when the user approaches/focuses Import Screenshot.
 - Treat missing regions independently. A missing action region returns three null actions at confidence 0 and preserves the existing menu while outlining all three action cards in red.
 - Use deterministic legal-slot colors and legal stat pools as validation, not as permission to invent missing text.
 
