@@ -119,7 +119,7 @@ Run the general performance suite with `npm run benchmark`. Run the v1.0 route b
 
 - `ENGINEERING.md` — public engineering progression, reference-model definition, alternatives considered, evidence, and remaining limitations.
 - `CLIENT_RULES_2026.md` — Fantasy scoring rules and optimizer probability assumptions.
-- `M7B_V1_READINESS_AUDIT.md` — detailed v1.0 support/routing and release-readiness evidence.
+- `engineering/history/M7B_V1_READINESS_AUDIT.md` — detailed v1.0 support/routing and release-readiness evidence.
 - `PERFORMANCE.md` — simulation counts and benchmark history.
 - `PRODUCT_DECISIONS.md` — product/modeling choices that affect the interface.
 - `BUILD_AND_SOURCE_POLICY.md` — canonical source and generated-artifact policy.
