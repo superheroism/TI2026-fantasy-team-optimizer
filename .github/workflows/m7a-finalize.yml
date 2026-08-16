@@ -1,0 +1,79 @@
+name: M7A finalize negative result
+
+on:
+  push:
+    branches:
+      - agent/m7a-incremental-target-kernel-reuse
+    paths:
+      - .github/m7a-finalize-request
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out M7A branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/m7a-incremental-target-kernel-reuse
+          fetch-depth: 0
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Validate current production behavior
+        run: npm run test:ci
+
+      - name: Append M7A performance and roadmap records
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! grep -q '^## M7A incremental target-kernel reuse' PERFORMANCE.md; then
+            cat >> PERFORMANCE.md <<'EOF'
+
+## M7A incremental target-kernel reuse
+
+M7A profiled the M5H adaptive screen→refine path before implementing any new cache. Using authoritative Node 22/Linux M5H calibration artifacts from workflow run `31895777023`, three representative decision-sensitive cases across all eight preregistered candidates produced 22 completed adaptive runs and two timeouts. The untouched M5H holdout was not consumed.
+
+Across the completed representative runs, screening spent 604.6 s evaluating roots, made 1,551,648 terminal scoring calls, and executed 78.78B target scenario checks. Refinement added 149.2 s, 344,840 **new** terminal scoring calls, and 18.68B scenario checks. Candidate preparation was only 8.9 s of refine work versus 113.4 s in combinatorial target search.
+
+The expected cross-fidelity reuse is already present. Refinement recorded 68.1% pair-group cache hits and 96.8% suffix-summary hits; screen rates were 69.5% and 97.0%. More importantly, M5H shares one `TerminalSearchRuntime` across screen and refine, so a terminal `BoardStateID` scored by the screen is not rescored by refinement. Unchanged role preparation also survives through `preparedRoleCache`, and compact transition mechanics have their own shared cache.
+
+**Decision:** M7A is a negative result. The dominant refinement cost is new exact frontier work required by the higher-fidelity policy, not duplicated exact preparation/evaluation. A new cache layer was therefore not implemented. The positive acceptance gate (`material duplicated work reduced` + `runtime improvement demonstrated`) is not met, and the package stops under its frozen negative-result clause. Production behavior is unchanged.
+
+Evidence: `benchmarks/m7a-incremental-target-kernel-reuse-profile.json` and `M7A_INCREMENTAL_TARGET_KERNEL_REUSE.md`.
+EOF
+          fi
+
+          if ! grep -q '^## M7A — Incremental target-kernel work reuse' ENGINEERING_ROADMAP.md; then
+            cat >> ENGINEERING_ROADMAP.md <<'EOF'
+
+---
+
+## M7A — Incremental target-kernel work reuse
+
+M7A closes as a **negative profiling result**. The M5H screen→refine path already shares terminal `BoardStateID` evaluation through one `TerminalSearchRuntime`; unchanged role preparation is reused by `preparedRoleCache`; pair samples and suffix bounds are reused inside `targetSearch.ts`; and transition mechanics are reused by the compact transition cache. Representative authoritative M5H calibration measurements showed about 68% pair-group and 97% suffix-summary reuse during refinement.
+
+The expensive refinement work is primarily newly reached exact terminal/search frontier: across 22 completed representative adaptive runs, refinement added 344,840 new terminal scoring calls and 18.68B target scenario checks. Candidate preparation was a small minority of target-kernel time.
+
+**Sequencing decision:** do not manufacture another exact reuse cache and do not reopen M5H adaptive threshold/candidate tuning on this premise. The M5H holdout remains untouched; production target horizon and M6E expanded-board routing remain unchanged; target `t=4` and `expanded_5 t=3` remain out of scope. Any next deep-search package must attack a different source of frontier cost and be frozen separately.
+EOF
+          fi
+
+      - name: Remove one-shot workflow files and commit result
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm -f .github/m7a-finalize-request .github/workflows/m7a-finalize.yml
+          git add PERFORMANCE.md ENGINEERING_ROADMAP.md
+          git commit -m 'docs: close M7A negative result'
+          git push origin HEAD:agent/m7a-incremental-target-kernel-reuse
