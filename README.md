@@ -119,5 +119,6 @@ Run `npm run benchmark` for the general performance suite and `npm run benchmark
 - `PERFORMANCE.md` — current performance contract and benchmark summary.
 - `PRODUCT_DECISIONS.md` — product/model choices that affect interpretation.
 - `UI_APPLICATION_ARCHITECTURE.md` — browser module and worker boundaries.
+- `SCREENSHOT_IMPORT_PIPELINE.md` — end-to-end screenshot intake, OCR/localization branches, feature extraction, confidence/review behavior, and optional hosted fallback.
 - `BUILD_AND_SOURCE_POLICY.md` — source-of-truth and generated-file policy.
 - `engineering/history/` — detailed milestone records and raw engineering rationale.
