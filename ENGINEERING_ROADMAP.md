@@ -566,3 +566,14 @@ Browser measurements are recorded in `benchmarks/m6f-browser-performance.json` a
 - `UI_APPLICATION_ARCHITECTURE.md` documents the final browser module boundaries.
 
 M6G is the Phase-10 application-layer cleanup milestone. Longer-horizon search work remains separate and requires its own frozen package.
+
+
+---
+
+## M7A — Incremental target-kernel work reuse
+
+M7A closes as a **negative profiling result**. The M5H screen→refine path already shares terminal `BoardStateID` evaluation through one `TerminalSearchRuntime`; unchanged role preparation is reused by `preparedRoleCache`; pair samples and suffix bounds are reused inside `targetSearch.ts`; and transition mechanics are reused by the compact transition cache. Representative authoritative M5H calibration measurements showed about 68% pair-group and 97% suffix-summary reuse during refinement.
+
+The expensive refinement work is primarily newly reached exact terminal/search frontier: across 22 completed representative adaptive runs, refinement added 344,840 new terminal scoring calls and 18.68B target scenario checks. Candidate preparation was a small minority of target-kernel time.
+
+**Sequencing decision:** do not manufacture another exact reuse cache and do not reopen M5H adaptive threshold/candidate tuning on this premise. The M5H holdout remains untouched; production target horizon and M6E expanded-board routing remain unchanged; target `t=4` and `expanded_5 t=3` remain out of scope. Any next deep-search package must attack a different source of frontier cost and be frozen separately.

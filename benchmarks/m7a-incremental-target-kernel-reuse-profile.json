@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "package": "M7A Incremental Target-Kernel Work Reuse",
+  "baseSha": "ae0daf5223d704f560d22a6daf7472dca4073ac6",
+  "source": {
+    "workflowRunId": 31895777023,
+    "measurementSha": "aad253d621939bd391593a85fe0bae0b7d6d1265",
+    "corpus": "M5H calibration only",
+    "holdoutConsumed": false,
+    "runner": "authoritative M5H Node 22/Linux artifacts"
+  },
+  "representativeCases": [
+    { "fixtureId": "calibration-01", "targetScore": 60000 },
+    { "fixtureId": "calibration-05", "targetScore": 55000 },
+    { "fixtureId": "calibration-09", "targetScore": 50000 }
+  ],
+  "adaptiveCandidates": ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8"],
+  "completedAdaptiveRuns": 22,
+  "timedOutAdaptiveRuns": 2,
+  "aggregates": {
+    "screen": {
+      "rootEvaluationWallMs": 604600,
+      "terminalScoringCalls": 1551648,
+      "scenarioChecks": 78780000000,
+      "candidatePreparationMs": 30970,
+      "combinatorialSearchMs": 464050,
+      "pairGroupCacheHits": 7224434,
+      "pairGroupCacheMisses": 3163116,
+      "pairGroupCacheHitRate": 0.695,
+      "suffixCacheHits": 12036688,
+      "suffixCacheMisses": 376496,
+      "suffixCacheHitRate": 0.970
+    },
+    "refine": {
+      "rootEvaluationWallMs": 149200,
+      "terminalScoringCalls": 344840,
+      "scenarioChecks": 18680000000,
+      "candidatePreparationMs": 8900,
+      "combinatorialSearchMs": 113410,
+      "pairGroupCacheHits": 1600874,
+      "pairGroupCacheMisses": 748789,
+      "pairGroupCacheHitRate": 0.681,
+      "suffixCacheHits": 2669712,
+      "suffixCacheMisses": 89008,
+      "suffixCacheHitRate": 0.968
+    }
+  },
+  "representativeRefinementExamples": [
+    {
+      "fixtureId": "calibration-05",
+      "targetScore": 55000,
+      "candidateId": "A3",
+      "newTerminalScoringCalls": 25889,
+      "scenarioChecks": 1668938250
+    },
+    {
+      "fixtureId": "calibration-01",
+      "targetScore": 60000,
+      "candidateId": "A3",
+      "newTerminalScoringCalls": 50628,
+      "scenarioChecks": 2450000000
+    }
+  ],
+  "architectureFindings": {
+    "terminalBoardReuseAcrossScreenRefine": "already present via shared TerminalSearchRuntime memo",
+    "rolePreparationReuse": "already present via preparedRoleCache",
+    "pairSampleReuse": "already present via targetSearch pair-group cache",
+    "suffixSummaryReuse": "already present via targetSearch suffix cache",
+    "transitionReuse": "already present via compact transition cache",
+    "remainingDominantCost": "new exact terminal states and combinatorial target scenario checks introduced by higher-fidelity refinement"
+  },
+  "outcome": "negative",
+  "positiveAcceptanceGatePassed": false,
+  "decision": "Do not add a redundant exact reuse layer; stop M7A under the frozen negative-result clause."
+}
