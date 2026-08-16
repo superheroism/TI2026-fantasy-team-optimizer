@@ -10,6 +10,7 @@ import { attachedPlayerLabel, escapeHtml, renderBoardHtml, UI_ROLES } from './bo
 import { clearActionResults, confidenceExplanation, renderActionResults, renderOperationEditors, utilityDeltaText, utilityText } from './actionView.js';
 import { clearHistogram, drawHistogram, renderComparisonTabs, renderTeamComparison } from './plots.js';
 import { bindDynamicControls, bindStaticControls, reflectTokens, updateLayoutToggle } from './controls.js';
+import { bindScreenshotImport } from './screenshotImport.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string): T => document.querySelector(selector) as T;
 const fmt = (value: number): string => Number.isFinite(value) ? Math.round(value).toLocaleString() : '—';
@@ -244,6 +245,14 @@ export function mount(): void {
     reset: resetBoard,
     layoutChanged: () => { if (data) renderStructure(); },
     themeChanged: theme => applyTheme(theme, true),
+  });
+  bindScreenshotImport(appState, {
+    getData: () => data,
+    renderStructure,
+    afterApply: () => {
+      reflectTokens(appState.tokensRemaining);
+      void runSelected();
+    },
   });
   void loadStatisticalModel().then(bundle => {
     data = bundle;
