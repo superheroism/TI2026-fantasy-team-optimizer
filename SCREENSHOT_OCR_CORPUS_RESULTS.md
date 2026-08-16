@@ -41,13 +41,13 @@ The branch now addresses the failure mechanisms found by the corpus:
 5. **Token extraction.** The same action region now parses an integer token count when visible.
 6. **Failure remains review-safe.** Missing/unreadable action regions still return `null` with confidence 0, preserving current action values and red review outlines rather than fabricating values.
 
-## Build validation
+## Build and contract validation
 
-The implementation typechecks and lints under the repository's strict TypeScript configuration. Generated `build/` and `docs/` artifacts were regenerated from source. The temporary regeneration workflow removed itself after use and is not part of the resulting branch.
+The implementation typechecks and lints under the repository's strict TypeScript configuration. Generated `build/` and `docs/` artifacts were regenerated from source. A deterministic corpus contract test now verifies both layouts are represented, action-visible/absent cases are represented, emblem counts match the declared layout, token ground truth includes 4 and 5, and all six visible action IDs/labels remain synchronized with the canonical `ACTION_CATALOG`.
 
 ## Remaining verification
 
-The six screenshots themselves are not committed as binary test fixtures, so the repository CI cannot truthfully claim image-level OCR accuracy from the JSON labels alone. The next live corpus pass must feed the six actual images through the browser OCR path and record:
+The six screenshots themselves are not committed as binary test fixtures, so repository CI cannot truthfully claim image-level OCR accuracy from the JSON labels alone. The next live corpus pass must feed the six actual images through the browser OCR path and record:
 
 - exact layout;
 - exact teams where roster mapping is valid;
@@ -57,4 +57,4 @@ The six screenshots themselves are not committed as binary test fixtures, so the
 - false-high-confidence errors;
 - cold/warm latency and analyzed-pixel fraction.
 
-Until that live pass is completed, the geometry/action implementation should be treated as **implemented and compile-verified, not accuracy-certified**. Threshold tuning should follow the live pass rather than precede it.
+Until that live pass is completed, the geometry/action implementation should be treated as **implemented and compile/contract-verified, not accuracy-certified**. Threshold tuning should follow the live pass rather than precede it.
