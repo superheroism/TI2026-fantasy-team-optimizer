@@ -13,6 +13,26 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Full CI-equivalent suite
-        run: npm run test:ci
+        shell: bash
+        run: |
+          set +e
+          npm run test:ci 2>&1 | tee m6g-test-ci.txt
+          code=${PIPESTATUS[0]}
+          echo "$code" > m6g-test-ci-exit.txt
+          exit 0
       - name: Browser smoke
-        run: node scripts/smoke-m6g-browser.mjs
+        shell: bash
+        run: |
+          set +e
+          node scripts/smoke-m6g-browser.mjs 2>&1 | tee m6g-browser-smoke.txt
+          code=${PIPESTATUS[0]}
+          echo "$code" > m6g-browser-smoke-exit.txt
+          exit 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m6g-validation
+          path: |
+            m6g-test-ci.txt
+            m6g-test-ci-exit.txt
+            m6g-browser-smoke.txt
+            m6g-browser-smoke-exit.txt
