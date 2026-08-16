@@ -40,7 +40,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           CONTENT=$(base64 -w0 m6f-test.log)
-          gh api --method PUT repos/${{ github.repository }}/contents/.github/m6f-test.log \
+          gh api --method PUT repos/${{ github.repository }}/contents/.github/m6f-test-latest.log \
             -f message='M6F capture failed regression diagnostics' \
             -f content="$CONTENT" \
             -f branch='agent/m6f-ui-layout-worker'
