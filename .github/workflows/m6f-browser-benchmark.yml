@@ -29,11 +29,12 @@ jobs:
         env:
           CHROME_PATH: /usr/bin/google-chrome
         run: node scripts/benchmark-m6f-browser.mjs
-      - name: Commit browser artifact
+      - name: Persist browser artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add benchmarks/m6f-browser-performance.json
-          git commit -m "M6F record browser worker performance"
-          git pull --rebase origin agent/m6f-ui-layout-worker
-          git push origin HEAD:agent/m6f-ui-layout-worker
+          CONTENT=$(base64 -w0 benchmarks/m6f-browser-performance.json)
+          gh api --method PUT repos/${{ github.repository }}/contents/benchmarks/m6f-browser-performance.json \
+            -f message='M6F record browser worker performance' \
+            -f content="$CONTENT" \
+            -f branch='agent/m6f-ui-layout-worker'
