@@ -79,6 +79,7 @@ execFileSync(process.execPath, [tscPath, '-p', resolve(root, 'tsconfig.json')], 
 cpSync(resolve(root, 'build/js'), resolve(root, 'docs/js'), { recursive: true });
 cpSync(resolve(root, 'site/index.html'), resolve(root, 'docs/index.html'));
 cpSync(resolve(root, 'site/styles.css'), resolve(root, 'docs/styles.css'));
+cpSync(resolve(root, 'site/screenshot-import.css'), resolve(root, 'docs/screenshot-import.css'));
 cpSync(resolve(root, 'data'), resolve(root, 'docs/data'), { recursive: true });
 writeFileSync(resolve(root, 'docs/.nojekyll'), '');
 

@@ -33,6 +33,13 @@ export class ApplicationState {
         this.menu[index] = operation;
         this.invalidate(preserveComparison);
     }
+    importScreenshot(board, menu, tokensRemaining) {
+        this.board = structuredClone(board);
+        this.menu = structuredClone(menu);
+        if (tokensRemaining !== undefined)
+            this.tokensRemaining = Math.max(0, tokensRemaining);
+        this.invalidate(false);
+    }
     updateControls(patch, preserveComparison = true) {
         if (patch.tokensRemaining !== undefined)
             this.tokensRemaining = Math.max(0, patch.tokensRemaining);

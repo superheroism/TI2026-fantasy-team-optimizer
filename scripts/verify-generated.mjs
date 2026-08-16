@@ -81,6 +81,7 @@ assertTreesEqual('build/js and docs/js', snapshotTree(resolve(root, 'build/js'))
 assertTreesEqual('data and docs/data', snapshotTree(resolve(root, 'data')), snapshotTree(resolve(root, 'docs/data')));
 assertFileEqual(resolve(root, 'site/index.html'), resolve(root, 'docs/index.html'));
 assertFileEqual(resolve(root, 'site/styles.css'), resolve(root, 'docs/styles.css'));
+assertFileEqual(resolve(root, 'site/screenshot-import.css'), resolve(root, 'docs/screenshot-import.css'));
 
 const noJekyll = resolve(root, 'docs/.nojekyll');
 if (!existsSync(noJekyll) || !statSync(noJekyll).isFile()) {

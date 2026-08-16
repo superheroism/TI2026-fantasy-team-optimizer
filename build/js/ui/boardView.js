@@ -71,7 +71,31 @@ function affectedIndices(board, role, operation) {
 }
 export function clearRecommendationHighlights(root = document) {
     root.querySelectorAll('.banner.recommended-target').forEach(element => element.classList.remove('recommended-target'));
+    root.querySelectorAll('.emblem.recommended-target-emblem').forEach(element => element.classList.remove('recommended-target-emblem'));
     root.querySelectorAll('.client-row.recommended-target-element').forEach(element => element.classList.remove('recommended-target-element'));
+}
+export function clearScreenshotReviewHighlights(root = document) {
+    root.querySelectorAll('.banner.screenshot-review-target').forEach(element => element.classList.remove('screenshot-review-target'));
+    root.querySelectorAll('.emblem.screenshot-review-target-emblem').forEach(element => element.classList.remove('screenshot-review-target-emblem'));
+}
+export function applyScreenshotReviewHighlights(paths) {
+    clearScreenshotReviewHighlights();
+    for (const path of paths) {
+        const role = UI_ROLES.find(candidate => path === candidate || path.startsWith(`${candidate}.`) || path.startsWith(`banners.${candidate}.`));
+        if (!role)
+            continue;
+        const banner = document.querySelector(`.banner[data-banner-role="${role}"]`);
+        if (!banner)
+            continue;
+        banner.classList.add('screenshot-review-target');
+        const match = path.match(/emblems\.(\d+)/) ?? path.match(/emblems\[(\d+)\]/);
+        if (!match)
+            continue;
+        const index = Number(match[1]);
+        if (!Number.isInteger(index))
+            continue;
+        banner.querySelector(`.emblem[data-index="${index}"]`)?.classList.add('screenshot-review-target-emblem');
+    }
 }
 export function applyRecommendationHighlights(result, board) {
     clearRecommendationHighlights();
@@ -87,7 +111,9 @@ export function applyRecommendationHighlights(result, board) {
         return;
     const element = operation.kind === 'stat_reroll' ? 'stat' : operation.kind === 'trait_reroll' ? 'trait' : 'quality';
     for (const index of affectedIndices(board, action.banner, operation)) {
-        banner.querySelector(`.emblem[data-index="${index}"] .client-row[data-element="${element}"]`)?.classList.add('recommended-target-element');
+        const emblem = banner.querySelector(`.emblem[data-index="${index}"]`);
+        emblem?.classList.add('recommended-target-emblem');
+        emblem?.querySelector(`.client-row[data-element="${element}"]`)?.classList.add('recommended-target-element');
     }
 }
 //# sourceMappingURL=boardView.js.map

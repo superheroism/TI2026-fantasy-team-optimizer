@@ -78,7 +78,29 @@ function affectedIndices(board: BoardState, role: Role, operation: OfferedOperat
 
 export function clearRecommendationHighlights(root: ParentNode = document): void {
   root.querySelectorAll<HTMLElement>('.banner.recommended-target').forEach(element => element.classList.remove('recommended-target'));
+  root.querySelectorAll<HTMLElement>('.emblem.recommended-target-emblem').forEach(element => element.classList.remove('recommended-target-emblem'));
   root.querySelectorAll<HTMLElement>('.client-row.recommended-target-element').forEach(element => element.classList.remove('recommended-target-element'));
+}
+
+export function clearScreenshotReviewHighlights(root: ParentNode = document): void {
+  root.querySelectorAll<HTMLElement>('.banner.screenshot-review-target').forEach(element => element.classList.remove('screenshot-review-target'));
+  root.querySelectorAll<HTMLElement>('.emblem.screenshot-review-target-emblem').forEach(element => element.classList.remove('screenshot-review-target-emblem'));
+}
+
+export function applyScreenshotReviewHighlights(paths: readonly string[]): void {
+  clearScreenshotReviewHighlights();
+  for (const path of paths) {
+    const role = UI_ROLES.find(candidate => path === candidate || path.startsWith(`${candidate}.`) || path.startsWith(`banners.${candidate}.`));
+    if (!role) continue;
+    const banner = document.querySelector<HTMLElement>(`.banner[data-banner-role="${role}"]`);
+    if (!banner) continue;
+    banner.classList.add('screenshot-review-target');
+    const match = path.match(/emblems\.(\d+)/) ?? path.match(/emblems\[(\d+)\]/);
+    if (!match) continue;
+    const index = Number(match[1]);
+    if (!Number.isInteger(index)) continue;
+    banner.querySelector<HTMLElement>(`.emblem[data-index="${index}"]`)?.classList.add('screenshot-review-target-emblem');
+  }
 }
 
 export function applyRecommendationHighlights(result: RecommendationResult, board: BoardState): void {
@@ -92,6 +114,8 @@ export function applyRecommendationHighlights(result: RecommendationResult, boar
   if (!operation) return;
   const element = operation.kind === 'stat_reroll' ? 'stat' : operation.kind === 'trait_reroll' ? 'trait' : 'quality';
   for (const index of affectedIndices(board, action.banner, operation)) {
-    banner.querySelector<HTMLElement>(`.emblem[data-index="${index}"] .client-row[data-element="${element}"]`)?.classList.add('recommended-target-element');
+    const emblem = banner.querySelector<HTMLElement>(`.emblem[data-index="${index}"]`);
+    emblem?.classList.add('recommended-target-emblem');
+    emblem?.querySelector<HTMLElement>(`.client-row[data-element="${element}"]`)?.classList.add('recommended-target-element');
   }
 }

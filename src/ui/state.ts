@@ -54,6 +54,13 @@ export class ApplicationState {
     this.invalidate(preserveComparison);
   }
 
+  importScreenshot(board: BoardState, menu: MenuState, tokensRemaining?: number): void {
+    this.board = structuredClone(board);
+    this.menu = structuredClone(menu);
+    if (tokensRemaining !== undefined) this.tokensRemaining = Math.max(0, tokensRemaining);
+    this.invalidate(false);
+  }
+
   updateControls(patch: ControlStatePatch, preserveComparison = true): void {
     if (patch.tokensRemaining !== undefined) this.tokensRemaining = Math.max(0, patch.tokensRemaining);
     if (patch.username !== undefined) this.username = patch.username || '[Username]';
