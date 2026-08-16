@@ -1,80 +1,69 @@
 # Product and Modeling Decisions
 
-This file records the choices that materially affect how the optimizer behaves or how its results should be interpreted.
+This file records choices that affect product behavior or how results should be interpreted. Detailed game rules live in `CLIENT_RULES_2026.md`; engineering history lives in `engineering/history/`.
 
-## Board entry uses selectors
+## Board entry is explicit
 
-The public tool uses explicit controls rather than screenshot parsing. The user directly enters the state the optimizer needs, which avoids adding recognition error to the decision model.
+The public tool uses selectors instead of screenshot parsing. Users enter the board state directly, avoiding an extra source of recognition error.
 
-## Team is the selectable roster unit
+## Teams are the roster controls
 
-The interface selects one team independently for each role:
+A team is selected independently for each role:
 
-- Core → position 1 + position 3
+- Core → positions 1 + 3
 - Mid → position 2
-- Support → position 4 + position 5
+- Support → positions 4 + 5
 
-Player names are shown as context beneath the team selection. They are not independent roster controls.
+Player names are shown for context but are not separate controls.
 
 ## Emblem multipliers are derived
 
-The user edits Stat, Tier, and Trait. Effective multipliers are calculated from the complete banner so adjacency and activation effects cannot drift out of sync with the scoring model.
+Users edit Stat, Tier, and Trait. The tool calculates effective multipliers from the full banner so adjacency and trait activation stay consistent with scoring.
 
-## The model is distribution-aware
+## Scoring uses distributions, not only averages
 
-The scoring model uses team- and role-level distributions plus cross-stat correlation rather than simple average-stat scoring. It also applies the best-two-games / best-series retention rule.
+The model uses team/role stat distributions and within-banner stat correlation, then applies the best-two-games / best-series retention rule.
 
-This is still a proxy. Exact player-game covariance, opponent effects, game duration, and shared tournament advancement are outside the current model.
+It is still a proxy: exact pair-level game covariance, opponent effects, game duration, and shared tournament advancement are not yet modeled.
 
-## The optimizer evaluates the whole decision
+## The optimizer compares the full decision set
 
-A visible reroll is not evaluated only on the banner currently selected in the UI. The optimizer compares every legal action × banner combination, then re-optimizes the free team choices and title contribution.
+For each visible reroll, the optimizer checks every legal action × banner combination and then re-optimizes free team and title choices. It also considers menu reroll and keeping the current board.
 
-Menu reroll and keeping the best current setup are part of the same decision set.
+The objective is either expected final score or probability of reaching a chosen target.
 
-The objective is either:
+## Unknown reroll odds stay explicit
 
-- expected final score; or
-- probability of reaching the user's target score.
+When client probabilities are unpublished, the optimizer uses the assumptions in `CLIENT_RULES_2026.md`. Keeping these assumptions outside search logic makes them visible and replaceable.
 
-## Reroll probabilities are explicit assumptions
+## Production lookahead is capped at two spends
 
-Where exact reroll probabilities are not specified, the optimizer uses the uniform transition assumptions documented in `CLIENT_RULES_2026.md`.
+The browser models at most two token spends. The action available now uses the full adopted transition model; deeper hypothetical continuation uses a validated lower-cost representation.
 
-Keeping these assumptions explicit is preferable to hiding them inside the search code. They can be replaced later without changing the UI or scoring rules.
+This bounds runtime without changing the legal root actions or their immediate outcome probabilities.
 
-## Browser lookahead is finite
+## Presentation and search use different simulation budgets
 
-The current browser search looks ahead at most two token spends. Immediate visible-action transitions are evaluated completely under the adopted transition model; approximation is introduced in the expensive continuation calculation.
+The selected-board histogram uses more Monte Carlo samples because it is meant to show a smooth score distribution. Action search uses fewer shared scenarios and cached role work because its job is to rank decisions quickly.
 
-This keeps the first decision accurate to the current model while bounding runtime.
+See `PERFORMANCE.md` for the current budgets and measured runtimes.
 
-## Score simulation and action search use different budgets
+## Action-card ranges are deltas
 
-The selected-board histogram uses a larger Monte Carlo sample because it is a presentation-quality distribution. Reroll search uses a lower-cost common-random-number model and cached role frontiers so the recommendation remains interactive.
+P10, Median, Expected, and P90 on an Available Action card are **changes relative to keeping the best current setup** after modeled continuation. They are not the same values as the absolute tournament-score histogram.
 
-The performance configuration and benchmark are documented in `PERFORMANCE.md`.
+## Team comparisons depend on the banner
 
-## Action ranges are relative to keeping the board
+The Likely Results view compares teams under the current banner mechanics. Changing only the selected team can reuse those mechanics; changing a stat, tier, trait, or expected-series assumption requires a new evaluation.
 
-P10, Median, Expected, and P90 on an Available Action card are **deltas versus the best current setup** after the modeled continuation policy. They are not the same quantities as the tournament-score histogram.
+## Confidence means decision stability
 
-The zero line is the keep-current-board reference.
-
-## Team comparisons are banner-dependent
-
-The Likely Results view compares every available team under the current banner mechanics. Changing the selected team alone does not change those simulated banner mechanics; changing a stat, tier, trait, or expected-series assumption does.
-
-## Confidence is about decision robustness
-
-Confidence describes how stable the recommended action is within the current probability and score model. It should not be read as confidence that future Dota matches themselves will follow the simulated distribution.
+Confidence describes how robust the recommendation is **within the current model**. It is not a forecast-confidence statement about future Dota matches themselves.
 
 ## Titles
 
-Title-prefix contribution is optimized from the modeled role boosts available to the tool. The suffix is not assigned an invented numeric expected value when its trigger value is not modeled.
+Title prefixes use modeled role boosts. The suffix is not assigned an invented expected value when its trigger value is unavailable.
 
 ## Visual hierarchy
 
-RED, GREEN, and BLUE remain reserved for emblem/stat-pool meaning. Gold marks recommended/best outcomes. Purple is used for interaction and application structure.
-
-The visual system should support the decision rather than add another layer of interpretation.
+RED, GREEN, and BLUE are reserved for emblem/stat-pool meaning. Gold marks recommended or best outcomes; purple is used for interaction and application structure.
