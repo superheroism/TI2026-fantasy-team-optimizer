@@ -1,0 +1,28 @@
+name: M6G targeted
+on:
+  push:
+    branches: [agent/m6g-ui-application-decomposition]
+jobs:
+  targeted:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Targeted UI tests
+        shell: bash
+        run: |
+          set +e
+          node --test tests/ui-contract.test.mjs tests/m6g-ui-decomposition.test.mjs 2>&1 | tee m6g-targeted.txt
+          echo "${PIPESTATUS[0]}" > m6g-targeted-exit.txt
+          exit 0
+      - uses: actions/upload-artifact@v4
+        with:
+          name: m6g-targeted
+          path: |
+            m6g-targeted.txt
+            m6g-targeted-exit.txt
