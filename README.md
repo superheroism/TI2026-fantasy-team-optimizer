@@ -12,10 +12,14 @@ Production recommendation lookahead is capped at **two modeled token spends**:
 
 | Layout | 0 tokens | 1 modeled spend | 2 modeled spends | More than 2 |
 |---|---|---|---|---|
-| 3 Emblems | exact terminal evaluation | exact | exact | not exposed as production search |
-| 5 Emblems | exact terminal evaluation | exact | certified `adaptive-tight` search with exact fallback | not exposed as production search |
+| 3 Emblems | terminal evaluation | full production-reference search | full production-reference search | not exposed as production search |
+| 5 Emblems | terminal evaluation | full production-reference search | certified adaptive reference search with full reference fallback | not exposed as production search |
 
-The five-emblem two-spend route uses the frozen M6E policy. If its policy/configuration invariants fail or the staged search remains ambiguous, it falls back to exact evaluation rather than presenting an uncertified approximate result. Deeper experimental search code is engineering-only and is not part of the v1.0 product contract.
+**Production-reference search** has a specific meaning here. The optimizer first defines a frozen production model: known Fantasy mechanics, explicit assumptions for unpublished reroll/menu probabilities, a fixed statistical player-performance model, and deterministic representative outcome strata for hypothetical continuation. Full reference search evaluates the complete action/value-function search defined by that model. It does **not** claim to enumerate every possible real-world tournament outcome or every modeled transition outcome at every future depth.
+
+For the five-emblem two-spend route, the frozen adaptive policy spends less computation on clear root decisions and progressively refines close ones. It matched full reference search on all 12 decisions in its preregistered holdout, with zero measured regret, and used full reference fallback in 16.7% of those cases. That is validation against the frozen corpus, not a claim of universal mathematical equivalence. Deeper experimental search code is engineering-only and is not part of the v1.0 product contract.
+
+See `ENGINEERING.md` for how the reference model was established, which alternatives were considered, and why these production boundaries were chosen.
 
 ## How to use it
 
@@ -52,11 +56,15 @@ Core retained score + Mid retained score + Support retained score
 
 The selected setup is evaluated with Monte Carlo simulation. The tool reports expected score, median score, P10/P90, and probability of reaching the selected target when a target is set. P10 and P90 are modeled downside/upside ranges, not guarantees.
 
+The same underlying simulated performance scenarios are reused when comparing hypothetical boards. A reroll therefore changes how a common modeled performance scenario is scored instead of generating an unrelated tournament for every candidate action.
+
 ## What the optimizer compares
 
 For each visible reroll action, the optimizer evaluates every legal Core, Mid, and Support target. For each possible result it recalculates the banner, re-optimizes the free team selections, and estimates the resulting board value.
 
 The decision set includes every legal visible action/target, menu reroll when available, and keeping the best current setup. A menu reroll costs one token and preserves the board, so the optimizer does not force a damaging board change merely to continue.
+
+When looking ahead, immediate visible actions use their full modeled transition distributions. Hypothetical continuation uses deterministic representative outcome strata to control state growth while keeping comparisons reproducible. This continuation fidelity is part of the frozen production reference model; it is described in `ENGINEERING.md`.
 
 ## Reroll model assumptions
 
@@ -107,8 +115,9 @@ Run the general performance suite with `npm run benchmark`. Run the v1.0 route b
 
 ## Technical references
 
+- `ENGINEERING.md` — public engineering progression, reference-model definition, alternatives considered, evidence, and remaining limitations.
 - `CLIENT_RULES_2026.md` — Fantasy scoring rules and optimizer probability assumptions.
-- `M7B_V1_READINESS_AUDIT.md` — v1.0 support/routing matrix and release-readiness evidence.
+- `M7B_V1_READINESS_AUDIT.md` — detailed v1.0 support/routing and release-readiness evidence.
 - `PERFORMANCE.md` — simulation counts and benchmark history.
 - `PRODUCT_DECISIONS.md` — product/modeling choices that affect the interface.
-- `ENGINEERING_ROADMAP.md` — architecture and milestone history.
+- `BUILD_AND_SOURCE_POLICY.md` — canonical source and generated-artifact policy.
