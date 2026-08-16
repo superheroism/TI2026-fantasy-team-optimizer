@@ -17,7 +17,7 @@ test('reference screenshot ground truth imports all 15 visible emblems and prese
   const result = validateScreenshotImport(fixture, data, currentBoard, currentMenu);
   assert.equal(result.board.layoutId, 'expanded_5');
   assert.deepEqual(result.board.core.emblems.map(e => [e.stat,e.qualityTier,e.trait]), [
-    ['GPM',4,'Fractal'], ['Teamfight Participation',4,'Vampiric'], ['Creep Score',5,'Vampiric'], ['Roshan Kills',3,'Unique'], ['Tower Kills',2,'Fractal'],
+    ['GPM',4,'Fractal'], ['Teamfight Participation',3,'Vampiric'], ['Creep Score',5,'Vampiric'], ['Roshan Kills',3,'Unique'], ['Tower Kills',2,'Fractal'],
   ]);
   assert.deepEqual(result.board.mid.emblems.map(e => [e.stat,e.qualityTier,e.trait]), [
     ['Tower Kills',5,'Friendly'], ['Runes',5,'Benevolent'], ['Teamfight Participation',5,'Benevolent'], ['Madstone',2,'Friendly'], ['Roshan Kills',5,'Fractal'],
