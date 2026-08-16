@@ -1,0 +1,993 @@
+{
+  "milestone": "M7B",
+  "baseSha": "aa8a880905859f94c4865d7b7a17adb61ad7376c",
+  "generatedAt": "2026-08-16T04:30:16.832Z",
+  "environment": {
+    "node": "v22.23.2",
+    "platform": "linux",
+    "arch": "x64",
+    "cpus": 4,
+    "cpuModel": "Intel(R) Xeon(R) 6973P-C",
+    "totalMemoryGiB": 15.613975524902344
+  },
+  "contract": {
+    "productionModeledHorizonMax": 2,
+    "layouts": [
+      "legacy_3",
+      "expanded_5"
+    ],
+    "objectives": [
+      "expected_score",
+      "target_probability"
+    ]
+  },
+  "routeChecks": [
+    {
+      "id": "legacy_3-expected_score-t1",
+      "pass": true
+    },
+    {
+      "id": "legacy_3-expected_score-t2",
+      "pass": true
+    },
+    {
+      "id": "legacy_3-target_probability-t1",
+      "pass": true
+    },
+    {
+      "id": "legacy_3-target_probability-t2",
+      "pass": true
+    },
+    {
+      "id": "expanded_5-expected_score-t1",
+      "pass": true
+    },
+    {
+      "id": "expanded_5-expected_score-t2",
+      "pass": true
+    },
+    {
+      "id": "expanded_5-target_probability-t1",
+      "pass": true
+    },
+    {
+      "id": "expanded_5-target_probability-t2",
+      "pass": true
+    }
+  ],
+  "allRouteChecksPass": true,
+  "results": [
+    {
+      "id": "legacy_3-expected_score-t1",
+      "layoutId": "legacy_3",
+      "objective": "expected_score",
+      "tokens": 1,
+      "wallMs": 138.858726,
+      "recommendation": "board:red-quality-all:core",
+      "objectiveValue": 57912.35649178181,
+      "currentExpectedScore": 52286.88030811379,
+      "searchMode": "exact",
+      "modeledHorizon": 1,
+      "terminalScoringCalls": 56,
+      "adaptiveStage": null,
+      "exactFallback": false,
+      "fallbackReason": null,
+      "transition": {
+        "cacheHits": 0,
+        "cacheMisses": 9,
+        "cacheEntries": 9
+      },
+      "target": {
+        "scenarioChecks": 0,
+        "preparedRoleCacheHits": 0,
+        "preparedRoleCacheMisses": 0,
+        "targetSearch": {
+          "candidateSets": [
+            0,
+            0,
+            0
+          ],
+          "candidatesBeforePruning": [
+            0,
+            0,
+            0
+          ],
+          "candidatesAfterPruning": [
+            0,
+            0,
+            0
+          ],
+          "searchesConsidered": 0,
+          "candidateCountSignatures": {},
+          "uniquePreparedGroups": [
+            0,
+            0,
+            0
+          ],
+          "uniquePreparedGroupTuples": 0,
+          "reusedPreparedGroupTuples": 0,
+          "uniquePreparedGroupPairs": [
+            0,
+            0,
+            0
+          ],
+          "reusedPreparedGroupPairs": [
+            0,
+            0,
+            0
+          ],
+          "searchBoundPruned": 0,
+          "firstBranchesConsidered": 0,
+          "firstBranchesPruned": 0,
+          "pairBranchesConsidered": 0,
+          "pairBranchesPruned": 0,
+          "triplesConsidered": 0,
+          "triplesCompleted": 0,
+          "triplesEarlyTerminated": 0,
+          "scenarioChecks": 0,
+          "searchScenarioChecks": 0,
+          "seedScenarioChecks": 0,
+          "firstScenarioChecks": 0,
+          "pairScenarioChecks": 0,
+          "tripleScenarioChecks": 0,
+          "suffixScenarioChecks": 0,
+          "survivingPairSampleBuilds": 0,
+          "thirdCandidatesVisited": 0,
+          "maxThirdCandidatesVisited": 0,
+          "suffixBoundCalls": 0,
+          "suffixBoundPruned": 0,
+          "suffixThirdCandidatesSkipped": 0,
+          "pairGroupCacheHits": 0,
+          "pairGroupCacheMisses": 0,
+          "pairSampleCacheHits": 0,
+          "pairSampleCacheMisses": 0,
+          "pairSampleCacheBuilds": 0,
+          "pairCacheResets": 0,
+          "pairCacheEstimatedBytes": 0,
+          "suffixCacheHits": 0,
+          "suffixCacheMisses": 0,
+          "suffixCacheBuilds": 0,
+          "suffixCacheResets": 0,
+          "suffixCacheEstimatedBytes": 0,
+          "candidatePreparationMs": 0,
+          "pairSampleBuildMs": 0,
+          "suffixSummaryBuildMs": 0,
+          "combinatorialSearchMs": 0
+        }
+      },
+      "memory": {
+        "rssBefore": 65441792,
+        "rssAfter": 86618112,
+        "rssDelta": 21176320,
+        "heapUsedAfter": 18928032
+      }
+    },
+    {
+      "id": "legacy_3-expected_score-t2",
+      "layoutId": "legacy_3",
+      "objective": "expected_score",
+      "tokens": 2,
+      "wallMs": 730.1577970000001,
+      "recommendation": "board:red-quality-all:core",
+      "objectiveValue": 60560.497614831875,
+      "currentExpectedScore": 52286.88030811379,
+      "searchMode": "exact",
+      "modeledHorizon": 2,
+      "terminalScoringCalls": 6563,
+      "adaptiveStage": null,
+      "exactFallback": false,
+      "fallbackReason": null,
+      "transition": {
+        "cacheHits": 1889,
+        "cacheMisses": 1000,
+        "cacheEntries": 9
+      },
+      "target": {
+        "scenarioChecks": 0,
+        "preparedRoleCacheHits": 0,
+        "preparedRoleCacheMisses": 0,
+        "targetSearch": {
+          "candidateSets": [
+            0,
+            0,
+            0
+          ],
+          "candidatesBeforePruning": [
+            0,
+            0,
+            0
+          ],
+          "candidatesAfterPruning": [
+            0,
+            0,
+            0
+          ],
+          "searchesConsidered": 0,
+          "candidateCountSignatures": {},
+          "uniquePreparedGroups": [
+            0,
+            0,
+            0
+          ],
+          "uniquePreparedGroupTuples": 0,
+          "reusedPreparedGroupTuples": 0,
+          "uniquePreparedGroupPairs": [
+            0,
+            0,
+            0
+          ],
+          "reusedPreparedGroupPairs": [
+            0,
+            0,
+            0
+          ],
+          "searchBoundPruned": 0,
+          "firstBranchesConsidered": 0,
+          "firstBranchesPruned": 0,
+          "pairBranchesConsidered": 0,
+          "pairBranchesPruned": 0,
+          "triplesConsidered": 0,
+          "triplesCompleted": 0,
+          "triplesEarlyTerminated": 0,
+          "scenarioChecks": 0,
+          "searchScenarioChecks": 0,
+          "seedScenarioChecks": 0,
+          "firstScenarioChecks": 0,
+          "pairScenarioChecks": 0,
+          "tripleScenarioChecks": 0,
+          "suffixScenarioChecks": 0,
+          "survivingPairSampleBuilds": 0,
+          "thirdCandidatesVisited": 0,
+          "maxThirdCandidatesVisited": 0,
+          "suffixBoundCalls": 0,
+          "suffixBoundPruned": 0,
+          "suffixThirdCandidatesSkipped": 0,
+          "pairGroupCacheHits": 0,
+          "pairGroupCacheMisses": 0,
+          "pairSampleCacheHits": 0,
+          "pairSampleCacheMisses": 0,
+          "pairSampleCacheBuilds": 0,
+          "pairCacheResets": 0,
+          "pairCacheEstimatedBytes": 0,
+          "suffixCacheHits": 0,
+          "suffixCacheMisses": 0,
+          "suffixCacheBuilds": 0,
+          "suffixCacheResets": 0,
+          "suffixCacheEstimatedBytes": 0,
+          "candidatePreparationMs": 0,
+          "pairSampleBuildMs": 0,
+          "suffixSummaryBuildMs": 0,
+          "combinatorialSearchMs": 0
+        }
+      },
+      "memory": {
+        "rssBefore": 65597440,
+        "rssAfter": 131526656,
+        "rssDelta": 65929216,
+        "heapUsedAfter": 35238504
+      }
+    },
+    {
+      "id": "legacy_3-target_probability-t1",
+      "layoutId": "legacy_3",
+      "objective": "target_probability",
+      "tokens": 1,
+      "wallMs": 258.560429,
+      "recommendation": "board:red-quality-all:core",
+      "objectiveValue": 0.7499999999999999,
+      "currentExpectedScore": 52167.682113470284,
+      "searchMode": "exact",
+      "modeledHorizon": 1,
+      "terminalScoringCalls": 111,
+      "adaptiveStage": null,
+      "exactFallback": false,
+      "fallbackReason": null,
+      "transition": {
+        "cacheHits": 0,
+        "cacheMisses": 9,
+        "cacheEntries": 9
+      },
+      "target": {
+        "scenarioChecks": 4091105,
+        "preparedRoleCacheHits": 880,
+        "preparedRoleCacheMisses": 464,
+        "targetSearch": {
+          "candidateSets": [
+            176,
+            112,
+            176
+          ],
+          "candidatesBeforePruning": [
+            2816,
+            1792,
+            2816
+          ],
+          "candidatesAfterPruning": [
+            2808,
+            1792,
+            2614
+          ],
+          "searchesConsidered": 448,
+          "candidateCountSignatures": {
+            "16,16,15": 62,
+            "16,16,16": 290,
+            "16,16,13": 53,
+            "15,16,15": 1,
+            "15,16,16": 6,
+            "15,16,13": 1,
+            "16,16,10": 6,
+            "16,16,11": 5,
+            "16,16,14": 22,
+            "16,16,12": 2
+          },
+          "uniquePreparedGroups": [
+            176,
+            112,
+            176
+          ],
+          "uniquePreparedGroupTuples": 448,
+          "reusedPreparedGroupTuples": 0,
+          "uniquePreparedGroupPairs": [
+            280,
+            280,
+            344
+          ],
+          "reusedPreparedGroupPairs": [
+            168,
+            168,
+            104
+          ],
+          "searchBoundPruned": 12,
+          "firstBranchesConsidered": 6968,
+          "firstBranchesPruned": 1227,
+          "pairBranchesConsidered": 91856,
+          "pairBranchesPruned": 87576,
+          "triplesConsidered": 6905,
+          "triplesCompleted": 103,
+          "triplesEarlyTerminated": 6802,
+          "scenarioChecks": 4091105,
+          "searchScenarioChecks": 20940,
+          "seedScenarioChecks": 20928,
+          "firstScenarioChecks": 319972,
+          "pairScenarioChecks": 3297740,
+          "tripleScenarioChecks": 224922,
+          "suffixScenarioChecks": 206603,
+          "survivingPairSampleBuilds": 2802,
+          "thirdCandidatesVisited": 6905,
+          "maxThirdCandidatesVisited": 8,
+          "suffixBoundCalls": 5140,
+          "suffixBoundPruned": 4280,
+          "suffixThirdCandidatesSkipped": 57625,
+          "pairGroupCacheHits": 168,
+          "pairGroupCacheMisses": 268,
+          "pairSampleCacheHits": 3692,
+          "pairSampleCacheMisses": 88164,
+          "pairSampleCacheBuilds": 301,
+          "pairCacheResets": 0,
+          "pairCacheEstimatedBytes": 131968,
+          "suffixCacheHits": 272,
+          "suffixCacheMisses": 176,
+          "suffixCacheBuilds": 176,
+          "suffixCacheResets": 0,
+          "suffixCacheEstimatedBytes": 307168,
+          "candidatePreparationMs": 6.79593699999954,
+          "pairSampleBuildMs": 1.981150999999869,
+          "suffixSummaryBuildMs": 1.854700000000662,
+          "combinatorialSearchMs": 86.17743000000004
+        }
+      },
+      "memory": {
+        "rssBefore": 65433600,
+        "rssAfter": 94892032,
+        "rssDelta": 29458432,
+        "heapUsedAfter": 17558088
+      }
+    },
+    {
+      "id": "legacy_3-target_probability-t2",
+      "layoutId": "legacy_3",
+      "objective": "target_probability",
+      "tokens": 2,
+      "wallMs": 3614.9436939999996,
+      "recommendation": "board:red-quality-all:core",
+      "objectiveValue": 0.8660000786833985,
+      "currentExpectedScore": 52167.682113470284,
+      "searchMode": "exact",
+      "modeledHorizon": 2,
+      "terminalScoringCalls": 6618,
+      "adaptiveStage": null,
+      "exactFallback": false,
+      "fallbackReason": null,
+      "transition": {
+        "cacheHits": 1889,
+        "cacheMisses": 1000,
+        "cacheEntries": 9
+      },
+      "target": {
+        "scenarioChecks": 432886346,
+        "preparedRoleCacheHits": 141656,
+        "preparedRoleCacheMisses": 15856,
+        "targetSearch": {
+          "candidateSets": [
+            5208,
+            4264,
+            6384
+          ],
+          "candidatesBeforePruning": [
+            83328,
+            68224,
+            102144
+          ],
+          "candidatesAfterPruning": [
+            82914,
+            67984,
+            92071
+          ],
+          "searchesConsidered": 52504,
+          "candidateCountSignatures": {
+            "16,16,15": 8440,
+            "16,16,16": 29274,
+            "16,16,13": 5636,
+            "15,16,15": 185,
+            "15,16,16": 830,
+            "15,16,13": 162,
+            "16,16,10": 1029,
+            "16,16,11": 1011,
+            "16,16,14": 3609,
+            "16,15,15": 51,
+            "16,15,16": 217,
+            "16,15,13": 42,
+            "16,14,15": 51,
+            "16,14,16": 198,
+            "16,14,13": 36,
+            "16,16,9": 630,
+            "16,16,12": 731,
+            "16,16,8": 164,
+            "15,16,10": 10,
+            "15,16,11": 15,
+            "15,16,14": 64,
+            "15,15,15": 1,
+            "15,15,16": 5,
+            "15,15,13": 1,
+            "15,14,15": 1,
+            "15,14,16": 6,
+            "15,14,13": 1,
+            "15,16,9": 15,
+            "15,16,12": 12,
+            "15,16,8": 2,
+            "16,13,15": 1,
+            "16,13,16": 8,
+            "16,13,13": 1,
+            "16,15,10": 5,
+            "16,15,11": 5,
+            "16,14,10": 6,
+            "16,14,11": 5,
+            "16,16,7": 5,
+            "16,16,6": 2,
+            "16,15,14": 15,
+            "16,14,14": 18,
+            "16,15,12": 2,
+            "16,14,12": 2
+          },
+          "uniquePreparedGroups": [
+            5208,
+            4264,
+            6384
+          ],
+          "uniquePreparedGroupTuples": 52504,
+          "reusedPreparedGroupTuples": 0,
+          "uniquePreparedGroupPairs": [
+            20432,
+            22024,
+            25896
+          ],
+          "reusedPreparedGroupPairs": [
+            32072,
+            30480,
+            26608
+          ],
+          "searchBoundPruned": 3109,
+          "firstBranchesConsidered": 789082,
+          "firstBranchesPruned": 170306,
+          "pairBranchesConsidered": 9887707,
+          "pairBranchesPruned": 9342964,
+          "triplesConsidered": 918012,
+          "triplesCompleted": 12630,
+          "triplesEarlyTerminated": 905382,
+          "scenarioChecks": 432886346,
+          "searchScenarioChecks": 2413692,
+          "seedScenarioChecks": 2370960,
+          "firstScenarioChecks": 35636089,
+          "pairScenarioChecks": 341288311,
+          "tripleScenarioChecks": 25901917,
+          "suffixScenarioChecks": 25275377,
+          "survivingPairSampleBuilds": 177595,
+          "thirdCandidatesVisited": 918012,
+          "maxThirdCandidatesVisited": 16,
+          "suffixBoundCalls": 667155,
+          "suffixBoundPruned": 544732,
+          "suffixThirdCandidatesSkipped": 7126627,
+          "pairGroupCacheHits": 30084,
+          "pairGroupCacheMisses": 19311,
+          "pairSampleCacheHits": 1989689,
+          "pairSampleCacheMisses": 7898018,
+          "pairSampleCacheBuilds": 47025,
+          "pairCacheResets": 0,
+          "pairCacheEstimatedBytes": 19839488,
+          "suffixCacheHits": 46120,
+          "suffixCacheMisses": 6384,
+          "suffixCacheBuilds": 6384,
+          "suffixCacheResets": 0,
+          "suffixCacheEstimatedBytes": 10838896,
+          "candidatePreparationMs": 239.54871800000433,
+          "pairSampleBuildMs": 19.705358999916797,
+          "suffixSummaryBuildMs": 33.19184800000659,
+          "combinatorialSearchMs": 2160.0807989999676
+        }
+      },
+      "memory": {
+        "rssBefore": 65376256,
+        "rssAfter": 439558144,
+        "rssDelta": 374181888,
+        "heapUsedAfter": 164477296
+      }
+    },
+    {
+      "id": "expanded_5-expected_score-t1",
+      "layoutId": "expanded_5",
+      "objective": "expected_score",
+      "tokens": 1,
+      "wallMs": 188.864397,
+      "recommendation": "board:blue-trait-all:support",
+      "objectiveValue": 72264.03917446457,
+      "currentExpectedScore": 70151.56450102488,
+      "searchMode": "exact",
+      "modeledHorizon": 1,
+      "terminalScoringCalls": 212,
+      "adaptiveStage": null,
+      "exactFallback": false,
+      "fallbackReason": null,
+      "transition": {
+        "cacheHits": 0,
+        "cacheMisses": 9,
+        "cacheEntries": 9
+      },
+      "target": {
+        "scenarioChecks": 0,
+        "preparedRoleCacheHits": 0,
+        "preparedRoleCacheMisses": 0,
+        "targetSearch": {
+          "candidateSets": [
+            0,
+            0,
+            0
+          ],
+          "candidatesBeforePruning": [
+            0,
+            0,
+            0
+          ],
+          "candidatesAfterPruning": [
+            0,
+            0,
+            0
+          ],
+          "searchesConsidered": 0,
+          "candidateCountSignatures": {},
+          "uniquePreparedGroups": [
+            0,
+            0,
+            0
+          ],
+          "uniquePreparedGroupTuples": 0,
+          "reusedPreparedGroupTuples": 0,
+          "uniquePreparedGroupPairs": [
+            0,
+            0,
+            0
+          ],
+          "reusedPreparedGroupPairs": [
+            0,
+            0,
+            0
+          ],
+          "searchBoundPruned": 0,
+          "firstBranchesConsidered": 0,
+          "firstBranchesPruned": 0,
+          "pairBranchesConsidered": 0,
+          "pairBranchesPruned": 0,
+          "triplesConsidered": 0,
+          "triplesCompleted": 0,
+          "triplesEarlyTerminated": 0,
+          "scenarioChecks": 0,
+          "searchScenarioChecks": 0,
+          "seedScenarioChecks": 0,
+          "firstScenarioChecks": 0,
+          "pairScenarioChecks": 0,
+          "tripleScenarioChecks": 0,
+          "suffixScenarioChecks": 0,
+          "survivingPairSampleBuilds": 0,
+          "thirdCandidatesVisited": 0,
+          "maxThirdCandidatesVisited": 0,
+          "suffixBoundCalls": 0,
+          "suffixBoundPruned": 0,
+          "suffixThirdCandidatesSkipped": 0,
+          "pairGroupCacheHits": 0,
+          "pairGroupCacheMisses": 0,
+          "pairSampleCacheHits": 0,
+          "pairSampleCacheMisses": 0,
+          "pairSampleCacheBuilds": 0,
+          "pairCacheResets": 0,
+          "pairCacheEstimatedBytes": 0,
+          "suffixCacheHits": 0,
+          "suffixCacheMisses": 0,
+          "suffixCacheBuilds": 0,
+          "suffixCacheResets": 0,
+          "suffixCacheEstimatedBytes": 0,
+          "candidatePreparationMs": 0,
+          "pairSampleBuildMs": 0,
+          "suffixSummaryBuildMs": 0,
+          "combinatorialSearchMs": 0
+        }
+      },
+      "memory": {
+        "rssBefore": 66674688,
+        "rssAfter": 87683072,
+        "rssDelta": 21008384,
+        "heapUsedAfter": 14352832
+      }
+    },
+    {
+      "id": "expanded_5-expected_score-t2",
+      "layoutId": "expanded_5",
+      "objective": "expected_score",
+      "tokens": 2,
+      "wallMs": 830.603236,
+      "recommendation": "board:blue-trait-all:support",
+      "objectiveValue": 74439.51130465663,
+      "currentExpectedScore": 70151.56450102488,
+      "searchMode": "expanded_t2_adaptive",
+      "modeledHorizon": 2,
+      "terminalScoringCalls": 5958,
+      "adaptiveStage": "k2",
+      "exactFallback": false,
+      "fallbackReason": null,
+      "transition": {
+        "cacheHits": 969,
+        "cacheMisses": 540,
+        "cacheEntries": 9
+      },
+      "target": {
+        "scenarioChecks": 0,
+        "preparedRoleCacheHits": 0,
+        "preparedRoleCacheMisses": 0,
+        "targetSearch": {
+          "candidateSets": [
+            0,
+            0,
+            0
+          ],
+          "candidatesBeforePruning": [
+            0,
+            0,
+            0
+          ],
+          "candidatesAfterPruning": [
+            0,
+            0,
+            0
+          ],
+          "searchesConsidered": 0,
+          "candidateCountSignatures": {},
+          "uniquePreparedGroups": [
+            0,
+            0,
+            0
+          ],
+          "uniquePreparedGroupTuples": 0,
+          "reusedPreparedGroupTuples": 0,
+          "uniquePreparedGroupPairs": [
+            0,
+            0,
+            0
+          ],
+          "reusedPreparedGroupPairs": [
+            0,
+            0,
+            0
+          ],
+          "searchBoundPruned": 0,
+          "firstBranchesConsidered": 0,
+          "firstBranchesPruned": 0,
+          "pairBranchesConsidered": 0,
+          "pairBranchesPruned": 0,
+          "triplesConsidered": 0,
+          "triplesCompleted": 0,
+          "triplesEarlyTerminated": 0,
+          "scenarioChecks": 0,
+          "searchScenarioChecks": 0,
+          "seedScenarioChecks": 0,
+          "firstScenarioChecks": 0,
+          "pairScenarioChecks": 0,
+          "tripleScenarioChecks": 0,
+          "suffixScenarioChecks": 0,
+          "survivingPairSampleBuilds": 0,
+          "thirdCandidatesVisited": 0,
+          "maxThirdCandidatesVisited": 0,
+          "suffixBoundCalls": 0,
+          "suffixBoundPruned": 0,
+          "suffixThirdCandidatesSkipped": 0,
+          "pairGroupCacheHits": 0,
+          "pairGroupCacheMisses": 0,
+          "pairSampleCacheHits": 0,
+          "pairSampleCacheMisses": 0,
+          "pairSampleCacheBuilds": 0,
+          "pairCacheResets": 0,
+          "pairCacheEstimatedBytes": 0,
+          "suffixCacheHits": 0,
+          "suffixCacheMisses": 0,
+          "suffixCacheBuilds": 0,
+          "suffixCacheResets": 0,
+          "suffixCacheEstimatedBytes": 0,
+          "candidatePreparationMs": 0,
+          "pairSampleBuildMs": 0,
+          "suffixSummaryBuildMs": 0,
+          "combinatorialSearchMs": 0
+        }
+      },
+      "memory": {
+        "rssBefore": 66600960,
+        "rssAfter": 133439488,
+        "rssDelta": 66838528,
+        "heapUsedAfter": 40927184
+      }
+    },
+    {
+      "id": "expanded_5-target_probability-t1",
+      "layoutId": "expanded_5",
+      "objective": "target_probability",
+      "tokens": 1,
+      "wallMs": 371.92287100000004,
+      "recommendation": "board:green-stat-all:core",
+      "objectiveValue": 1.0000000000000002,
+      "currentExpectedScore": 70151.56450102488,
+      "searchMode": "exact",
+      "modeledHorizon": 1,
+      "terminalScoringCalls": 423,
+      "adaptiveStage": null,
+      "exactFallback": false,
+      "fallbackReason": null,
+      "transition": {
+        "cacheHits": 0,
+        "cacheMisses": 9,
+        "cacheEntries": 9
+      },
+      "target": {
+        "scenarioChecks": 61621,
+        "preparedRoleCacheHits": 3376,
+        "preparedRoleCacheMisses": 1712,
+        "targetSearch": {
+          "candidateSets": [
+            688,
+            336,
+            688
+          ],
+          "candidatesBeforePruning": [
+            11008,
+            5376,
+            11008
+          ],
+          "candidatesAfterPruning": [
+            10998,
+            5376,
+            10949
+          ],
+          "searchesConsidered": 1696,
+          "candidateCountSignatures": {
+            "16,16,16": 1638,
+            "15,16,16": 10,
+            "16,16,15": 39,
+            "16,16,14": 8,
+            "16,16,12": 1
+          },
+          "uniquePreparedGroups": [
+            688,
+            336,
+            688
+          ],
+          "uniquePreparedGroupTuples": 1696,
+          "reusedPreparedGroupTuples": 0,
+          "uniquePreparedGroupPairs": [
+            1016,
+            1016,
+            1368
+          ],
+          "reusedPreparedGroupPairs": [
+            680,
+            680,
+            328
+          ],
+          "searchBoundPruned": 1180,
+          "firstBranchesConsidered": 8252,
+          "firstBranchesPruned": 8240,
+          "pairBranchesConsidered": 192,
+          "pairBranchesPruned": 176,
+          "triplesConsidered": 31,
+          "triplesCompleted": 14,
+          "triplesEarlyTerminated": 17,
+          "scenarioChecks": 61621,
+          "searchScenarioChecks": 25948,
+          "seedScenarioChecks": 24768,
+          "firstScenarioChecks": 8816,
+          "pairScenarioChecks": 944,
+          "tripleScenarioChecks": 889,
+          "suffixScenarioChecks": 256,
+          "survivingPairSampleBuilds": 6,
+          "thirdCandidatesVisited": 31,
+          "maxThirdCandidatesVisited": 4,
+          "suffixBoundCalls": 21,
+          "suffixBoundPruned": 16,
+          "suffixThirdCandidatesSkipped": 225,
+          "pairGroupCacheHits": 219,
+          "pairGroupCacheMisses": 297,
+          "pairSampleCacheHits": 10,
+          "pairSampleCacheMisses": 182,
+          "pairSampleCacheBuilds": 4,
+          "pairCacheResets": 0,
+          "pairCacheEstimatedBytes": 7680,
+          "suffixCacheHits": 1008,
+          "suffixCacheMisses": 688,
+          "suffixCacheBuilds": 688,
+          "suffixCacheResets": 0,
+          "suffixCacheEstimatedBytes": 1231568,
+          "candidatePreparationMs": 29.77532699999921,
+          "pairSampleBuildMs": 0.010072000000008074,
+          "suffixSummaryBuildMs": 4.8531589999989535,
+          "combinatorialSearchMs": 21.015368999999765
+        }
+      },
+      "memory": {
+        "rssBefore": 66588672,
+        "rssAfter": 136015872,
+        "rssDelta": 69427200,
+        "heapUsedAfter": 29757088
+      }
+    },
+    {
+      "id": "expanded_5-target_probability-t2",
+      "layoutId": "expanded_5",
+      "objective": "target_probability",
+      "tokens": 2,
+      "wallMs": 5726.664395,
+      "recommendation": "stop",
+      "objectiveValue": 1,
+      "currentExpectedScore": 70151.56450102488,
+      "searchMode": "expanded_t2_adaptive_exact_fallback",
+      "modeledHorizon": 2,
+      "terminalScoringCalls": 18232,
+      "adaptiveStage": "exact",
+      "exactFallback": true,
+      "fallbackReason": null,
+      "transition": {
+        "cacheHits": 3049,
+        "cacheMisses": 1580,
+        "cacheEntries": 9
+      },
+      "target": {
+        "scenarioChecks": 24861461,
+        "preparedRoleCacheHits": 388640,
+        "preparedRoleCacheMisses": 43864,
+        "targetSearch": {
+          "candidateSets": [
+            12736,
+            17232,
+            13896
+          ],
+          "candidatesBeforePruning": [
+            203776,
+            275712,
+            222336
+          ],
+          "candidatesAfterPruning": [
+            203618,
+            275366,
+            216417
+          ],
+          "searchesConsidered": 144168,
+          "candidateCountSignatures": {
+            "16,16,16": 130562,
+            "15,16,16": 1208,
+            "16,16,15": 7841,
+            "16,16,14": 2668,
+            "16,16,12": 423,
+            "16,13,16": 62,
+            "16,15,16": 400,
+            "16,14,16": 140,
+            "16,16,13": 582,
+            "16,16,11": 125,
+            "15,16,14": 17,
+            "15,16,15": 38,
+            "15,16,12": 2,
+            "15,13,16": 1,
+            "15,15,16": 3,
+            "15,14,16": 1,
+            "15,16,13": 2,
+            "15,16,11": 1,
+            "16,13,15": 3,
+            "16,15,15": 20,
+            "16,14,14": 3,
+            "16,14,15": 4,
+            "16,16,10": 31,
+            "16,16,9": 11,
+            "16,14,12": 1,
+            "16,16,6": 7,
+            "16,16,7": 7,
+            "16,16,5": 1,
+            "16,16,8": 3,
+            "16,13,14": 1
+          },
+          "uniquePreparedGroups": [
+            12736,
+            17232,
+            13896
+          ],
+          "uniquePreparedGroupTuples": 144168,
+          "reusedPreparedGroupTuples": 0,
+          "uniquePreparedGroupPairs": [
+            64296,
+            66576,
+            57152
+          ],
+          "reusedPreparedGroupPairs": [
+            79872,
+            77592,
+            87016
+          ],
+          "searchBoundPruned": 99144,
+          "firstBranchesConsidered": 719899,
+          "firstBranchesPruned": 685534,
+          "pairBranchesConsidered": 549546,
+          "pairBranchesPruned": 451477,
+          "triplesConsidered": 294307,
+          "triplesCompleted": 3935,
+          "triplesEarlyTerminated": 290372,
+          "scenarioChecks": 24861461,
+          "searchScenarioChecks": 2260296,
+          "seedScenarioChecks": 2161152,
+          "firstScenarioChecks": 2335054,
+          "pairScenarioChecks": 9658433,
+          "tripleScenarioChecks": 3262650,
+          "suffixScenarioChecks": 5183876,
+          "survivingPairSampleBuilds": 55919,
+          "thirdCandidatesVisited": 294307,
+          "maxThirdCandidatesVisited": 16,
+          "suffixBoundCalls": 161145,
+          "suffixBoundPruned": 98067,
+          "suffixThirdCandidatesSkipped": 1262731,
+          "pairGroupCacheHits": 24841,
+          "pairGroupCacheMisses": 20183,
+          "pairSampleCacheHits": 97720,
+          "pairSampleCacheMisses": 451826,
+          "pairSampleCacheBuilds": 23143,
+          "pairCacheResets": 0,
+          "pairCacheEstimatedBytes": 10579456,
+          "suffixCacheHits": 130272,
+          "suffixCacheMisses": 13896,
+          "suffixCacheBuilds": 13896,
+          "suffixCacheResets": 0,
+          "suffixCacheEstimatedBytes": 24688656,
+          "candidatePreparationMs": 686.6113620000438,
+          "pairSampleBuildMs": 5.463267999997527,
+          "suffixSummaryBuildMs": 174.58756899997604,
+          "combinatorialSearchMs": 826.5628199999173
+        }
+      },
+      "memory": {
+        "rssBefore": 67010560,
+        "rssAfter": 985833472,
+        "rssDelta": 918822912,
+        "heapUsedAfter": 407452272
+      }
+    }
+  ]
+}
