@@ -13,13 +13,14 @@ const raw=JSON.parse(fs.readFileSync('data/ti2026-statistical-model.json','utf8'
 const titles=JSON.parse(fs.readFileSync('data/ti2026-title-model.json','utf8'));
 const data=convertStatisticalModel(raw,titles);
 const board=layoutId==='legacy_3'?structuredClone(defaultBoard):convertBoardLayout(defaultBoard,'expanded_5');
-const state={board,tokensRemaining:tokens,menu:structuredClone(defaultMenu),menuRerollAvailable:true,username:'M7B production baseline',objective,...(objective==='target_probability'?{targetScore:55000}:{})};
+const targetScore=layoutId==='expanded_5'?75000:55000;
+const state={board,tokensRemaining:tokens,menu:structuredClone(defaultMenu),menuRerollAvailable:true,username:'M7B production baseline',objective,...(objective==='target_probability'?{targetScore}:{})};
 const actionKey=action=>action.kind==='board_action'?`board:${action.operationId}:${action.banner}`:action.kind;
 clearTransitionCache();resetTransitionDiagnostics();clearTargetSearchOptimizationCaches();resetTargetDiagnostics();setTargetDiagnosticsEnabled(true);if(global.gc)global.gc();
 const before=process.memoryUsage(),started=performance.now(),result=recommendNextAction(state,data,true),wallMs=performance.now()-started,after=process.memoryUsage();
 const engine=getLastOptimizerEngineDiagnostics(),transition=getTransitionDiagnostics(),target=getTargetDiagnostics(),targetSearch=getTargetSearchDiagnostics();setTargetDiagnosticsEnabled(false);
 console.log(JSON.stringify({
-  id:`${layoutId}-${objective}-t${tokens}`,layoutId,objective,tokens,wallMs,
+  id:`${layoutId}-${objective}-t${tokens}`,layoutId,objective,tokens,...(objective==='target_probability'?{targetScore}:{}),wallMs,
   recommendation:actionKey(result.recommendation.action),objectiveValue:result.recommendation.expectedFinalUtility,currentExpectedScore:result.current.expected,
   searchMode:engine.searchMode,modeledHorizon:engine.modeledHorizon,terminalScoringCalls:engine.terminalScoringCalls,
   adaptiveStage:engine.adaptiveRefinement?.finalStage??null,exactFallback:engine.adaptiveRefinement?.exactFallback??false,fallbackReason:engine.fallbackReason??null,
