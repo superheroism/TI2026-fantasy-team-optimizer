@@ -170,14 +170,15 @@ export function validateScreenshotImport(raw: unknown, data: DataBundle, current
   const warnings = Array.isArray(raw.warnings) ? raw.warnings.filter((warning): warning is string => typeof warning === 'string' && warning.trim().length > 0) : [];
   const fieldConfidence = asConfidence(raw.fieldConfidence);
   const lowConfidenceFields = fieldConfidence.filter(field => field.confidence < REVIEW_THRESHOLD);
-  return {
+  const result: ValidatedScreenshotImport = {
     board,
     menu,
-    tokensRemaining,
     warnings,
     lowConfidenceFields,
     requiresReview: warnings.length > 0 || lowConfidenceFields.length > 0,
   };
+  if (tokensRemaining !== undefined) result.tokensRemaining = tokensRemaining;
+  return result;
 }
 
 export async function fileToScreenshotDataUrl(file: File, maxDimension = 2200): Promise<string> {
