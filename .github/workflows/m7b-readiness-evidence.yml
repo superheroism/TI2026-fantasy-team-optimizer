@@ -1,0 +1,49 @@
+name: M7B readiness evidence
+
+on:
+  push:
+    branches:
+      - agent/m7b-v1-readiness-audit
+
+permissions:
+  contents: write
+
+jobs:
+  evidence:
+    if: ${{ !contains(github.event.head_commit.message, '[m7b evidence]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/m7b-v1-readiness-audit
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Regenerate deployment artifacts
+        run: npm run build
+
+      - name: Typecheck and test generated program
+        run: |
+          npm run typecheck
+          npm run verify:generated
+          node --test tests/*.test.mjs
+
+      - name: Run authoritative v1 route baseline
+        run: node scripts/benchmark-m7b-v1.mjs
+
+      - name: Commit generated outputs and benchmark evidence
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add build docs benchmarks/m7b-v1-production-baseline.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: record M7B generated outputs and benchmark [m7b evidence] [skip ci]"
+            git push origin HEAD:agent/m7b-v1-readiness-audit
+          fi
