@@ -1,46 +1,12 @@
 {
-  "schemaVersion": 1,
-  "note": "Ground truth manually established from four supplied Fantasy screenshots. New screenshots record visible selection text rather than guessing a canonical current-model team when roster-era mapping is not established. All four omit reroll cards.",
+  "schemaVersion": 2,
+  "note": "Ground truth manually established from six supplied Fantasy screenshots. Visible selection text is retained where historical roster-to-current-team mapping is not established.",
   "fixtures": [
-    {
-      "id": "expanded5-reference-no-actions",
-      "layoutId": "expanded_5",
-      "actionsVisible": false,
-      "banners": {
-        "core": {"expectedTeam":"Team Vision","visibleSelectionText":"Satanic & Noticed","emblems":[["GPM",4,"Fractal"],["Teamfight Participation",3,"Vampiric"],["Creep Score",5,"Vampiric"],["Roshan Kills",3,"Unique"],["Tower Kills",2,"Fractal"]]},
-        "mid": {"expectedTeam":"Nigma Galaxy","visibleSelectionText":"lorenof","emblems":[["Tower Kills",5,"Friendly"],["Runes",5,"Benevolent"],["Teamfight Participation",5,"Benevolent"],["Madstone",2,"Friendly"],["Roshan Kills",5,"Fractal"]]},
-        "support": {"expectedTeam":"LGD Gaming","visibleSelectionText":"Thiolicor & KingJungles","emblems":[["Runes",5,"Friendly"],["Teamfight Participation",1,"Unique"],["Camps Stacked",5,"Vampiric"],["Roshan Kills",2,"Benevolent"],["Smokes Used",3,"Vampiric"]]}
-      }
-    },
-    {
-      "id": "expanded5-crimson-no-actions",
-      "layoutId": "expanded_5",
-      "actionsVisible": false,
-      "banners": {
-        "core": {"visibleSelectionText":"Satanic & Noticed","emblems":[["Creep Score",5,"Vampiric"],["Teamfight Participation",5,"Vampiric"],["GPM",5,"Vampiric"],["Tormentor Kills",1,"Benevolent"],["Tower Kills",5,"Friendly"]]},
-        "mid": {"visibleSelectionText":"Nisha","emblems":[["GPM",4,"Vampiric"],["Camps Stacked",5,"Vampiric"],["Stuns",3,"Fractal"],["Deaths",2,"Vampiric"],["Teamfight Participation",3,"Vampiric"]]},
-        "support": {"visibleSelectionText":"rue & not_me","emblems":[["Watchers",4,"Unique"],["Teamfight Participation",1,"Friendly"],["Wards Placed",4,"Fractal"],["Stuns",1,"Friendly"],["Lotuses",2,"Friendly"]]}
-      }
-    },
-    {
-      "id": "expanded5-full-desktop-no-actions",
-      "layoutId": "expanded_5",
-      "actionsVisible": false,
-      "banners": {
-        "core": {"visibleSelectionText":"Collapse & Yatoro","emblems":[["GPM",5,"Benevolent"],["Stuns",5,"Vampiric"],["Madstone",2,"Fractal"],["Teamfight Participation",2,"Unique"],["Deaths",2,"Vampiric"]]},
-        "mid": {"visibleSelectionText":"No[o]ne-","emblems":[["GPM",3,"Fractal"],["Runes",4,"Vampiric"],["Tormentor Kills",3,"Friendly"],["Deaths",3,"Fractal"],["Roshan Kills",2,"Fractal"]]},
-        "support": {"visibleSelectionText":"Sneyking & Cr1t-","emblems":[["Wards Placed",5,"Fractal"],["Stuns",3,"Fractal"],["Camps Stacked",2,"Vampiric"],["Courier Kills",4,"Vampiric"],["Lotuses",1,"Fractal"]]}
-      }
-    },
-    {
-      "id": "legacy3-golden-no-actions",
-      "layoutId": "legacy_3",
-      "actionsVisible": false,
-      "banners": {
-        "core": {"visibleSelectionText":"Raven & Natsumi","emblems":[["Madstone",4,"Fractal"],["Courier Kills",2,"Unique"],["Creep Score",2,"Vampiric"]]},
-        "mid": {"visibleSelectionText":"Nisha","emblems":[["Creep Score",2,"Vampiric"],["Watchers",3,"Benevolent"],["Teamfight Participation",5,"Fractal"]]},
-        "support": {"visibleSelectionText":"y` & XinQ","emblems":[["Wards Placed",5,"Benevolent"],["Teamfight Participation",1,"Fractal"],["Lotuses",4,"Unique"]]}
-      }
-    }
+    {"id":"expanded5-reference-no-actions","layoutId":"expanded_5","actionsVisible":false,"banners":{"core":{"expectedTeam":"Team Vision","visibleSelectionText":"Satanic & Noticed","emblems":[["GPM",4,"Fractal"],["Teamfight Participation",3,"Vampiric"],["Creep Score",5,"Vampiric"],["Roshan Kills",3,"Unique"],["Tower Kills",2,"Fractal"]]},"mid":{"expectedTeam":"Nigma Galaxy","visibleSelectionText":"lorenof","emblems":[["Tower Kills",5,"Friendly"],["Runes",5,"Benevolent"],["Teamfight Participation",5,"Benevolent"],["Madstone",2,"Friendly"],["Roshan Kills",5,"Fractal"]]},"support":{"expectedTeam":"LGD Gaming","visibleSelectionText":"Thiolicor & KingJungles","emblems":[["Runes",5,"Friendly"],["Teamfight Participation",1,"Unique"],["Camps Stacked",5,"Vampiric"],["Roshan Kills",2,"Benevolent"],["Smokes Used",3,"Vampiric"]]}}},
+    {"id":"expanded5-crimson-no-actions","layoutId":"expanded_5","actionsVisible":false,"banners":{"core":{"visibleSelectionText":"Satanic & Noticed","emblems":[["Creep Score",5,"Vampiric"],["Teamfight Participation",5,"Vampiric"],["GPM",5,"Vampiric"],["Tormentor Kills",1,"Benevolent"],["Tower Kills",5,"Friendly"]]},"mid":{"visibleSelectionText":"Nisha","emblems":[["GPM",4,"Vampiric"],["Camps Stacked",5,"Vampiric"],["Stuns",3,"Fractal"],["Deaths",2,"Vampiric"],["Teamfight Participation",3,"Vampiric"]]},"support":{"visibleSelectionText":"rue & not_me","emblems":[["Watchers",4,"Unique"],["Teamfight Participation",1,"Friendly"],["Wards Placed",4,"Fractal"],["Stuns",1,"Friendly"],["Lotuses",2,"Friendly"]]}}},
+    {"id":"expanded5-full-desktop-no-actions","layoutId":"expanded_5","actionsVisible":false,"banners":{"core":{"visibleSelectionText":"Collapse & Yatoro","emblems":[["GPM",5,"Benevolent"],["Stuns",5,"Vampiric"],["Madstone",2,"Fractal"],["Teamfight Participation",2,"Unique"],["Deaths",2,"Vampiric"]]},"mid":{"visibleSelectionText":"No[o]ne-","emblems":[["GPM",3,"Fractal"],["Runes",4,"Vampiric"],["Tormentor Kills",3,"Friendly"],["Deaths",3,"Fractal"],["Roshan Kills",2,"Fractal"]]},"support":{"visibleSelectionText":"Sneyking & Cr1t-","emblems":[["Wards Placed",5,"Fractal"],["Stuns",3,"Fractal"],["Camps Stacked",2,"Vampiric"],["Courier Kills",4,"Vampiric"],["Lotuses",1,"Fractal"]]}}},
+    {"id":"legacy3-golden-no-actions","layoutId":"legacy_3","actionsVisible":false,"banners":{"core":{"visibleSelectionText":"Raven & Natsumi","emblems":[["Madstone",4,"Fractal"],["Courier Kills",2,"Unique"],["Creep Score",2,"Vampiric"]]},"mid":{"visibleSelectionText":"Nisha","emblems":[["Creep Score",2,"Vampiric"],["Watchers",3,"Benevolent"],["Teamfight Participation",5,"Fractal"]]},"support":{"visibleSelectionText":"y` & XinQ","emblems":[["Wards Placed",5,"Benevolent"],["Teamfight Participation",1,"Fractal"],["Lotuses",4,"Unique"]]}}},
+    {"id":"legacy3-actions-tight-1232x824","layoutId":"legacy_3","actionsVisible":true,"tokensRemaining":4,"banners":{"core":{"visibleSelectionText":"Noticed & Satanic","emblems":[["GPM",5,"Vampiric"],["Teamfight Participation",4,"Benevolent"],["Creep Score",5,"Friendly"]]},"mid":{"visibleSelectionText":"No[o]ne-","emblems":[["Deaths",2,"Unique"],["Runes",2,"Fractal"],["First Blood",3,"Vampiric"]]},"support":{"visibleSelectionText":"Dukalis & 9Class","emblems":[["Camps Stacked",2,"Vampiric"],["Courier Kills",1,"Friendly"],["Wards Placed",3,"Unique"]]}},"actions":[{"label":"Reroll Trait for the first Blue Emblem","id":"blue-trait-first"},{"label":"Reroll Trait for Red Emblems","id":"red-trait-all"},{"label":"Reroll Stat for the first Red Emblem","id":null,"catalogCoverage":false}]},
+    {"id":"legacy3-actions-full-desktop-2560x1600","layoutId":"legacy_3","actionsVisible":true,"tokensRemaining":5,"banners":{"core":{"visibleSelectionText":"Noticed & Satanic","emblems":[["Deaths",4,"Friendly"],["Teamfight Participation",4,"Vampiric"],["GPM",2,"Vampiric"]]},"mid":{"visibleSelectionText":"Nisha","emblems":[["Creep Score",4,"Friendly"],["Runes",3,"Vampiric"],["Teamfight Participation",4,"Vampiric"]]},"support":{"visibleSelectionText":"Sneyking & Cr1t-","emblems":[["Wards Placed",1,"Unique"],["Teamfight Participation",4,"Vampiric"],["Runes",5,"Vampiric"]]}},"actions":[{"label":"Reroll Stat for the last Green Emblem","id":"green-stat-last"},{"label":"Randomly increase one Quality","id":"quality-increase-one"},{"label":"Reroll Stat for one random Green Emblem","id":"green-stat-random"}]}
   ]
 }
