@@ -121,13 +121,14 @@ export function validateScreenshotImport(raw: unknown, data: DataBundle, current
     const rawBanner = raw.banners[role];
     assertRecord(rawBanner, `${role} banner`);
     const selectedTeam = asTeam(rawBanner.selectedTeam, role, data);
-    if (!Array.isArray(rawBanner.emblems)) throw new Error(`${role} emblems are missing.`);
+    const rawEmblems = rawBanner.emblems;
+    if (!Array.isArray(rawEmblems)) throw new Error(`${role} emblems are missing.`);
     const slots = layout.roles[role];
-    if (rawBanner.emblems.length !== slots.length) {
-      throw new Error(`${role} has ${rawBanner.emblems.length} parsed emblems but ${layoutId} requires ${slots.length}.`);
+    if (rawEmblems.length !== slots.length) {
+      throw new Error(`${role} has ${rawEmblems.length} parsed emblems but ${layoutId} requires ${slots.length}.`);
     }
     const emblems = slots.map((slot, index) => {
-      const candidate = rawBanner.emblems[index];
+      const candidate = rawEmblems[index];
       assertRecord(candidate, `${role} emblem ${index + 1}`);
       if (candidate.position !== slot.index) throw new Error(`${role} emblem ${index + 1} has the wrong position.`);
       if (candidate.color !== slot.color) throw new Error(`${role} emblem ${index + 1} color conflicts with the ${layoutId} layout.`);
