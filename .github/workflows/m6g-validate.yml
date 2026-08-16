@@ -20,6 +20,8 @@ jobs:
           code=${PIPESTATUS[0]}
           echo "$code" > m6g-test-ci-exit.txt
           exit 0
+      - name: Install browser-smoke harness dependency
+        run: npm install --no-save --package-lock=false puppeteer-core
       - name: Browser smoke
         shell: bash
         run: |
