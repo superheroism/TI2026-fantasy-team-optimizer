@@ -137,7 +137,7 @@ The menu layer remains negligible: 6,611 exact fresh-menu operator calls consume
 
 The expected-score recommendation was unchanged from `t=2` to `t=3` for all five tested menu classes. No deeper target-probability or realistic `t=4` policy claim is possible because those cases exceeded the execution ceiling.
 
-**Decision:** production remains at two modeled token spends. See `M5_FOUR_TOKEN_EXPERIMENT.md` for full state-growth diagnostics and the recommended M5B cache-pressure package.
+**Decision:** production remains at two modeled token spends. See `engineering/history/M5_FOUR_TOKEN_EXPERIMENT.md` for full state-growth diagnostics and the recommended M5B cache-pressure package.
 
 ## M5B exact cache and scoring optimizations
 
@@ -161,7 +161,7 @@ Default t=3 still reaches exactly 415,223 terminal states. The optimization chan
 
 The recommendation and utility remain identical. The first complete M5B pass still exceeded the 60-second ceiling at t=4, and the final cache micro-pass showed no cold-runtime improvement at t=3. Production therefore remains at two modeled token spends.
 
-Raw data are stored in `benchmarks/m5b-exact-optimizations.json` and `benchmarks/m5b-fresh-action-cache.json`; full interpretation is in `M5B_EXACT_OPTIMIZATIONS.md`.
+Raw data are stored in `benchmarks/m5b-exact-optimizations.json` and `benchmarks/m5b-fresh-action-cache.json`; full interpretation is in `engineering/history/M5B_EXACT_OPTIMIZATIONS.md`.
 
 ## Why the search is faster than the histogram
 
@@ -207,7 +207,7 @@ Only aggressive advanced to `t=4`. It still timed out on **all five** establishe
 
 **Decision:** M5C is Outcome B. Continuation-outcome compression alone does not make four-token search tractable. Production remains at two modeled token spends. The recommended next bounded technique is **progressive widening of distant fresh-menu action evaluation**, because the aggressive schedule already reduces deepest transition outcomes to one stratum; the remaining target is action/state frontier breadth rather than additional outcome compression.
 
-Raw reports: `benchmarks/m5c-depth-calibration.json` and `benchmarks/m5c-four-token-benchmark.json`. Full interpretation: `M5C_DEPTH_AWARE_CONTINUATION.md`.
+Raw reports: `benchmarks/m5c-depth-calibration.json` and `benchmarks/m5c-four-token-benchmark.json`. Full interpretation: `engineering/history/M5C_DEPTH_AWARE_CONTINUATION.md`.
 
 ## M5D progressive action widening
 
@@ -287,11 +287,11 @@ M6B profiled the complete exact `expanded_5` production-horizon frontier before 
 
 Target probability grew from **6,563 to 17,862 target scalar states** and from **432,886,346 to 1,383,756,976 exact scenario checks**. Expanded target runtime was 13.441 s versus 4.441 s legacy. Existing exact reuse is already active: expanded target prepared-role reuse is about 90%; pair/suffix target caches record zero capacity resets; pair/suffix construction consumes only ~0.19 s combined versus ~6.82 s in the exact target kernel. Compact transition aggregation, terminal BoardStateID memoization, role-local scoring/target caches, and compact no-BoardState terminal paths are already in place.
 
-**Decision: M6B Outcome B.** The measured expanded `t=2` cost is predominantly genuinely distinct reachable state and exact target work, not avoidable duplicate computation. No new cache or exact-search mutation was added merely to claim a speedup. `benchmarks/m6b-expanded-frontier-baseline.json` contains the profile; `benchmarks/m6b-expanded-frontier-post.json` is a same-semantics validation replication with `optimizationSelected: null`. Production remains `legacy_3` / `t<=2`; target `t=3`/`t=4` were not run and the M5H holdout remains untouched. Full interpretation is in `M6B_EXPANDED_T2_FRONTIER.md`.
+**Decision: M6B Outcome B.** The measured expanded `t=2` cost is predominantly genuinely distinct reachable state and exact target work, not avoidable duplicate computation. No new cache or exact-search mutation was added merely to claim a speedup. `benchmarks/m6b-expanded-frontier-baseline.json` contains the profile; `benchmarks/m6b-expanded-frontier-post.json` is a same-semantics validation replication with `optimizationSelected: null`. Production remains `legacy_3` / `t<=2`; target `t=3`/`t=4` were not run and the M5H holdout remains untouched. Full interpretation is in `engineering/history/M6B_EXPANDED_T2_FRONTIER.md`.
 
 ## M6C expanded t=2 approximation calibration
 
-M6C calibrated adaptive root refinement against exact expanded_5 t=2 oracles. Frozen selection: root-k2. Final outcome: **B**. One-shot holdout root agreement 75.0%, median speedup 2.8012x, P90 speedup 3.2658x, median structural work avoided 71.5%. Production remains legacy_3 / t<=2 and the approximation is disabled by default. See `M6C_EXPANDED_T2_APPROXIMATION.md`.
+M6C calibrated adaptive root refinement against exact expanded_5 t=2 oracles. Frozen selection: root-k2. Final outcome: **B**. One-shot holdout root agreement 75.0%, median speedup 2.8012x, P90 speedup 3.2658x, median structural work avoided 71.5%. Production remains legacy_3 / t<=2 and the approximation is disabled by default. See `engineering/history/M6C_EXPANDED_T2_APPROXIMATION.md`.
 
 ---
 
@@ -340,7 +340,7 @@ The expected cross-fidelity reuse is already present. Refinement recorded 68.1% 
 
 **Decision:** M7A is a negative result. The dominant refinement cost is new exact frontier work required by the higher-fidelity policy, not duplicated exact preparation/evaluation. A new cache layer was therefore not implemented. The positive acceptance gate (`material duplicated work reduced` + `runtime improvement demonstrated`) is not met, and the package stops under its frozen negative-result clause. Production behavior is unchanged.
 
-Evidence: `benchmarks/m7a-incremental-target-kernel-reuse-profile.json` and `M7A_INCREMENTAL_TARGET_KERNEL_REUSE.md`.
+Evidence: `benchmarks/m7a-incremental-target-kernel-reuse-profile.json` and `engineering/history/M7A_INCREMENTAL_TARGET_KERNEL_REUSE.md`.
 
 
 ## M7B v1.0 production baseline

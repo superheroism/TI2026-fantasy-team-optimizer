@@ -9,7 +9,7 @@
     "build": "node scripts/build.mjs",
     "verify:generated": "node scripts/verify-generated.mjs --check-committed",
     "test": "npm run build && node --test tests/*.test.mjs",
-    "test:ci": "npm run typecheck && npm run verify:generated && node --test tests/*.test.mjs",
+    "test:ci": "npm run typecheck && npm run lint && npm run verify:generated && node --test tests/*.test.mjs",
     "benchmark": "npm run build && node scripts/benchmark.mjs",
     "benchmark:m5": "npm run build && node scripts/benchmark-m5-four-token.mjs",
     "benchmark:m5d": "npm run test:ci && node scripts/benchmark-m5d.mjs",
@@ -21,9 +21,15 @@
     "benchmark:m5f:kernel": "npm run build && node scripts/benchmark-m5f-target-kernel.mjs",
     "benchmark:m5g:plan": "node scripts/benchmark-m5g-target.mjs --plan",
     "benchmark:m6e": "npm run test:ci && node scripts/benchmark-m6e.mjs",
-    "benchmark:m7b": "npm run test:ci && node scripts/benchmark-m7b-v1.mjs"
+    "benchmark:m7b": "npm run test:ci && node scripts/benchmark-m7b-v1.mjs",
+    "lint": "eslint src scripts tests",
+    "format:check": "prettier --check src scripts tests *.md",
+    "format": "prettier --write src scripts tests *.md"
   },
   "devDependencies": {
-    "typescript": "5.8.3"
+    "eslint": "^9.39.5",
+    "prettier": "^3.9.6",
+    "typescript": "5.8.3",
+    "typescript-eslint": "^8.67.0"
   }
 }
