@@ -1,5 +1,5 @@
 import { applyScreenshotReviewHighlights, clearScreenshotReviewHighlights } from './boardView.js';
-import { requestScreenshotImport, validateScreenshotImport } from '../import/screenshotImport.js';
+import { getLastLocalOcrMetrics, requestScreenshotImport, validateScreenshotImport } from '../import/screenshotImport.js';
 import { diagnoseLocalScreenshotOcr, warmLocalScreenshotOcr } from '../import/localScreenshotOcr.js';
 const $ = (selector) => document.querySelector(selector);
 function setStatus(text, kind = 'idle') { const status = $('#screenshot-import-status'); status.textContent = text; status.dataset.kind = kind; }
@@ -40,22 +40,32 @@ export function bindScreenshotImport(state, callbacks) {
         const validated = validateScreenshotImport(raw, data, state.board, state.menu);
         applyImport(validated, performance.now() - started);
         if (validated.requiresReview) {
-            try {
-                showDiagnostic(await diagnoseLocalScreenshotOcr(file));
-            }
-            catch (diagError) {
-                showDiagnostic({ diagnosticError: String(diagError) });
+            const productionDiagnostic = getLastLocalOcrMetrics();
+            if (productionDiagnostic)
+                showDiagnostic(productionDiagnostic);
+            else {
+                try {
+                    showDiagnostic(await diagnoseLocalScreenshotOcr(file));
+                }
+                catch (diagError) {
+                    showDiagnostic({ diagnosticError: String(diagError) });
+                }
             }
         }
     }
     catch (error) {
         clearAllReviewHighlights();
         setStatus(error instanceof Error ? error.message : String(error), 'error');
-        try {
-            showDiagnostic(await diagnoseLocalScreenshotOcr(file));
-        }
-        catch (diagError) {
-            showDiagnostic({ importError: String(error), diagnosticError: String(diagError) });
+        const productionDiagnostic = getLastLocalOcrMetrics();
+        if (productionDiagnostic)
+            showDiagnostic({ importError: String(error), ...productionDiagnostic });
+        else {
+            try {
+                showDiagnostic({ importError: String(error), browserOcr: await diagnoseLocalScreenshotOcr(file) });
+            }
+            catch (diagError) {
+                showDiagnostic({ importError: String(error), diagnosticError: String(diagError) });
+            }
         }
     }
     finally {
