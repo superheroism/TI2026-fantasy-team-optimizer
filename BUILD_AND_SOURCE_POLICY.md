@@ -1,29 +1,27 @@
 # Build and Source Authority
 
-## Canonical inputs
+This repository has one editable source of truth. Generated files are committed for deployment compatibility, but they are not independent implementations.
 
-The authoritative editable inputs are:
+## Editable source
 
-- `src/` — TypeScript application and optimizer source
-- `site/` — static HTML/CSS source
-- `data/` — statistical/title/rules data snapshots consumed by the application
-- `scripts/` — build, verification, and benchmark tooling
-- `tests/` — regression/integration tests
+- `src/` — TypeScript application and optimizer code
+- `site/` — static HTML/CSS
+- `data/` — statistical and title-model inputs
+- `scripts/` — build, verification, and benchmark tools
+- `tests/` — regression and integration tests
 
-## Generated compatibility trees
+## Generated output
 
-The supported generated artifacts are:
+- `build/` — compiled JavaScript from `src/`
+- `docs/` — GitHub Pages output assembled from `build/`, `site/`, and `data/`
 
-- `build/` — TypeScript compiler output; `tsconfig.json` emits application JavaScript to `build/js/`
-- `docs/` — GitHub Pages deployment output assembled from `build/js`, `site/`, and `data/`
+Do not hand-edit `build/` or `docs/js/`. Make application changes in `src/`, then run the build.
 
-Do not hand-edit JavaScript under `build/` or `docs/js/`. A change that belongs in the application must be made under `src/` and regenerated with `npm run build`.
+A root-level `js/` directory is not supported. An old compiled snapshot once lived there; it was removed before v1.0. Verification now rejects `/js/` so an accidental compiler run cannot create a third generated tree.
 
-A root-level `js/` directory is **not** part of the build or deployment contract. It was a stale compiled snapshot inherited from the repository's initial commit and was removed before v1.0. `/js/` is ignored and reproducibility verification rejects its presence so an accidental compiler invocation cannot silently create a third generated tree.
+`docs/` remains committed because GitHub Pages currently deploys from it. Changing that deployment model is a separate project decision.
 
-`docs/` remains committed to preserve the repository's current GitHub Pages deployment contract. A future deployment migration may remove this requirement, but that is intentionally separate from application-source authority.
-
-## Required development checks
+## Required checks
 
 ```bash
 npm run typecheck
@@ -31,27 +29,21 @@ npm test
 npm run verify:generated
 ```
 
-`npm run verify:generated` snapshots committed/generated output, rejects unsupported root-level generated output, performs a clean build, confirms the supported generated trees match canonical inputs, and fails if the pre-build generated trees were stale.
+`verify:generated` performs a clean build and checks that committed generated files match the canonical inputs. It also rejects unsupported generated output.
 
-## CI contract
-
-CI performs:
+CI runs the same contract:
 
 ```text
-TypeScript typecheck
-→ generated-artifact reproducibility check
-→ Node test suite
+typecheck → generated-file verification → tests
 ```
 
-A source-only change that modifies compiled/deployed output must therefore include the regenerated `build/` and `docs/` artifacts while those directories remain committed.
+If a source change affects compiled or deployed output, commit the regenerated `build/` and `docs/` files as well.
 
 ## Performance baseline
-
-Use:
 
 ```bash
 npm run benchmark
 npm run benchmark -- --json=m1-benchmark.json
 ```
 
-The JSON form records runtime metadata and individual workload timings so future milestones can compare cold and warm behavior rather than relying on a single anecdotal elapsed time.
+The JSON report records runtime metadata and per-workload timings so later changes can be compared on the same machine/runtime instead of relying on a single elapsed-time number.
