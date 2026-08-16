@@ -9,6 +9,7 @@ import { attachedPlayerLabel, escapeHtml, renderBoardHtml, UI_ROLES } from './bo
 import { clearActionResults, confidenceExplanation, renderActionResults, renderOperationEditors, utilityDeltaText, utilityText } from './actionView.js';
 import { clearHistogram, drawHistogram, renderComparisonTabs, renderTeamComparison } from './plots.js';
 import { bindDynamicControls, bindStaticControls, reflectTokens, updateLayoutToggle } from './controls.js';
+import { bindScreenshotImport } from './screenshotImport.js';
 const $ = (selector) => document.querySelector(selector);
 const fmt = (value) => Number.isFinite(value) ? Math.round(value).toLocaleString() : '—';
 const pct = (value) => value === undefined ? '—' : `${(value * 100).toFixed(1)}%`;
@@ -250,6 +251,14 @@ export function mount() {
         layoutChanged: () => { if (data)
             renderStructure(); },
         themeChanged: theme => applyTheme(theme, true),
+    });
+    bindScreenshotImport(appState, {
+        getData: () => data,
+        renderStructure,
+        afterApply: () => {
+            reflectTokens(appState.tokensRemaining);
+            void runSelected();
+        },
     });
     void loadStatisticalModel().then(bundle => {
         data = bundle;
