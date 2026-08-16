@@ -328,3 +328,16 @@ M6F moves recommendation/search work from the browser main thread into a reusabl
 The important product result is structural: optimizer computation no longer executes on the UI thread. All five measured cases recorded 0 ms of Long Tasks API time during optimization. The first call includes worker startup and one-time immutable model loading; subsequent calls reuse the same worker/model bundle. The cold-versus-warm wall-time difference therefore characterizes startup/model-load plus cache warm-up rather than a change in search semantics. Each request sends only canonical `OptimizerState`, avoiding repeated transfer of the statistical model.
 
 The routing evidence is also unchanged from M6E: legacy cases report `exact`, normal expanded t=2 cases report `expanded_t2_adaptive` with policy `adaptive-tight`, and the required fallback case reports `expanded_t2_adaptive_exact_fallback`. No search-policy thresholds or adaptive stages were changed in response to browser measurements.
+
+
+## M7A incremental target-kernel reuse
+
+M7A profiled the M5H adaptive screen→refine path before implementing any new cache. Using authoritative Node 22/Linux M5H calibration artifacts from workflow run `31895777023`, three representative decision-sensitive cases across all eight preregistered candidates produced 22 completed adaptive runs and two timeouts. The untouched M5H holdout was not consumed.
+
+Across the completed representative runs, screening spent 604.6 s evaluating roots, made 1,551,648 terminal scoring calls, and executed 78.78B target scenario checks. Refinement added 149.2 s, 344,840 **new** terminal scoring calls, and 18.68B scenario checks. Candidate preparation was only 8.9 s of refine work versus 113.4 s in combinatorial target search.
+
+The expected cross-fidelity reuse is already present. Refinement recorded 68.1% pair-group cache hits and 96.8% suffix-summary hits; screen rates were 69.5% and 97.0%. More importantly, M5H shares one `TerminalSearchRuntime` across screen and refine, so a terminal `BoardStateID` scored by the screen is not rescored by refinement. Unchanged role preparation also survives through `preparedRoleCache`, and compact transition mechanics have their own shared cache.
+
+**Decision:** M7A is a negative result. The dominant refinement cost is new exact frontier work required by the higher-fidelity policy, not duplicated exact preparation/evaluation. A new cache layer was therefore not implemented. The positive acceptance gate (`material duplicated work reduced` + `runtime improvement demonstrated`) is not met, and the package stops under its frozen negative-result clause. Production behavior is unchanged.
+
+Evidence: `benchmarks/m7a-incremental-target-kernel-reuse-profile.json` and `M7A_INCREMENTAL_TARGET_KERNEL_REUSE.md`.
