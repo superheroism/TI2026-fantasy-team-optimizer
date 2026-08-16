@@ -74,7 +74,7 @@ function traitMatch(s) { let best = { value: TRAITS[0], score: -1 }; for (const 
         best = { value: v, score };
 } return best; }
 function tierMatch(s) { const bonuses = [...s.matchAll(/([+-]?)(10|30|60|100|150)%/g)].map(m => Number(m[2])), bonus = bonuses.find(v => [10, 30, 60, 100, 150].includes(v)), byBonus = { 10: 1, 30: 2, 60: 3, 100: 4, 150: 5 }; if (bonus && byBonus[bonus])
-    return { value: byBonus[bonus], score: .99 }; const m = s.toUpperCase().match(/\b(?:III|IV|II|V|I)\b/g) ?? [], v = m.find(x => x !== 'I') ?? m[0], map = { I: 1, II: 2, III: 3, IV: 4, V: 5 }; return v && map[v] ? { value: map[v], score: .82 } : { value: 1, score: .2 }; }
+    return { value: byBonus[bonus], score: .99 }; const m = s.toUpperCase().match(/(?:III|IV|II|V|I)/g) ?? [], v = m.find(x => x !== 'I') ?? m[0], map = { I: 1, II: 2, III: 3, IV: 4, V: 5 }; return v && map[v] ? { value: map[v], score: .82 } : { value: 1, score: .2 }; }
 function conf(score, ws) { const o = ws.length ? ws.reduce((s, w) => s + w.confidence, 0) / ws.length / 100 : 0; return Math.max(0, Math.min(.99, score * .72 + o * .28)); }
 function teamMatch(ws, role, data) { const s = text(ws); let best = { team: data.players.find(p => p.role === role)?.team ?? '', score: -1 }; for (const p of data.players.filter(x => x.role === role)) {
     const q = [p.name, ...p.attachedPlayers].map(n => sim(s, n)), strong = q.filter(x => x > .62), score = strong.length ? Math.min(.99, strong.reduce((a, b) => a + b, 0) / Math.min(2, strong.length)) : Math.max(...q, 0);
