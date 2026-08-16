@@ -25,6 +25,8 @@ test('tier token evidence supports roman and digit OCR only when adjacent to a T
 
 test('action matcher resolves the three noisy live-corpus action strings', () => {
   assert.equal(matchActionText('REROLL LAST GREEN STAT F E')?.id, 'green-stat-last');
-  assert.equal(matchActionText('RANDOMLY "od ne QUALIT INCH')?.id, 'quality-increase-one');
+  const quality = matchActionText('RANDOMLY \"od ne QUALIT INCH');
+  assert.equal(quality?.id, 'quality-increase-one');
+  assert.ok((quality?.score ?? 0) >= .58);
   assert.equal(matchActionText('TAD é ERC IN EN RANDOM REROLL STAT GREE')?.id, 'green-stat-random');
 });

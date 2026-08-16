@@ -1,7 +1,7 @@
 import { BOARD_LAYOUTS, isLegalStat } from '../domain/rules.js';
 import { ACTION_BY_ID, ACTION_CATALOG, cloneAction } from '../data/actionCatalog.js';
 import { parseScreenshotLocally } from './localScreenshotOcr.js';
-import { refineUncertainEmblemStats } from './emblemOcrRefinement.js';
+import { refineUncertainScreenshotFields } from './emblemOcrRefinement.js';
 const ROLES = ['core', 'mid', 'support'];
 const TRAITS = ['Fractal', 'Friendly', 'Vampiric', 'Unique', 'Benevolent'];
 const REVIEW_THRESHOLD = .9;
@@ -67,9 +67,11 @@ async function visionFallback(file, data) { const endpoint = document.querySelec
     throw new Error(`Screenshot recognition failed (${response.status})${detail ? `: ${detail.slice(0, 240)}` : '.'}`);
 } return await response.json(); }
 export async function requestScreenshotImport(file, data) { lastLocalOcrMetrics = undefined; try {
-    const local = await parseScreenshotLocally(file, data);
+    const local = await parseScreenshotLocally(file, data), refined = await refineUncertainScreenshotFields(file, data, local.result, local.metrics);
+    local.metrics.targetedRetryMs += refined.elapsedMs;
+    local.metrics.totalMs += refined.elapsedMs;
     lastLocalOcrMetrics = local.metrics;
-    return await refineUncertainEmblemStats(file, data, local.result);
+    return refined.result;
 }
 catch (localError) {
     const endpoint = document.querySelector('meta[name="screenshot-import-endpoint"]')?.content;

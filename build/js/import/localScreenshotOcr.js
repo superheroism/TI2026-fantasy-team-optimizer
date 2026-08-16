@@ -200,7 +200,7 @@ export async function parseScreenshotLocally(file, data) {
     }
     const extractionGeometry = centerResult(ex.words, ex.width), bs = bandsFromCenters(extractionGeometry.centers, ex.width), detected = Object.fromEntries(ROLES.map(r => [r, tiers(ex.words, bs[r], ex.height)])), pooledResult = globalRows(ex.words, bs, ex.height), pooled = pooledResult.rows, layoutId = layoutOf(detected, pooled), layout = BOARD_LAYOUTS[layoutId], rows = Object.fromEntries(ROLES.map(r => [r, (layoutId === 'expanded_5' && pooled.length >= 5) || (layoutId === 'legacy_3' && pooled.length >= 3) ? pooled.slice(0, layout.roles[r].length) : detected[r]]));
     const fc = [], warnings = [], banners = {}, emblemDiagnostics = [], teamEvidence = {};
-    const geometryConfidenceCap = localGeometry.method === 'fallback' || extractionGeometry.method === 'fallback' ? .85 : 1;
+    const geometryConfidenceCap = extractionGeometry.method === 'fallback' || pooledResult.synthesized ? .85 : localGeometry.method === 'fallback' ? .92 : 1;
     if (localGeometry.method === 'fallback')
         warnings.push('Board localization used conservative fallback geometry; imported board fields require review.');
     if (extractionGeometry.method === 'fallback')
@@ -216,7 +216,16 @@ export async function parseScreenshotLocally(file, data) {
             warnings.push(`${role} emblem ${i + 1} OCR should be reviewed.`); emblemDiagnostics.push({ role, rowIndex: i, roi, synthesizedRow: rw.synthesized, words: ww.map(wordDiagnostic), inferredColor: slot.color, rawText: s, normalizedStat: sm.value, statMatchScore: sm.score, rawTierText: s, normalizedTier: qt.value, tierMatchScore: qt.score, rawTraitText: s, normalizedTrait: tr.value, traitMatchScore: tr.score, finalConfidence, reviewRequired: finalConfidence < REVIEW_THRESHOLD }); return { position: slot.index, color: slot.color, stat: sm.value, qualityTier: qt.value, trait: tr.value }; });
         banners[role] = { selectedTeam: tm.team, emblems };
     }
-    const actionRows = pooled.length ? pooled : ROLES.flatMap(r => rows[r]), actions = await parseActions(worker, img, ex, crop, actionRows, fc, warnings), tokens = tokenCount(ex.words);
+    const actionRows = pooled.length ? pooled : ROLES.flatMap(r => rows[r]), actions = await parseActions(worker, img, ex, crop, actionRows, fc, warnings);
+    let tokens = tokenCount(ex.words), tokenRetryMs = 0;
+    if (!tokens) {
+        const ag = actionGeometry(ex, actionRows);
+        if (ag) {
+            const pitch = actionRows.length > 1 ? actionRows.slice(1).map((y, i) => y - actionRows[i]).sort((a, b) => a - b)[Math.floor((actionRows.length - 1) / 2)] : Math.max(55, ex.height * .08), r = { left: Math.max(0, ag.cards[1].left), top: Math.max(0, ag.anchorY - pitch * .4), width: Math.min(ex.width - ag.cards[1].left, ag.cards[1].width * 2.35), height: Math.min(ex.height - (ag.anchorY - pitch * .4), pitch * .95) }, sr = sourceRect(r, crop, ex, img.naturalWidth, img.naturalHeight), retry = await run(worker, canvas(img, Number.POSITIVE_INFINITY, sr));
+            tokenRetryMs = retry.elapsedMs;
+            tokens = tokenCount(retry.words);
+        }
+    }
     if (geometryConfidenceCap < 1) {
         for (const field of fc)
             if (field.path.startsWith('operationIds.'))
@@ -227,8 +236,12 @@ export async function parseScreenshotLocally(file, data) {
         result.tokensRemaining = tokens.value;
         fc.push({ path: 'tokensRemaining', confidence: tokens.confidence });
     }
+    else {
+        fc.push({ path: 'tokensRemaining', confidence: 0 });
+        warnings.push('Roll token count is missing or unreadable.');
+    }
     const tierCandidates = ROLES.flatMap(role => tierWords(ex.words, bs[role]).map(w => ({ ...wordDiagnostic(w), role, similarity: sim(w.text, 'TIER') })));
     const diagnostic = { localizationWordCount: local.words.length, extractionWordCount: ex.words.length, roleCandidates: localGeometry.roleCandidates, cardAnchors: localGeometry.cardAnchors, columnLocalizationMethod: localGeometry.method, localizationColumnCenters: localGeometry.centers, localizationCrop, sourceCrop: crop, extractionColumnMethod: extractionGeometry.method, extractionColumnCenters: extractionGeometry.centers, columnBands: bs, tierCandidates, tierRowsByColumn: detected, globalRows: pooled, inferredLayout: layoutId, synthesizedRows, emblems: emblemDiagnostics, teamEvidence, actionEvidence: { resolved: actions.ops, reason: actions.reason, cardTexts: actions.cardTexts }, tokenEvidence: { rawText: tokens?.rawText ?? '', value: tokens?.value ?? null, confidence: tokens?.confidence ?? 0 } };
-    return { result, metrics: { sourceWidth: img.naturalWidth, sourceHeight: img.naturalHeight, localizationWidth: local.width, localizationHeight: local.height, extractionWidth: ex.width, extractionHeight: ex.height, localizationMs: local.elapsedMs, extractionMs: ex.elapsedMs, targetedRetryMs: actions.extraMs, totalMs: performance.now() - start, croppedPixelFraction: (crop.width * crop.height) / (img.naturalWidth * img.naturalHeight), processedPixels: { localization: local.width * local.height, extraction: ex.width * ex.height }, diagnostic } };
+    return { result, metrics: { sourceWidth: img.naturalWidth, sourceHeight: img.naturalHeight, localizationWidth: local.width, localizationHeight: local.height, extractionWidth: ex.width, extractionHeight: ex.height, localizationMs: local.elapsedMs, extractionMs: ex.elapsedMs, targetedRetryMs: actions.extraMs + tokenRetryMs, totalMs: performance.now() - start, croppedPixelFraction: (crop.width * crop.height) / (img.naturalWidth * img.naturalHeight), processedPixels: { localization: local.width * local.height, extraction: ex.width * ex.height }, diagnostic } };
 }
 //# sourceMappingURL=localScreenshotOcr.js.map

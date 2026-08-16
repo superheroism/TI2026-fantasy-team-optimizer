@@ -72,7 +72,12 @@ const SCOPE_WORDS=['FIRST','LAST','RANDOM'];
 const COLOR_WORDS=['GREEN','RED','BLUE'];
 const KIND_WORDS=['STAT','QUALITY','TRAIT'];
 function actionTokens(s:string):string[]{return tokens(s).filter(t=>!STOPWORDS.has(t));}
-function observedMatch(ocr:string[],target:string):number{return Math.max(0,...ocr.map(t=>ocrSimilarity(t,target)));}
+function observedMatch(ocr:string[],target:string):number{
+  const fuzzy=Math.max(0,...ocr.map(t=>ocrSimilarity(t,target)));
+  const stems:Record<string,readonly string[]>={INCREASE:['INC'],QUALITY:['QUAL'],RANDOM:['RANDOM'],GREEN:['GRE'],RED:['RED'],BLUE:['BLU']};
+  const stemHit=(stems[target]??[]).some(stem=>ocr.some(token=>token.startsWith(stem)));
+  return stemHit?Math.max(fuzzy,.78):fuzzy;
+}
 function hasObserved(ocr:string[],target:string):boolean{return observedMatch(ocr,target)>=.72;}
 
 export function matchActionText(s:string):{id:string;score:number}|undefined{
