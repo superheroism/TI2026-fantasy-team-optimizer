@@ -1,46 +1,45 @@
 # Dota 2 Fantasy Optimizer 2026
 
-A browser-based tool for building a TI 2026 Fantasy board, comparing team choices, and deciding how to spend the next reroll token.
+A browser tool for building a TI 2026 Fantasy board, comparing teams, and deciding how to spend the next reroll token.
 
-The optimizer is distribution-aware: it models a range of plausible outcomes rather than ranking boards from simple averages alone.
+Unlike a simple average-stat ranking, the optimizer models a distribution of plausible Fantasy outcomes and the game's best-game retention rules.
 
-## v1.0 production contract
+## What v1.0 supports
 
-v1.0 supports both **3 Emblems** (`legacy_3`) and **5 Emblems** (`expanded_5`), with either **Expected final score** or **P(score ≥ target)** as the optimization objective.
+The tool supports both **3 Emblems** (`legacy_3`) and **5 Emblems** (`expanded_5`) and two objectives:
 
-Production recommendation lookahead is capped at **two modeled token spends**:
+- **Expected final score** — maximize the average modeled final score.
+- **P(score ≥ target)** — maximize the chance of clearing a chosen score.
 
-| Layout | 0 tokens | 1 modeled spend | 2 modeled spends | More than 2 |
-|---|---|---|---|---|
-| 3 Emblems | terminal evaluation | full production-reference search | full production-reference search | not exposed as production search |
-| 5 Emblems | terminal evaluation | full production-reference search | certified adaptive reference search with full reference fallback | not exposed as production search |
+Recommendation search looks ahead at most **two token spends**.
 
-**Production-reference search** has a specific meaning here. The optimizer first defines a frozen production model: known Fantasy mechanics, explicit assumptions for unpublished reroll/menu probabilities, a fixed statistical player-performance model, and deterministic representative outcome strata for hypothetical continuation. Full reference search evaluates the complete action/value-function search defined by that model. It does **not** claim to enumerate every possible real-world tournament outcome or every modeled transition outcome at every future depth.
+| Layout | 0 tokens | 1 spend | 2 spends |
+|---|---|---|---|
+| 3 Emblems | score current board | full reference search | full reference search |
+| 5 Emblems | score current board | full reference search | validated adaptive search, with full-search fallback |
 
-For the five-emblem two-spend route, the frozen adaptive policy spends less computation on clear root decisions and progressively refines close ones. It matched full reference search on all 12 decisions in its preregistered holdout, with zero measured regret, and used full reference fallback in 16.7% of those cases. That is validation against the frozen corpus, not a claim of universal mathematical equivalence. Deeper experimental search code is engineering-only and is not part of the v1.0 product contract.
+Here, **reference search** means the complete search defined by the production model. The model itself still contains explicit assumptions where Valve does not publish probabilities. It is not a claim that the tool enumerates every possible tournament future.
 
-See `ENGINEERING.md` for how the reference model was established, which alternatives were considered, and why these production boundaries were chosen.
+For the five-emblem, two-spend route, the adaptive policy does less work when one action is clearly ahead and spends more computation on close decisions. On its preregistered 12-case holdout it matched full reference search in all 12 cases, with zero measured regret; 16.7% of cases required full-search fallback. This is validation on the frozen test set, not a proof of equivalence for every possible board.
 
 ## How to use it
 
-1. Choose **3 Emblems** or **5 Emblems** in Current Board, then match your Core, Mid, and Support War Banners.
-2. Select the team used for each role.
-3. Enter your remaining roll tokens and the three actions currently offered in-game.
-4. Choose an objective:
-   - **Expected final score** for the highest average modeled outcome.
-   - **P(score ≥ target)** if you care more about clearing a specific score threshold.
+1. Choose **3 Emblems** or **5 Emblems** and enter the Core, Mid, and Support banners.
+2. Select a team for each role.
+3. Enter your remaining tokens and the three actions currently offered in-game.
+4. Choose **Expected final score** or **P(score ≥ target)**.
 5. Run the optimizer.
-6. Apply the recommended action in-game, then update the board and action menu for the next roll.
+6. Apply the recommendation in-game, then update the board and menu.
 
-Core uses a team's position 1 + position 3 pair, Mid uses position 2, and Support uses position 4 + position 5. Core and Support player scores are averaged for that role.
+Core uses positions 1 + 3, Mid uses position 2, and Support uses positions 4 + 5. Core and Support player scores are averaged within the role.
 
-For each emblem, you enter only the **stat**, **quality tier**, and **trait**. Effective multipliers are calculated automatically from the full banner state.
+For each emblem, enter its **stat**, **quality tier**, and **trait**. The tool derives the effective multiplier from the full banner, including trait interactions.
 
-## How scoring is modeled
+## How scoring works
 
-The simulator uses precomputed team- and role-level statistical distributions and models correlations among the stats on a banner. That matters because Fantasy keeps strong games rather than averaging every game equally.
+The statistical model contains team- and role-level stat distributions plus correlations among stats on the same banner. Correlation matters because Fantasy rewards strong games, not just high averages.
 
-For each role, the scoring order is:
+For each role:
 
 ```text
 score each game
@@ -48,63 +47,61 @@ score each game
 → keep the best series in the scoring period
 ```
 
-The final modeled score is:
+The final score is:
 
 ```text
-Core retained score + Mid retained score + Support retained score
+Core + Mid + Support retained scores
 ```
 
-The selected setup is evaluated with Monte Carlo simulation. The tool reports expected score, median score, P10/P90, and probability of reaching the selected target when a target is set. P10 and P90 are modeled downside/upside ranges, not guarantees.
+Monte Carlo simulation estimates the selected board's expected score, median, P10, P90, and target probability when applicable. **P10/P90 are modeled ranges, not guarantees.**
 
-The same underlying simulated performance scenarios are reused when comparing hypothetical boards. A reroll therefore changes how a common modeled performance scenario is scored instead of generating an unrelated tournament for every candidate action.
+When comparing hypothetical boards, the optimizer reuses the same simulated underlying performances. This is a common-random-numbers design: competing actions are compared against the same modeled tournament worlds instead of unrelated random draws.
 
 ## What the optimizer compares
 
-For each visible reroll action, the optimizer evaluates every legal Core, Mid, and Support target. For each possible result it recalculates the banner, re-optimizes the free team selections, and estimates the resulting board value.
+For each visible reroll action, the optimizer checks every legal Core, Mid, and Support target. For every possible result it recalculates banner effects, re-optimizes the free team selections, and scores the resulting board.
 
-The decision set includes every legal visible action/target, menu reroll when available, and keeping the best current setup. A menu reroll costs one token and preserves the board, so the optimizer does not force a damaging board change merely to continue.
+It also considers **rerolling the action menu** and **keeping the current board**. A menu reroll costs one token but does not change the board.
 
-When looking ahead, immediate visible actions use their full modeled transition distributions. Hypothetical continuation uses deterministic representative outcome strata to control state growth while keeping comparisons reproducible. This continuation fidelity is part of the frozen production reference model; it is described in `ENGINEERING.md`.
+The action available now uses its full modeled transition distribution. Deeper hypothetical decisions use a smaller deterministic set of representative outcomes to keep the search tractable and reproducible. `ENGINEERING.md` explains this approximation and how it was validated.
 
-## Reroll model assumptions
+## Probability assumptions
 
-Some reroll probabilities are not treated as known client odds. The current model assumes:
+Valve does not publish every reroll probability used by the optimizer. The current model assumes:
 
-- a stat reroll is uniform over legal replacement stats after must-change and no-duplicate restrictions;
-- an ordinary quality reroll is uniform over the other four tiers;
-- a trait reroll is uniform over the other four traits;
-- a directional quality change is uniform over valid tiers above or below the current tier;
-- random quality operations choose eligible slots uniformly;
-- a future action menu is a uniform draw of 3 distinct actions from the 20-action catalogue.
+- legal replacement stats are equally likely after must-change and no-duplicate rules;
+- the other four quality tiers are equally likely on a quality reroll;
+- the other four traits are equally likely on a trait reroll;
+- valid higher/lower quality destinations are equally likely for directional changes;
+- random quality operations choose eligible slots equally;
+- a future menu is a uniform draw of 3 distinct actions from the 20-action catalogue.
 
-These are modeling assumptions, not claims about unpublished client probabilities.
+These are model inputs, not claims about hidden client RNG. See `CLIENT_RULES_2026.md`.
 
-## Current scope and limitations
+## Current limitations
 
-v1.0 models team/role-specific stat distributions, cross-stat correlation within a banner, full-banner quality/trait effects, retained-game/series scoring, legal reroll outcomes, free team re-optimization after hypothetical board changes, and a two-spend finite decision horizon.
+v1.0 models role-specific stat distributions, within-banner stat correlation, quality and trait effects, retained-game scoring, legal rerolls, free team re-optimization, and a two-spend decision horizon.
 
-It does **not** model exact player-game covariance for Core/Support pairs, opponent-specific effects, game-duration effects, or a shared tournament-advancement path across selected roles. Search beyond two modeled spends remains post-v1.0 research. Title prefixes are optimized from modeled role boosts; the suffix is not assigned a fabricated numeric expected value.
+It does not yet model exact game-level covariance between the two Core/Support players, opponent effects, game-duration effects, or one shared tournament-advancement path across selected roles. Search beyond two spends remains research-only. Title prefixes use modeled role boosts; the suffix is not given an invented expected value.
 
-## Board layouts
+## Board layouts and browser behavior
 
-The Current Board selector supports both TI 2026 banner geometries. **3 Emblems** is the backward-compatible default; **5 Emblems** uses the expanded five-slot board. Switching layouts preserves the first three emblem states, selected teams, expected series, roll tokens, and current three offered actions. New fourth/fifth slots use deterministic legal defaults, and **Reset Board** resets within the selected layout.
+**3 Emblems** is the backward-compatible default. Switching to **5 Emblems** preserves the first three emblem states, selected teams, expected series, tokens, and current menu; new slots receive deterministic legal defaults.
 
-Recommendation search runs in a Web Worker so the page remains responsive during heavier five-emblem calculations. Editing the board, menu, tokens, objective, or layout invalidates the displayed recommendation; active stale work is cancelled and cannot replace a newer result.
-
-The worker also has a bounded lifetime so caches from many hypothetical boards cannot accumulate indefinitely across a long browser session. Two-spend target-probability requests retire their worker after returning the result, and other workloads periodically recycle the worker after eight successful requests. This changes cache lifetime, not recommendation semantics.
+Recommendation search runs in a Web Worker so heavier calculations do not freeze the page. Editing optimizer-relevant state cancels or invalidates stale work. Workers are also recycled periodically to bound long-session cache growth; this changes cache lifetime, not recommendation logic.
 
 ## Data and generated files
 
-Canonical model inputs live under `data/`:
+Canonical model inputs live in `data/`:
 
-- `ti2026-statistical-model.json` — team/role quantile distributions, effective sample support, and cross-stat correlations;
-- `ti2026-title-model.json` — title-prefix expected boosts by team and role plus title catalog metadata.
+- `ti2026-statistical-model.json` — team/role distributions, sample support, and cross-stat correlations.
+- `ti2026-title-model.json` — modeled title-prefix boosts and title metadata.
 
-`src/data/` contains application code/configuration such as rosters, legal operations, default state, and validated model loaders. `build/` and `docs/` are generated artifacts; do not hand-edit generated JavaScript. See `BUILD_AND_SOURCE_POLICY.md`.
+`src/data/` contains application configuration and validated model loaders. `build/` and `docs/` are generated; do not hand-edit generated JavaScript. See `BUILD_AND_SOURCE_POLICY.md`.
 
 ## Local development
 
-Node 22 is the authoritative release/benchmark runtime.
+Node 22 is the release and benchmark runtime.
 
 ```bash
 npm install
@@ -113,13 +110,14 @@ npm test
 npm run verify:generated
 ```
 
-Run the general performance suite with `npm run benchmark`. Run the v1.0 route baseline with `npm run benchmark:m7b` on Node 22.
+Run `npm run benchmark` for the general performance suite and `npm run benchmark:m7b` for the v1.0 production-route baseline.
 
 ## Technical references
 
-- `ENGINEERING.md` — public engineering progression, reference-model definition, alternatives considered, evidence, and remaining limitations.
-- `CLIENT_RULES_2026.md` — Fantasy scoring rules and optimizer probability assumptions.
-- `engineering/history/M7B_V1_READINESS_AUDIT.md` — detailed v1.0 support/routing and release-readiness evidence.
-- `PERFORMANCE.md` — simulation counts and benchmark history.
-- `PRODUCT_DECISIONS.md` — product/modeling choices that affect the interface.
-- `BUILD_AND_SOURCE_POLICY.md` — canonical source and generated-artifact policy.
+- `ENGINEERING.md` — how the architecture and production search policy were developed and validated.
+- `CLIENT_RULES_2026.md` — game rules and explicit probability assumptions.
+- `PERFORMANCE.md` — current performance contract and benchmark summary.
+- `PRODUCT_DECISIONS.md` — product/model choices that affect interpretation.
+- `UI_APPLICATION_ARCHITECTURE.md` — browser module and worker boundaries.
+- `BUILD_AND_SOURCE_POLICY.md` — source-of-truth and generated-file policy.
+- `engineering/history/` — detailed milestone records and raw engineering rationale.
