@@ -24,11 +24,24 @@ jobs:
       - run: node scripts/apply-m6f-integration.mjs
       - run: npm run typecheck
       - run: npm run build
-      - run: node --test
+      - name: Run regression suite
+        id: tests
+        continue-on-error: true
+        run: node --test > m6f-test.log 2>&1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m6f-test-log
+          path: m6f-test.log
+      - name: Enforce regression suite
+        if: steps.tests.outcome == 'failure'
+        run: cat m6f-test.log && exit 1
       - name: Commit source integration and generated artifacts
+        if: steps.tests.outcome == 'success'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src site tests build docs
           git commit -m "M6F integrate board layout UI and optimizer worker"
+          git pull --rebase origin agent/m6f-ui-layout-worker
           git push origin HEAD:agent/m6f-ui-layout-worker
