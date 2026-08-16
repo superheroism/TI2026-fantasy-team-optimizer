@@ -1,14 +1,14 @@
 {
   "milestone": "M7B",
   "baseSha": "aa8a880905859f94c4865d7b7a17adb61ad7376c",
-  "generatedAt": "2026-08-16T04:30:16.832Z",
+  "generatedAt": "2026-08-16T04:35:19.228Z",
   "environment": {
     "node": "v22.23.2",
     "platform": "linux",
     "arch": "x64",
     "cpus": 4,
-    "cpuModel": "Intel(R) Xeon(R) 6973P-C",
-    "totalMemoryGiB": 15.613975524902344
+    "cpuModel": "AMD EPYC 7763 64-Core Processor",
+    "totalMemoryGiB": 15.614940643310547
   },
   "contract": {
     "productionModeledHorizonMax": 2,
@@ -62,7 +62,7 @@
       "layoutId": "legacy_3",
       "objective": "expected_score",
       "tokens": 1,
-      "wallMs": 138.858726,
+      "wallMs": 203.83554400000003,
       "recommendation": "board:red-quality-all:core",
       "objectiveValue": 57912.35649178181,
       "currentExpectedScore": 52286.88030811379,
@@ -156,10 +156,10 @@
         }
       },
       "memory": {
-        "rssBefore": 65441792,
-        "rssAfter": 86618112,
-        "rssDelta": 21176320,
-        "heapUsedAfter": 18928032
+        "rssBefore": 65200128,
+        "rssAfter": 87592960,
+        "rssDelta": 22392832,
+        "heapUsedAfter": 20222432
       }
     },
     {
@@ -167,7 +167,7 @@
       "layoutId": "legacy_3",
       "objective": "expected_score",
       "tokens": 2,
-      "wallMs": 730.1577970000001,
+      "wallMs": 977.867869,
       "recommendation": "board:red-quality-all:core",
       "objectiveValue": 60560.497614831875,
       "currentExpectedScore": 52286.88030811379,
@@ -261,10 +261,10 @@
         }
       },
       "memory": {
-        "rssBefore": 65597440,
-        "rssAfter": 131526656,
-        "rssDelta": 65929216,
-        "heapUsedAfter": 35238504
+        "rssBefore": 65568768,
+        "rssAfter": 130269184,
+        "rssDelta": 64700416,
+        "heapUsedAfter": 28897936
       }
     },
     {
@@ -272,7 +272,8 @@
       "layoutId": "legacy_3",
       "objective": "target_probability",
       "tokens": 1,
-      "wallMs": 258.560429,
+      "targetScore": 55000,
+      "wallMs": 379.66974200000004,
       "recommendation": "board:red-quality-all:core",
       "objectiveValue": 0.7499999999999999,
       "currentExpectedScore": 52167.682113470284,
@@ -370,17 +371,17 @@
           "suffixCacheBuilds": 176,
           "suffixCacheResets": 0,
           "suffixCacheEstimatedBytes": 307168,
-          "candidatePreparationMs": 6.79593699999954,
-          "pairSampleBuildMs": 1.981150999999869,
-          "suffixSummaryBuildMs": 1.854700000000662,
-          "combinatorialSearchMs": 86.17743000000004
+          "candidatePreparationMs": 10.779399000001035,
+          "pairSampleBuildMs": 2.0044399999992493,
+          "suffixSummaryBuildMs": 3.294825999999887,
+          "combinatorialSearchMs": 134.66178800000037
         }
       },
       "memory": {
-        "rssBefore": 65433600,
-        "rssAfter": 94892032,
-        "rssDelta": 29458432,
-        "heapUsedAfter": 17558088
+        "rssBefore": 66523136,
+        "rssAfter": 113045504,
+        "rssDelta": 46522368,
+        "heapUsedAfter": 20215856
       }
     },
     {
@@ -388,7 +389,8 @@
       "layoutId": "legacy_3",
       "objective": "target_probability",
       "tokens": 2,
-      "wallMs": 3614.9436939999996,
+      "targetScore": 55000,
+      "wallMs": 4386.515375999999,
       "recommendation": "board:red-quality-all:core",
       "objectiveValue": 0.8660000786833985,
       "currentExpectedScore": 52167.682113470284,
@@ -519,17 +521,17 @@
           "suffixCacheBuilds": 6384,
           "suffixCacheResets": 0,
           "suffixCacheEstimatedBytes": 10838896,
-          "candidatePreparationMs": 239.54871800000433,
-          "pairSampleBuildMs": 19.705358999916797,
-          "suffixSummaryBuildMs": 33.19184800000659,
-          "combinatorialSearchMs": 2160.0807989999676
+          "candidatePreparationMs": 284.53152800001084,
+          "pairSampleBuildMs": 25.206850999829697,
+          "suffixSummaryBuildMs": 89.56045900005097,
+          "combinatorialSearchMs": 2591.6779430000215
         }
       },
       "memory": {
-        "rssBefore": 65376256,
-        "rssAfter": 439558144,
-        "rssDelta": 374181888,
-        "heapUsedAfter": 164477296
+        "rssBefore": 65339392,
+        "rssAfter": 438788096,
+        "rssDelta": 373448704,
+        "heapUsedAfter": 149078936
       }
     },
     {
@@ -537,7 +539,7 @@
       "layoutId": "expanded_5",
       "objective": "expected_score",
       "tokens": 1,
-      "wallMs": 188.864397,
+      "wallMs": 265.450991,
       "recommendation": "board:blue-trait-all:support",
       "objectiveValue": 72264.03917446457,
       "currentExpectedScore": 70151.56450102488,
@@ -631,10 +633,10 @@
         }
       },
       "memory": {
-        "rssBefore": 66674688,
-        "rssAfter": 87683072,
-        "rssDelta": 21008384,
-        "heapUsedAfter": 14352832
+        "rssBefore": 66498560,
+        "rssAfter": 87531520,
+        "rssDelta": 21032960,
+        "heapUsedAfter": 15916264
       }
     },
     {
@@ -642,7 +644,7 @@
       "layoutId": "expanded_5",
       "objective": "expected_score",
       "tokens": 2,
-      "wallMs": 830.603236,
+      "wallMs": 1138.153908,
       "recommendation": "board:blue-trait-all:support",
       "objectiveValue": 74439.51130465663,
       "currentExpectedScore": 70151.56450102488,
@@ -736,10 +738,10 @@
         }
       },
       "memory": {
-        "rssBefore": 66600960,
-        "rssAfter": 133439488,
-        "rssDelta": 66838528,
-        "heapUsedAfter": 40927184
+        "rssBefore": 66605056,
+        "rssAfter": 134483968,
+        "rssDelta": 67878912,
+        "heapUsedAfter": 39207360
       }
     },
     {
@@ -747,9 +749,10 @@
       "layoutId": "expanded_5",
       "objective": "target_probability",
       "tokens": 1,
-      "wallMs": 371.92287100000004,
-      "recommendation": "board:green-stat-all:core",
-      "objectiveValue": 1.0000000000000002,
+      "targetScore": 75000,
+      "wallMs": 691.571646,
+      "recommendation": "board:blue-trait-all:support",
+      "objectiveValue": 0.3180338541666666,
       "currentExpectedScore": 70151.56450102488,
       "searchMode": "exact",
       "modeledHorizon": 1,
@@ -763,7 +766,7 @@
         "cacheEntries": 9
       },
       "target": {
-        "scenarioChecks": 61621,
+        "scenarioChecks": 19118900,
         "preparedRoleCacheHits": 3376,
         "preparedRoleCacheMisses": 1712,
         "targetSearch": {
@@ -807,50 +810,50 @@
             680,
             328
           ],
-          "searchBoundPruned": 1180,
-          "firstBranchesConsidered": 8252,
-          "firstBranchesPruned": 8240,
-          "pairBranchesConsidered": 192,
-          "pairBranchesPruned": 176,
-          "triplesConsidered": 31,
-          "triplesCompleted": 14,
-          "triplesEarlyTerminated": 17,
-          "scenarioChecks": 61621,
-          "searchScenarioChecks": 25948,
-          "seedScenarioChecks": 24768,
-          "firstScenarioChecks": 8816,
-          "pairScenarioChecks": 944,
-          "tripleScenarioChecks": 889,
-          "suffixScenarioChecks": 256,
-          "survivingPairSampleBuilds": 6,
-          "thirdCandidatesVisited": 31,
-          "maxThirdCandidatesVisited": 4,
-          "suffixBoundCalls": 21,
-          "suffixBoundPruned": 16,
-          "suffixThirdCandidatesSkipped": 225,
-          "pairGroupCacheHits": 219,
-          "pairGroupCacheMisses": 297,
-          "pairSampleCacheHits": 10,
-          "pairSampleCacheMisses": 182,
-          "pairSampleCacheBuilds": 4,
+          "searchBoundPruned": 0,
+          "firstBranchesConsidered": 27126,
+          "firstBranchesPruned": 3185,
+          "pairBranchesConsidered": 383056,
+          "pairBranchesPruned": 365686,
+          "triplesConsidered": 33956,
+          "triplesCompleted": 288,
+          "triplesEarlyTerminated": 33668,
+          "scenarioChecks": 19118900,
+          "searchScenarioChecks": 81408,
+          "seedScenarioChecks": 81408,
+          "firstScenarioChecks": 1298498,
+          "pairScenarioChecks": 15336793,
+          "tripleScenarioChecks": 1307869,
+          "suffixScenarioChecks": 1012924,
+          "survivingPairSampleBuilds": 8769,
+          "thirdCandidatesVisited": 33956,
+          "maxThirdCandidatesVisited": 12,
+          "suffixBoundCalls": 22836,
+          "suffixBoundPruned": 17370,
+          "suffixThirdCandidatesSkipped": 243919,
+          "pairGroupCacheHits": 680,
+          "pairGroupCacheMisses": 1016,
+          "pairSampleCacheHits": 30615,
+          "pairSampleCacheMisses": 352441,
+          "pairSampleCacheBuilds": 505,
           "pairCacheResets": 0,
-          "pairCacheEstimatedBytes": 7680,
+          "pairCacheEstimatedBytes": 210304,
           "suffixCacheHits": 1008,
           "suffixCacheMisses": 688,
           "suffixCacheBuilds": 688,
           "suffixCacheResets": 0,
           "suffixCacheEstimatedBytes": 1231568,
-          "candidatePreparationMs": 29.77532699999921,
-          "pairSampleBuildMs": 0.010072000000008074,
-          "suffixSummaryBuildMs": 4.8531589999989535,
-          "combinatorialSearchMs": 21.015368999999765
+          "candidatePreparationMs": 35.58376800000184,
+          "pairSampleBuildMs": 2.4713960000041766,
+          "suffixSummaryBuildMs": 6.9752930000005335,
+          "combinatorialSearchMs": 219.88967900000029
         }
       },
       "memory": {
-        "rssBefore": 66588672,
-        "rssAfter": 136015872,
-        "rssDelta": 69427200,
-        "heapUsedAfter": 29757088
+        "rssBefore": 65335296,
+        "rssAfter": 138252288,
+        "rssDelta": 72916992,
+        "heapUsedAfter": 34092640
       }
     },
     {
@@ -858,135 +861,118 @@
       "layoutId": "expanded_5",
       "objective": "target_probability",
       "tokens": 2,
-      "wallMs": 5726.664395,
-      "recommendation": "stop",
-      "objectiveValue": 1,
+      "targetScore": 75000,
+      "wallMs": 5644.407207,
+      "recommendation": "board:blue-trait-all:support",
+      "objectiveValue": 0.4858434606481481,
       "currentExpectedScore": 70151.56450102488,
-      "searchMode": "expanded_t2_adaptive_exact_fallback",
+      "searchMode": "expanded_t2_adaptive",
       "modeledHorizon": 2,
-      "terminalScoringCalls": 18232,
-      "adaptiveStage": "exact",
-      "exactFallback": true,
+      "terminalScoringCalls": 6169,
+      "adaptiveStage": "k2",
+      "exactFallback": false,
       "fallbackReason": null,
       "transition": {
-        "cacheHits": 3049,
-        "cacheMisses": 1580,
+        "cacheHits": 969,
+        "cacheMisses": 540,
         "cacheEntries": 9
       },
       "target": {
-        "scenarioChecks": 24861461,
-        "preparedRoleCacheHits": 388640,
-        "preparedRoleCacheMisses": 43864,
+        "scenarioChecks": 586056812,
+        "preparedRoleCacheHits": 127664,
+        "preparedRoleCacheMisses": 15328,
         "targetSearch": {
           "candidateSets": [
-            12736,
-            17232,
-            13896
+            6880,
+            888,
+            7560
           ],
           "candidatesBeforePruning": [
-            203776,
-            275712,
-            222336
+            110080,
+            14208,
+            120960
           ],
           "candidatesAfterPruning": [
-            203618,
-            275366,
-            216417
+            110065,
+            14196,
+            119394
           ],
-          "searchesConsidered": 144168,
+          "searchesConsidered": 47664,
           "candidateCountSignatures": {
-            "16,16,16": 130562,
-            "15,16,16": 1208,
-            "16,16,15": 7841,
-            "16,16,14": 2668,
-            "16,16,12": 423,
-            "16,13,16": 62,
-            "16,15,16": 400,
-            "16,14,16": 140,
-            "16,16,13": 582,
-            "16,16,11": 125,
-            "15,16,14": 17,
-            "15,16,15": 38,
-            "15,16,12": 2,
-            "15,13,16": 1,
-            "15,15,16": 3,
-            "15,14,16": 1,
-            "15,16,13": 2,
-            "15,16,11": 1,
-            "16,13,15": 3,
-            "16,15,15": 20,
-            "16,14,14": 3,
-            "16,14,15": 4,
-            "16,16,10": 31,
-            "16,16,9": 11,
-            "16,14,12": 1,
-            "16,16,6": 7,
-            "16,16,7": 7,
-            "16,16,5": 1,
-            "16,16,8": 3,
-            "16,13,14": 1
+            "16,16,16": 45758,
+            "15,16,16": 75,
+            "16,16,15": 875,
+            "16,16,14": 506,
+            "16,16,12": 74,
+            "16,13,16": 25,
+            "16,15,16": 125,
+            "16,14,16": 50,
+            "16,16,13": 130,
+            "16,16,11": 37,
+            "16,16,10": 8,
+            "16,16,8": 1
           },
           "uniquePreparedGroups": [
-            12736,
-            17232,
-            13896
+            6880,
+            888,
+            7560
           ],
-          "uniquePreparedGroupTuples": 144168,
+          "uniquePreparedGroupTuples": 47664,
           "reusedPreparedGroupTuples": 0,
           "uniquePreparedGroupPairs": [
-            64296,
-            66576,
-            57152
+            16304,
+            16984,
+            29696
           ],
           "reusedPreparedGroupPairs": [
-            79872,
-            77592,
-            87016
+            31360,
+            30680,
+            17968
           ],
-          "searchBoundPruned": 99144,
-          "firstBranchesConsidered": 719899,
-          "firstBranchesPruned": 685534,
-          "pairBranchesConsidered": 549546,
-          "pairBranchesPruned": 451477,
-          "triplesConsidered": 294307,
-          "triplesCompleted": 3935,
-          "triplesEarlyTerminated": 290372,
-          "scenarioChecks": 24861461,
-          "searchScenarioChecks": 2260296,
-          "seedScenarioChecks": 2161152,
-          "firstScenarioChecks": 2335054,
-          "pairScenarioChecks": 9658433,
-          "tripleScenarioChecks": 3262650,
-          "suffixScenarioChecks": 5183876,
-          "survivingPairSampleBuilds": 55919,
-          "thirdCandidatesVisited": 294307,
-          "maxThirdCandidatesVisited": 16,
-          "suffixBoundCalls": 161145,
-          "suffixBoundPruned": 98067,
-          "suffixThirdCandidatesSkipped": 1262731,
-          "pairGroupCacheHits": 24841,
-          "pairGroupCacheMisses": 20183,
-          "pairSampleCacheHits": 97720,
-          "pairSampleCacheMisses": 451826,
-          "pairSampleCacheBuilds": 23143,
+          "searchBoundPruned": 35,
+          "firstBranchesConsidered": 761989,
+          "firstBranchesPruned": 46348,
+          "pairBranchesConsidered": 11445485,
+          "pairBranchesPruned": 10589878,
+          "triplesConsidered": 1698200,
+          "triplesCompleted": 10755,
+          "triplesEarlyTerminated": 1687445,
+          "scenarioChecks": 586056812,
+          "searchScenarioChecks": 2287636,
+          "seedScenarioChecks": 2286192,
+          "firstScenarioChecks": 36512544,
+          "pairScenarioChecks": 440527105,
+          "tripleScenarioChecks": 56970043,
+          "suffixScenarioChecks": 47473292,
+          "survivingPairSampleBuilds": 245489,
+          "thirdCandidatesVisited": 1698200,
+          "maxThirdCandidatesVisited": 12,
+          "suffixBoundCalls": 1133717,
+          "suffixBoundPruned": 855607,
+          "suffixThirdCandidatesSkipped": 11951263,
+          "pairGroupCacheHits": 31343,
+          "pairGroupCacheMisses": 16286,
+          "pairSampleCacheHits": 2345818,
+          "pairSampleCacheMisses": 9099667,
+          "pairSampleCacheBuilds": 71701,
           "pairCacheResets": 0,
-          "pairCacheEstimatedBytes": 10579456,
-          "suffixCacheHits": 130272,
-          "suffixCacheMisses": 13896,
-          "suffixCacheBuilds": 13896,
+          "pairCacheEstimatedBytes": 30463744,
+          "suffixCacheHits": 40104,
+          "suffixCacheMisses": 7560,
+          "suffixCacheBuilds": 7560,
           "suffixCacheResets": 0,
-          "suffixCacheEstimatedBytes": 24688656,
-          "candidatePreparationMs": 686.6113620000438,
-          "pairSampleBuildMs": 5.463267999997527,
-          "suffixSummaryBuildMs": 174.58756899997604,
-          "combinatorialSearchMs": 826.5628199999173
+          "suffixCacheEstimatedBytes": 13489824,
+          "candidatePreparationMs": 278.3718040000388,
+          "pairSampleBuildMs": 33.923874000044265,
+          "suffixSummaryBuildMs": 60.26302299999091,
+          "combinatorialSearchMs": 3372.119482000061
         }
       },
       "memory": {
-        "rssBefore": 67010560,
-        "rssAfter": 985833472,
-        "rssDelta": 918822912,
-        "heapUsedAfter": 407452272
+        "rssBefore": 66686976,
+        "rssAfter": 474693632,
+        "rssDelta": 408006656,
+        "heapUsedAfter": 174640728
       }
     }
   ]
