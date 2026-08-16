@@ -577,3 +577,18 @@ M7A closes as a **negative profiling result**. The M5H screen→refine path alre
 The expensive refinement work is primarily newly reached exact terminal/search frontier: across 22 completed representative adaptive runs, refinement added 344,840 new terminal scoring calls and 18.68B target scenario checks. Candidate preparation was a small minority of target-kernel time.
 
 **Sequencing decision:** do not manufacture another exact reuse cache and do not reopen M5H adaptive threshold/candidate tuning on this premise. The M5H holdout remains untouched; production target horizon and M6E expanded-board routing remain unchanged; target `t=4` and `expanded_5 t=3` remain out of scope. Any next deep-search package must attack a different source of frontier cost and be frozen separately.
+
+
+---
+
+## M7B — v1.0 readiness audit and release contract
+
+M7B closes as **PASS / v1.0 ready**. The production contract is frozen at modeled horizon `t<=2` for both supported layouts and both objectives. `legacy_3` is exact at t=0/1/2. `expanded_5` is exact at t=0/1 and uses the unchanged M6E-certified `adaptive-tight` route at t=2 with exact fallback. Deeper engineering machinery is not a production capability.
+
+The audit found two narrow release-contract defects and fixed them without changing search mathematics: zero-token states now report modeled horizon t=0 and expose only stop, and the current visible menu now honors `menuRerollAvailable` while future-menu value-function semantics remain unchanged. Production statistical/title inputs now fail fast on incompatible structure/schema.
+
+The authoritative Node 22 release matrix covers all eight layout × objective × t=1/2 routes; all route assertions pass. Existing M6F browser evidence continues to show optimizer work off the main thread with stale-result suppression and synchronous/worker parity. Cache review found no evidence requiring a new eviction policy; exact target pair/suffix caches are already bounded/weak, request-scoped search caches are naturally released, and persistent scoring caches are documented for post-v1 long-session observation.
+
+**v1.0 blockers: none.** Lint/format/dead-code tooling and release tag/deployment mechanics are deferred as non-blocking release-process work. The M5H holdout remains untouched; target t=3 is not exposed; expanded_5 t=3 and t=4 were not begun; M6E policy parameters were not changed.
+
+**Post-v1 sequencing:** deeper-horizon work requires a separately frozen research package. M7A remains the performance guidance: the likely frontier is frontier reduction, not another exact-cache layer.

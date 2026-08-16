@@ -341,3 +341,21 @@ The expected cross-fidelity reuse is already present. Refinement recorded 68.1% 
 **Decision:** M7A is a negative result. The dominant refinement cost is new exact frontier work required by the higher-fidelity policy, not duplicated exact preparation/evaluation. A new cache layer was therefore not implemented. The positive acceptance gate (`material duplicated work reduced` + `runtime improvement demonstrated`) is not met, and the package stops under its frozen negative-result clause. Production behavior is unchanged.
 
 Evidence: `benchmarks/m7a-incremental-target-kernel-reuse-profile.json` and `M7A_INCREMENTAL_TARGET_KERNEL_REUSE.md`.
+
+
+## M7B v1.0 production baseline
+
+M7B freezes the v1 production horizon at **t<=2** and records all eight supported layout × objective × horizon routes on Node v22.23.2/Linux. Each case runs in a fresh process against production data and the normal production entry point. Target-probability fixtures use 55k for legacy_3 and 75k for expanded_5 so neither layout is benchmarked only at a trivially saturated threshold. This is a release baseline, not a timing gate.
+
+| Layout | Objective | Horizon | Wall time | Route | Adaptive stage | Exact fallback | End RSS |
+|---|---|---:|---:|---|---|---|---:|
+| legacy_3 | expected score | t=1 | 203.8 ms | exact | — | no | 83.5 MiB |
+| legacy_3 | expected score | t=2 | 977.9 ms | exact | — | no | 124.2 MiB |
+| legacy_3 | target probability | t=1 | 379.7 ms | exact | — | no | 107.8 MiB |
+| legacy_3 | target probability | t=2 | 4386.5 ms | exact | — | no | 418.5 MiB |
+| expanded_5 | expected score | t=1 | 265.5 ms | exact | — | no | 83.5 MiB |
+| expanded_5 | expected score | t=2 | 1138.2 ms | expanded_t2_adaptive | k2 | no | 128.3 MiB |
+| expanded_5 | target probability | t=1 | 691.6 ms | exact | — | no | 131.8 MiB |
+| expanded_5 | target probability | t=2 | 5644.4 ms | expanded_t2_adaptive | k2 | no | 452.7 MiB |
+
+All eight route checks passed. legacy_3 remains exact at t=1/2; expanded_5 is exact at t=1 and uses the frozen M6E adaptive-tight policy at t=2, with exact fallback when required. No t=3/t=4 production route was benchmarked or exposed. Raw evidence: `benchmarks/m7b-v1-production-baseline.json`.

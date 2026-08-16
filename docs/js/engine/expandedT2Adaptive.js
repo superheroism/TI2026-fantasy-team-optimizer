@@ -62,8 +62,11 @@ export function recommendExpandedT2Adaptive(state, data, uniformStatFallback, po
     }
     if (!screened.length)
         throw new Error('expanded t2 adaptive found no legal board roots');
-    const menuValue = valueFunction.V(initialEngine, 1);
-    const menuRow = { action: { kind: 'menu_reroll' }, expectedFinalUtility: menuValue, expectedFinalScore: current.expected, tokensAfter: state.tokensRemaining - 1, assetAtRisk: '1 token; board preserved', confidence: current.confidence, status: 'evaluated', note: menuModel.mode === 'known_uniform' ? `Fresh menu is a uniform draw of 3 distinct actions from 20; expectation uses the exact combinatorial operator equivalent to ${TOTAL_UNIFORM_MENUS.toLocaleString()} menus.` : `Fresh-menu expectation uses ${overrideMenus?.length ?? 0} supplied menu samples.`, order: order++ };
+    const menuRow = state.menuRerollAvailable ? {
+        action: { kind: 'menu_reroll' }, expectedFinalUtility: valueFunction.V(initialEngine, 1), expectedFinalScore: current.expected, tokensAfter: state.tokensRemaining - 1,
+        assetAtRisk: '1 token; board preserved', confidence: current.confidence, status: 'evaluated',
+        note: menuModel.mode === 'known_uniform' ? `Fresh menu is a uniform draw of 3 distinct actions from 20; expectation uses the exact combinatorial operator equivalent to ${TOTAL_UNIFORM_MENUS.toLocaleString()} menus.` : `Fresh-menu expectation uses ${overrideMenus?.length ?? 0} supplied menu samples.`, order: order++
+    } : undefined;
     const screenOrder = [...screened].sort((a, b) => b.screenUtility - a.screenUtility || a.order - b.order);
     const stageReports = [];
     const boardRow = (item) => {
@@ -80,7 +83,7 @@ export function recommendExpandedT2Adaptive(state, data, uniformStatFallback, po
             row.downside = item.worst - current.expected;
         return row;
     };
-    const materialize = () => [stopRow, ...screened.map(boardRow), menuRow];
+    const materialize = () => menuRow ? [stopRow, ...screened.map(boardRow), menuRow] : [stopRow, ...screened.map(boardRow)];
     const refineThrough = (k) => { for (const item of screenOrder.slice(0, Math.min(k, screenOrder.length))) {
         if (item.refined)
             continue;

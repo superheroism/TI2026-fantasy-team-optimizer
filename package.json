@@ -20,7 +20,8 @@
     "benchmark:m5f:plan": "node scripts/benchmark-m5f-target.mjs --plan",
     "benchmark:m5f:kernel": "npm run build && node scripts/benchmark-m5f-target-kernel.mjs",
     "benchmark:m5g:plan": "node scripts/benchmark-m5g-target.mjs --plan",
-    "benchmark:m6e": "npm run test:ci && node scripts/benchmark-m6e.mjs"
+    "benchmark:m6e": "npm run test:ci && node scripts/benchmark-m6e.mjs",
+    "benchmark:m7b": "npm run test:ci && node scripts/benchmark-m7b-v1.mjs"
   },
   "devDependencies": {
     "typescript": "5.8.3"
