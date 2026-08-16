@@ -1,0 +1,34 @@
+name: Refresh screenshot speed generated artifacts
+
+on:
+  push:
+    branches:
+      - agent/screenshot-import-speed-confidence
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/screenshot-import-speed-confidence
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run build
+      - name: Commit generated artifacts
+        run: |
+          if git diff --quiet -- build docs; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add build docs
+          git commit -m "Regenerate screenshot speed artifacts"
+          git push origin HEAD:agent/screenshot-import-speed-confidence
