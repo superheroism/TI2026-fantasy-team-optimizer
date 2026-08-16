@@ -33,10 +33,27 @@ test('validated screenshot import accepts both layouts and preserves expected-se
 
 test('low-confidence emblem field requires review without invalidating an otherwise legal import', () => {
   const current = createDefaultBoard('legacy_3');
-  const raw = rawFromBoard(current, { fieldConfidence:[{path:'banners.core.emblems.1.trait',confidence:0.72}], warnings:['Core emblem 2 trait is difficult to read.'] });
+  const raw = rawFromBoard(current, { fieldConfidence:[{path:'banners.core.emblems.1.trait',confidence:0.72,reason:'fuzzy-trait'}], warnings:['Core emblem 2 trait is difficult to read.'] });
   const result = validateScreenshotImport(raw, data, current, menu);
   assert.equal(result.requiresReview, true);
-  assert.deepEqual(result.lowConfidenceFields, [{ path:'banners.core.emblems.1.trait', confidence:0.72 }]);
+  assert.deepEqual(result.lowConfidenceFields, [{ path:'banners.core.emblems.1.trait', confidence:0.72, reason:'fuzzy-trait' }]);
+});
+
+test('resolved warning text does not force review when calibrated fields are confident', () => {
+  const current = createDefaultBoard('legacy_3');
+  const raw = rawFromBoard(current, { fieldConfidence:[{path:'banners.core.emblems.1.trait',confidence:0.96,reason:'targeted-native-trait'}], warnings:['core emblem 2 OCR should be reviewed.'] });
+  const result = validateScreenshotImport(raw, data, current, menu);
+  assert.equal(result.requiresReview, false);
+  assert.equal(result.lowConfidenceFields.length, 0);
+  assert.equal(result.warnings.length, 1, 'warnings remain available diagnostically');
+});
+
+test('confidence diagnostics preserve final reason and component evidence', () => {
+  const current = createDefaultBoard('legacy_3');
+  const components={geometry:1,domainMatch:1,structuredEvidence:.97,targetedRetry:0,fieldConsistency:1};
+  const result=validateScreenshotImport(rawFromBoard(current,{fieldConfidence:[{path:'banners.core.emblems.0.stat',confidence:.97,reason:'exact-domain-stat',components}]}),data,current,menu);
+  assert.deepEqual(result.lowConfidenceFields,[]);
+  assert.equal(result.requiresReview,false);
 });
 
 test('missing reroll actions preserve existing menu and become zero-confidence review fields', () => {
@@ -45,7 +62,7 @@ test('missing reroll actions preserve existing menu and become zero-confidence r
   const result = validateScreenshotImport(raw, data, current, menu);
   assert.deepEqual(result.menu.map(action => action.id), menu.map(action => action.id));
   assert.equal(result.requiresReview, true);
-  assert.deepEqual(result.lowConfidenceFields.filter(field => field.path.startsWith('operationIds.')), [
+  assert.deepEqual(result.lowConfidenceFields.filter(field => field.path.startsWith('operationIds.')).map(field=>({path:field.path,confidence:field.confidence})), [
     { path:'operationIds.0', confidence:0 }, { path:'operationIds.1', confidence:0 }, { path:'operationIds.2', confidence:0 },
   ]);
   assert.equal(result.warnings.filter(warning => warning.includes('was not visible')).length, 3);
