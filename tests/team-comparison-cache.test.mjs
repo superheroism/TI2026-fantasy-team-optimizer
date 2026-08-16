@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 
 const scoring=readFileSync(new URL('../src/engine/scoring.ts',import.meta.url),'utf8');
 const app=readFileSync(new URL('../src/ui/app.ts',import.meta.url),'utf8');
+const controls=readFileSync(new URL('../src/ui/controls.ts',import.meta.url),'utf8');
 
 test('team comparison cache is independent of selectedTeam when banner mechanics are unchanged',()=>{
   const start=scoring.indexOf('export function rankTeamsForRole');
@@ -16,10 +17,10 @@ test('team comparison cache is independent of selectedTeam when banner mechanics
 });
 
 test('team-only changes preserve and immediately re-highlight the likely-results comparison',()=>{
-  const start=app.indexOf('function bindDynamic()');
-  const end=app.indexOf('function advanceToNextRoll',start);
-  const block=app.slice(start,end);
-  assert.match(block,/\.team-select/);
-  assert.match(block,/markStale\(true\)/);
-  assert.match(block,/renderTeamComparison\(changedRole\)/);
+  assert.match(controls,/\.team-select/);
+  assert.match(controls,/state\.mutateBoard\([\s\S]*?, true\)/);
+  assert.match(controls,/callbacks\.teamChanged\(role\)/);
+  assert.match(app,/teamChanged: role =>/);
+  assert.match(app,/appState\.comparisonRole === role/);
+  assert.match(app,/renderComparison\(\)/);
 });

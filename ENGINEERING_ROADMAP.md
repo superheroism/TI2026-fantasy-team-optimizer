@@ -550,3 +550,19 @@ The optimizer is now invoked through `OptimizerWorkerClient → optimizer.worker
 End-to-end regression coverage proves exact worker/synchronous recommendation parity, canonical 3↔5 conversion semantics, no token/menu mutation on layout changes, legacy routing preservation, and expanded t=2 routing through the frozen M6E `adaptive-tight` policy with existing exact fallback semantics. M6F makes **no changes** to M6D/M6E search configuration or t=2 semantics.
 
 Browser measurements are recorded in `benchmarks/m6f-browser-performance.json` and summarized in `PERFORMANCE.md`. With this product/runtime integration complete, M6F stops; longer-horizon search remains a separate future milestone.
+
+
+## M6G — UI/Application Layer Decomposition
+
+**Outcome: complete.** M6G decomposed the M6F browser application without changing optimizer semantics or the established worker/runtime boundary.
+
+- `M6G_BASE_SHA = 4e80f0a77be571f2e51734c935dcd3b7dd476c02`.
+- Canonical browser/application state and optimizer-relevant mutation invalidation now live in `src/ui/state.ts`.
+- Board rendering, controls, offered-action/result presentation, and plots are separated into `boardView.ts`, `controls.ts`, `actionView.ts`, and `plots.ts`.
+- `src/ui/app.ts` is now the composition/bootstrap and optimizer-orchestration layer.
+- Optimizer-relevant mutations invalidate displayed recommendations, cancel/supersede pending worker work, and remove stale highlights through one application-state boundary.
+- The M6F route remains unchanged: legacy exact; expanded t=1 exact; expanded t=2 M6E adaptive-tight; unsupported adaptive cases exact fallback.
+- Synchronous engine APIs and exact worker/synchronous parity remain preserved.
+- `UI_APPLICATION_ARCHITECTURE.md` documents the final browser module boundaries.
+
+M6G is the Phase-10 application-layer cleanup milestone. Longer-horizon search work remains separate and requires its own frozen package.
