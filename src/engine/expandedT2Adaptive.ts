@@ -61,7 +61,7 @@ export function recommendExpandedT2Adaptive(
   terminal.seedCurrent(current);valueFunction.seedTerminalUtility(initialEngine,stopUtility);
 
   let order=0;
-  const stopRow:InternalRow={action:{kind:'stop'},expectedFinalUtility:stopUtility,expectedFinalScore:current.expected,tokensAfter:state.tokensRemaining,assetAtRisk:'none',confidence:current.confidence,status:'evaluated',note:'Preserves the board; free team-by-role selection is re-optimized.',order:order++};
+  const stopRow:InternalRow={action:{kind:'stop'},expectedFinalUtility:stopUtility,expectedFinalScore:current.expected,pImprove:0,tokensAfter:state.tokensRemaining,assetAtRisk:'none',confidence:current.confidence,status:'evaluated',note:'Preserves the board; free team-by-role selection is re-optimized.',order:order++};
   const screened:ScreenedRoot[]=[];
   for(const operation of state.menu){
     for(const role of OPTIMIZER_ROLES){
@@ -81,7 +81,7 @@ export function recommendExpandedT2Adaptive(
   if(!screened.length)throw new Error('expanded t2 adaptive found no legal board roots');
 
   const menuRow:InternalRow|undefined=state.menuRerollAvailable?{
-    action:{kind:'menu_reroll'},expectedFinalUtility:valueFunction.V(initialEngine,1),expectedFinalScore:current.expected,tokensAfter:state.tokensRemaining-1,
+    action:{kind:'menu_reroll'},expectedFinalUtility:valueFunction.V(initialEngine,1),expectedFinalScore:current.expected,pImprove:continuation.freshMenuImprovementProbability(initialEngine,1),tokensAfter:state.tokensRemaining-1,
     assetAtRisk:'1 token; board preserved',confidence:current.confidence,status:'evaluated',
     note:menuModel.mode==='known_uniform'?`Fresh menu is a uniform draw of 3 distinct actions from 20; expectation uses the exact combinatorial operator equivalent to ${TOTAL_UNIFORM_MENUS.toLocaleString()} menus.`:`Fresh-menu expectation uses ${overrideMenus?.length??0} supplied menu samples.`,order:order++
   }:undefined;
