@@ -73,11 +73,15 @@ export class OptimizerWorkerClient {
     });
   }
 
-  /** Invalidate any result for the prior UI state. Termination provides true cancellation where the browser supports Worker.terminate(). */
+  /** Invalidate prior UI state. Pending work is truly cancelled; an idle worker is retained for warm reuse. */
   invalidate():void {
     ++this.requestSequence;
-    if(this.pending||this.worker)this.terminateCurrent('Optimizer request invalidated by a board or control change.');
+    if(this.pending)this.terminateCurrent('Optimizer request invalidated by a board or control change.');
   }
 
-  dispose():void {this.invalidate();}
+  dispose():void {
+    ++this.requestSequence;
+    if(this.pending)this.terminateCurrent('Optimizer client disposed.');
+    else if(this.worker){this.worker.terminate();this.worker=undefined;}
+  }
 }
