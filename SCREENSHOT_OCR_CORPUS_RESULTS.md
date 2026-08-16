@@ -10,10 +10,10 @@ The corpus now includes four prior screenshots plus two legacy-three screenshots
 
 New fixture A: 1232×824 (1.015 MP), tight board/action crop, tokens = 4.
 
-- actions: `blue-trait-first`, `red-trait-all`, and visible **Reroll Stat for the first Red Emblem**.
+- actions: `blue-trait-first`, `red-trait-all`, `green-stat-first`.
 - native whole-image OCR: ~0.55 s exploratory run.
 - OCR sees the action region but merges/garbles the three adjacent card labels.
-- critical rules finding: **Reroll Stat for the first Red Emblem is not present in the current 20-action `ACTION_CATALOG`**, so even perfect OCR cannot currently import this menu exactly.
+- correction: the third card reads **Reroll Stat for the first Green Emblem**. This is already present in the current 20-action `ACTION_CATALOG`; the earlier `first Red Emblem` reading was a ground-truth transcription error, not a catalog gap.
 
 New fixture B: 2560×1600 (4.096 MP), full Dota desktop, tokens = 5.
 
@@ -36,14 +36,13 @@ New fixture B: 2560×1600 (4.096 MP), full Dota desktop, tokens = 5.
 1. Board localization still needs the previously identified closed-vocabulary three-column fallback and pooled vertical row grid.
 2. Action recognition should be a separate ROI pipeline. Anchor on `REROLL OPERATIONS`, `ROLL TOKENS`, and/or the three button rectangles, map the action strip back to source pixels, then OCR each card separately. Do not downscale the action text merely because the full screenshot is large.
 3. Action matching should remain closed-vocabulary/fuzzy after per-card OCR. The 2560×1600 fixture is a strong example where local high-resolution crops should outperform whole-image recognition while analyzing far fewer pixels.
-4. The action catalogue must be reconciled with current-client evidence before OCR can be certified. The supplied screenshot proves at least one currently unsupported action label: `Reroll Stat for the first Red Emblem`.
+4. The supplied authoritative action table matches the current 20-action `ACTION_CATALOG`; no catalog expansion is required from these screenshots.
 5. Token extraction is now testable (4 and 5) and should use the same action-strip ROI.
-6. Do not claim action-import certification yet. The new fixtures establish ground truth and expose two blockers: action-strip OCR strategy and action-catalog coverage.
+6. Do not claim action-import certification yet. The remaining blockers are action-strip OCR strategy and robust board localization, not action-catalog coverage.
 
 ## Recommended implementation order
 
-1. Audit the action catalogue against the authoritative client action table and add any missing variants before changing OCR matching.
-2. Implement robust board-column + pooled-row geometry fallback.
-3. Implement dedicated source-resolution action-strip/card OCR and token extraction.
-4. Re-run all six fixtures and report layout, teams where roster mapping is valid, stat/tier/trait exactness, action exactness, token exactness, false-high-confidence errors, and latency.
-5. Only then tune thresholds/preprocessing; preserve the native/crop-first policy and avoid arbitrary resolution normalization.
+1. Implement robust board-column + pooled-row geometry fallback.
+2. Implement dedicated source-resolution action-strip/card OCR and token extraction.
+3. Re-run all six fixtures and report layout, teams where roster mapping is valid, stat/tier/trait exactness, action exactness, token exactness, false-high-confidence errors, and latency.
+4. Only then tune thresholds/preprocessing; preserve the native/crop-first policy and avoid arbitrary resolution normalization.
