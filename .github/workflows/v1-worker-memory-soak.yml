@@ -6,6 +6,8 @@ on:
     branches:
       - agent/v1-public-engineering-docs
     paths:
+      - src/ui/optimizerClient.ts
+      - tests/m6f-layout-worker.test.mjs
       - scripts/benchmark-v1-worker-memory.mjs
       - .github/workflows/v1-worker-memory-soak.yml
 
@@ -26,6 +28,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: Validate production changes
+        run: npm run test:ci
       - name: Install pinned browser harness dependency
         run: npm install --no-save --package-lock=false puppeteer-core@24.16.0
       - name: Run dedicated-worker memory soak
@@ -37,13 +41,13 @@ jobs:
         with:
           name: v1-worker-memory-soak
           path: benchmarks/v1-worker-memory-soak.json
-      - name: Commit evidence
+      - name: Commit generated output and evidence
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add benchmarks/v1-worker-memory-soak.json
+          git add build docs benchmarks/v1-worker-memory-soak.json
           if git diff --cached --quiet; then
             exit 0
           fi
-          git commit -m "record worker memory soak evidence"
+          git commit -m "record bounded worker memory evidence"
           git push
