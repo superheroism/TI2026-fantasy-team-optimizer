@@ -6,43 +6,55 @@ Exploratory native-Tesseract/Linux measurements are used to expose OCR/localizat
 
 ## Six-image corpus
 
-The corpus now includes four prior screenshots plus two legacy-three screenshots with all three reroll cards and token counts visible.
+The corpus includes four board-only screenshots plus two legacy-three screenshots with all three reroll cards and token counts visible.
 
-New fixture A: 1232×824 (1.015 MP), tight board/action crop, tokens = 4.
+Action fixture A: 1232×824 (1.015 MP), tight board/action crop, tokens = 4.
 
 - actions: `blue-trait-first`, `red-trait-all`, `green-stat-first`.
 - native whole-image OCR: ~0.55 s exploratory run.
-- OCR sees the action region but merges/garbles the three adjacent card labels.
-- correction from user-supplied authoritative action table: the third card reads **Reroll Stat for the first Green Emblem**. This is already present in the current 20-action `ACTION_CATALOG`; the earlier `first Red Emblem` reading was a ground-truth transcription error, not a catalog gap.
+- whole-image OCR sees the action region but merges/garbles adjacent card labels.
+- correction from the user-supplied authoritative action table: the third card is **Reroll Stat for the first Green Emblem**. The current 20-action `ACTION_CATALOG` is complete for the supplied evidence.
 
-New fixture B: 2560×1600 (4.096 MP), full Dota desktop, tokens = 5.
+Action fixture B: 2560×1600 (4.096 MP), full Dota desktop, tokens = 5.
 
 - actions: `green-stat-last`, `quality-increase-one`, `green-stat-random`.
 - native whole-image OCR: ~1.19 s exploratory run.
-- generic whole-image OCR sees `REROLL OPERATIONS` / token text but does not reliably recover the three card labels at this scale.
-- this validates the need to localize the action strip and OCR that small region independently at source resolution rather than expecting a board-wide OCR pass to read it.
+- generic whole-image OCR sees `REROLL OPERATIONS` / token text but does not reliably recover the three individual card labels.
 
-## Prior geometry results
+## Baseline geometry findings
 
-| Fixture | Expected | Current geometry result |
+| Fixture | Expected | Baseline result before geometry change |
 |---|---|---|
 | original reference | expanded_5 | PASS: 5/5/5 TIER rows |
 | crimson cropped board | expanded_5 | PASS layout; Support only 2/5 TIER anchors |
 | full desktop capture | expanded_5 | **FAIL: legacy_3** under equal-third fallback |
 | golden cropped board | legacy_3 | PASS: 3/3/3 |
 
-## Conclusions
+## Implemented parser changes
 
-1. Board localization still needs the previously identified closed-vocabulary three-column fallback and pooled vertical row grid.
-2. Action recognition should be a separate ROI pipeline. Anchor on `REROLL OPERATIONS`, `ROLL TOKENS`, and/or the three button rectangles, map the action strip back to source pixels, then OCR each card separately. Do not downscale the action text merely because the full screenshot is large.
-3. Action matching should remain closed-vocabulary/fuzzy after per-card OCR. The 2560×1600 fixture is a strong example where local high-resolution crops should outperform whole-image recognition while analyzing far fewer pixels.
-4. The user-supplied authoritative action table matches the current 20-action `ACTION_CATALOG`; no catalog expansion is required from these screenshots.
-5. Token extraction is now testable (4 and 5) and should use the same action-strip ROI.
-6. Do not claim action-import certification yet. The remaining blockers are action-strip OCR strategy and robust board localization, not action-catalog coverage.
+The branch now addresses the failure mechanisms found by the corpus:
 
-## Recommended implementation order
+1. **Three-column fallback.** If all `CORE` / `MID` / `SUPPORT` headings are not confidently found, repeated closed-vocabulary card anchors (`TIER`, stat tokens, traits) are clustered into three horizontal card columns instead of dividing the entire uploaded screenshot into equal thirds.
+2. **Pooled row geometry.** `TIER` evidence is pooled across all three banners. A role no longer needs to OCR every row independently. Four-row evidence can be regularized to a five-row grid from the repeated pitch, preventing the observed 5→3 collapse.
+3. **Native/crop-first policy retained.** Normal-size screenshots use native OCR once. Large screenshots use a low-resolution localization copy, then map extraction back to original pixels. No image is upscaled.
+4. **Dedicated action-strip path.** `REROLL OPERATIONS` / `ROLL TOKENS` anchor the strip. Each of the three action-card regions is evaluated independently; weak whole-board OCR is retried on the corresponding original-resolution source crop and fuzzy-matched against the closed 20-action catalog.
+5. **Token extraction.** The same action region now parses an integer token count when visible.
+6. **Failure remains review-safe.** Missing/unreadable action regions still return `null` with confidence 0, preserving current action values and red review outlines rather than fabricating values.
 
-1. Implement robust board-column + pooled-row geometry fallback.
-2. Implement dedicated source-resolution action-strip/card OCR and token extraction.
-3. Re-run all six fixtures and report layout, teams where roster mapping is valid, stat/tier/trait exactness, action exactness, token exactness, false-high-confidence errors, and latency.
-4. Only then tune thresholds/preprocessing; preserve the native/crop-first policy and avoid arbitrary resolution normalization.
+## Build validation
+
+The implementation typechecks and lints under the repository's strict TypeScript configuration. Generated `build/` and `docs/` artifacts were regenerated from source. The temporary regeneration workflow removed itself after use and is not part of the resulting branch.
+
+## Remaining verification
+
+The six screenshots themselves are not committed as binary test fixtures, so the repository CI cannot truthfully claim image-level OCR accuracy from the JSON labels alone. The next live corpus pass must feed the six actual images through the browser OCR path and record:
+
+- exact layout;
+- exact teams where roster mapping is valid;
+- exact stat / tier / trait fields;
+- exact action order;
+- exact token count;
+- false-high-confidence errors;
+- cold/warm latency and analyzed-pixel fraction.
+
+Until that live pass is completed, the geometry/action implementation should be treated as **implemented and compile-verified, not accuracy-certified**. Threshold tuning should follow the live pass rather than precede it.
