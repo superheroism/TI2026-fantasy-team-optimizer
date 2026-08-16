@@ -3,7 +3,7 @@ import { ACTION_CATALOG } from '../data/actionCatalog.js';
 const ROLES = ['core', 'mid', 'support'];
 const TRAITS = ['Fractal', 'Friendly', 'Vampiric', 'Unique', 'Benevolent'];
 const OCR_CDN = 'https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js';
-const LOCALIZE_MAX = 1100, EXTRACT_MAX = 1440;
+const LOCALIZE_MAX = 1100, EXTRACT_MAX = 1440, DIRECT_NATIVE_MAX_PIXELS = 2_000_000;
 let workerPromise;
 const ALIASES = { 'Creep Score': ['CREEP SCORE', 'CREEP'], GPM: ['GPM'], Deaths: ['DEATHS'], 'Tower Kills': ['TOWER KILLS', 'TOWER'], Madstone: ['MADSTONE COLLECTED', 'MADSTONE'], Kills: ['KILLS'], 'Teamfight Participation': ['TEAMFIGHT PARTICIPATION', 'TEAMFIGHT'], 'Tormentor Kills': ['TORMENTOR KILLS', 'TORMENTOR'], 'Roshan Kills': ['ROSHAN KILLS', 'ROSHAN'], Stuns: ['STUNS'], 'Courier Kills': ['COURIER KILLS', 'COURIER'], 'First Blood': ['FIRST BLOOD'], Runes: ['RUNES GRABBED', 'RUNES'], Watchers: ['WATCHERS'], 'Wards Placed': ['WARDS PLACED', 'WARDS'], 'Smokes Used': ['SMOKES USED', 'SMOKES'], 'Camps Stacked': ['CAMPS STACKED', 'CAMPS'], Lotuses: ['LOTUSES'] };
 const norm = (s) => s.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -46,6 +46,7 @@ function parse(tsv) { if (!tsv)
         out.push({ text: t, confidence: Number(c[10]) || 0, left: Number(c[6]) || 0, top: Number(c[7]) || 0, width: Number(c[8]) || 0, height: Number(c[9]) || 0, lineKey: `${c[1]}:${c[2]}:${c[3]}:${c[4]}` });
 } return out; }
 async function run(w, c) { const t = performance.now(), r = await w.recognize(c, {}, { tsv: true }); return { words: parse(r.data.tsv), elapsedMs: performance.now() - t, width: c.width, height: c.height }; }
+function cropRecognizedPass(p, c) { const words = p.words.filter(w => cx(w) >= c.left && cx(w) < c.left + c.width && cy(w) >= c.top && cy(w) < c.top + c.height).map(w => ({ ...w, left: w.left - c.left, top: w.top - c.top })); return { words, elapsedMs: 0, width: c.width, height: c.height }; }
 function centers(ws, width) { const f = {}; for (const r of ROLES) {
     const a = ws.filter(w => sim(w.text, r.toUpperCase()) >= .72).sort((x, y) => y.confidence - x.confidence);
     if (a[0])
@@ -82,7 +83,19 @@ function teamMatch(ws, role, data) { const s = text(ws); let best = { team: data
         best = { team: p.team, score };
 } return best; }
 function rowWindow(rows, i, height) { const y = rows[i] ?? height * (.18 + i * .14), prev = i ? rows[i - 1] : Math.max(0, y - 55), next = i < rows.length - 1 ? rows[i + 1] : Math.min(height, y + 65); return { top: i ? (prev + y) / 2 : Math.max(0, y - (next - y) * .55), bottom: i < rows.length - 1 ? (y + next) / 2 : Math.min(height, y + (y - prev) * .65) }; }
-export async function parseScreenshotLocally(file, data) { const start = performance.now(), img = await decode(file), worker = await getWorker(), lc = canvas(img, LOCALIZE_MAX), local = await run(worker, lc), crop = cropBox(local, img.naturalWidth, img.naturalHeight), ec = canvas(img, EXTRACT_MAX, crop), ex = await run(worker, ec), bs = bands(ex.words, ex.width), rows = Object.fromEntries(ROLES.map(r => [r, tiers(ex.words, bs[r])])), layoutId = layoutOf(rows), layout = BOARD_LAYOUTS[layoutId], fc = [], warnings = [], banners = {}; for (const role of ROLES) {
+export async function parseScreenshotLocally(file, data) { const start = performance.now(), img = await decode(file), worker = await getWorker(), nativePixels = img.naturalWidth * img.naturalHeight; let local, ex, crop; if (nativePixels <= DIRECT_NATIVE_MAX_PIXELS) {
+    const native = canvas(img, Number.POSITIVE_INFINITY);
+    local = await run(worker, native);
+    crop = cropBox(local, img.naturalWidth, img.naturalHeight);
+    ex = cropRecognizedPass(local, crop);
+}
+else {
+    const lc = canvas(img, LOCALIZE_MAX);
+    local = await run(worker, lc);
+    crop = cropBox(local, img.naturalWidth, img.naturalHeight);
+    const ec = canvas(img, EXTRACT_MAX, crop);
+    ex = await run(worker, ec);
+} const bs = bands(ex.words, ex.width), rows = Object.fromEntries(ROLES.map(r => [r, tiers(ex.words, bs[r])])), layoutId = layoutOf(rows), layout = BOARD_LAYOUTS[layoutId], fc = [], warnings = [], banners = {}; for (const role of ROLES) {
     const b = bs[role], rs = rows[role], first = rs[0] ?? ex.height * .2, tw = within(ex.words, b.left, b.left + (b.right - b.left) * .58, 0, Math.max(first - 5, ex.height * .24)), tm = teamMatch(tw, role, data);
     fc.push({ path: `banners.${role}.selectedTeam`, confidence: tm.score });
     if (tm.score < .9)
