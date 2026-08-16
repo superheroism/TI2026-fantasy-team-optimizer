@@ -22,6 +22,10 @@ function setConfidence(raw, path, confidence) { raw.fieldConfidence ??= []; cons
     old.confidence = Math.max(old.confidence, confidence);
 else
     raw.fieldConfidence.push({ path, confidence }); }
+function replaceConfidence(raw, path, confidence) { raw.fieldConfidence ??= []; const old = raw.fieldConfidence.find(x => x.path === path); if (old)
+    old.confidence = Math.max(0, Math.min(1, confidence));
+else
+    raw.fieldConfidence.push({ path, confidence: Math.max(0, Math.min(1, confidence)) }); }
 function extractionToSource(r, m) { const c = m.diagnostic.sourceCrop, sx = c.width / m.extractionWidth, sy = c.height / m.extractionHeight; return { left: c.left + r.left * sx, top: c.top + r.top * sy, width: r.width * sx, height: r.height * sy }; }
 function orderedText(ws) { return [...ws].sort((a, b) => a.top - b.top || a.left - b.left).map(w => w.text).join(' '); }
 function ocrConfidence(ws) { return ws.length ? ws.reduce((sum, w) => sum + w.confidence, 0) / ws.length / 100 : 0; }
@@ -39,10 +43,23 @@ function teamMatch(s, role, data) { let best = { team: data.players.find(p => p.
     if (score > best.score)
         best = { team: p.team, score };
 } return best; }
-function bestTierLine(ls) { let best = { match: { value: 1, score: .2 } }; for (const line of ls) {
-    const match = matchTierText(line.text), hasTier = line.words.some(w => ocrSimilarity(w.text, 'TIER') >= .62), bonus = line.words.some(w => /^\+?(10|30|60|100|150)%$/.test(w.text.replace(/[“”'`]/g, ''))), score = Math.min(.99, match.score + (hasTier ? .08 : 0) + (bonus ? .08 : 0));
-    if (score > best.match.score)
-        best = { match: { value: match.value, score }, line };
+function directTier(line) { const cleaned = line.words.map(w => w.text.replace(/[“”'`]/g, '').toUpperCase()), bonus = cleaned.map(x => x.match(/^\+?(10|30|60|100|150)%$/)?.[1]).find(Boolean), bonusTier = { '10': 1, '30': 2, '60': 3, '100': 4, '150': 5 }; if (bonus)
+    return { value: bonusTier[bonus], score: .99 }; const tierIndex = line.words.findIndex(w => ocrSimilarity(w.text, 'TIER') >= .62); if (tierIndex >= 0) {
+    for (const token of cleaned.slice(tierIndex + 1, tierIndex + 3)) {
+        const roman = token.match(/^(I|II|III|IV|V)$/)?.[1];
+        if (roman)
+            return { value: { I: 1, II: 2, III: 3, IV: 4, V: 5 }[roman], score: .97 };
+    }
+} return undefined; }
+function bestTierLine(ls) { let best = { match: { value: 1, score: .2 }, direct: false }; for (const line of ls) {
+    const exact = directTier(line);
+    if (exact && exact.score > best.match.score)
+        best = { match: exact, line, direct: true };
+    else if (!best.direct) {
+        const match = matchTierText(line.text), hasTier = line.words.some(w => ocrSimilarity(w.text, 'TIER') >= .62), score = Math.min(.85, match.score + (hasTier ? .08 : 0));
+        if (score > best.match.score)
+            best = { match: { value: match.value, score }, line, direct: false };
+    }
 } return best; }
 function bestTraitLine(ls) { let best = { match: { value: 'Fractal', score: 0 } }; for (const line of ls) {
     const match = matchTraitText(line.text), score = Math.min(.99, match.score + (TRAITS.some(t => line.text.toUpperCase().includes(t.toUpperCase())) ? .08 : 0));
@@ -98,11 +115,25 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
                 }
             }
             const tier = bestTierLine(ls), qc = combined(tier.match.score, tier.line?.words ?? words);
-            if (tier.match.score >= .72 && qc > confidenceFor(raw, qp)) {
+            if (tier.direct && tier.match.score >= .72 && qc > confidenceFor(raw, qp)) {
                 raw.banners[role].emblems[i].qualityTier = tier.match.value;
                 setConfidence(raw, qp, qc);
                 d.normalizedTier = tier.match.value;
                 d.tierMatchScore = tier.match.score;
+            }
+            else if (!tier.direct) {
+                const base = extractionToSource(d.roi, metrics), strip = { left: base.left + base.width * .02, top: base.top + base.height * .30, width: base.width * .96, height: base.height * .38 }, tierRec = await w.recognize(canvas(src, strip), { tessedit_pageseg_mode: '7' }, { tsv: true }), tierWords = parse(tierRec.data.tsv), tierLines = lines(tierWords), retryTier = bestTierLine(tierLines);
+                retries++;
+                emblemRetries++;
+                if (retryTier.direct) {
+                    const retryConfidence = combined(retryTier.match.score, retryTier.line?.words ?? tierWords);
+                    raw.banners[role].emblems[i].qualityTier = retryTier.match.value;
+                    replaceConfidence(raw, qp, retryConfidence);
+                    d.normalizedTier = retryTier.match.value;
+                    d.tierMatchScore = retryTier.match.score;
+                }
+                else
+                    replaceConfidence(raw, qp, Math.min(confidenceFor(raw, qp), .75));
             }
             const trait = bestTraitLine(ls), tc = combined(trait.match.score, trait.line?.words ?? words);
             if (trait.match.score >= .62 && tc > confidenceFor(raw, tp)) {
@@ -143,21 +174,19 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
             else
                 metrics.diagnostic.tokenEvidence = { rawText: all, value: null, confidence: 0 };
         }
-        const groups = cluster3(words);
-        if (groups) {
-            const cardTexts = groups.map(g => orderedText(g)), resolved = [null, null, null];
-            for (let i = 0; i < 3; i++) {
-                const match = matchActionText(cardTexts[i] ?? '');
-                if (match && match.score >= .58) {
-                    resolved[i] = match.id;
-                    raw.operationIds[i] = match.id;
-                    setConfidence(raw, `operationIds.${i}`, match.score);
-                }
+        const centers = metrics.diagnostic.extractionColumnCenters, buttonCenters = [(centers.core + centers.mid) / 2, centers.mid, (centers.mid + centers.support) / 2], spacing = Math.min(buttonCenters[1] - buttonCenters[0], buttonCenters[2] - buttonCenters[1]), sx = metrics.diagnostic.sourceCrop.width / metrics.extractionWidth, tokenWords = words.filter(x => ocrSimilarity(x.text, 'TOKENS') >= .62 || /^\d+$/.test(x.text)), tokenY = tokenWords.length ? tokenWords.reduce((sum, x) => sum + x.top + x.height / 2, 0) / tokenWords.length : footerRect.height * .88, buttonTop = Math.max(0, tokenY - footerRect.height * .34), buttonHeight = Math.min(footerRect.height - buttonTop, footerRect.height * .24), buttonWidth = spacing * sx * 1.08, resolved = [null, null, null], cardTexts = [];
+        for (let i = 0; i < 3; i++) {
+            const centerSource = metrics.diagnostic.sourceCrop.left + buttonCenters[i] * sx, rect = { left: centerSource - buttonWidth / 2, top: footerRect.top + buttonTop, width: buttonWidth, height: buttonHeight }, buttonRec = await w.recognize(canvas(src, rect), { tessedit_pageseg_mode: '6' }, { tsv: true }), buttonWords = parse(buttonRec.data.tsv), buttonText = orderedText(buttonWords), match = matchActionText(buttonText);
+            retries++;
+            footerRetries++;
+            cardTexts.push(buttonText);
+            if (match && match.score >= .58) {
+                resolved[i] = match.id;
+                raw.operationIds[i] = match.id;
+                setConfidence(raw, `operationIds.${i}`, match.score);
             }
-            metrics.diagnostic.actionEvidence = { resolved, reason: resolved.every(Boolean) ? 'resolved-by-footer-clustering' : 'footer-clustering-partial', cardTexts };
         }
-        else
-            metrics.diagnostic.actionEvidence = { resolved: [null, null, null], reason: 'footer-action-clustering-underdetermined', cardTexts: [all] };
+        metrics.diagnostic.actionEvidence = { resolved, reason: resolved.every(Boolean) ? 'resolved-by-native-button-crops' : 'native-button-crops-partial', cardTexts };
     }
     const elapsedMs = performance.now() - started;
     const diagnostic = metrics.diagnostic;
