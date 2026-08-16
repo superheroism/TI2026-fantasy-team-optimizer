@@ -6,6 +6,8 @@ import {
   MenuModel,
   expectedExplicitMenuSamples,
   expectedUniformBestOfThree,
+  probabilityExplicitMenuSamplesImprove,
+  probabilityUniformBestOfThreeImproves,
 } from '../docs/js/engine/menuModel.js';
 
 function explicitCombinations(values,baseline){
@@ -14,6 +16,13 @@ function explicitCombinations(values,baseline){
     sum+=Math.max(baseline,values[i].value,values[j].value,values[k].value);count++;
   }
   return count?sum/count:baseline;
+}
+function explicitImproveProbability(values,baseline){
+  let improving=0,count=0;
+  for(let i=0;i<values.length-2;i++)for(let j=i+1;j<values.length-1;j++)for(let k=j+1;k<values.length;k++){
+    if(Math.max(values[i].value,values[j].value,values[k].value)>baseline)improving++;count++;
+  }
+  return count?improving/count:0;
 }
 function close(a,b,tolerance=1e-12){
   if(Object.is(a,b))return;
@@ -36,6 +45,7 @@ for(const [name,numbers,baseline] of cases){
   test(`analytic uniform menu operator matches 1,140-menu enumeration: ${name}`,()=>{
     const values=vector(numbers);
     close(expectedUniformBestOfThree(values,baseline),explicitCombinations(values,baseline));
+    close(probabilityUniformBestOfThreeImproves(values,baseline),explicitImproveProbability(values,baseline));
   });
 }
 
@@ -46,6 +56,7 @@ test('analytic operator matches explicit enumeration on deterministic random vec
     const values=vector(Array.from({length:20},()=>next()*200-100));
     const baseline=next()*80-40;
     close(expectedUniformBestOfThree(values,baseline),explicitCombinations(values,baseline),1e-10);
+    close(probabilityUniformBestOfThreeImproves(values,baseline),explicitImproveProbability(values,baseline),1e-10);
   }
 });
 
@@ -64,6 +75,7 @@ test('override menu samples preserve explicit supplied-sample semantics',()=>{
   const model=new MenuModel(samples);
   const expected=expectedExplicitMenuSamples(values,-2,samples);
   close(model.expectedFreshMenuUtility(values,-2),expected);
+  close(model.freshMenuImprovementProbability(values,-2),probabilityExplicitMenuSamplesImprove(values,-2,samples));
   const diagnostics=model.getDiagnostics();
   assert.equal(model.mode,'override_samples');
   assert.equal(diagnostics.overrideCalls,1);
@@ -74,6 +86,7 @@ test('normal MenuModel path is analytic and scans no explicit menus',()=>{
   const values=ACTION_CATALOG.map((operation,index)=>({id:operation.id,value:index}));
   const model=new MenuModel();
   close(model.expectedFreshMenuUtility(values,3),expectedExplicitMenuSamples(values,3,allUniformMenus()));
+  close(model.freshMenuImprovementProbability(values,3),explicitImproveProbability(values,3));
   const diagnostics=model.getDiagnostics();
   assert.equal(model.mode,'known_uniform');
   assert.equal(diagnostics.uniformCalls,1);
