@@ -1,20 +1,20 @@
 # TI 2026 Fantasy Rules and Model Assumptions
 
-This file separates rules the optimizer treats as game mechanics from probability assumptions used when the game does not specify an exact reroll distribution.
+This file separates **game rules** from **model assumptions**. Rules describe behavior the optimizer treats as known. Assumptions fill gaps where the client does not publish exact probabilities.
 
 ## Fantasy scoring
 
 For each scoring period:
 
-1. The active roster is fixed for scoring.
+1. The roster is fixed for scoring.
 2. Each selected player is scored game by game.
-3. Only stats on that role's War Banner contribute.
-4. Player scores are averaged within the role.
-5. The best two games in each series are retained.
-6. If a role plays multiple series, only its highest-scoring series is retained.
-7. Core, Mid, and Support retained-role scores are summed.
+3. Only stats on that role's War Banner count.
+4. Scores for paired players are averaged within the role.
+5. The best two games in each series are kept.
+6. If a role plays multiple series, only its highest-scoring series is kept.
+7. Core, Mid, and Support retained scores are added together.
 
-Because player averaging happens before best-game selection, an exact pair model would require players to be aligned at the game and series level. Pairing already-aggregated player distributions is an approximation.
+Because paired players are averaged **before** the best games are selected, an exact Core/Support model would need both players aligned to the same games and series. The current pair model is therefore an approximation.
 
 ## Base stat scoring
 
@@ -45,7 +45,7 @@ Because player averaging happens before best-game selection, an exact pair model
 - **BLUE:** Wards Placed, Camps Stacked, Runes Grabbed, Watchers Taken, Smokes Used, Lotuses Grabbed
 - **GREEN:** Roshan Kills, Teamfight Participation, Stuns, Tormentor Kills, First Blood, Courier Kills
 
-A stat reroll must produce a different stat, and a War Banner cannot contain duplicate stats.
+A stat reroll must change the stat, stay within the emblem's color pool, and cannot create a duplicate stat on the same banner.
 
 ## Quality
 
@@ -59,52 +59,52 @@ A stat reroll must produce a different stat, and a War Banner cannot contain dup
 
 ## Traits
 
-- **Fractal:** +60% if all emblem qualities on the War Banner are different.
+- **Fractal:** +60% if every emblem quality on the banner is different.
 - **Benevolent:** adjacent emblems receive +20%.
 - **Vampiric:** this emblem receives +50%; adjacent emblems receive -10%.
-- **Unique:** +30% if this is the only Unique emblem on the War Banner.
-- **Friendly:** +50% if at least three Friendly emblems are on the War Banner.
+- **Unique:** +30% if it is the only Unique emblem on the banner.
+- **Friendly:** +50% if at least three Friendly emblems are on the banner.
 
-A trait reroll must produce a different trait.
+A trait reroll must change the trait.
 
 ## Effective multiplier
 
-The tool derives each emblem's multiplier from quality and every active trait effect on the banner:
+Each emblem starts at 100%. Quality and active trait effects are then added:
 
 ```text
 effective multiplier = 100% + quality bonus + active trait modifiers
 ```
 
-Trait modifiers stack additively and may affect neighboring emblems.
-
 Examples:
 
 - Tier V + active Fractal: `100 + 150 + 60 = 310%`
-- Tier III adjacent to Benevolent: `100 + 60 + 20 = 180%`
+- Tier III next to Benevolent: `100 + 60 + 20 = 180%`
 - Tier II with Vampiric: `100 + 30 + 50 = 180%`
+
+Trait effects can stack and can affect neighboring emblems.
 
 ## Action menu
 
-The action catalogue contains 20 distinct reroll actions. A visible menu contains three distinct actions. A menu reroll costs one token and leaves the board unchanged.
+The catalogue contains 20 distinct reroll actions. A visible menu contains three distinct actions. Rerolling the menu costs one token and does not change the board.
 
-## Optimizer probability assumptions
+## Probability assumptions
 
-The current probability model assumes:
+Where exact client odds are unknown, the optimizer currently assumes:
 
-- stat rerolls are uniform over legal replacement stats;
-- quality rerolls are uniform over the other four tiers;
-- trait rerolls are uniform over the other four traits;
-- directional quality changes are uniform over valid destination tiers;
-- random quality operations choose eligible slots uniformly;
+- legal stat replacements are equally likely;
+- the other four quality tiers are equally likely on a quality reroll;
+- the other four traits are equally likely on a trait reroll;
+- valid higher/lower quality destinations are equally likely for directional changes;
+- random quality operations choose eligible slots equally;
 - future menus are uniform draws of three distinct actions from the 20-action catalogue;
-- successive future menus are treated as fresh draws from the same distribution.
+- successive future menus are fresh draws from the same distribution.
 
-Under the menu assumption there are `C(20,3) = 1,140` possible menus, and any specific action appears in `3/20 = 15%` of them.
+Under the menu assumption there are `C(20,3) = 1,140` possible menus, and a specific action appears in 15% of them.
 
-These probabilities are model inputs, not stronger claims about hidden client RNG.
+These are **model inputs**, not claims about Valve's hidden random-number generator.
 
 ## Known gaps
 
-- The exact Teamfight Participation mapping to its 2,124-point maximum is not specified here.
+- The exact Teamfight Participation mapping to its 2,124-point maximum is not documented here.
 - Title-condition scoring is not fully modeled numerically.
-- Pair-level scoring is approximate until exact game-aligned player data are modeled.
+- Core/Support pair scoring remains approximate until game-aligned player data are modeled.
