@@ -1,0 +1,104 @@
+1249-  ...
+1250-# Subtest: next roll decrements tokens and returns the user to the top of the page
+1251-ok 209 - next roll decrements tokens and returns the user to the top of the page
+1252-  ---
+1253-  duration_ms: 0.134662
+1254-  type: 'test'
+1255-  ...
+1256-# Subtest: layout selector is the only product geometry control and exposes both supported layouts
+1257:not ok 210 - layout selector is the only product geometry control and exposes both supported layouts
+1258-  ---
+1259-  duration_ms: 1.998773
+1260-  type: 'test'
+1261-  location: '/home/runner/work/TI2026-fantasy-team-optimizer/TI2026-fantasy-team-optimizer/tests/ui-contract.test.mjs:173:1'
+1262-  failureType: 'testCodeFailure'
+1263-  error: |-
+1264-    The input did not match the regular expression /convertBoardLayout(board,target)/. Input:
+1265-    
+1266-    "import type { ActionEvaluation, BannerState, BoardLayoutId, BoardState, DataBundle, MenuState, OfferedOperation, OptimizerState, RecommendationResult, Role, StatName, TraitName } from '../domain/types.js';\n" +
+1267-      "import { legalStats } from '../domain/rules.js';\n" +
+1268-      "import { convertBoardLayout, createDefaultBoard, defaultBoard, defaultMenu, resolvedLayoutId } from '../data/defaultState.js';\n" +
+1269-      "import { loadStatisticalModel } from '../data/statisticalModel.js';\n" +
+1270-      "import { attachedPlayers, displayTeamName, rosterForTeam } from '../data/ti2026Rosters.js';\n" +
+1271-      "import { formatAction } from '../engine/optimizer.js';\n" +
+1272-      "import { OptimizerRequestCancelledError, OptimizerWorkerClient } from './optimizerClient.js';\n" +
+1273-      "import { evaluateSelectedBoard, rankTeamsForRole } from '../engine/scoring.js';\n" +
+1274-      "import { evaluateBanner } from '../domain/bannerEvaluator.js';\n" +
+1275-      "import { ACTION_CATALOG, ACTION_BY_ID, cloneAction } from '../data/actionCatalog.js';\n" +
+1276-      "const roles:Role[]=['core','mid','support'];\n" +
+1277-      "const traits:TraitName[]=['Fractal','Friendly','Vampiric','Unique','Benevolent'];\n" +
+1278-      'let data!:DataBundle;\n' +
+1279-      'let board:BoardState=structuredClone(defaultBoard);\n' +
+1280-      'let menu:MenuState=structuredClone(defaultMenu);\n' +
+1281-      "let tokens=10,username='[Username]',targetScore=0,objective:OptimizerState['objective']='expected_score';\n" +
+1282-      "let comparisonRole:Role='core';\n" +
+1283-      "let theme:'dark'|'light'='dark';\n" +
+1284-      'let lastResult:RecommendationResult|null=null,lastOptimizerState:OptimizerState|null=null;\n' +
+1285-      'const actionTargetSelection=new Map<number,Role>();\n' +
+1286-      'const optimizerClient=new OptimizerWorkerClient();\n' +
+1287-      'const $=<T extends HTMLElement=HTMLElement>(sel:string)=>document.querySelector(sel) as T;\n' +
+1288-      "const fmt=(n:number)=>Number.isFinite(n)?Math.round(n).toLocaleString():'—';\n" +
+1289-      "const pct=(p:number|undefined)=>p===undefined?'—':`${(p*100).toFixed(1)}%`;\n" +
+1290-      `const escapeHtml=(s:string)=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]!));\n` +
+1291-      'function teamOptions(role:Role,selected:string):string{\n' +
+1292-      '  return data.players.filter(p=>p.role===role).sort((a,b)=>displayTeamName(a.team).localeCompare(displayTeamName(b.team)))\n' +
+  duration_ms: 43.368431
+  type: 'test'
+  ...
+# Subtest: memoized Q matches explicit complete tree at t=4
+ok 221 - memoized Q matches explicit complete tree at t=4
+  ---
+  duration_ms: 3.766114
+  type: 'test'
+  ...
+# Subtest: deterministic depth-4 transitions match complete explicit enumeration
+ok 222 - deterministic depth-4 transitions match complete explicit enumeration
+  ---
+  duration_ms: 21.493367
+  type: 'test'
+  ...
+# Subtest: stop dominates when every action weakens terminal utility
+ok 223 - stop dominates when every action weakens terminal utility
+  ---
+  duration_ms: 0.728685
+  type: 'test'
+  ...
+# Subtest: board action dominates when a visible action improves the state
+ok 224 - board action dominates when a visible action improves the state
+  ---
+  duration_ms: 0.248375
+  type: 'test'
+  ...
+# Subtest: menu reroll and repeated menu rerolls are represented by V recursion
+ok 225 - menu reroll and repeated menu rerolls are represented by V recursion
+  ---
+  duration_ms: 0.348653
+  type: 'test'
+  ...
+# Subtest: ties and unavailable actions preserve exact value semantics
+ok 226 - ties and unavailable actions preserve exact value semantics
+  ---
+  duration_ms: 12.788923
+  type: 'test'
+  ...
+# Subtest: optional extra tokens cannot reduce V or fixed-menu Q
+ok 227 - optional extra tokens cannot reduce V or fixed-menu Q
+  ---
+  duration_ms: 0.878646
+  type: 'test'
+  ...
+# Subtest: transposed stochastic states reuse V/action/terminal memo entries and expose depth diagnostics
+ok 228 - transposed stochastic states reuse V/action/terminal memo entries and expose depth diagnostics
+  ---
+  duration_ms: 1.213543
+  type: 'test'
+  ...
+1..228
+# tests 228
+# suites 0
+# pass 227
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 42118.499959
