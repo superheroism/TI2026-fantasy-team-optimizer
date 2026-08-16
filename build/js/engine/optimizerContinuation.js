@@ -50,6 +50,7 @@ export function createContinuationRuntime(state, data, terminal, uniformStatFall
     const missesByDepth = new Map(), bypassesByDepth = new Map();
     const transitionEvaluationsByDepth = new Map();
     const outcomesBeforeByDepth = new Map(), outcomesAfterByDepth = new Map();
+    const freshMenuImproveMemo = new Map();
     let valueFunction;
     const targetedContinuation = (engine, operation, role, tokensRemaining, phase) => {
         incrementDepth(requestsByDepth, tokensRemaining);
@@ -139,8 +140,18 @@ export function createContinuationRuntime(state, data, terminal, uniformStatFall
         actionValue: (engine, operation, tokensRemaining, phase) => wideningRuntime
             ? wideningRuntime.evaluate(engine, operation, tokensRemaining, phase)
             : fullActionValue(engine, operation, tokensRemaining, phase),
-        freshMenuExpectedUtility: (_engine, _tokensRemaining, baseline, operationValues) => menuModel.expectedFreshMenuUtility(operationValues, baseline),
+        freshMenuExpectedUtility: (engine, tokensRemaining, baseline, operationValues) => {
+            freshMenuImproveMemo.set(`${engine.id}|${tokensRemaining}`, menuModel.freshMenuImprovementProbability(operationValues, terminal.searchUtility(engine)));
+            return menuModel.expectedFreshMenuUtility(operationValues, baseline);
+        },
     });
+    const freshMenuImprovementProbability = (engine, tokensRemaining) => {
+        const t = Math.max(0, tokensRemaining);
+        if (t <= 0)
+            return 0;
+        valueFunction.V(engine, t);
+        return freshMenuImproveMemo.get(`${engine.id}|${t}`) ?? 0;
+    };
     const diagnostics = () => ({
         continuationFidelity: fidelity,
         actionWidening: wideningRuntime?.report() ?? disabledWidening.report(),
@@ -152,6 +163,6 @@ export function createContinuationRuntime(state, data, terminal, uniformStatFall
         transitionOutcomesBeforeCompressionByDepth: depthRecord(outcomesBeforeByDepth),
         transitionOutcomesAfterCompressionByDepth: depthRecord(outcomesAfterByDepth),
     });
-    return { valueFunction, menuModel, transitionsFor, targetedContinuation, diagnostics };
+    return { valueFunction, menuModel, transitionsFor, targetedContinuation, freshMenuImprovementProbability, diagnostics };
 }
 //# sourceMappingURL=optimizerContinuation.js.map
