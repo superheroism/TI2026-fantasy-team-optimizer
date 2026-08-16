@@ -1,5 +1,5 @@
 import { BOARD_LAYOUTS, LEGAL_STAT_POOLS } from '../domain/rules.js';
-import { ACTION_CATALOG } from '../data/actionCatalog.js';
+import { matchActionText, matchStatText, matchTierText, matchTraitText } from './ocrDomainMatch.js';
 const ROLES = ['core', 'mid', 'support'];
 const TRAITS = ['Fractal', 'Friendly', 'Vampiric', 'Unique', 'Benevolent'];
 const OCR_CDN = 'https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js';
@@ -116,18 +116,9 @@ function layoutOf(r, g) { const n = ROLES.map(x => r[x].length); if (g.length >=
     return 'expanded_5'; if (g.length >= 3 || n.filter(x => x >= 3).length >= 2)
     return 'legacy_3'; return Math.max(...n) >= 5 ? 'expanded_5' : 'legacy_3'; }
 const within = (ws, l, r, t, b) => ws.filter(w => cx(w) >= l && cx(w) < r && cy(w) >= t && cy(w) < b);
-function statMatch(s, legal) { let best = { value: legal[0], score: -1 }; for (const v of legal) {
-    const score = Math.max(...ALIASES[v].map(a => sim(s, a)));
-    if (score > best.score)
-        best = { value: v, score };
-} return best; }
-function traitMatch(s) { let best = { value: TRAITS[0], score: -1 }; for (const v of TRAITS) {
-    const score = sim(s, v);
-    if (score > best.score)
-        best = { value: v, score };
-} return best; }
-function tierMatch(s) { const bonuses = [...s.matchAll(/([+-]?)(10|30|60|100|150)%/g)].map(m => Number(m[2])), bonus = bonuses.find(v => [10, 30, 60, 100, 150].includes(v)), byBonus = { 10: 1, 30: 2, 60: 3, 100: 4, 150: 5 }; if (bonus && byBonus[bonus])
-    return { value: byBonus[bonus], score: .99 }; const m = s.toUpperCase().match(/\b(?:III|IV|II|V|I)\b/g) ?? [], v = m.find(x => x !== 'I') ?? m[0], map = { I: 1, II: 2, III: 3, IV: 4, V: 5 }; return v && map[v] ? { value: map[v], score: .82 } : { value: 1, score: .2 }; }
+function statMatch(s, legal) { return matchStatText(s, legal); }
+function traitMatch(s) { return matchTraitText(s); }
+function tierMatch(s) { return matchTierText(s); }
 function conf(score, ws) { const o = ws.length ? ws.reduce((s, w) => s + w.confidence, 0) / ws.length / 100 : 0; return Math.max(0, Math.min(.99, score * .72 + o * .28)); }
 function teamMatch(ws, role, data) { const s = text(ws); let best = { team: data.players.find(p => p.role === role)?.team ?? '', score: -1 }; for (const p of data.players.filter(x => x.role === role)) {
     const q = [p.name, ...p.attachedPlayers].map(n => sim(s, n)), strong = q.filter(x => x > .62), score = strong.length ? Math.min(.99, strong.reduce((a, b) => a + b, 0) / Math.min(2, strong.length)) : Math.max(...q, 0);
@@ -135,7 +126,7 @@ function teamMatch(ws, role, data) { const s = text(ws); let best = { team: data
         best = { team: p.team, score };
 } return best; }
 function rowWindow(rows, i, height) { const synthesized = rows[i] === undefined, y = rows[i] ?? height * (.18 + i * .14), prev = i ? rows[i - 1] : Math.max(0, y - 55), next = i < rows.length - 1 ? rows[i + 1] : Math.min(height, y + 65); return { top: i ? (prev + y) / 2 : Math.max(0, y - (next - y) * .55), bottom: i < rows.length - 1 ? (y + next) / 2 : Math.min(height, y + (y - prev) * .65), synthesized }; }
-function actionMatch(s) { return ACTION_CATALOG.map(a => ({ id: a.id, score: sim(s, a.label) })).sort((a, b) => b.score - a.score)[0]; }
+function actionMatch(s) { return matchActionText(s); }
 function lineRecords(ws) { return [...groups(ws).values()].map(words => ({ words, s: text(words), y: words.reduce((a, w) => a + cy(w), 0) / words.length, x: words.reduce((a, w) => a + cx(w), 0) / words.length })); }
 function tokenCount(ws) { for (const line of lineRecords(ws)) {
     if (!norm(line.s).includes('ROLLTOKENS'))
@@ -209,18 +200,29 @@ export async function parseScreenshotLocally(file, data) {
     }
     const extractionGeometry = centerResult(ex.words, ex.width), bs = bandsFromCenters(extractionGeometry.centers, ex.width), detected = Object.fromEntries(ROLES.map(r => [r, tiers(ex.words, bs[r], ex.height)])), pooledResult = globalRows(ex.words, bs, ex.height), pooled = pooledResult.rows, layoutId = layoutOf(detected, pooled), layout = BOARD_LAYOUTS[layoutId], rows = Object.fromEntries(ROLES.map(r => [r, (layoutId === 'expanded_5' && pooled.length >= 5) || (layoutId === 'legacy_3' && pooled.length >= 3) ? pooled.slice(0, layout.roles[r].length) : detected[r]]));
     const fc = [], warnings = [], banners = {}, emblemDiagnostics = [], teamEvidence = {};
+    const geometryConfidenceCap = localGeometry.method === 'fallback' || extractionGeometry.method === 'fallback' ? .85 : 1;
+    if (localGeometry.method === 'fallback')
+        warnings.push('Board localization used conservative fallback geometry; imported board fields require review.');
+    if (extractionGeometry.method === 'fallback')
+        warnings.push('Board columns used conservative fallback geometry; imported board fields require review.');
     let synthesizedRows = pooledResult.synthesized;
     for (const role of ROLES) {
-        const b = bs[role], rs = rows[role], first = rs[0] ?? ex.height * .2, tw = within(ex.words, b.left, b.left + (b.right - b.left) * .58, 0, Math.max(first - 5, ex.height * .24)), tm = teamMatch(tw, role, data);
+        const b = bs[role], rs = rows[role], first = rs[0] ?? ex.height * .2, bandWidth = b.right - b.left, emblemLeft = b.left + bandWidth * .42, pitch = rs.length > 1 ? Math.abs(rs[1] - rs[0]) : Math.max(55, ex.height * .08), tw = within(ex.words, Math.max(0, b.left - bandWidth * .08), Math.max(b.left, emblemLeft - bandWidth * .03), 0, Math.min(ex.height, first + pitch * .7)), tm = teamMatch(tw, role, data), teamConfidence = Math.min(tm.score, geometryConfidenceCap);
         teamEvidence[role] = { rawText: text(tw), normalizedTeam: tm.team, matchScore: tm.score };
-        fc.push({ path: `banners.${role}.selectedTeam`, confidence: tm.score });
-        if (tm.score < .9)
+        fc.push({ path: `banners.${role}.selectedTeam`, confidence: teamConfidence });
+        if (teamConfidence < .9)
             warnings.push(`${role} team OCR should be reviewed.`);
-        const emblems = layout.roles[role].map((slot, i) => { const rw = rowWindow(rs, i, ex.height); synthesizedRows ||= rw.synthesized; const roi = { left: b.left + (b.right - b.left) * .42, top: rw.top, width: b.right - (b.left + (b.right - b.left) * .42), height: rw.bottom - rw.top }, ww = within(ex.words, roi.left, roi.left + roi.width, roi.top, roi.top + roi.height), s = text(ww), sm = statMatch(s, LEGAL_STAT_POOLS[slot.color]), tr = traitMatch(s), qt = tierMatch(s), sc = conf(sm.score, ww), tc = conf(tr.score, ww), finalConfidence = Math.min(sc, qt.score, tc); fc.push({ path: `banners.${role}.emblems.${i}.stat`, confidence: sc }, { path: `banners.${role}.emblems.${i}.qualityTier`, confidence: qt.score }, { path: `banners.${role}.emblems.${i}.trait`, confidence: tc }); if (finalConfidence < .9)
+        const emblems = layout.roles[role].map((slot, i) => { const rw = rowWindow(rs, i, ex.height); synthesizedRows ||= rw.synthesized; const roi = { left: b.left + (b.right - b.left) * .42, top: rw.top, width: b.right - (b.left + (b.right - b.left) * .42), height: rw.bottom - rw.top }, ww = within(ex.words, roi.left, roi.left + roi.width, roi.top, roi.top + roi.height), s = text(ww), sm = statMatch(s, LEGAL_STAT_POOLS[slot.color]), tr = traitMatch(s), qt = tierMatch(s), sc = Math.min(conf(sm.score, ww), geometryConfidenceCap), tc = Math.min(conf(tr.score, ww), geometryConfidenceCap), qc = Math.min(qt.score, geometryConfidenceCap), finalConfidence = Math.min(sc, qc, tc); fc.push({ path: `banners.${role}.emblems.${i}.stat`, confidence: sc }, { path: `banners.${role}.emblems.${i}.qualityTier`, confidence: qc }, { path: `banners.${role}.emblems.${i}.trait`, confidence: tc }); if (finalConfidence < .9)
             warnings.push(`${role} emblem ${i + 1} OCR should be reviewed.`); emblemDiagnostics.push({ role, rowIndex: i, roi, synthesizedRow: rw.synthesized, words: ww.map(wordDiagnostic), inferredColor: slot.color, rawText: s, normalizedStat: sm.value, statMatchScore: sm.score, rawTierText: s, normalizedTier: qt.value, tierMatchScore: qt.score, rawTraitText: s, normalizedTrait: tr.value, traitMatchScore: tr.score, finalConfidence, reviewRequired: finalConfidence < REVIEW_THRESHOLD }); return { position: slot.index, color: slot.color, stat: sm.value, qualityTier: qt.value, trait: tr.value }; });
         banners[role] = { selectedTeam: tm.team, emblems };
     }
-    const actionRows = pooled.length ? pooled : ROLES.flatMap(r => rows[r]), actions = await parseActions(worker, img, ex, crop, actionRows, fc, warnings), tokens = tokenCount(ex.words), result = { layoutId, banners, operationIds: actions.ops, fieldConfidence: fc, warnings };
+    const actionRows = pooled.length ? pooled : ROLES.flatMap(r => rows[r]), actions = await parseActions(worker, img, ex, crop, actionRows, fc, warnings), tokens = tokenCount(ex.words);
+    if (geometryConfidenceCap < 1) {
+        for (const field of fc)
+            if (field.path.startsWith('operationIds.'))
+                field.confidence = Math.min(field.confidence, geometryConfidenceCap);
+    }
+    const result = { layoutId, banners, operationIds: actions.ops, fieldConfidence: fc, warnings };
     if (tokens) {
         result.tokensRemaining = tokens.value;
         fc.push({ path: 'tokensRemaining', confidence: tokens.confidence });
