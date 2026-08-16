@@ -6,7 +6,7 @@ The optimizer is distribution-aware: it models a range of plausible outcomes rat
 
 ## How to use it
 
-1. Match your current Core, Mid, and Support War Banners.
+1. Choose **3 Emblems** or **5 Emblems** in Current Board, then match your Core, Mid, and Support War Banners.
 2. Select the team used for each role.
 3. Enter your remaining roll tokens and the three actions currently offered in-game.
 4. Choose an objective:
@@ -132,3 +132,9 @@ Model inputs live under `data/`:
 - `CLIENT_RULES_2026.md` — Fantasy scoring rules and optimizer probability assumptions.
 - `PERFORMANCE.md` — simulation counts, runtime approximations, and benchmarks.
 - `PRODUCT_DECISIONS.md` — product and modeling choices that affect the interface.
+
+## Board layouts
+
+The Current Board selector supports both TI 2026 banner geometries. **3 Emblems** is the backward-compatible default; **5 Emblems** uses the expanded five-slot board. Switching layouts preserves the first three emblem states, selected teams, expected series, roll tokens, and the current three offered actions. New fourth/fifth slots use deterministic legal defaults, and **Reset Board** resets within the layout you currently selected.
+
+Recommendation search runs in a Web Worker so the page remains responsive during heavier five-emblem calculations. Editing the board or switching layouts cancels any pending recommendation and prevents stale results from being displayed.

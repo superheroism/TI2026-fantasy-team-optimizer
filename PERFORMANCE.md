@@ -310,3 +310,21 @@ The authoritative Node 22/Linux 12-case integration matrix covered both objectiv
 The lower median speedup than M6D's 2.52× holdout result is explained by the deliberately broader integration corpus: 5/12 M6E cases reach exact fallback versus 16.7% of M6D holdout cases, and those fallback cases necessarily run near exact cost. The certified thresholds and escalation logic were not retuned. Raw evidence is in `benchmarks/m6e-production-integration-results.json` and `benchmarks/m6e-production-integration-report.md`.
 
 **Decision:** M6E passes. `expanded_5` t=2 may use adaptive-tight in production with tested exact fallback; `legacy_3` behavior remains unchanged. Target t=3/t=4 remain frozen and M5H remains untouched.
+
+## M6F browser worker characterization
+
+M6F moves recommendation/search work from the browser main thread into a reusable module Web Worker. These measurements were produced from the generated `docs/` deployment using headless Chrome on the same GitHub runner; they characterize the production worker boundary rather than Node-only engine calls. Raw observations are in `benchmarks/m6f-browser-performance.json`.
+
+| Case | Cold wall | Cold optimizer | Warm wall | Warm optimizer | Main-thread long tasks | Warm request round-trip | Page heap peak* | Warm retained heap* | 3-repeat heap growth* | Request payload | Route |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| legacy-expected | 796 ms | 702 ms | 28 ms | 28 ms | 0.0 ms | 28.3 ms | 5.08 MB | 5.15 MB | 0.04 MB | 1702 B | exact |
+| legacy-target | 2415 ms | 2336 ms | 893 ms | 892 ms | 0.0 ms | 892.8 ms | 5.23 MB | 5.29 MB | 0.05 MB | 1724 B | exact |
+| expanded-expected | 900 ms | 784 ms | 42 ms | 42 ms | 0.0 ms | 41.7 ms | 5.38 MB | 5.42 MB | 0.04 MB | 2255 B | expanded_t2_adaptive |
+| expanded-target | 7718 ms | 7659 ms | 4483 ms | 4483 ms | 0.0 ms | 4483.3 ms | 5.52 MB | 5.58 MB | -0.46 MB | 2287 B | expanded_t2_adaptive |
+| expanded-exact-fallback | 2783 ms | 2683 ms | 150 ms | 149 ms | 0.0 ms | 149.5 ms | 5.20 MB | 5.25 MB | 0.04 MB | 2334 B | expanded_t2_adaptive_exact_fallback |
+
+* Chrome `performance.memory` reports the page isolate and does not reliably include the worker isolate, so heap values are browser-side indicators rather than total process memory. A negative repeated-run growth value means the browser reclaimed more page memory than it retained over that interval; it is not evidence of negative worker memory use.
+
+The important product result is structural: optimizer computation no longer executes on the UI thread. All five measured cases recorded 0 ms of Long Tasks API time during optimization. The first call includes worker startup and one-time immutable model loading; subsequent calls reuse the same worker/model bundle. The cold-versus-warm wall-time difference therefore characterizes startup/model-load plus cache warm-up rather than a change in search semantics. Each request sends only canonical `OptimizerState`, avoiding repeated transfer of the statistical model.
+
+The routing evidence is also unchanged from M6E: legacy cases report `exact`, normal expanded t=2 cases report `expanded_t2_adaptive` with policy `adaptive-tight`, and the required fallback case reports `expanded_t2_adaptive_exact_fallback`. No search-policy thresholds or adaptive stages were changed in response to browser measurements.

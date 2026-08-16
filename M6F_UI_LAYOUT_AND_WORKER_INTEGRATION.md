@@ -1,6 +1,6 @@
 # M6F — Board-Layout UI and Worker Integration
 
-**Status:** implementation in validation  
+**Status:** complete  
 **Base SHA:** `cf03a20e601242810e4101415eb4989a8cae646c`  
 **Architecture authority:** `ENGINEERING_ROADMAP.md`
 
@@ -103,6 +103,10 @@ TypeScript builds `optimizerClient.js`, `optimizer.worker.js`, and `optimizerWor
 ## Performance characterization
 
 Browser-oriented measurements are recorded in `PERFORMANCE.md` and the M6F benchmark artifact. They characterize main-thread blocking, worker wall time, startup/warm reuse, heap behavior, and request-transfer overhead without retuning M6E.
+
+## Measured browser result
+
+The generated deployment was characterized in headless Chrome using the real module worker. All five required workloads recorded 0 ms of main-thread Long Tasks API time during optimizer execution. Legacy cases remained on the exact route, expanded t=2 cases remained on M6E `adaptive-tight`, and the fallback workload reported `expanded_t2_adaptive_exact_fallback`. See `benchmarks/m6f-browser-performance.json` for raw cold/warm/repeated observations and `PERFORMANCE.md` for the compact table. No M6E policy parameter was retuned.
 
 ## Exit rule
 
