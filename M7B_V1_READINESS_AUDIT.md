@@ -6,33 +6,43 @@
 
 M7B audits and freezes the already validated production surface. It does not expand search depth or retune the M6E policy.
 
+## Terminology
+
+The v1.0 release contract is defined relative to the **production reference model** established before the later adaptive-search work. That model includes the known Fantasy mechanics, explicit probability assumptions, the production statistical/scoring model, and the existing deterministic continuation stratification preserved by M4.
+
+Accordingly, this document uses **full production-reference search** instead of the unqualified word “exact” for a complete search of that model. This does not claim exhaustive enumeration of every real-world uncertainty or every modeled transition outcome at every future depth. Where historical milestone documents use “exact” or “exact oracle,” they refer to the full/current-fidelity reference route used by those experiments.
+
+`ENGINEERING.md` gives the public explanation of how the reference model was established, its important assumptions, and the alternatives considered.
+
 ## 1. Frozen v1.0 production contract
 
 Production modeled horizon is **at most two token spends**.
 
 | Layout | Objective | t=0 | t=1 | t=2 | t>2 |
 |---|---|---|---|---|---|
-| `legacy_3` | expected score | exact terminal | exact | exact | unsupported in production |
-| `legacy_3` | target probability | exact terminal | exact | exact | unsupported in production |
-| `expanded_5` | expected score | exact terminal | exact | M6E `adaptive-tight` | unsupported in production |
-| `expanded_5` | target probability | exact terminal | exact | M6E `adaptive-tight` | unsupported in production |
+| `legacy_3` | expected score | terminal evaluation | full reference | full reference | unsupported in production |
+| `legacy_3` | target probability | terminal evaluation | full reference | full reference | unsupported in production |
+| `expanded_5` | expected score | terminal evaluation | full reference | M6E `adaptive-tight` reference search | unsupported in production |
+| `expanded_5` | target probability | terminal evaluation | full reference | M6E `adaptive-tight` reference search | unsupported in production |
 
-For `expanded_5`, t=2 uses the unchanged frozen M6E policy. Its K=2 → K=4 → K=6 staged refinement falls back to exact evaluation when required by the certified policy. Invalid policy/configuration or integration-invariant failure also routes to exact evaluation. The UI exposes neither K controls nor deeper engineering horizons.
+For `expanded_5`, t=2 uses the unchanged frozen M6E policy. Its K=2 → K=4 → K=6 staged refinement falls back to full production-reference evaluation when required by the certified policy. Invalid policy/configuration or integration-invariant failure also routes to the full reference path. The UI exposes neither K controls nor deeper engineering horizons.
 
-Explicit engineering/oracle horizon overrides remain outside the product contract and preserve their historical exact semantics unless an experimental policy is explicitly supplied by engineering code. They are not reachable from normal UI requests.
+The M6D policy matched the full reference-search root action on all 12 decisions in its frozen one-shot holdout, with zero measured regret and full reference fallback in 16.7% of cases. This certifies the policy **against that frozen validation corpus**; it is not a mathematical proof of universal equivalence across every possible board.
+
+Explicit engineering/oracle horizon overrides remain outside the product contract and preserve their historical current-fidelity/reference semantics unless an experimental policy is explicitly supplied by engineering code. They are not reachable from normal UI requests.
 
 ## 2. Production routing audit
 
 | Request | Required route | Evidence | Status |
 |---|---|---|---|
-| any layout, t=0 | terminal stop, exact | M7B regression | FIXED IN M7B |
-| `legacy_3`, t=1 | exact | existing + M7B routing regression | PASS |
-| `legacy_3`, t=2 | exact | M6E + M7B routing regression | PASS |
-| `expanded_5`, t=1 | exact | M6E + M7B routing regression | PASS |
+| any layout, t=0 | terminal stop | M7B regression | FIXED IN M7B |
+| `legacy_3`, t=1 | full reference | existing + M7B routing regression | PASS |
+| `legacy_3`, t=2 | full reference | M6E + M7B routing regression | PASS |
+| `expanded_5`, t=1 | full reference | M6E + M7B routing regression | PASS |
 | `expanded_5`, t=2 | frozen `adaptive-tight` | M6E + M7B routing regression | PASS |
-| M6E unresolved ambiguity/config failure | exact fallback | M6E integration suite | PASS |
+| M6E unresolved ambiguity/config failure | full reference fallback | M6E integration suite | PASS |
 | normal request with >2 tokens | modeled horizon capped at 2 | M7B regression | PASS |
-| engineering exact override | exact/oracle path | M6E integration suite | PASS |
+| engineering reference/oracle override | full/current-fidelity path | M6E integration suite | PASS |
 
 Two release-contract defects were found and corrected without altering search mathematics:
 
@@ -69,15 +79,15 @@ No M6E stage, threshold, fallback, or policy configuration was changed.
 | 3↔5 conversion | M6F layout tests | PASS |
 | worker/synchronous parity | M6F + M7B worker regressions | PASS |
 | stale-worker suppression | M6F cancellation regression | PASS |
-| exact fallback | M6E integration regression | PASS |
+| full-reference fallback | M6E integration regression | PASS |
 
 No uncovered user-visible transition or scoring mechanic was found that justified rewriting a proven subsystem.
 
 ## 4. Browser and worker readiness
 
-The production optimizer remains behind `OptimizerWorkerClient → optimizer.worker → engine`. M6F browser evidence measured **0 ms of main-thread Long Tasks** during all recorded optimization cases, including expanded target-probability and exact-fallback cases. Active superseded work is terminated, request IDs reject late stale responses, and state/layout/menu/token edits invalidate displayed recommendations through the application-state boundary.
+The production optimizer remains behind `OptimizerWorkerClient → optimizer.worker → engine`. M6F browser evidence measured **0 ms of main-thread Long Tasks** during all recorded optimization cases, including expanded target-probability and full-reference-fallback cases. Active superseded work is terminated, request IDs reject late stale responses, and state/layout/menu/token edits invalidate displayed recommendations through the application-state boundary.
 
-Existing integration tests cover worker/synchronous recommendation identity, cancellation, stale-response suppression, layout conversion, expanded adaptive routing, and exact fallback. Worker errors are surfaced as recoverable optimization errors; model-load failures do not substitute synthetic data.
+Existing integration tests cover worker/synchronous recommendation identity, cancellation, stale-response suppression, layout conversion, expanded adaptive routing, and full-reference fallback. Worker errors are surfaced as recoverable optimization errors; model-load failures do not substitute synthetic data.
 
 M6F's recorded expanded target-probability case took about 7.7 s cold and 4.5 s warm while leaving the main thread responsive. This is substantial latency but is an already-supported route, not a newly introduced M7B regression. No worker pool or parallel search was added.
 
@@ -118,7 +128,7 @@ Protocol:
 - Node 22 only;
 - fresh process for every route;
 - production model/data and default menu;
-- exact normal production entry point, not engineering overrides;
+- normal production entry point, not engineering overrides;
 - eight required layout × objective × horizon cases;
 - transition, target-search, adaptive-stage, terminal-scoring, and RSS/heap diagnostics captured where applicable.
 
@@ -148,13 +158,13 @@ M7B intentionally does not perform broad cosmetic refactors or adopt new fronten
 | unsupported production depth | normal route caps at t=2; deeper controls not exposed | PASS |
 | worker failure | recoverable optimization-error state | PASS |
 | cancelled/stale request | ignored/rejected; cannot overwrite newer state | PASS |
-| M6E invariant/config failure | exact fallback | PASS |
-| M6E unresolved ambiguity | exact fallback | PASS |
+| M6E invariant/config failure | full reference fallback | PASS |
+| M6E unresolved ambiguity | full reference fallback | PASS |
 | no legal board action | stop remains legal | PASS |
-| zero tokens | exact terminal stop only | FIXED IN M7B |
+| zero tokens | terminal stop only | FIXED IN M7B |
 | unavailable root menu reroll | no menu-reroll row | FIXED IN M7B |
 
-The UI does not label M6E's certified adaptive route as exact. When exact fallback is invoked, the returned result is exact for that route.
+The UI does not present the M6E certified adaptive route as universally equivalent to full reference search. When full reference fallback is invoked, the result is evaluated by the reference route for that request.
 
 ## 10. v1.0 release checklist
 
@@ -181,7 +191,7 @@ supported route regressions           = 0
 known semantic coverage gaps          = closed or non-blocking
 M6E policy changes                    = 0
 M5H holdout consumed                  = no
-target t=4 begun                      = no
+target t=4 begun                       = no
 expanded_5 t=3 begun                  = no
 uncertified deep search exposed       = no
 worker/synchronous parity             = preserved
@@ -198,8 +208,8 @@ release checklist                     = complete
 
 M7B does not consume the M5H holdout, reopen target-probability t=3 tuning, begin expanded t=3/t=4, add probability truncation, alter progressive-widening schedules, add learned continuation values, add multi-worker search, or add another exact-cache layer.
 
-M7A's result remains the current research direction: exact preparation/evaluation reuse is already strong, while newly reached frontier work dominates deeper refinement. Future performance research should therefore target **frontier reduction** under a separately frozen and validated package rather than assume another cache will solve the problem.
+M7A's result remains the current research direction: reusable preparation/evaluation is already strong, while newly reached frontier work dominates deeper refinement. Future performance research should therefore target **frontier reduction** under a separately frozen and validated package rather than assume another cache will solve the problem.
 
 ## Final answer
 
-**Yes. The current optimizer is defensible as v1.0 with the contract above: both board layouts and both objectives are supported through two modeled token spends; legacy search is exact, expanded five-emblem t=2 uses the frozen certified adaptive-tight route with exact fallback, and deeper horizons are explicitly outside the production contract.**
+**Yes. The current optimizer is defensible as v1.0 with the contract above: both board layouts and both objectives are supported through two modeled token spends; the three-emblem route uses full production-reference search, expanded five-emblem t=2 uses the frozen certified adaptive reference route with full reference fallback, and deeper horizons are explicitly outside the production contract.**

@@ -12,14 +12,16 @@ The authoritative editable inputs are:
 
 ## Generated compatibility trees
 
-The following are generated artifacts during M1:
+The supported generated artifacts are:
 
-- `build/` — TypeScript compiler output
+- `build/` — TypeScript compiler output; `tsconfig.json` emits application JavaScript to `build/js/`
 - `docs/` — GitHub Pages deployment output assembled from `build/js`, `site/`, and `data/`
 
 Do not hand-edit JavaScript under `build/` or `docs/js/`. A change that belongs in the application must be made under `src/` and regenerated with `npm run build`.
 
-`docs/` remains committed during M1 to preserve the repository's current GitHub Pages deployment contract. A future deployment migration may remove this requirement, but that is intentionally separate from M1.
+A root-level `js/` directory is **not** part of the build or deployment contract. It was a stale compiled snapshot inherited from the repository's initial commit and was removed before v1.0. `/js/` is ignored and reproducibility verification rejects its presence so an accidental compiler invocation cannot silently create a third generated tree.
+
+`docs/` remains committed to preserve the repository's current GitHub Pages deployment contract. A future deployment migration may remove this requirement, but that is intentionally separate from application-source authority.
 
 ## Required development checks
 
@@ -29,7 +31,7 @@ npm test
 npm run verify:generated
 ```
 
-`npm run verify:generated` snapshots committed/generated output, performs a clean build, confirms the generated trees match canonical inputs, and fails if the pre-build generated trees were stale.
+`npm run verify:generated` snapshots committed/generated output, rejects unsupported root-level generated output, performs a clean build, confirms the supported generated trees match canonical inputs, and fails if the pre-build generated trees were stale.
 
 ## CI contract
 

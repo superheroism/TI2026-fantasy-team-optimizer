@@ -85,6 +85,13 @@ class FakeWorker {
   terminate(){this.terminated=true;}
   emit(data){this.onmessage?.({data});}
 }
+const fakePayload={result:{recommendation:'fake'},diagnostics:{searchMode:'fake'},optimizerWallMs:1};
+
+async function completeFake(client,workers,state){
+  const promise=client.optimize(state),worker=workers.at(-1),requestId=worker.lastMessage.requestId;
+  worker.emit({type:'result',requestId,payload:fakePayload});
+  return {result:await promise,worker};
+}
 
 test('client cancellation rejects stale work, terminates it, and never accepts its late response',async()=>{
   const workers=[];
@@ -98,4 +105,39 @@ test('client cancellation rejects stale work, terminates it, and never accepts i
   const secondPromise=client.optimize(state),second=workers[1];
   assert.notEqual(second.lastMessage.requestId,requestId);
   client.invalidate();await assert.rejects(secondPromise,error=>error instanceof OptimizerRequestCancelledError);
+});
+
+test('two-spend target result retires its worker before the next request',async()=>{
+  const workers=[];
+  const client=new OptimizerWorkerClient(()=>{const worker=new FakeWorker();workers.push(worker);return worker;});
+  const target={board:structuredClone(defaultBoard),tokensRemaining:2,menu:structuredClone(defaultMenu),menuRerollAvailable:true,username:'target-retire',objective:'target_probability',targetScore:65000};
+  const first=await completeFake(client,workers,target);
+  assert.equal(first.worker.terminated,true);
+  const next={...target,tokensRemaining:1,objective:'expected_score'};
+  const pending=client.optimize(next);
+  assert.equal(workers.length,2);
+  assert.notEqual(workers[1],first.worker);
+  const requestId=workers[1].lastMessage.requestId;
+  workers[1].emit({type:'result',requestId,payload:fakePayload});
+  await pending;
+  client.dispose();
+});
+
+test('successful-request cap periodically retires long-lived workers',async()=>{
+  const workers=[];
+  const client=new OptimizerWorkerClient(()=>{const worker=new FakeWorker();workers.push(worker);return worker;});
+  const state={board:structuredClone(defaultBoard),tokensRemaining:1,menu:structuredClone(defaultMenu),menuRerollAvailable:true,username:'lifetime-cap',objective:'expected_score'};
+  let firstWorker;
+  for(let i=0;i<8;i++){
+    const completed=await completeFake(client,workers,state);
+    firstWorker??=completed.worker;
+    assert.equal(completed.worker,firstWorker);
+    assert.equal(completed.worker.terminated,i===7);
+  }
+  const ninth=client.optimize(state);
+  assert.equal(workers.length,2);
+  const requestId=workers[1].lastMessage.requestId;
+  workers[1].emit({type:'result',requestId,payload:fakePayload});
+  await ninth;
+  client.dispose();
 });
