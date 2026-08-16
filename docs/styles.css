@@ -146,3 +146,13 @@ body[data-theme="light"] .op-number{color:var(--purple)}
 @media(max-width:720px){
   .site-header,main{padding-left:13px;padding-right:13px}.site-header{padding-top:14px}h1{font-size:25px}.control-strip{grid-template-columns:1fr}.control-buttons{display:grid;grid-template-columns:1.15fr 1fr;align-items:end}.theme-switch-wrap{min-width:0;width:100%;justify-content:center;padding-bottom:6px}.board{grid-template-columns:1fr}.console-buttons{display:grid;grid-template-columns:1fr 1fr}.console-buttons .optimize{grid-column:1/-1;grid-row:1}.decision-floor{grid-template-columns:1fr}.decision-summary{grid-column:auto}.op-card-head{grid-template-columns:32px minmax(0,1fr)}.op-recommended{grid-column:1/-1;justify-self:start;margin-left:40px}.op-metrics{grid-template-columns:1fr 1fr}.op-metrics>div:last-child{grid-column:1/-1;border-left:0;border-top:1px solid var(--line)}.metrics{grid-template-columns:1fr 1fr}.metrics .metric-primary{grid-column:1/-1}.metrics .title{grid-column:1/-1}.metrics>div:nth-child(2n){border-right:0}.panel-head{align-items:flex-start;flex-direction:column}.team-chart{overflow-x:auto}.team-chart-head,.team-interval-head,.team-interval-row{min-width:720px}.hist-legend{gap:9px}.client-row{grid-template-columns:40px minmax(0,1fr) auto}.client-select{font-size:11px}.team-picker{grid-template-columns:1fr}.attached-players{padding:0 2px 3px}.series-control{width:78px}
 }
+
+/* M6F board layout selector */
+.board-section-title{display:flex;align-items:flex-end!important;gap:18px!important;flex-wrap:wrap}
+.layout-control{display:grid!important;gap:4px!important;min-width:210px}
+.layout-control>span{font-size:9px;color:var(--muted);font-weight:850;letter-spacing:.09em}
+.layout-segmented{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line2);border-radius:5px;overflow:hidden;background:var(--bg-elev)}
+.layout-segmented button{border:0;border-radius:0;padding:6px 10px;background:transparent;color:var(--muted);font-size:11px;white-space:nowrap}
+.layout-segmented button+button{border-left:1px solid var(--line2)}
+.layout-segmented button.active{background:var(--purple);color:#fff;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--purple2) 65%,transparent)}
+@media(max-width:720px){.section-bar{align-items:flex-start;flex-direction:column}.section-bar>small{text-align:left}.board-section-title{align-items:flex-start!important}.layout-control{min-width:min(100%,260px)}}

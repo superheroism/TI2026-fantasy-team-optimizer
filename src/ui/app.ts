@@ -1,9 +1,10 @@
-import type { ActionEvaluation, BannerState, BoardState, DataBundle, MenuState, OfferedOperation, OptimizerState, RecommendationResult, Role, StatName, TraitName } from '../domain/types.js';
+import type { ActionEvaluation, BannerState, BoardLayoutId, BoardState, DataBundle, MenuState, OfferedOperation, OptimizerState, RecommendationResult, Role, StatName, TraitName } from '../domain/types.js';
 import { legalStats } from '../domain/rules.js';
-import { defaultBoard, defaultMenu } from '../data/defaultState.js';
+import { convertBoardLayout, createDefaultBoard, defaultBoard, defaultMenu, resolvedLayoutId } from '../data/defaultState.js';
 import { loadStatisticalModel } from '../data/statisticalModel.js';
 import { attachedPlayers, displayTeamName, rosterForTeam } from '../data/ti2026Rosters.js';
-import { formatAction, recommendNextAction } from '../engine/optimizer.js';
+import { formatAction } from '../engine/optimizer.js';
+import { OptimizerRequestCancelledError, OptimizerWorkerClient } from './optimizerClient.js';
 import { evaluateSelectedBoard, rankTeamsForRole } from '../engine/scoring.js';
 import { evaluateBanner } from '../domain/bannerEvaluator.js';
 import { ACTION_CATALOG, ACTION_BY_ID, cloneAction } from '../data/actionCatalog.js';
@@ -17,6 +18,7 @@ let comparisonRole:Role='core';
 let theme:'dark'|'light'='dark';
 let lastResult:RecommendationResult|null=null,lastOptimizerState:OptimizerState|null=null;
 const actionTargetSelection=new Map<number,Role>();
+const optimizerClient=new OptimizerWorkerClient();
 const $=<T extends HTMLElement=HTMLElement>(sel:string)=>document.querySelector(sel) as T;
 const fmt=(n:number)=>Number.isFinite(n)?Math.round(n).toLocaleString():'—';
 const pct=(p:number|undefined)=>p===undefined?'—':`${(p*100).toFixed(1)}%`;
@@ -175,6 +177,7 @@ function clearActionResults(message='Run the optimizer to compare legal targets 
   const next=$<HTMLButtonElement>('#next-roll');if(next)next.disabled=true;
 }
 function markStale(preserveComparison=false){
+  optimizerClient.invalidate();
   $('#calc-status').textContent='Setup changed — Run Optimizer to refresh the selected setup';
   $('#rec-action').textContent='Setup changed';$('#rec-note').textContent='Run Optimizer to refresh the score distribution and evaluate the next move.';
   $('#rec-confidence').textContent='—';$('#confidence-tooltip').textContent='Confidence explanation will appear after optimization.';$('#menu-ev').textContent='—';$('#menu-delta').textContent='—';$('#stop-ev').textContent='—';
@@ -220,7 +223,7 @@ async function runOptimizer(){
     const s=state();
     button.textContent='Optimizing…';$('#rec-action').textContent='Calculating all legal action targets…';
     await new Promise<void>(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
-    const result=recommendNextAction(s,data,true),rec=result.recommendation,elapsed=performance.now()-started;
+    const workerRun=await optimizerClient.optimize(s),result=workerRun.result,rec=result.recommendation,elapsed=performance.now()-started;
     const targetMode=s.objective==='target_probability',stopUtility=targetMode?(result.current.targetProbability??0):result.current.expected,recDelta=rec.expectedFinalUtility-stopUtility;
     renderActionResults(result,s);
     $('#rec-action').textContent=formatAction(rec.action,s);$('#rec-confidence').textContent=rec.confidence.toUpperCase();$('#confidence-tooltip').textContent=confidenceExplanation(rec.confidence);$('#rec-note').textContent=`${rec.note??''}${rec.note?' · ':''}Recalculated + optimized in ${elapsed<1000?`${Math.round(elapsed)} ms`:`${(elapsed/1000).toFixed(2)} s`}.`;
@@ -232,6 +235,7 @@ async function runOptimizer(){
     $('#ranking').innerHTML=`<div class="rank-head"><span>#</span><span>ACTION</span><span>${metricHead}</span><span>${deltaHead}</span><span>${lastHead}</span><span>P10 Δ</span><span>P50 Δ</span><span>P90 Δ</span></div>${result.ranking.slice(0,12).map((r,i)=>{const metric=utilityText(r.expectedFinalUtility,targetMode),delta=r.expectedFinalUtility-stopUtility,deltaText=utilityDeltaText(delta,targetMode),last=r.pImprove!==undefined?`${(r.pImprove*100).toFixed(0)}%`:r.confidence.toUpperCase(),p10=(r.outcomeP10Utility??r.expectedFinalUtility)-stopUtility,p50=(r.outcomeMedianUtility??r.expectedFinalUtility)-stopUtility,p90=(r.outcomeP90Utility??r.expectedFinalUtility)-stopUtility;return `<div class="rank-row ${i===0?'best':''}"><i>${i+1}</i><div><b>${formatAction(r.action,s)}</b><small>${r.status.replaceAll('_',' ')}${r.note?` · ${r.note}`:''}</small></div><strong>${r.status==='evaluated'?metric:'—'}</strong><strong class="rank-delta ${delta>0?'positive':delta<0?'negative':'zero'}">${r.status==='evaluated'?deltaText:'—'}</strong><span>${last}</span><strong class="rank-quantile ${p10>0?'positive':p10<0?'negative':'zero'}">${r.status==='evaluated'?utilityDeltaText(p10,targetMode):'—'}</strong><strong class="rank-quantile ${p50>0?'positive':p50<0?'negative':'zero'}">${r.status==='evaluated'?utilityDeltaText(p50,targetMode):'—'}</strong><strong class="rank-quantile ${p90>0?'positive':p90<0?'negative':'zero'}">${r.status==='evaluated'?utilityDeltaText(p90,targetMode):'—'}</strong></div>`;}).join('')}`;
     requestAnimationFrame(()=>setTimeout(()=>{renderTeamComparison(comparisonRole);renderComparisonTabs();},0));
   }catch(error){
+    if(error instanceof OptimizerRequestCancelledError)return;
     $('#rec-action').textContent='Optimization error';
     $('#rec-note').textContent=String(error);
   }finally{
@@ -260,8 +264,16 @@ function applyTheme(next:'dark'|'light',recalculate=false){
   if(toggle){toggle.checked=theme==='dark';toggle.setAttribute('aria-checked',theme==='dark'?'true':'false');toggle.setAttribute('aria-label',theme==='dark'?'Dark Theme on':'Dark Theme off');}
   if(recalculate&&data)void runSelected(true);
 }
+function updateLayoutToggle(){
+  const current=resolvedLayoutId(board);
+  document.querySelectorAll<HTMLButtonElement>('[data-layout-slots]').forEach(button=>{const active=(button.dataset.layoutSlots==='5'?'expanded_5':'legacy_3')===current;button.classList.toggle('active',active);button.setAttribute('aria-pressed',active?'true':'false');});
+}
+function changeLayout(target:BoardLayoutId){
+  syncStateFromDom();if(resolvedLayoutId(board)===target)return;
+  board=convertBoardLayout(board,target);renderStructure();markStale(false);
+}
 function renderStructure(){
-  $('#board').innerHTML=roles.map(bannerColumn).join('');$('#ops').innerHTML=menu.map(opEditor).join('');renderComparisonTabs();bindDynamic();
+  $('#board').innerHTML=roles.map(bannerColumn).join('');$('#ops').innerHTML=menu.map(opEditor).join('');updateLayoutToggle();renderComparisonTabs();bindDynamic();
 }
 function bindDynamic(){
   document.querySelectorAll<HTMLInputElement|HTMLSelectElement>('.emblem input,.emblem select,.series').forEach(x=>x.addEventListener('change',()=>{syncStateFromDom();renderStructure();markStale(false);}));
@@ -281,10 +293,11 @@ export function mount(){
   $('#calc-status').textContent='Loading tournament model…';
   ['tokens','username','target','objective'].forEach(id=>$('#'+id).addEventListener('change',()=>markStale(true)));
   $('#optimize').addEventListener('click',()=>{if(data)runOptimizer();});$('#next-roll').addEventListener('click',()=>{if(data)advanceToNextRoll();});
+  document.querySelectorAll<HTMLButtonElement>('[data-layout-slots]').forEach(button=>button.addEventListener('click',()=>changeLayout(button.dataset.layoutSlots==='5'?'expanded_5':'legacy_3')));
   $<HTMLInputElement>('#theme-toggle').addEventListener('change',event=>applyTheme((event.currentTarget as HTMLInputElement).checked?'dark':'light',true));
   $('#reset').addEventListener('click',()=>{
-    board=structuredClone(defaultBoard);menu=structuredClone(defaultMenu);tokens=10;$<HTMLInputElement>('#tokens').value='10';
-    if(data){normalizeSelectedTeams();renderStructure();runSelected();}
+    optimizerClient.invalidate();const layoutId=resolvedLayoutId(board);board=createDefaultBoard(layoutId);menu=structuredClone(defaultMenu);tokens=10;$<HTMLInputElement>('#tokens').value='10';
+    if(data){normalizeSelectedTeams();renderStructure();markStale(false);void runSelected();}
   });
   void loadStatisticalModel().then(bundle=>{
     data=bundle;normalizeSelectedTeams();renderStructure();runSelected();

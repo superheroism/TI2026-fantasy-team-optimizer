@@ -1,8 +1,9 @@
 import { legalStats } from '../domain/rules.js';
-import { defaultBoard, defaultMenu } from '../data/defaultState.js';
+import { convertBoardLayout, createDefaultBoard, defaultBoard, defaultMenu, resolvedLayoutId } from '../data/defaultState.js';
 import { loadStatisticalModel } from '../data/statisticalModel.js';
 import { attachedPlayers, displayTeamName, rosterForTeam } from '../data/ti2026Rosters.js';
-import { formatAction, recommendNextAction } from '../engine/optimizer.js';
+import { formatAction } from '../engine/optimizer.js';
+import { OptimizerRequestCancelledError, OptimizerWorkerClient } from './optimizerClient.js';
 import { evaluateSelectedBoard, rankTeamsForRole } from '../engine/scoring.js';
 import { evaluateBanner } from '../domain/bannerEvaluator.js';
 import { ACTION_CATALOG, ACTION_BY_ID, cloneAction } from '../data/actionCatalog.js';
@@ -16,6 +17,7 @@ let comparisonRole = 'core';
 let theme = 'dark';
 let lastResult = null, lastOptimizerState = null;
 const actionTargetSelection = new Map();
+const optimizerClient = new OptimizerWorkerClient();
 const $ = (sel) => document.querySelector(sel);
 const fmt = (n) => Number.isFinite(n) ? Math.round(n).toLocaleString() : '—';
 const pct = (p) => p === undefined ? '—' : `${(p * 100).toFixed(1)}%`;
@@ -220,6 +222,7 @@ function clearActionResults(message = 'Run the optimizer to compare legal target
         next.disabled = true;
 }
 function markStale(preserveComparison = false) {
+    optimizerClient.invalidate();
     $('#calc-status').textContent = 'Setup changed — Run Optimizer to refresh the selected setup';
     $('#rec-action').textContent = 'Setup changed';
     $('#rec-note').textContent = 'Run Optimizer to refresh the score distribution and evaluate the next move.';
@@ -296,7 +299,7 @@ async function runOptimizer() {
         button.textContent = 'Optimizing…';
         $('#rec-action').textContent = 'Calculating all legal action targets…';
         await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
-        const result = recommendNextAction(s, data, true), rec = result.recommendation, elapsed = performance.now() - started;
+        const workerRun = await optimizerClient.optimize(s), result = workerRun.result, rec = result.recommendation, elapsed = performance.now() - started;
         const targetMode = s.objective === 'target_probability', stopUtility = targetMode ? (result.current.targetProbability ?? 0) : result.current.expected, recDelta = rec.expectedFinalUtility - stopUtility;
         renderActionResults(result, s);
         $('#rec-action').textContent = formatAction(rec.action, s);
@@ -317,6 +320,8 @@ async function runOptimizer() {
         requestAnimationFrame(() => setTimeout(() => { renderTeamComparison(comparisonRole); renderComparisonTabs(); }, 0));
     }
     catch (error) {
+        if (error instanceof OptimizerRequestCancelledError)
+            return;
         $('#rec-action').textContent = 'Optimization error';
         $('#rec-note').textContent = String(error);
     }
@@ -397,9 +402,22 @@ function applyTheme(next, recalculate = false) {
     if (recalculate && data)
         void runSelected(true);
 }
+function updateLayoutToggle() {
+    const current = resolvedLayoutId(board);
+    document.querySelectorAll('[data-layout-slots]').forEach(button => { const active = (button.dataset.layoutSlots === '5' ? 'expanded_5' : 'legacy_3') === current; button.classList.toggle('active', active); button.setAttribute('aria-pressed', active ? 'true' : 'false'); });
+}
+function changeLayout(target) {
+    syncStateFromDom();
+    if (resolvedLayoutId(board) === target)
+        return;
+    board = convertBoardLayout(board, target);
+    renderStructure();
+    markStale(false);
+}
 function renderStructure() {
     $('#board').innerHTML = roles.map(bannerColumn).join('');
     $('#ops').innerHTML = menu.map(opEditor).join('');
+    updateLayoutToggle();
     renderComparisonTabs();
     bindDynamic();
 }
@@ -445,16 +463,20 @@ export function mount() {
         runOptimizer(); });
     $('#next-roll').addEventListener('click', () => { if (data)
         advanceToNextRoll(); });
+    document.querySelectorAll('[data-layout-slots]').forEach(button => button.addEventListener('click', () => changeLayout(button.dataset.layoutSlots === '5' ? 'expanded_5' : 'legacy_3')));
     $('#theme-toggle').addEventListener('change', event => applyTheme(event.currentTarget.checked ? 'dark' : 'light', true));
     $('#reset').addEventListener('click', () => {
-        board = structuredClone(defaultBoard);
+        optimizerClient.invalidate();
+        const layoutId = resolvedLayoutId(board);
+        board = createDefaultBoard(layoutId);
         menu = structuredClone(defaultMenu);
         tokens = 10;
         $('#tokens').value = '10';
         if (data) {
             normalizeSelectedTeams();
             renderStructure();
-            runSelected();
+            markStale(false);
+            void runSelected();
         }
     });
     void loadStatisticalModel().then(bundle => {

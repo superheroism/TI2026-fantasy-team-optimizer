@@ -34,10 +34,11 @@ test('Run Optimizer recalculates the visible selected-board state before optimiz
   const optimizer=app.slice(app.indexOf('async function runOptimizer()'),app.indexOf('function clearHistogram'));
   const recalcAt=optimizer.indexOf('await runSelected(false)');
   const snapshotAt=optimizer.indexOf('const s=state()');
-  const recommendAt=optimizer.indexOf('recommendNextAction(s,data,true)');
+  const recommendAt=optimizer.indexOf('optimizerClient.optimize(s)');
   assert.ok(recalcAt>=0,'optimizer must await selected-board recalculation');
   assert.ok(snapshotAt>recalcAt,'optimizer state must be captured after recalculation');
-  assert.ok(recommendAt>snapshotAt,'recommendation must run after the refreshed state is captured');
+  assert.ok(recommendAt>snapshotAt,'worker recommendation must run after the refreshed state is captured');
+  assert.equal(app.includes('recommendNextAction(s,data,true)'),false,'browser UI must not run optimizer search synchronously');
   assert.match(app,/Run Optimizer to refresh the score distribution and evaluate the next move/);
 });
 
@@ -167,4 +168,22 @@ test('recommendation confidence has a hover explanation and best current setup r
 test('next roll decrements tokens and returns the user to the top of the page',()=>{
   assert.match(app,/tokens=Math\.max\(0,tokens-1\)/);
   assert.match(app,/window\.scrollTo\(\{top:0,behavior:'smooth'\}\)/);
+});
+
+test('layout selector is the only product geometry control and exposes both supported layouts',()=>{
+  assert.match(index,/BANNER LAYOUT/);
+  assert.ok(index.includes('>3 Emblems</button>'));
+  assert.ok(index.includes('>5 Emblems</button>'));
+  assert.doesNotMatch(index,/legacy_3|expanded_5/);
+  assert.ok(app.includes('convertBoardLayout(board,target)'));
+  assert.ok(app.includes('createDefaultBoard(layoutId)'));
+  assert.ok(app.includes('optimizerClient.invalidate()'));
+  assert.ok(app.includes('optimizerClient.optimize(s)'));
+  assert.match(app,/data-layout-slots/);
+});
+
+test('expanded_5 exists in the engine but is unreachable is prevented by UI contract',()=>{
+  const rules=readFileSync(new URL('../src/domain/rules.ts',import.meta.url),'utf8');
+  assert.match(rules,/expanded_5/);
+  assert.ok(index.includes('>5 Emblems</button>'));
 });
