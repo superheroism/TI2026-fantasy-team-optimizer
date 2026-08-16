@@ -36,21 +36,73 @@ y: TIER - ~43% row pitch       →  TIER - ~6% row pitch
 
 The crop remains source-resolution and is never upscaled. It is only evaluated for stat fields whose first-pass confidence is below 0.90, and it replaces the first-pass stat only when the resulting constrained same-color match has higher confidence.
 
-## Proxy results
+## Six-image live proxy results
 
-A native-Tesseract manual-geometry proxy confirms the direction of the change: correctly positioned title-only crops recover difficult stat labels substantially more often than the prior left-of-card ROI. The proxy is not reported as browser end-to-end accuracy because it bypasses the production browser geometry implementation and uses native Tesseract 5.5 rather than Tesseract.js.
+The corrected geometry was rerun against all six actual screenshots with native Tesseract 5.5 using the production stat-vocabulary matching rule and the same `match.score >= 0.58` acceptance gate.
 
-The strongest evidence from the live pass is therefore the geometry correction itself, which is directly visible and consistent across all six screenshots.
+### Structural geometry
+
+- All six screenshots produced the expected 3-column TIER geometry.
+- The pooled row geometry produced the expected layout on all six: 3/3 legacy-three fixtures and 3/3 expanded-five fixtures.
+- This includes both full-desktop screenshots with unrelated Dota UI around the board.
+
+### Targeted stat refinement
+
+There are 72 labeled emblem stat fields across the corpus.
+
+If the corrected title crop is forced to classify every field, 55/72 (76.4%) land on the correct canonical stat. This forced-classification number is **not** the production behavior and should not be used as the import accuracy metric.
+
+The production safety gate is the important result:
+
+- 25 targeted crops reached `match.score >= 0.58`;
+- **25/25 accepted matches were correct**;
+- **0/25 accepted matches were false replacements**;
+- all 17 incorrect forced classifications scored below 0.58 (maximum incorrect score 0.50), so the current gate rejected them rather than promoting them over the first-pass result.
+
+Per-image accepted/correct targeted replacements in this native proxy:
+
+| Fixture | Accepted | Correct | False accepted |
+|---|---:|---:|---:|
+| 1536×650 expanded-five reference | 12 | 12 | 0 |
+| 1515×867 expanded-five crop | 4 | 4 | 0 |
+| 1536×864 expanded-five full desktop | 5 | 5 | 0 |
+| 1363×814 legacy-three crop | 2 | 2 | 0 |
+| 1232×824 legacy-three + actions | 1 | 1 | 0 |
+| 2560×1600 legacy-three + actions | 1 | 1 | 0 |
+
+This is the key validation of PR #35: the corrected retry path is **conservative and precision-oriented**. It recovers a meaningful subset of difficult titles while the acceptance threshold prevented every observed bad crop from overwriting the first-pass value.
+
+### Runtime proxy
+
+Native subprocess timing for one whole-image geometry read plus title crops for every emblem was approximately:
+
+| Fixture | Time |
+|---|---:|
+| 1536×650 | 2.13 s |
+| 1515×867 | 2.26 s |
+| 1536×864 | 2.28 s |
+| 1363×814 | 1.46 s |
+| 1232×824 | 1.37 s |
+| 2560×1600 | 2.08 s |
+
+These values are deliberately pessimistic relative to production because the proxy launches native Tesseract repeatedly and retries **every** emblem. Production reuses a browser worker and only retries fields whose first-pass confidence is below 0.90.
+
+### Previously validated unchanged paths
+
+PR #35 changes only the targeted stat-title ROI. The earlier live corpus pass had already established the unchanged paths used by PR #34:
+
+- both action-visible screenshots yielded all six reroll actions with dedicated action-card ROIs;
+- token counts were 2/2 exact (`4` and `5`);
+- action-absent screenshots correctly represent missing/low-confidence action regions rather than inventing actions.
+
+Those paths were not changed by PR #35.
 
 ## Build state
 
-The source change has been rebuilt with the repository's normal Node 22 build. The generated `build/` and `docs/` copies of `emblemOcrRefinement.js` and their source maps are committed and synchronized with source. The temporary regeneration workflow removed itself after completing successfully.
+The source change has been rebuilt with the repository's normal Node 22 build. The generated `build/` and `docs/` copies of `emblemOcrRefinement.js` and their source maps are committed and synchronized with source. The temporary regeneration workflow removed itself after completing successfully. CI run #937 passed typecheck, lint, generated-artifact verification, and tests before this documentation-only update.
 
-## Remaining acceptance gate
+## Interpretation and remaining limitation
 
-Before claiming screenshot import accuracy certification:
+The six-image rerun materially validates the latest **geometry and targeted-stat safety behavior**. It does not convert the external corpus into a repository-level browser E2E certification: native Tesseract 5.5 is still an engineering proxy for Tesseract.js, and this evaluation isolates the revised stat-refinement path rather than reproducing the entire browser UI/import event loop.
 
-1. CI for the regenerated branch must be green;
-2. the corrected branch should be exercised in the actual browser importer against the six live screenshots;
-3. record final normalized layout, team, stat, tier, trait, action, token, review-state, and latency results;
-4. do not merge further threshold tuning unless it improves final normalized accuracy or reduces false-high-confidence errors.
+The evidence supports merging the geometry correction because accepted targeted retries were 100% precise on the live corpus and no false replacement crossed the production threshold. Future OCR tuning should continue to optimize final normalized accuracy and false-high-confidence error rate rather than raw OCR character accuracy.
