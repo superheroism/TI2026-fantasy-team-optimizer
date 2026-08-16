@@ -91,6 +91,8 @@ The Current Board selector supports both TI 2026 banner geometries. **3 Emblems*
 
 Recommendation search runs in a Web Worker so the page remains responsive during heavier five-emblem calculations. Editing the board, menu, tokens, objective, or layout invalidates the displayed recommendation; active stale work is cancelled and cannot replace a newer result.
 
+The worker also has a bounded lifetime so caches from many hypothetical boards cannot accumulate indefinitely across a long browser session. Two-spend target-probability requests retire their worker after returning the result, and other workloads periodically recycle the worker after eight successful requests. This changes cache lifetime, not recommendation semantics.
+
 ## Data and generated files
 
 Canonical model inputs live under `data/`:
