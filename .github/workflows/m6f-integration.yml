@@ -35,14 +35,14 @@ jobs:
           path: m6f-test.log
       - name: Persist failed regression diagnostics
         if: steps.tests.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          cp m6f-test.log .github/m6f-test.log
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/m6f-test.log
-          git commit -m "M6F capture failed regression diagnostics"
-          git pull --rebase origin agent/m6f-ui-layout-worker
-          git push origin HEAD:agent/m6f-ui-layout-worker
+          CONTENT=$(base64 -w0 m6f-test.log)
+          gh api --method PUT repos/${{ github.repository }}/contents/.github/m6f-test.log \
+            -f message='M6F capture failed regression diagnostics' \
+            -f content="$CONTENT" \
+            -f branch='agent/m6f-ui-layout-worker'
           exit 1
       - name: Commit source integration and generated artifacts
         if: steps.tests.outcome == 'success'
