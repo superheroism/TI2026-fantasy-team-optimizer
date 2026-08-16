@@ -42,11 +42,15 @@ A native-Tesseract manual-geometry proxy confirms the direction of the change: c
 
 The strongest evidence from the live pass is therefore the geometry correction itself, which is directly visible and consistent across all six screenshots.
 
+## Build state
+
+The source change has been rebuilt with the repository's normal Node 22 build. The generated `build/` and `docs/` copies of `emblemOcrRefinement.js` and their source maps are committed and synchronized with source. The temporary regeneration workflow removed itself after completing successfully.
+
 ## Remaining acceptance gate
 
 Before claiming screenshot import accuracy certification:
 
-1. generated browser artifacts must be current and CI green;
+1. CI for the regenerated branch must be green;
 2. the corrected branch should be exercised in the actual browser importer against the six live screenshots;
 3. record final normalized layout, team, stat, tier, trait, action, token, review-state, and latency results;
 4. do not merge further threshold tuning unless it improves final normalized accuracy or reduces false-high-confidence errors.
