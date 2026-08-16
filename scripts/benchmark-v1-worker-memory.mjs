@@ -5,11 +5,9 @@ import puppeteer from 'puppeteer-core';
 const chrome=process.env.CHROME_PATH||'/usr/bin/google-chrome';
 const port=4173;
 const requestCount=Number(process.env.SOAK_REQUESTS||24);
-const warmupCount=Math.min(6,Math.max(2,Math.floor(requestCount/4)));
 const server=spawn('python3',['-m','http.server',String(port),'--directory','docs'],{stdio:'ignore'});
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const median=values=>{const xs=[...values].sort((a,b)=>a-b);const n=xs.length;return n?xs[Math.floor(n/2)]:null;};
-const linearSlope=values=>{if(values.length<2)return null;const n=values.length,xbar=(n-1)/2,ybar=values.reduce((a,b)=>a+b,0)/n;let num=0,den=0;for(let i=0;i<n;i++){num+=(i-xbar)*(values[i]-ybar);den+=(i-xbar)**2;}return den?num/den:null;};
 
 try{
   await sleep(700);
@@ -17,16 +15,17 @@ try{
   const page=await browser.newPage();
   await page.goto(`http://127.0.0.1:${port}/`,{waitUntil:'networkidle0'});
 
-  // Dedicated workers are child targets of the page and are not exposed as top-level
-  // browser targets in all Chromium/Puppeteer combinations. Attach through the page's
-  // Target domain and forward CDP commands to the worker session explicitly.
   const pageSession=await page.target().createCDPSession();
-  let workerSessionId=null,workerTargetUrl=null,commandSequence=0;
+  let workerSessionId=null,workerTargetUrl=null,workerGeneration=0,commandSequence=0;
+  let profilerGeneration=0;
   const pendingCommands=new Map();
   pageSession.on('Target.attachedToTarget',event=>{
     if(event.targetInfo.type==='worker'&&event.targetInfo.url.includes('optimizer.worker')){
-      workerSessionId=event.sessionId;workerTargetUrl=event.targetInfo.url;
+      workerSessionId=event.sessionId;workerTargetUrl=event.targetInfo.url;workerGeneration++;profilerGeneration=0;
     }
+  });
+  pageSession.on('Target.detachedFromTarget',event=>{
+    if(event.sessionId===workerSessionId){workerSessionId=null;profilerGeneration=0;}
   });
   pageSession.on('Target.receivedMessageFromTarget',event=>{
     if(event.sessionId!==workerSessionId)return;
@@ -40,10 +39,16 @@ try{
   await pageSession.send('Target.setAutoAttach',{autoAttach:true,waitForDebuggerOnStart:false,flatten:false});
   async function waitForWorker(){for(let i=0;i<100&&!workerSessionId;i++)await sleep(50);if(!workerSessionId)throw new Error('Optimizer worker child target was not attached within 5 seconds.');}
   async function workerSend(method,params={}){
-    await waitForWorker();const id=++commandSequence;
+    await waitForWorker();const id=++commandSequence,sessionId=workerSessionId;
     const response=new Promise((resolve,reject)=>pendingCommands.set(id,{resolve,reject}));
-    await pageSession.send('Target.sendMessageToTarget',{sessionId:workerSessionId,message:JSON.stringify({id,method,params})});
+    await pageSession.send('Target.sendMessageToTarget',{sessionId,message:JSON.stringify({id,method,params})});
     return response;
+  }
+  async function sampleWorkerHeap(){
+    if(!workerSessionId)return null;
+    if(profilerGeneration!==workerGeneration){await workerSend('Runtime.enable');await workerSend('HeapProfiler.enable');profilerGeneration=workerGeneration;}
+    await workerSend('HeapProfiler.collectGarbage');
+    return workerSend('Runtime.getHeapUsage');
   }
 
   await page.evaluate(async()=>{
@@ -87,44 +92,50 @@ try{
     };
   });
 
-  let heapProfilerEnabled=false;
   const samples=[];
   for(let i=0;i<requestCount;i++){
+    const generationBefore=workerGeneration;
     const run=await page.evaluate(index=>globalThis.__v1MemorySoak.run(index),i);
-    if(!heapProfilerEnabled){await workerSend('Runtime.enable');await workerSend('HeapProfiler.enable');heapProfilerEnabled=true;}
-    await workerSend('HeapProfiler.collectGarbage');
-    const heap=await workerSend('Runtime.getHeapUsage');
-    samples.push({request:i+1,...run,workerUsedHeapBytes:heap.usedSize,workerTotalHeapBytes:heap.totalSize});
-    console.log(`${i+1}/${requestCount} ${run.layout} ${run.objective} t=${run.tokens} worker=${(heap.usedSize/1048576).toFixed(1)} MiB wall=${run.wallMs.toFixed(0)} ms`);
+    // Worker retirement occurs synchronously when the result is accepted. Allow the target
+    // detach event to reach CDP before deciding whether this request intentionally retired it.
+    await sleep(25);
+    const retiredAfterRequest=!workerSessionId;
+    const heap=retiredAfterRequest?null:await sampleWorkerHeap();
+    samples.push({request:i+1,...run,workerGeneration:retiredAfterRequest?generationBefore||workerGeneration:workerGeneration,workerRetiredAfterRequest:retiredAfterRequest,workerUsedHeapBytes:heap?.usedSize??null,workerTotalHeapBytes:heap?.totalSize??null});
+    console.log(`${i+1}/${requestCount} gen=${workerGeneration} ${run.layout} ${run.objective} t=${run.tokens} worker=${heap?`${(heap.usedSize/1048576).toFixed(1)} MiB`:'retired'} wall=${run.wallMs.toFixed(0)} ms`);
   }
   await page.evaluate(()=>globalThis.__v1MemorySoak.dispose());
   await pageSession.detach();
   await browser.close();
 
-  const retained=samples.slice(warmupCount).map(x=>x.workerUsedHeapBytes);
-  const windowSize=Math.min(6,Math.max(3,Math.floor(retained.length/3)));
-  const firstWindow=retained.slice(0,windowSize),lastWindow=retained.slice(-windowSize);
+  const measured=samples.map(x=>x.workerUsedHeapBytes).filter(Number.isFinite);
+  const generations=[...new Set(samples.map(x=>x.workerGeneration).filter(x=>x>0))];
+  const perGeneration=generations.map(g=>{
+    const rows=samples.filter(x=>x.workerGeneration===g),heaps=rows.map(x=>x.workerUsedHeapBytes).filter(Number.isFinite);
+    return {generation:g,requests:rows.map(x=>x.request),retiredAfterRequest:rows.some(x=>x.workerRetiredAfterRequest),maxMeasuredUsedHeapBytes:heaps.length?Math.max(...heaps):null,lastMeasuredUsedHeapBytes:heaps.at(-1)??null};
+  });
   const artifact={
     capturedAt:new Date().toISOString(),
     runtime:{node:process.version,chrome},
-    protocol:{requests:requestCount,warmupRequests:warmupCount,forcedGcBeforeWorkerSample:true,workerMeasurement:'Chrome DevTools Protocol Runtime.getHeapUsage on the dedicated optimizer worker',workload:'mixed legacy/expanded, expected/target, t=1/2 requests with deterministic quality/trait edits'},
+    protocol:{requests:requestCount,forcedGcBeforeWorkerSample:true,workerMeasurement:'Chrome DevTools Protocol Runtime.getHeapUsage on each dedicated optimizer-worker generation',workload:'mixed legacy/expanded, expected/target, t=1/2 requests with deterministic quality/trait edits'},
     workerTargetUrl,
     summary:{
-      firstPostWarmupMedianBytes:median(firstWindow),
-      lastWindowMedianBytes:median(lastWindow),
-      postWarmupSlopeBytesPerRequest:linearSlope(retained),
-      minPostWarmupBytes:retained.length?Math.min(...retained):null,
-      maxPostWarmupBytes:retained.length?Math.max(...retained):null,
-      finalWorkerUsedHeapBytes:samples.at(-1)?.workerUsedHeapBytes??null
+      workerGenerations:generations.length,
+      retiredRequests:samples.filter(x=>x.workerRetiredAfterRequest).map(x=>x.request),
+      maxMeasuredWorkerUsedHeapBytes:measured.length?Math.max(...measured):null,
+      medianMeasuredWorkerUsedHeapBytes:median(measured),
+      finalRequestRetiredWorker:samples.at(-1)?.workerRetiredAfterRequest??null
     },
+    perGeneration,
     measurementNotes:[
       'Worker retained heap is sampled directly from the dedicated optimizer worker, not from performance.memory on the page.',
       'HeapProfiler.collectGarbage runs immediately before each retained-heap sample to reduce ordinary GC timing noise.',
+      'A request that intentionally retires its worker has no post-request heap sample because the isolate has already been destroyed; the following request creates a new worker generation.',
       'The sequence intentionally changes banner qualities/traits and mixes supported routes so persistent caches see more than one repeated state.',
-      'This is a finite soak characterization, not a proof that memory is bounded for every possible indefinitely long session.'
+      'This is a finite soak characterization of the bounded worker-lifetime policy, not a proof about every possible request sequence.'
     ],
     samples
   };
   fs.writeFileSync('benchmarks/v1-worker-memory-soak.json',JSON.stringify(artifact,null,2)+'\n');
-  console.log(JSON.stringify(artifact.summary,null,2));
+  console.log(JSON.stringify({summary:artifact.summary,perGeneration},null,2));
 }finally{server.kill('SIGTERM');}
