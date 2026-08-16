@@ -2,7 +2,7 @@
 
 ## Status
 
-Implemented on `agent/m6g-ui-application-decomposition` pending final regression/smoke validation and draft PR review.
+Complete on `agent/m6g-ui-application-decomposition`; ready for draft PR review.
 
 ```text
 M6G_BASE_SHA = 4e80f0a77be571f2e51734c935dcd3b7dd476c02
@@ -84,9 +84,26 @@ The validation suite covers or retains coverage for:
 - generated deployment reproducibility;
 - application-module boundary constraints.
 
+## Browser smoke
+
+Headless Chromium smoke validation covered:
+
+- initial `legacy_3` load;
+- switching to `expanded_5`;
+- board edits;
+- menu edits;
+- expanded optimizer execution;
+- an optimizer-relevant edit during an active worker request;
+- zero stale recommendation highlights after that edit;
+- reset preserving the selected expanded layout;
+- switching back to `legacy_3`;
+- repeated unchanged optimizer runs with deterministic recommendation presentation.
+
+The smoke run passed all checks.
+
 ## Build/runtime impact
 
-M6G is an application-layer refactor, not a search-performance milestone. No search retuning or new performance campaign is performed. Material source/bundle/runtime changes are recorded only if observed during final validation.
+M6G is an application-layer refactor, not a search-performance milestone. No search retuning or new performance campaign was performed. No material engine/runtime behavior change was observed during validation.
 
 ## Non-goals preserved
 
@@ -94,15 +111,14 @@ M6G does not retune M6D/M6E, alter t=2 semantics, resume target t=3, begin t=4, 
 
 ## Final validation record
 
-To be finalized before the draft PR is opened:
-
 ```text
-build/tests                          = pending final run
-UI behavior regressions             = pending browser smoke
-optimizer recommendation regressions = pending final run
-M6E policy changes                  = 0 by scope/source review
-worker boundary preserved           = yes
-stale-result protection preserved   = yes; centralized
-app.ts responsibility concentration = materially reduced
-generated-output verification       = pending final run
+build/tests                           = green; 235/235
+UI behavior regressions              = 0 in browser smoke
+optimizer recommendation regressions = 0
+M6E policy changes                   = 0
+worker boundary preserved            = yes
+stale-result protection preserved    = yes; centralized and browser-tested
+app.ts responsibility concentration  = materially reduced
+generated-output verification        = green
+browser smoke                        = pass
 ```
