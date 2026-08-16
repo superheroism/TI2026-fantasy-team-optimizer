@@ -54,6 +54,11 @@ function assertFileEqual(source, generated) {
   }
 }
 
+const legacyRootJsPath = resolve(root, 'js');
+if (existsSync(legacyRootJsPath)) {
+  throw new Error('Unsupported root-level js/ tree exists. TypeScript output belongs only in build/js; remove root js/.');
+}
+
 const buildPath = resolve(root, 'build');
 const docsPath = resolve(root, 'docs');
 const beforeBuild = checkCommitted ? snapshotTree(buildPath) : null;
@@ -64,6 +69,10 @@ if (checkCommitted && (beforeBuild === null || beforeDocs === null)) {
 }
 
 execFileSync(process.execPath, [resolve(root, 'scripts/build.mjs')], { cwd: root, stdio: 'inherit' });
+
+if (existsSync(legacyRootJsPath)) {
+  throw new Error('Build unexpectedly created unsupported root-level js/ output.');
+}
 
 const afterBuild = snapshotTree(buildPath);
 const afterDocs = snapshotTree(docsPath);
