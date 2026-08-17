@@ -33,17 +33,21 @@ test('diagnostic copy helper writes exact JSON without DOM or scroll side effect
 
 test('screenshot review classes attach only to exact editable targets',()=>{
   assert.match(boardView,/\.emblem\.screenshot-review-target-emblem/);
+  assert.match(boardView,/\.client-select\.screenshot-review-target-field/);
   assert.match(boardView,/\.team-select\.screenshot-review-target-team/);
+  assert.match(boardView,/\.client-select\[data-field="\$\{field\}"\]/);
+  assert.match(boardView,/\.\(stat\|qualityTier\|trait\)\$/);
   assert.match(screenshotUi,/\.op-select\.screenshot-review-target-operation/);
   assert.match(screenshotUi,/screenshot-review-target-token/);
   assert.doesNotMatch(boardView,/\.banner\.screenshot-review-target/);
   assert.doesNotMatch(screenshotUi,/\.op-card\.screenshot-review-target-operation/);
   assert.doesNotMatch(css,/\.banner\.screenshot-review-target/);
   assert.doesNotMatch(css,/\.op-card\.screenshot-review-target-operation/);
-  assert.match(css,/\.team-select\.screenshot-review-target-team,\.op-select\.screenshot-review-target-operation,#tokens\.screenshot-review-target-token/);
+  assert.match(css,/\.client-select\.screenshot-review-target-field,\.team-select\.screenshot-review-target-team,\.op-select\.screenshot-review-target-operation,#tokens\.screenshot-review-target-token/);
 });
 
-test('optimizer confirmation clears emblem, team, action, and token review styling',()=>{
+test('optimizer confirmation clears emblem, field, team, action, and token review styling',()=>{
+  assert.match(boardView,/clearScreenshotReviewHighlights[\s\S]*screenshot-review-target-field/);
   assert.match(screenshotUi,/function clearAllReviewHighlights/);
   assert.match(screenshotUi,/clearScreenshotReviewHighlights\(\);clearActionReviewHighlights\(\);clearTokenReviewHighlight\(\)/);
   assert.match(screenshotUi,/optimize\.addEventListener\('click',[\s\S]*clearAllReviewHighlights\(\)/);
