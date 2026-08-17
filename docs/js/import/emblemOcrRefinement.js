@@ -102,7 +102,7 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
             const sp = `banners.${role}.emblems.${i}.stat`, qp = `banners.${role}.emblems.${i}.qualityTier`, tp = `banners.${role}.emblems.${i}.trait`, d = diagnostics.get(`${role}:${i}`);
             if (!d)
                 continue;
-            if (confidenceFor(raw, qp) >= .9 && confidenceFor(raw, tp) >= .9)
+            if (confidenceFor(raw, sp) >= .9 && confidenceFor(raw, qp) >= .9 && confidenceFor(raw, tp) >= .9)
                 continue;
             const rr = extractionToSource({ left: Math.max(0, d.roi.left - d.roi.width * .05), top: Math.max(0, d.roi.top - d.roi.height * .08), width: d.roi.width * 1.08, height: d.roi.height * 1.16 }, metrics), rec = await w.recognize(canvas(src, rr), { tessedit_pageseg_mode: '6' }, { tsv: true }), words = parse(rec.data.tsv), ls = lines(words);
             retries++;
