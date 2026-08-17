@@ -18,6 +18,15 @@ test('fitted row synthesis does not globally cap otherwise independent field evi
   assert.equal(source.includes("if(metrics.diagnostic.synthesizedRows) return {value:.85,reason:'synthesized-row'}"),false);
 });
 
+test('coarse localization fallback does not cap independently relocalized extraction fields',()=>{
+  assert.equal(source.includes("columnLocalizationMethod==='fallback'"),false);
+});
+
+test('team evidence fuses the role header with first-card roster text',()=>{
+  assert.ok(source.includes('teamCorpus=['));
+  assert.ok(source.includes('emblem.rowIndex===0'));
+});
+
 test('team auto-application requires candidate separation, not a fuzzy winner alone',()=>{
   assert.ok(source.includes('match.margin>=.08'));
   assert.ok(source.includes("teamComponents.fieldConsistency=.7"));
@@ -34,6 +43,6 @@ test('sub-threshold action evidence preserves the existing menu',()=>{
 });
 
 test('action auto-application requires decisive closed-catalog evidence or strong raw confidence',()=>{
-  assert.ok(source.includes('actionMatch.score>=.65&&actionMatch.margin>=.06'));
+  assert.ok(source.includes('actionMatch.score>=.65&&actionMatch.margin>=.05'));
   assert.ok(source.includes('const actionResolved=operationId!==null&&(decisiveCatalogMatch||rawConfidence>=.9)'));
 });

@@ -125,7 +125,6 @@ function geometryConfidence(metrics:LocalScreenshotOcrMetrics):{value:number;rea
   const directTierRowCount=Object.values(metrics.diagnostic.tierRowsByColumn).reduce((sum,rows)=>sum+rows.length,0);
   if(directTierRowCount===0) return {value:.84,reason:'geometry-fallback'};
   if(metrics.diagnostic.extractionColumnMethod==='fallback') return {value:.85,reason:'geometry-fallback'};
-  if(metrics.diagnostic.columnLocalizationMethod==='fallback') return {value:.92,reason:'geometry-fallback'};
   return {value:1};
 }
 function baseComponents(geometry:number,domainMatch:number):ScreenshotConfidenceComponents {
@@ -180,7 +179,7 @@ export function calibrateScreenshotImportConfidence(raw:RawScreenshotImport, met
   const byEmblem=new Map(metrics.diagnostic.emblems.map(emblem=>[`${emblem.role}:${emblem.rowIndex}`,emblem] as const));
   const layout=BOARD_LAYOUTS[raw.layoutId];
   for(const role of ROLES){
-    const teamPath=`banners.${role}.selectedTeam`,team=metrics.diagnostic.teamEvidence[role],teamRaw=confidenceFor(raw,teamPath),teamMatch=matchTeamEvidence(team.rawText,role,data);
+    const teamPath=`banners.${role}.selectedTeam`,team=metrics.diagnostic.teamEvidence[role],teamRaw=confidenceFor(raw,teamPath),teamCorpus=[team.rawText,...metrics.diagnostic.emblems.filter(emblem=>emblem.role===role&&emblem.rowIndex===0).map(emblem=>emblem.rawText)].filter(Boolean).join(' '),teamMatch=matchTeamEvidence(teamCorpus,role,data);
     const teamDomain=teamMatch?.score??team.matchScore,teamComponents=baseComponents(geometry.value,teamDomain);
     let teamReason:ScreenshotEvidenceClass='fuzzy-team',teamResolved=Boolean(raw.banners[role].selectedTeam);
     if(teamMatch&&trustedTeamEvidence(teamMatch,role)){
@@ -242,7 +241,7 @@ export function calibrateScreenshotImportConfidence(raw:RawScreenshotImport, met
     const actionEvidence=metrics.diagnostic.actionEvidence as typeof metrics.diagnostic.actionEvidence & {independentAgreement?:boolean[]};
     const independentAgreement=actionEvidence.independentAgreement?.[index]===true;
     const catalogAgreement=operationId!==null&&actionMatch?.id===operationId&&actionEvidence.resolved[index]===operationId;
-    const decisiveCatalogMatch=Boolean(catalogAgreement&&actionMatch&&((actionMatch.score>=.65&&actionMatch.margin>=.06)||(independentAgreement&&actionMatch.score>=.5)));
+    const decisiveCatalogMatch=Boolean(catalogAgreement&&actionMatch&&((actionMatch.score>=.65&&actionMatch.margin>=.05)||(independentAgreement&&actionMatch.score>=.5)));
     const actionResolved=operationId!==null&&(decisiveCatalogMatch||rawConfidence>=.9);
     let reason:ScreenshotEvidenceClass=decisiveCatalogMatch?'dedicated-action-crop':(operationId!==null?'fuzzy-action':'unresolved');
     if(decisiveCatalogMatch)components.structuredEvidence=independentAgreement?.98:.96;

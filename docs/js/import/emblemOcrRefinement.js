@@ -223,11 +223,11 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
         const path = `banners.${role}.selectedTeam`;
         if (budget.exhausted || confidenceFor(raw, path) >= .9)
             continue;
-        const band = metrics.diagnostic.columnBands[role], bw = band.right - band.left, teamLeft = Math.max(0, band.left - bw * .04), teamWidth = Math.min(metrics.extractionWidth - teamLeft, bw * 1.04), teamHeight = Math.min(metrics.extractionHeight, Math.max(pitch * .75, first - pitch * .18)), rect = extractionToSource({ left: teamLeft, top: 0, width: teamWidth, height: teamHeight }, metrics), teamCanvas = canvas(src, rect), rec = await recognize(w, teamCanvas, budget, `team:${role}`, 6, rect), words = parse(rec.data.tsv), s = orderedText(words), match = teamMatch(s, role, data), confidence = combined(match.score, words);
+        const band = metrics.diagnostic.columnBands[role], bw = band.right - band.left, teamLeft = Math.max(0, band.left - bw * .04), teamWidth = Math.min(metrics.extractionWidth - teamLeft, bw * 1.04), teamTop = Math.max(0, first - pitch * .65), teamHeight = Math.min(metrics.extractionHeight - teamTop, pitch * 1.45), rect = extractionToSource({ left: teamLeft, top: teamTop, width: teamWidth, height: teamHeight }, metrics), teamCanvas = canvas(src, rect), rec = await recognize(w, teamCanvas, budget, `team:${role}`, 6, rect), words = parse(rec.data.tsv), s = orderedText(words), match = teamMatch(s, role, data), confidence = combined(match.score, words), prior = metrics.diagnostic.teamEvidence[role], combinedText = [prior.rawText, s].filter(Boolean).join(' ');
         retries++;
         teamRetries++;
-        metrics.diagnostic.teamEvidence[role] = { rawText: s, normalizedTeam: match.team, matchScore: match.score };
-        if (match.score >= .62 && confidence > confidenceFor(raw, path)) {
+        metrics.diagnostic.teamEvidence[role] = { rawText: combinedText, normalizedTeam: match.team, matchScore: match.score };
+        if (match.score >= .9 && confidence >= .9 && confidence > confidenceFor(raw, path)) {
             raw.banners[role].selectedTeam = match.team;
             setConfidence(raw, path, confidence);
         }

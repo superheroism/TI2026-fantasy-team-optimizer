@@ -54,7 +54,10 @@ test('action matcher reports candidate separation for evidence-based application
 test('action matcher preserves scope and kind discriminators in noisy dedicated button OCR', () => {
   assert.equal(matchActionText('OLL TRAIT FOR THE RA RST BLUE EMBLEM')?.id, 'blue-trait-first');
   assert.equal(matchActionText('OR RED REROLL TRAT 1S EMBLE')?.id, 'red-trait-all');
-  assert.equal(matchActionText('AIT FOR RED REROLL QU LEMS RANDOM')?.id, 'red-quality-random');
+  const clippedQuality=matchActionText('AIT FOR RED REROLL QU LEMS RANDOM');
+  assert.equal(clippedQuality?.id, 'red-quality-random');
+  assert.ok((clippedQuality?.score ?? 0) >= .65);
+  assert.ok((clippedQuality?.margin ?? 0) >= .05);
 });
 
 test('tier matcher accepts punctuation-stripped roman evidence only next to TIER', () => {

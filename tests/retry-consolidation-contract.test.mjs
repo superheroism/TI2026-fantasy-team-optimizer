@@ -20,6 +20,11 @@ test('P51 keeps strict stat acceptance thresholds centralized and unchanged',()=
   assert.match(retryPolicy,/matchScore>=STAT_MATCH_GATE&&confidence>=STRUCTURED_CONFIDENCE_GATE/);
 });
 
+test('team retry cannot overwrite the board from weak fuzzy evidence',()=>{
+  assert.match(refinement,/match\.score>=\.9&&confidence>=\.9/);
+  assert.match(refinement,/combinedText=\[prior\.rawText,s\]/);
+});
+
 test('dedicated Tier retry remains bounded to unresolved or ambiguous Tier evidence',()=>{
   assert.match(refinement,/\(!tier\.direct\|\|tier\.match\.value===1\|\|tier\.match\.score<\.9\)&&!strongSupplementalTier&&shouldRetryTier\(confidenceFor\(raw,qp\)\)/);
 });
