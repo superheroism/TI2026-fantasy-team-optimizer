@@ -1,5 +1,5 @@
 import { BOARD_LAYOUTS, LEGAL_STAT_POOLS } from '../domain/rules.js';
-import { matchActionText, matchStatText, matchTierText, matchTraitText, ocrSimilarity } from './ocrDomainMatch.js';
+import { matchActionText, matchStatLines, matchTierText, matchTraitText, ocrSimilarity } from './ocrDomainMatch.js';
 const ROLES = ['core', 'mid', 'support'];
 const TRAITS = ['Fractal', 'Friendly', 'Vampiric', 'Unique', 'Benevolent'];
 let workerPromise;
@@ -108,7 +108,7 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
             retries++;
             emblemRetries++;
             if (confidenceFor(raw, sp) < .9) {
-                const sm = matchStatText(ls[0]?.text ?? orderedText(words), LEGAL_STAT_POOLS[layout.roles[role][i].color]), sc = combined(sm.score, ls[0]?.words ?? words);
+                const sm = matchStatLines(ls.map(line => line.text), LEGAL_STAT_POOLS[layout.roles[role][i].color]), statWords = sm.lineIndices.flatMap(index => ls[index]?.words ?? []), sc = combined(sm.score, statWords.length ? statWords : words);
                 if (sm.score >= .92 && sc >= .9 && sc > confidenceFor(raw, sp)) {
                     raw.banners[role].emblems[i].stat = sm.value;
                     setConfidence(raw, sp, sc);

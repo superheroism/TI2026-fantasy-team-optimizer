@@ -48,6 +48,28 @@ export function matchStatText(s, legal) {
     }
     return best;
 }
+function statLineText(s) { return tokens(s).filter(token => !/^\d+%$/.test(token)).join(' '); }
+/** Match a stat across OCR line breaks without treating the displayed percentage as part of the stat name. */
+export function matchStatLines(lines, legal) {
+    let best = { value: legal[0], score: -1, lineIndices: [], text: '' };
+    const cleaned = lines.map(statLineText);
+    const consider = (text, lineIndices) => {
+        if (!text.trim())
+            return;
+        const match = matchStatText(text, legal);
+        if (match.score > best.score)
+            best = { ...match, lineIndices, text };
+    };
+    cleaned.forEach((text, index) => consider(text, [index]));
+    for (let index = 0; index + 1 < cleaned.length; index++) {
+        if (cleaned[index] && cleaned[index + 1])
+            consider(cleaned[index] + ' ' + cleaned[index + 1], [index, index + 1]);
+    }
+    const nonempty = cleaned.map((text, index) => ({ text, index })).filter(row => row.text);
+    if (nonempty.length > 1)
+        consider(nonempty.map(row => row.text).join(' '), nonempty.map(row => row.index));
+    return best;
+}
 export function matchTraitText(s) {
     let best = { value: TRAITS[0], score: -1 };
     for (const value of TRAITS) {

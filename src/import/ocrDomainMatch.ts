@@ -47,6 +47,26 @@ export function matchStatText(s:string,legal:readonly StatName[]):{value:StatNam
   return best;
 }
 
+export interface StatLineMatch { value:StatName;score:number;lineIndices:number[];text:string; }
+function statLineText(s:string):string { return tokens(s).filter(token=>!/^\d+%$/.test(token)).join(' '); }
+/** Match a stat across OCR line breaks without treating the displayed percentage as part of the stat name. */
+export function matchStatLines(lines:readonly string[],legal:readonly StatName[]):StatLineMatch {
+  let best:StatLineMatch={value:legal[0]!,score:-1,lineIndices:[],text:''};
+  const cleaned=lines.map(statLineText);
+  const consider=(text:string,lineIndices:number[]):void=>{
+    if(!text.trim()) return;
+    const match=matchStatText(text,legal);
+    if(match.score>best.score) best={...match,lineIndices,text};
+  };
+  cleaned.forEach((text,index)=>consider(text,[index]));
+  for(let index=0;index+1<cleaned.length;index++){
+    if(cleaned[index]&&cleaned[index+1]) consider(cleaned[index]+' '+cleaned[index+1],[index,index+1]);
+  }
+  const nonempty=cleaned.map((text,index)=>({text,index})).filter(row=>row.text);
+  if(nonempty.length>1) consider(nonempty.map(row=>row.text).join(' '),nonempty.map(row=>row.index));
+  return best;
+}
+
 export function matchTraitText(s:string):{value:TraitName;score:number}{
   let best={value:TRAITS[0]!,score:-1};
   for(const value of TRAITS){const score=bestPhraseSimilarity(s,value);if(score>best.score)best={value,score};}
