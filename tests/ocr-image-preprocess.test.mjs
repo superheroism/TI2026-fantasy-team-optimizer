@@ -29,9 +29,9 @@ test('whiteness Otsu produces dark text from bright low-saturation pixels on col
   assert.ok(result.contrastHigh>result.contrastLow);
 });
 
-test('stat fallback applies preprocessing only after the raw strict retry fails',()=>{
+test('stat-specific fallback goes directly to the strict Otsu retry',()=>{
   const refinement=readFileSync(new URL('../src/import/emblemOcrRefinement.ts',import.meta.url),'utf8');
-  assert.match(refinement,/if\(confidenceFor\(raw,sp\)<\.9\).*statStrip/s);
+  assert.doesNotMatch(refinement,/statStrip=/);
   assert.match(refinement,/if\(confidenceFor\(raw,sp\)<\.9\).*otsuCanvas/s);
   assert.match(refinement,/tessedit_pageseg_mode:'7'/);
   assert.match(refinement,/sm\.score>=\.92&&sc>=\.9/);
