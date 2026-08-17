@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 concurrency:
-  group: p52f-firefox-payload-${{ github.event.pull_request.number }}
+  group: p52f-tier-retry-experiment-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
@@ -15,7 +15,7 @@ jobs:
   corpus:
     if: github.event.pull_request.head.ref == 'agent/p52f-fast-accurate-low-review'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -25,36 +25,53 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Instrument localization OCR payload
+      - name: Apply narrow Tier retry experiment
         run: |
           python - <<'PY'
           from pathlib import Path
-          p=Path('src/import/localScreenshotOcr.ts')
-          s=p.read_text()
-          old="async function run(w:Worker,c:HTMLCanvasElement,budget:OcrExecutionBudget,stage:string,crop?:Rect):Promise<Pass>{const t=performance.now(),r=await recognizeWithBudget(w,c,budget,{stage,psm:3,...(crop?{crop}:{}),canvasWidth:c.width,canvasHeight:c.height},{},{tsv:true},resetWorker);return{words:parse(r.data.tsv),elapsedMs:performance.now()-t,width:c.width,height:c.height};}"
-          new="async function run(w:Worker,c:HTMLCanvasElement,budget:OcrExecutionBudget,stage:string,crop?:Rect):Promise<Pass>{const t=performance.now(),r=await recognizeWithBudget(w,c,budget,{stage,psm:3,...(crop?{crop}:{}),canvasWidth:c.width,canvasHeight:c.height},{},{tsv:true},resetWorker),words=parse(r.data.tsv);if(stage==='localization'&&words.length===0)throw new Error(`EMPTY_LOCALIZATION textLen=${(r.data.text??'').length} tsvLen=${(r.data.tsv??'').length} text=${JSON.stringify((r.data.text??'').slice(0,300))} tsv=${JSON.stringify((r.data.tsv??'').slice(0,300))}`);return{words,elapsedMs:performance.now()-t,width:c.width,height:c.height};}"
-          if old not in s: raise SystemExit('missing run anchor')
-          p.write_text(s.replace(old,new))
+          p=Path('src/import/emblemOcrRefinement.ts'); s=p.read_text()
+          old="if(retryTier||retryTrait){const rr=extractionToSource({left:Math.max(0,d.roi.left-d.roi.width*.05),top:Math.max(0,d.roi.top-d.roi.height*.08),width:d.roi.width*1.08,height:d.roi.height*1.16},metrics),emblemCanvas=canvas(src,rr),rec=await recognize(w,emblemCanvas,budget,`emblem:${role}:${i+1}:psm6`,6,rr);words=parse(rec.data.tsv);ls=lines(words);retries++;emblemRetries++;}"
+          new="if(retryTrait){const rr=extractionToSource({left:Math.max(0,d.roi.left-d.roi.width*.05),top:Math.max(0,d.roi.top-d.roi.height*.08),width:d.roi.width*1.08,height:d.roi.height*1.16},metrics),emblemCanvas=canvas(src,rr),rec=await recognize(w,emblemCanvas,budget,`emblem:${role}:${i+1}:psm6`,6,rr);words=parse(rec.data.tsv);ls=lines(words);retries++;emblemRetries++;}"
+          if old not in s: raise SystemExit('missing broad retry anchor')
+          s=s.replace(old,new)
+          start="const tier=bestTierLine(ls),tierConfidence=combined(tier.match.score,tier.line?.words??words);if(tier.direct&&tierConfidence>confidenceFor(raw,qp)){raw.banners[role].emblems[i]!.qualityTier=tier.match.value;replaceConfidence(raw,qp,Math.min(.84,tierConfidence));d.normalizedTier=tier.match.value;d.tierMatchScore=tier.match.score;}if(!budget.exhausted&&(!tier.direct||tier.match.value===1||tier.match.score<.9)&&!strongSupplementalTier&&shouldRetryTier(confidenceFor(raw,qp))){const base=extractionToSource(d.roi,metrics),strip={left:base.left+base.width*.02,top:base.top+base.height*.27,width:base.width*.74,height:base.height*.42},rawTierCanvas=canvas(src,strip),rawTierRec=await recognize(w,rawTierCanvas,budget,`tier:${role}:${i+1}:raw`,7,strip),rawTierWords=parse(rawTierRec.data.tsv),rawTier=bestTierLine(lines(rawTierWords)),processedTierCanvas=otsuCanvas(rawTierCanvas),otsuTierRec=await recognize(w,processedTierCanvas,budget,`tier:${role}:${i+1}:otsu`,7,strip),otsuTierWords=parse(otsuTierRec.data.tsv),otsuTier=bestTierLine(lines(otsuTierWords));retries+=2;emblemRetries+=2;const direct=[tier,rawTier,otsuTier].filter(candidate=>candidate.direct),counts=new Map<QualityTier,number>();for(const candidate of direct)counts.set(candidate.match.value,(counts.get(candidate.match.value)??0)+1);const consensus=[...counts.entries()].sort((a,b)=>b[1]-a[1])[0];if(consensus&&consensus[1]>=2){const value=consensus[0],support=direct.filter(candidate=>candidate.match.value===value),confidence=Math.min(.99,Math.max(...support.map(candidate=>combined(candidate.match.score,candidate.line?.words??[]))));raw.banners[role].emblems[i]!.qualityTier=value;replaceConfidence(raw,qp,confidence);d.normalizedTier=value;d.tierMatchScore=Math.max(...support.map(candidate=>candidate.match.score));}else if(new Set(direct.map(candidate=>candidate.match.value)).size>1){replaceConfidence(raw,qp,Math.min(confidenceFor(raw,qp),.72));}else if(direct.length===1){const lone=direct[0]!,confidence=Math.min(.84,combined(lone.match.score,lone.line?.words??[]));raw.banners[role].emblems[i]!.qualityTier=lone.match.value;replaceConfidence(raw,qp,confidence);d.normalizedTier=lone.match.value;d.tierMatchScore=lone.match.score;}}"
+          repl="const tier=bestTierLine(ls),tierConfidence=combined(tier.match.score,tier.line?.words??words);if(tier.direct&&tierConfidence>confidenceFor(raw,qp)){raw.banners[role].emblems[i]!.qualityTier=tier.match.value;replaceConfidence(raw,qp,Math.min(.84,tierConfidence));d.normalizedTier=tier.match.value;d.tierMatchScore=tier.match.score;}if(!budget.exhausted&&!strongSupplementalTier&&shouldRetryTier(confidenceFor(raw,qp))){const initialTier=raw.banners[role].emblems[i]!.qualityTier,base=extractionToSource(d.roi,metrics),strip={left:base.left+base.width*.02,top:base.top+base.height*.27,width:base.width*.74,height:base.height*.42},rawTierCanvas=canvas(src,strip),rawTierRec=await recognize(w,rawTierCanvas,budget,`tier:${role}:${i+1}:raw`,7,strip),rawTierWords=parse(rawTierRec.data.tsv),rawTier=bestTierLine(lines(rawTierWords));retries++;emblemRetries++;if(rawTier.direct&&rawTier.match.value!==1&&rawTier.match.value===initialTier&&rawTier.match.score>=.9){const confidence=Math.min(.99,Math.max(.96,combined(rawTier.match.score,rawTier.line?.words??rawTierWords)));raw.banners[role].emblems[i]!.qualityTier=rawTier.match.value;replaceConfidence(raw,qp,confidence);d.normalizedTier=rawTier.match.value;d.tierMatchScore=rawTier.match.score;}else if(!budget.exhausted){const processedTierCanvas=otsuCanvas(rawTierCanvas),otsuTierRec=await recognize(w,processedTierCanvas,budget,`tier:${role}:${i+1}:otsu`,7,strip),otsuTierWords=parse(otsuTierRec.data.tsv),otsuTier=bestTierLine(lines(otsuTierWords));retries++;emblemRetries++;const direct=[tier,rawTier,otsuTier].filter(candidate=>candidate.direct),counts=new Map<QualityTier,number>();for(const candidate of direct)counts.set(candidate.match.value,(counts.get(candidate.match.value)??0)+1);const consensus=[...counts.entries()].sort((a,b)=>b[1]-a[1])[0];if(consensus&&consensus[1]>=2){const value=consensus[0],support=direct.filter(candidate=>candidate.match.value===value),confidence=Math.min(.99,Math.max(...support.map(candidate=>combined(candidate.match.score,candidate.line?.words??[]))));raw.banners[role].emblems[i]!.qualityTier=value;replaceConfidence(raw,qp,confidence);d.normalizedTier=value;d.tierMatchScore=Math.max(...support.map(candidate=>candidate.match.score));}else if(new Set(direct.map(candidate=>candidate.match.value)).size>1){replaceConfidence(raw,qp,Math.min(confidenceFor(raw,qp),.72));}else if(direct.length===1){const lone=direct[0]!,confidence=Math.min(.84,combined(lone.match.score,lone.line?.words??[]));raw.banners[role].emblems[i]!.qualityTier=lone.match.value;replaceConfidence(raw,qp,confidence);d.normalizedTier=lone.match.value;d.tierMatchScore=lone.match.score;}}}"
+          if start not in s: raise SystemExit('missing tier retry block')
+          p.write_text(s.replace(start,repl))
+
+          # Contracts now assert field-specific retry behavior rather than the superseded broad Tier pass.
+          for path in ['tests/retry-consolidation-contract.test.mjs','tests/stat-row-retry-ui.test.mjs','tests/p52-direct-tier-application.test.mjs']:
+              q=Path(path); t=q.read_text()
+              t=t.replace('if(retryTier||retryTrait)', 'if(retryTrait)')
+              t=t.replace("assert.match(refinement,/if\\(retryTier\\|\\|retryTrait\\).*emblem:/s);", "assert.match(refinement,/if\\(retryTrait\\).*emblem:/s);")
+              t=t.replace("/\\(!tier\\.direct\\|\\|tier\\.match\\.value===1\\|\\|tier\\.match\\.score<\\.9\\)&&!strongSupplementalTier&&shouldRetryTier\\(confidenceFor\\(raw,qp\\)\\)/", "/!strongSupplementalTier&&shouldRetryTier\\(confidenceFor\\(raw,qp\\)\\)/")
+              q.write_text(t)
           PY
       - run: npm run build
-      - run: npm install --no-save --package-lock=false playwright@1.62.0
-      - run: npx playwright install --with-deps firefox
-      - name: Firefox Board 2 payload diagnostic
-        env:
-          SCREENSHOT_E2E_OUT: artifacts/firefox-board2
-        run: node scripts/test-screenshot-e2e.mjs --browser=firefox --board2 --report-only
-      - name: Print status payload
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - name: Run real-image regression gate
+        run: node scripts/test-ocr-corpus.mjs --report-only --output=artifacts/p52f-tier-retry.json
+      - name: Enforce frozen readable-board safety
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');const report=JSON.parse(fs.readFileSync('artifacts/p52f-tier-retry.json','utf8'));
+          const byName=new Map(report.results.map(r=>[r.sourceFile,r]));
+          const required=['TI2026 - Board 1.png','TI2026 - Board 2.png','TI2026 - Board 3.png','Ti2026 - board 6.png'];
+          for(const name of required){const r=byName.get(name);if(!r?.comparison?.exact)throw new Error(`${name} lost exact raw recognition`);if(r.comparison.falseHighConfidenceErrors!==0)throw new Error(`${name} introduced false-high-confidence errors`);}
+          const b5=byName.get('Ti2026 - board 5.webp');if(!b5||b5.comparison.statsExact!=='8/9'||b5.comparison.tiersExact!=='9/9'||b5.comparison.traitsExact!=='9/9'||b5.comparison.actionsExact!=='3/3'||!b5.comparison.tokenExact)throw new Error('Board 5 regressed below the frozen one-stat-miss baseline');
+          if(report.totals.falseHighConfidenceErrors!==0)throw new Error('Corpus introduced false-high-confidence errors');
+          NODE
+      - name: Print timing summary
         if: always()
         run: |
           node - <<'NODE'
-          const fs=require('fs'); const p='artifacts/firefox-board2/report.json';
-          if(!fs.existsSync(p)) process.exit(0);
-          const r=JSON.parse(fs.readFileSync(p,'utf8'));
-          for(const x of r.results) console.log(x.mode, JSON.stringify(x.stages?.rendered?.status));
+          const fs=require('fs');const p='artifacts/p52f-tier-retry.json';if(!fs.existsSync(p))process.exit(0);const r=JSON.parse(fs.readFileSync(p,'utf8'));for(const x of r.results)console.log(x.sourceFile,'exact=',x.comparison?.exact,'ms=',Math.round(x.elapsedMs??0),'calls=',x.ocrCalls,'FHCE=',x.comparison?.falseHighConfidenceErrors);
           NODE
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: p52f-firefox-payload
-          path: artifacts/firefox-board2
+          name: p52f-tier-retry
+          path: artifacts/p52f-tier-retry.json
           if-no-files-found: warn
