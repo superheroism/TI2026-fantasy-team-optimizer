@@ -6,7 +6,11 @@ const source=readFileSync(new URL('../src/import/emblemOcrRefinement.ts',import.
 
 test('ambiguous direct Tier-I glyph retry is structurally narrow, direct-evidence-only, and fail-closed',()=>{
   assert.match(source,/const TIER_GLYPH_RETRY_CONFIDENCE_CEILING=60/);
-  assert.match(source,/!tier\.direct\|\|tier\.match\.value!==1\|\|!tier\.line/);
+  assert.match(source,/currentTier!==1/);
+  assert.match(source,/words\.filter\(w=>ocrSimilarity\(w\.text,'TIER'\)>=\.62\)/);
+  assert.match(source,/Math\.abs\(glyphY-tierY\)<=yTolerance/);
+  assert.match(source,/rightGap>=-2&&rightGap<=maxGap/);
+  assert.match(source,/ambiguousTierGlyph\(words,raw\.banners\[role\]\.emblems\[i\]!\.qualityTier\)/);
   assert.match(source,/confused==='I'&&glyphWord\.confidence<TIER_GLYPH_RETRY_CONFIDENCE_CEILING/);
   assert.match(source,/tightRight=Math\.min\(src\.naturalWidth,sourceLeft\+localRight\)/);
   assert.match(source,/tightBottom=Math\.min\(src\.naturalHeight,sourceTop\+localBottom\)/);

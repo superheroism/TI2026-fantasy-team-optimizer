@@ -84,12 +84,14 @@ function bestTierLine(ls) { let best = { match: { value: 1, score: .2 }, direct:
             best = { match: { value: match.value, score }, line, direct: false };
     }
 } return best; }
-function ambiguousTierGlyph(tier) { if (!tier.direct || tier.match.value !== 1 || !tier.line)
-    return undefined; const ws = tier.line.words, tierIndex = ws.findIndex(w => ocrSimilarity(w.text, 'TIER') >= .62); if (tierIndex < 0)
-    return undefined; const tierWord = ws[tierIndex]; for (const glyphWord of ws.slice(tierIndex + 1, tierIndex + 3)) {
-    const token = glyphWord.text.toUpperCase().replace(/[^A-Z0-9\]|]/g, ''), confused = token.replace(/[1L|]/g, 'I').replace(/]/g, 'I');
-    if (confused === 'I' && glyphWord.confidence < TIER_GLYPH_RETRY_CONFIDENCE_CEILING)
-        return { tierWord, glyphWord };
+function ambiguousTierGlyph(words, currentTier) { if (currentTier !== 1)
+    return undefined; for (const tierWord of words.filter(w => ocrSimilarity(w.text, 'TIER') >= .62)) {
+    const tierRight = tierWord.left + tierWord.width, tierY = tierWord.top + tierWord.height / 2;
+    for (const glyphWord of words) {
+        const token = glyphWord.text.toUpperCase().replace(/[^A-Z0-9\]|]/g, ''), confused = token.replace(/[1L|]/g, 'I').replace(/]/g, 'I'), glyphY = glyphWord.top + glyphWord.height / 2, yTolerance = Math.max(tierWord.height, glyphWord.height) * .7, rightGap = glyphWord.left - tierRight, maxGap = Math.max(12, tierWord.height * 1.5);
+        if (confused === 'I' && glyphWord.confidence < TIER_GLYPH_RETRY_CONFIDENCE_CEILING && Math.abs(glyphY - tierY) <= yTolerance && rightGap >= -2 && rightGap <= maxGap)
+            return { tierWord, glyphWord };
+    }
 } return undefined; }
 function bestTraitLine(ls) { let best = { match: { value: 'Fractal', score: 0 } }; for (const line of ls) {
     const match = matchTraitText(line.text), score = Math.min(.99, match.score + (TRAITS.some(t => line.text.toUpperCase().includes(t.toUpperCase())) ? .08 : 0));
@@ -182,7 +184,7 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
                 }
             }
             ;
-            const tier = bestTierLine(ls), tierConfidence = combined(tier.match.score, tier.line?.words ?? words), ambiguousGlyph = ambiguousTierGlyph(tier);
+            const tier = bestTierLine(ls), tierConfidence = combined(tier.match.score, tier.line?.words ?? words), ambiguousGlyph = ambiguousTierGlyph(words, raw.banners[role].emblems[i].qualityTier);
             if (tier.direct && tierConfidence > confidenceFor(raw, qp)) {
                 raw.banners[role].emblems[i].qualityTier = tier.match.value;
                 replaceConfidence(raw, qp, Math.min(.84, tierConfidence));
