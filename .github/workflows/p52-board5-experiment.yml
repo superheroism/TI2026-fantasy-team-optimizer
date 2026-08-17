@@ -67,22 +67,32 @@ jobs:
           s += "\ntest('long legal stat tokens can use a narrower same-color margin only while the existing field is weak',()=>{\n  assert.equal(LONG_TOKEN_STAT_LENGTH_GATE,6);\n  assert.equal(LONG_TOKEN_STAT_MARGIN_GATE,.12);\n  assert.equal(LONG_TOKEN_STAT_EXISTING_CONFIDENCE_CEILING,.70);\n  assert.equal(acceptsStatEvidence(.714,.50,.143,7,0),true);\n  assert.equal(acceptsStatEvidence(.714,.50,.143,5,0),false);\n  assert.equal(acceptsStatEvidence(.714,.50,.119,7,0),false);\n  assert.equal(acceptsStatEvidence(.699,.50,.143,7,0),false);\n  assert.equal(acceptsStatEvidence(.714,.50,.143,7,.70),false);\n});\n"
           test.write_text(s)
 
-          for name in ['tests/p52-stat-psm6.test.mjs','tests/retry-consolidation-contract.test.mjs']:
-            p=Path(name)
-            s=p.read_text()
-            s=s.replace(
-              'acceptsStatEvidence(sm.score,sc,sm.score-sm.runnerUpScore)',
-              "acceptsStatEvidence(sm.score,sc,sm.score-sm.runnerUpScore,sm.value.replace(/[^A-Za-z0-9]/g,'').length,confidenceFor(raw,sp))"
-            )
-            p.write_text(s)
+          p=Path('tests/p52-stat-psm6.test.mjs')
+          s=p.read_text()
+          s=s.replace(
+            "assert.ok(source.includes('acceptsStatEvidence(sm.score,sc,sm.score-sm.runnerUpScore)'));",
+            "assert.ok(source.includes(\"acceptsStatEvidence(sm.score,sc,sm.score-sm.runnerUpScore,sm.value.replace(/[^A-Za-z0-9]/g,'').length,confidenceFor(raw,sp))\"));"
+          )
+          p.write_text(s)
+
+          p=Path('tests/retry-consolidation-contract.test.mjs')
+          s=p.read_text()
+          s=s.replace(
+            "assert.match(refinement,/acceptsStatEvidence\\(sm\\.score,sc,sm\\.score-sm\\.runnerUpScore\\)/);",
+            "assert.ok(refinement.includes(\"acceptsStatEvidence(sm.score,sc,sm.score-sm.runnerUpScore,sm.value.replace(/[^A-Za-z0-9]/g,'').length,confidenceFor(raw,sp))\"));"
+          )
+          p.write_text(s)
           PY
       - run: npm ci
       - run: npm run build
       - run: npm run typecheck
       - run: npm run lint
-      - name: Remove experiment workflow and commit generated mirrors
+      - name: Run focused policy tests
+        run: node --test tests/p52-exact-stat-evidence.test.mjs tests/p52-stat-psm6.test.mjs tests/retry-consolidation-contract.test.mjs
+      - name: Remove experiment debris and commit generated mirrors
         run: |
           rm .github/workflows/p52-board5-experiment.yml
+          rm -f .p52-board5-trigger
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add -A
