@@ -21,47 +21,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Apply bounded direct Tier-glyph retry
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          p=Path('src/import/emblemOcrRefinement.ts')
-          s=p.read_text()
-          anchor="const TRAITS:readonly TraitName[]=['Fractal','Friendly','Vampiric','Unique','Benevolent'];\n"
-          assert anchor in s
-          s=s.replace(anchor,anchor+"const TIER_GLYPH_RETRY_CONFIDENCE_CEILING=60;\n")
-
-          old="function bestTierLine(ls:readonly Line[]):{match:{value:QualityTier;score:number};line?:Line;direct:boolean}{let best:{match:{value:QualityTier;score:number};line?:Line;direct:boolean}={match:{value:1,score:.2},direct:false};for(const line of ls){const exact=directTier(line);if(exact&&exact.score>best.match.score)best={match:exact,line,direct:true};else if(!best.direct){const match=matchTierText(line.text),hasTier=line.words.some(w=>ocrSimilarity(w.text,'TIER')>=.62),score=Math.min(.85,match.score+(hasTier ? .08 : 0));if(score>best.match.score)best={match:{value:match.value,score},line,direct:false};}}return best;}\n"
-          assert old in s
-          helper="function ambiguousTierGlyph(tier:ReturnType<typeof bestTierLine>):{tierWord:Word;glyphWord:Word}|undefined{if(!tier.direct||tier.match.value!==1||!tier.line)return undefined;const ws=tier.line.words,tierIndex=ws.findIndex(w=>ocrSimilarity(w.text,'TIER')>=.62);if(tierIndex<0)return undefined;const tierWord=ws[tierIndex]!;for(const glyphWord of ws.slice(tierIndex+1,tierIndex+3)){const token=glyphWord.text.toUpperCase().replace(/[^A-Z0-9\\]|]/g,''),confused=token.replace(/[1L|]/g,'I').replace(/]/g,'I');if(confused==='I'&&glyphWord.confidence<TIER_GLYPH_RETRY_CONFIDENCE_CEILING)return{tierWord,glyphWord};}return undefined;}\n"
-          s=s.replace(old,old+helper)
-
-          old2="const tier=bestTierLine(ls),tierConfidence=combined(tier.match.score,tier.line?.words??words);if(tier.direct&&tierConfidence>confidenceFor(raw,qp)){raw.banners[role].emblems[i]!.qualityTier=tier.match.value;replaceConfidence(raw,qp,Math.min(.84,tierConfidence));d.normalizedTier=tier.match.value;d.tierMatchScore=tier.match.score;}if(!budget.exhausted&&!tier.direct&&!strongSupplementalTier&&shouldRetryTier(confidenceFor(raw,qp))){"
-          assert old2 in s
-          new2="const tier=bestTierLine(ls),tierConfidence=combined(tier.match.score,tier.line?.words??words),ambiguousGlyph=ambiguousTierGlyph(tier);if(tier.direct&&tierConfidence>confidenceFor(raw,qp)){raw.banners[role].emblems[i]!.qualityTier=tier.match.value;replaceConfidence(raw,qp,Math.min(.84,tierConfidence));d.normalizedTier=tier.match.value;d.tierMatchScore=tier.match.score;}if(!budget.exhausted&&ambiguousGlyph&&shouldRetryTier(confidenceFor(raw,qp))){const {tierWord,glyphWord}=ambiguousGlyph,localPadX=Math.max(2,tierWord.height*.3),localPadY=Math.max(2,tierWord.height*.45),localLeft=Math.max(0,tierWord.left-localPadX),localTop=Math.max(0,Math.min(tierWord.top,glyphWord.top)-localPadY),localRight=Math.min(emblemCanvas.width,Math.max(tierWord.left+tierWord.width,glyphWord.left+glyphWord.width)+Math.max(4,tierWord.height*1.1)),localBottom=Math.min(emblemCanvas.height,Math.max(tierWord.top+tierWord.height,glyphWord.top+glyphWord.height)+localPadY),sourceLeft=Math.max(0,Math.floor(rr.left)),sourceTop=Math.max(0,Math.floor(rr.top)),tightTierStrip={left:Math.max(0,sourceLeft+localLeft),top:Math.max(0,sourceTop+localTop),width:Math.max(1,localRight-localLeft),height:Math.max(1,localBottom-localTop)},tightTierCanvas=otsuCanvas(canvas(src,tightTierStrip)),tightTierRec=await recognize(w,tightTierCanvas,budget,`tier:${role}:${i+1}:glyph`,7,tightTierStrip),tightTierWords=parse(tightTierRec.data.tsv),tightTier=bestTierLine(lines(tightTierWords)),tightTierConfidence=combined(tightTier.match.score,tightTier.line?.words??tightTierWords);retries++;emblemRetries++;if(tightTier.direct&&tightTierConfidence>tierConfidence){raw.banners[role].emblems[i]!.qualityTier=tightTier.match.value;replaceConfidence(raw,qp,Math.min(.84,tightTierConfidence));d.normalizedTier=tightTier.match.value;d.tierMatchScore=tightTier.match.score;}}if(!budget.exhausted&&!tier.direct&&!strongSupplementalTier&&shouldRetryTier(confidenceFor(raw,qp))){"
-          s=s.replace(old2,new2)
-          p.write_text(s)
-
-          test=Path('tests/p52-tier-glyph-retry.test.mjs')
-          test.write_text("""import test from 'node:test';
-import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-
-const source=readFileSync(new URL('../src/import/emblemOcrRefinement.ts',import.meta.url),'utf8');
-
-test('ambiguous direct Tier-I glyph retry is structurally narrow and bounded',()=>{
-  assert.match(source,/const TIER_GLYPH_RETRY_CONFIDENCE_CEILING=60/);
-  assert.match(source,/!tier\.direct\|\|tier\.match\.value!==1\|\|!tier\.line/);
-  assert.match(source,/confused==='I'&&glyphWord\.confidence<TIER_GLYPH_RETRY_CONFIDENCE_CEILING/);
-  assert.match(source,/tightTierStrip=\{left:Math\.max\(0,sourceLeft\+localLeft\)/);
-  assert.match(source,/tightTierCanvas=otsuCanvas\(canvas\(src,tightTierStrip\)\)/);
-  assert.match(source,/`tier:\$\{role\}:\$\{i\+1\}:glyph`/);
-  assert.match(source,/tightTier\.direct&&tightTierConfidence>tierConfidence/);
-  assert.equal((source.match(/`tier:\$\{role\}:\$\{i\+1\}:glyph`/g)??[]).length,1);
-});
-""")
-          PY
+      - run: python .p52-board6-patch.py
       - run: npm ci
       - run: npm run build
       - run: npm run typecheck
@@ -71,7 +31,7 @@ test('ambiguous direct Tier-I glyph retry is structurally narrow and bounded',()
       - name: Remove experiment debris and commit generated mirrors
         run: |
           rm .github/workflows/p52-board6-tier-glyph-experiment.yml
-          rm -f .p52-board6-tier-glyph-trigger
+          rm -f .p52-board6-tier-glyph-trigger .p52-board6-patch.py
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add -A
