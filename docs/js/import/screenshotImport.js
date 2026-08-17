@@ -129,7 +129,7 @@ export function calibrateScreenshotImportConfidence(raw, metrics) {
                 statComponents.structuredEvidence = .97;
                 statReason = 'exact-domain-stat';
             }
-            else if (statRaw >= .95 && (statChanged || statStrengthened)) {
+            else if (statRaw >= .9 && (statChanged || statStrengthened)) {
                 statComponents.targetedRetry = .95;
                 statComponents.fieldConsistency = statChanged ? .9 : 1;
                 statReason = 'targeted-native-stat';

@@ -152,7 +152,7 @@ export function calibrateScreenshotImportConfidence(raw:RawScreenshotImport, met
       let statReason:ScreenshotEvidenceClass='fuzzy-stat';
       if(!isLegalStat(slot.color,emblem.stat)){statComponents.fieldConsistency=0;statReason='unresolved';}
       else if(!statChanged&&diag.statMatchScore>=.99){statComponents.structuredEvidence=.97;statReason='exact-domain-stat';}
-      else if(statRaw>=.95&&(statChanged||statStrengthened)){statComponents.targetedRetry=.95;statComponents.fieldConsistency=statChanged?.9:1;statReason='targeted-native-stat';}
+      else if(statRaw>=.9&&(statChanged||statStrengthened)){statComponents.targetedRetry=.95;statComponents.fieldConsistency=statChanged?.9:1;statReason='targeted-native-stat';}
       else if(statChanged){statComponents.targetedRetry=statRaw;statComponents.fieldConsistency=.7;statReason='conflicting-retry';}
       if(geometry.reason) statReason=geometry.reason;
       calibrated.push(calibrateConfidenceEvidence(statPath,{resolved:isLegalStat(slot.color,emblem.stat),rawConfidence:statRaw,reason:statReason,components:statComponents}));
