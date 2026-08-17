@@ -46,6 +46,8 @@ retry weak action cards from source-resolution crops
 deterministic validation + confidence review flags
     ↓
 populate application state
+    ↓
+rerender + review highlighting
 ```
 
 ## 1. Image intake and scaling policy
@@ -65,59 +67,30 @@ For images at or below approximately 2 MP, the initial OCR pass runs at native r
 
 ## 2. Banner localization
 
-The preferred structural anchors are the role headings:
+The preferred structural anchors are the role headings `CORE`, `MID`, and `SUPPORT`.
 
-- `CORE`
-- `MID`
-- `SUPPORT`
-
-If all three are confidently recognized, their horizontal centers define the three banner columns.
-
-If role headings are incomplete, the parser falls back to repeated closed-vocabulary card anchors, including:
-
-- `TIER`;
-- known stat tokens;
-- `Fractal`, `Friendly`, `Vampiric`, `Unique`, and `Benevolent`.
-
-The x-coordinates of these repeated anchors are clustered into three approximately evenly spaced columns. This prevents unrelated UI, such as the Dota navigation/sidebar area, from shifting the assumed Core/Mid/Support regions.
-
-An equal-third split of the available image remains only a last-resort fallback when stronger geometry cannot be established.
+If all three are confidently recognized, their horizontal centers define the three banner columns. If headings are incomplete, the parser falls back to repeated closed-vocabulary card anchors such as `TIER`, known stat tokens, and canonical trait names, clustering their x-coordinates into three approximately evenly spaced columns. Equal-third splitting is only a last-resort fallback.
 
 ## 3. Layout and row-grid inference
 
 Within each inferred banner column, the parser searches for `TIER` anchors and pools their y-coordinates across all three roles.
-
-The layout decision uses the pooled row structure rather than requiring each role to expose every row independently:
 
 ```text
 3 stable row levels → legacy_3
 5 stable row levels → expanded_5
 ```
 
-When four row levels are directly recognized and their spacing supports a regular five-row grid, the missing level can be inferred from the repeated vertical pitch. This protects the 5-emblem layout from collapsing to 3 emblems because one banner has weak OCR on one or more `TIER` labels.
-
-Once the layout is known, emblem position and color come from `BOARD_LAYOUTS`; OCR does not guess slot color.
+Four directly recognized row levels may be regularized to a five-row grid when their pitch supports that interpretation. Once layout is known, emblem position and color come from `BOARD_LAYOUTS`; OCR does not guess slot color.
 
 ## 4. Initial emblem extraction
 
-For each expected emblem row, the first pass extracts:
+For each expected emblem row the first pass extracts stat, quality tier, and trait.
 
-- stat;
-- quality tier;
-- trait.
-
-Stat normalization is constrained to the target slot's legal color-specific stat pool. An OCR result cannot normalize to a stat that is illegal for the emblem's color.
-
-Quality tier uses redundant evidence:
-
-- Roman numeral `TIER I` through `TIER V`;
-- displayed quality bonus mapping: `+10`, `+30`, `+60`, `+100`, `+150` percent.
-
-Trait extraction is fuzzy-matched against the five canonical trait names.
+Stat normalization is constrained to the slot's legal color-specific stat pool. Quality tier uses redundant Roman-numeral and displayed-bonus evidence. Trait extraction is fuzzy-matched against the five canonical trait names.
 
 ## 5. Selective targeted stat retry
 
-Stat titles are the most OCR-sensitive emblem field. The importer therefore retries only weak stat reads rather than re-OCRing every emblem.
+Stat titles are the most OCR-sensitive emblem field. The importer retries weak reads rather than re-OCRing every emblem.
 
 Current trigger:
 
@@ -125,83 +98,107 @@ Current trigger:
 stat confidence < 0.90
 ```
 
-For a weak stat:
-
-1. derive the exact emblem rectangle from the known role/row grid;
-2. crop only the stat-title portion from the original-resolution image;
-3. OCR that small region independently with a text-oriented segmentation mode;
-4. fuzzy-match the result only against the legal stat pool for that slot color;
-5. replace the initial result only when the targeted read improves confidence.
-
-This keeps clean fields such as `GPM` on the cheap path while giving difficult labels such as `TEAMFIGHT PARTICIPATION`, `COURIER KILLS`, `FIRST BLOOD`, or `WARDS PLACED` a focused retry.
+The retry derives the emblem rectangle from role/row geometry, crops from the original-resolution image, uses text-oriented OCR, constrains normalization to the legal slot-color pool, and replaces the initial read only when confidence improves.
 
 ## 6. Team extraction
 
-Each banner's visible selected-player text is compared against the current model's players and attached players for that role. The best supported player match maps to the canonical team used by the optimizer.
+Each banner's visible selected-player text is compared against current model players for that role. The best supported player match maps to the optimizer's canonical team. Historical or otherwise unmappable text remains a review case rather than being converted to a guessed team.
 
-Historical or otherwise unmappable roster text should remain a review case rather than being converted to a guessed current team.
+Selected teams are part of authoritative Production E2E correctness. They are not inferred as correct merely because visible player text was recognized.
 
 ## 7. Reroll-action and token extraction
 
-The reroll region is optional and independent of successful board import.
+The reroll region is optional and independent of successful board import. Anchors such as `REROLL OPERATIONS`, `ROLL TOKENS`, and repeated three-card geometry localize it.
 
-The parser searches for action-region anchors such as:
+If the region is absent, raw import returns three missing action slots with confidence 0. Validation preserves existing application actions and flags all three for review.
 
-- `REROLL OPERATIONS`;
-- `ROLL TOKENS`;
-- the repeated three-card geometry.
-
-If the region is absent, the importer returns three missing action slots with confidence 0. Validation preserves the application's existing action values and flags all three action cards for review.
-
-When the region is visible, the three action cards are treated independently. Each card is OCRed and fuzzy-matched against the canonical 20-action catalog. Weak whole-image/card reads are retried on the corresponding original-resolution source crop.
-
-The token count is extracted from the same action region when visible.
+When visible, the three cards are handled independently and matched against the canonical action catalog. Weak card reads may receive source-resolution retries. Token count is extracted from the same region when visible.
 
 ## 8. Confidence, validation, and review behavior
 
-The raw OCR result is passed through deterministic validation before application state is changed. Validation checks include:
+The raw OCR result is passed through deterministic validation before application state changes. Validation checks include:
 
 - supported layout;
-- exact expected emblem count for the layout;
-- slot position and color agreement with `BOARD_LAYOUTS`;
+- exact emblem count for the layout;
+- slot position/color agreement with `BOARD_LAYOUTS`;
 - stat legality for slot color;
 - quality tier in `1..5`;
 - canonical trait;
-- canonical and distinct action IDs;
+- canonical/distinct action IDs;
 - non-negative integer token count when present.
 
-The current review threshold is 0.90. Fields below that threshold are surfaced as low-confidence review targets.
+The current review threshold is 0.90. Values below threshold are review targets. For fields whose product semantics preserve the current value when unresolved—most notably actions—the **final applied value may intentionally differ from a raw OCR value**.
 
-Missing reroll actions are explicitly confidence 0. The UI preserves existing values and outlines affected action cards in red. Low-confidence banner/emblem fields receive corresponding red review outlines. Running optimization clears the red review state and is treated as user confirmation of the imported board.
+That distinction is why raw OCR correctness cannot be used as the final screenshot-import metric.
+
+The real UI then calls `state.importScreenshot(...)`, rerenders, applies review highlighting, and displays import status. Running optimization clears review highlighting and is treated as user confirmation.
 
 ## 9. Optional hosted fallback
 
-`requestScreenshotImport` attempts local OCR first. If local OCR fails and a `screenshot-import-endpoint` is configured, the application may fall back to the hosted vision endpoint.
-
-The hosted path is not required for normal use. A user without LLM/API access retains the local OCR importer.
+`requestScreenshotImport` attempts local OCR first. If local OCR fails and a `screenshot-import-endpoint` is configured, the application may fall back to the hosted vision endpoint. The hosted path is not required for normal use.
 
 ## 10. Performance strategy
 
 The importer optimizes analyzed pixels rather than blindly rescaling every screenshot:
 
-- normal screenshots: one native OCR pass plus selective tiny retries;
+- normal screenshots: native OCR plus selective retries;
 - large screenshots: low-resolution localization, then original-pixel crops;
-- reroll cards and weak stat titles: narrow source-resolution OCR regions;
-- OCR worker is reused and may be prewarmed from Import Screenshot UI interaction.
+- weak stat/action fields: narrow source-resolution OCR regions;
+- OCR worker reuse and optional UI-triggered prewarming.
 
-This architecture intentionally spends additional OCR only on fields where confidence or geometry indicates it is useful.
+Browser-level screenshot import has a 30-second outer certification watchdog. Worker startup is measured separately from warm-session behavior where applicable.
 
-## 11. Verification
+## 11. Verification and acceptance surfaces
 
-`SCREENSHOT_OCR_CORPUS.md` and `SCREENSHOT_OCR_CORPUS_RESULTS.md` describe the current six-image live verification corpus and its acceptance metrics. The screenshot binaries are intentionally not committed to the repository; image-level regression testing is performed live against labeled ground truth.
+Screenshot import has two test layers with different authority.
 
-Primary acceptance metrics are final normalized imported-state accuracy and false-high-confidence errors, not raw OCR character accuracy.
+### OCR-core corpus
+
+`scripts/test-ocr-corpus.mjs` calls the OCR/parser layer and compares raw structured output to ground truth. It answers:
+
+> Did OCR/localization/parsing regress?
+
+**Raw OCR/parser exactness is a diagnostic metric.**
+
+### Production E2E corpus
+
+`scripts/test-screenshot-e2e.mjs` serves the actual `docs/` artifact and drives the same user-facing path:
+
+```text
+docs/index.html
+    ↓
+real application initialization
+    ↓
+#screenshot-file
+    ↓
+bindScreenshotImport
+    ↓
+requestScreenshotImport
+    ↓
+validateScreenshotImport
+    ↓
+state.importScreenshot
+    ↓
+renderStructure
+    ↓
+review UI/status
+```
+
+Before each import the harness creates a deterministic sentinel state so preserved current values cannot accidentally equal screenshot truth. It records raw, validated, applied, and rendered states and identifies the first divergence for every final mismatch.
+
+**Production E2E exactness is the authoritative screenshot-import product metric.** Both application state and rendered UI must match expected final semantics.
+
+Permanent certification covers Chromium and Firefox, cold and warm worker behavior, selected teams, every emblem field, final applied actions, tokens, review highlighting, safety counters, source SHA-256, and deployment asset parity.
+
+See `SCREENSHOT_OCR_CORPUS.md`, `SCREENSHOT_OCR_CORPUS_RESULTS.md`, and `P52E_PRODUCTION_E2E_CERTIFICATION.md`.
 
 ## Relevant implementation files
 
-- `src/import/localScreenshotOcr.ts` — native OCR, geometry, layout, emblem, action, and token extraction.
-- `src/import/emblemOcrRefinement.ts` — selective targeted stat-title OCR retry.
-- `src/import/screenshotImport.ts` — local-first request path, deterministic validation, and optional hosted fallback.
-- `src/ui/screenshotImport.ts` — upload interaction, application-state import, status text, and red review highlighting.
-- `tests/fixtures/screenshot-corpus-ground-truth.json` — labeled corpus ground truth.
-- `tests/screenshot-import-corpus.test.mjs` — deterministic corpus/catalog contract checks.
+- `src/import/localScreenshotOcr.ts` — OCR, geometry, layout, emblem, action, and token extraction.
+- `src/import/emblemOcrRefinement.ts` — selective targeted stat retry.
+- `src/import/screenshotImport.ts` — local-first request path and deterministic validation.
+- `src/ui/screenshotImport.ts` — real upload interaction, state import, status, review highlighting, and narrow test-only stage observer.
+- `tests/test_boards/*` — committed real-image corpus and sidecars.
+- `tests/fixtures/screenshot-e2e-ground-truth.json` — final-state team labels and corpus identity metadata.
+- `scripts/test-ocr-corpus.mjs` — OCR-core diagnostic corpus.
+- `scripts/test-screenshot-e2e.mjs` — authoritative production browser corpus.

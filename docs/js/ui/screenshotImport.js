@@ -4,6 +4,15 @@ import { diagnoseLocalScreenshotOcr, warmLocalScreenshotOcr } from '../import/lo
 const $ = (selector) => document.querySelector(selector);
 let latestDiagnosticJson;
 let diagnosticToastTimer;
+function emitScreenshotImportStage(event) {
+    const hook = window.__TI2026_TEST_HOOKS__?.onScreenshotImportStage;
+    if (!hook)
+        return;
+    try {
+        hook(structuredClone(event));
+    }
+    catch { }
+}
 function setStatus(text, kind = 'idle') { const status = $('#screenshot-import-status'); status.textContent = text; status.dataset.kind = kind; }
 function reviewPaths(result) { return result.lowConfidenceFields.map(field => field.path); }
 export async function copyDiagnosticJson(json, writeText) {
@@ -73,6 +82,7 @@ export function bindScreenshotImport(state, callbacks) {
         state.importScreenshot(result.board, result.menu, result.tokensRemaining);
         callbacks.renderStructure();
         callbacks.afterApply();
+        emitScreenshotImportStage({ stage: 'applied', value: { board: state.board, menu: state.menu, tokensRemaining: state.tokensRemaining } });
         const paths = reviewPaths(result);
         applyScreenshotReviewHighlights(paths);
         applyActionReviewHighlights(paths);
@@ -104,7 +114,10 @@ export function bindScreenshotImport(state, callbacks) {
         setStatus('Local OCR: locating board and reading visible fields…', 'working');
         const started = performance.now();
         try {
-            const raw = await requestScreenshotImport(file, data), validated = validateScreenshotImport(raw, data, state.board, state.menu), productionDiagnostic = getLastLocalOcrMetrics();
+            const raw = await requestScreenshotImport(file, data), productionDiagnostic = getLastLocalOcrMetrics();
+            emitScreenshotImportStage({ stage: 'raw', value: raw, localOcrMetrics: productionDiagnostic });
+            const validated = validateScreenshotImport(raw, data, state.board, state.menu);
+            emitScreenshotImportStage({ stage: 'validated', value: validated });
             if (productionDiagnostic)
                 setDiagnostic(productionDiagnostic, diagnosticButton);
             applyImport(validated, performance.now() - started);
