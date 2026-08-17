@@ -108,7 +108,8 @@ function observedMatch(ocr:string[],target:string):number{
 }
 function hasObserved(ocr:string[],target:string):boolean{return observedMatch(ocr,target)>=.72;}
 
-export function matchActionText(s:string):{id:string;score:number}|undefined{
+export interface ActionTextMatch { id:string;score:number;runnerUpScore:number;margin:number; }
+export function matchActionText(s:string):ActionTextMatch|undefined{
   const ocr=actionTokens(s);
   if(!ocr.length)return undefined;
   const ranked=ACTION_CATALOG.map(action=>{
@@ -131,5 +132,8 @@ export function matchActionText(s:string):{id:string;score:number}|undefined{
     }
     return{id:action.id,score:Math.max(0,Math.min(.99,score))};
   }).sort((a,b)=>b.score-a.score);
-  return ranked[0];
+  const best=ranked[0];
+  if(!best)return undefined;
+  const runnerUpScore=ranked[1]?.score??0;
+  return {...best,runnerUpScore,margin:best.score-runnerUpScore};
 }
