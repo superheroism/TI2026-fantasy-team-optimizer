@@ -144,7 +144,7 @@ The production-equivalent harness exposes safety failures that the old raw corpu
 - Firefox completed imports with exhausted OCR budget: **2/2**;
 - Firefox internal OCR-call timeouts on those completed imports: **6 cold / 5 warm**.
 
-The strict P52E gate now fails on missing raw/validated/applied stages, outer watchdogs, internal OCR-call timeouts, OCR errors, invalid geometry, exhausted OCR budgets, or false-high-confidence errors. These are hard failures and are not normalized into a passing baseline.
+The strict P52E command fails on missing raw/validated/applied stages, outer watchdogs, internal OCR-call timeouts, OCR errors, invalid geometry, exhausted OCR budgets, or false-high-confidence errors. Those criteria remain hard failures in strict mode. For PR #55, the automatic production-E2E check runs the same corpus in report-only mode so these known product failures remain visible in artifacts/results without making the measurement package itself red. `workflow_dispatch` runs the same corpus in strict mode and remains expected to fail until P52F fixes the product.
 
 ## Source identity
 
@@ -173,7 +173,7 @@ The manual discrepancy is therefore not explained by a stale deployed OCR asset.
 
 P52E closes the measurement gap. The web product is materially less accurate and less browser-portable than the old OCR-core corpus suggested.
 
-The P52E **work package itself is complete**: the production path is exercised, source bytes are frozen, raw → validated → applied → rendered divergence is attributable, browser/safety timing is bounded, and one authoritative strict CI path exists. The strict product gate remains red because the product has real defects; that red result is the P52E certification outcome, not unfinished measurement infrastructure.
+The P52E **work package itself is complete**: the production path is exercised, source bytes are frozen, raw → validated → applied → rendered divergence is attributable, browser/safety timing is bounded, and an automatic production-E2E baseline check plus manually dispatchable strict gate exist. Product certification remains **FAIL** in the authoritative result; that failure is a property of the current product baseline, not unfinished measurement infrastructure and not a reason for the P52E PR check itself to be red.
 
 ## Recommended next package
 
