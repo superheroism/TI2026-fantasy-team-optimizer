@@ -1,0 +1,185 @@
+name: P52F evidence latency pass
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.pull_request.head.ref == 'agent/p52f-fast-accurate-low-review'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/p52f-fast-accurate-low-review
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Apply evidence and latency patches
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new):
+              p=Path(path); s=p.read_text()
+              if old not in s:
+                  if new in s:
+                      return
+                  raise SystemExit(f'missing patch anchor in {path}: {old[:180]}')
+              p.write_text(s.replace(old,new))
+
+          # Preserve the public stat matcher while exposing closed-pool winner
+          # separation to the confidence model.
+          p=Path('src/import/ocrDomainMatch.ts'); s=p.read_text()
+          old="""export function matchStatText(s:string,legal:readonly StatName[]):{value:StatName;score:number}{
+  let best={value:legal[0]!,score:-1};
+  for(const value of legal){
+    const score=Math.max(...ALIASES[value].map(alias=>bestPhraseSimilarity(s,alias)));
+    if(score>best.score) best={value,score};
+  }
+  return best;
+}
+"""
+          new="""export interface StatTextCandidateMatch { value:StatName;score:number;runnerUpScore:number;margin:number; }
+export function matchStatTextWithMargin(s:string,legal:readonly StatName[]):StatTextCandidateMatch{
+  let best={value:legal[0]!,score:-1},runnerUpScore=-1;
+  for(const value of legal){
+    const score=Math.max(...ALIASES[value].map(alias=>bestPhraseSimilarity(s,alias)));
+    if(score>best.score){runnerUpScore=best.score;best={value,score};}
+    else if(score>runnerUpScore)runnerUpScore=score;
+  }
+  const runner=Math.max(0,runnerUpScore);
+  return{...best,runnerUpScore:runner,margin:Math.max(0,best.score-runner)};
+}
+export function matchStatText(s:string,legal:readonly StatName[]):{value:StatName;score:number}{
+  const {value,score}=matchStatTextWithMargin(s,legal);return{value,score};
+}
+"""
+          if old not in s:
+              if new not in s: raise SystemExit('missing matchStatText block')
+          else: s=s.replace(old,new)
+          old="""    if(ocrSimilarity(token,'TIER')<.65) continue;
+    const next=ts[i+1];
+    if(next&&byRoman[next]) return{value:byRoman[next]!,score:/^[1-5]$/.test(next)?.72:.86};
+  }
+  return{value:1,score:.2};
+}"""
+          new="""    if(ocrSimilarity(token,'TIER')<.65) continue;
+    const next=ts[i+1];
+    if(next&&byRoman[next]) return{value:byRoman[next]!,score:/^[1-5]$/.test(next)?.72:.86};
+    const separated=ts.slice(i+1,i+6).filter(candidate=>/^(II|III|IV|V)$/.test(candidate));
+    if(separated.length===1)return{value:byRoman[separated[0]!]!,score:.84};
+  }
+  return{value:1,score:.2};
+}"""
+          if old not in s:
+              if new not in s: raise SystemExit('missing tier matcher anchor')
+          else: s=s.replace(old,new)
+          p.write_text(s)
+
+          # Carry stat winner separation in the diagnostic instead of forcing a
+          # second OCR pass solely to rediscover the same closed-pool winner.
+          p=Path('src/import/localScreenshotOcr.ts'); s=p.read_text()
+          s=s.replace("matchActionText, matchStatText, matchTierText, matchTraitText","matchActionText, matchStatText, matchStatTextWithMargin, matchTierText, matchTraitText")
+          s=s.replace("  statMatchScore:number;\n", "  statMatchScore:number;\n  statRunnerUpScore:number;\n  statMatchMargin:number;\n")
+          s=s.replace("function statMatch(s:string,legal:readonly StatName[]){return matchStatText(s,legal);}","function statMatch(s:string,legal:readonly StatName[]){return matchStatTextWithMargin(s,legal);}")
+          s=s.replace("normalizedStat:sm.value,statMatchScore:sm.score,rawTierText", "normalizedStat:sm.value,statMatchScore:sm.score,statRunnerUpScore:sm.runnerUpScore,statMatchMargin:sm.margin,rawTierText")
+          p.write_text(s)
+
+          # Use strong color-pool separation as structured evidence, while
+          # keeping ambiguous or low-score reads in review. Non-Tier-I Roman
+          # evidence may be separated from TIER by trait/stat words because OCR
+          # flattens a two-dimensional card into one line; Tier I stays strict.
+          p=Path('src/import/screenshotImport.ts'); s=p.read_text()
+          s=s.replace("  | 'exact-domain-stat'\n", "  | 'exact-domain-stat'\n  | 'decisive-domain-stat'\n")
+          old="""      const statPath=`banners.${role}.emblems.${index}.stat`,statRaw=confidenceFor(raw,statPath),statComponents=baseComponents(geometry.value,diag.statMatchScore),initialStat=Math.min(geometry.value,clamp(diag.statMatchScore*.72+averageDiagnosticWordConfidence(diag.words)*.28));
+      const statChanged=diag.normalizedStat!==emblem.stat,statStrengthened=statRaw>initialStat+.03;
+      let statReason:ScreenshotEvidenceClass='fuzzy-stat';
+      if(!isLegalStat(slot.color,emblem.stat)){statComponents.fieldConsistency=0;statReason='unresolved';}
+      else if(!statChanged&&diag.statMatchScore>=.99){statComponents.structuredEvidence=.97;statReason='exact-domain-stat';}
+      else if(statRaw>=.9&&(statChanged||statStrengthened)){statComponents.targetedRetry=.95;statComponents.fieldConsistency=statChanged?.9:1;statReason='targeted-native-stat';}"""
+          new="""      const statPath=`banners.${role}.emblems.${index}.stat`,statRaw=confidenceFor(raw,statPath),statComponents=baseComponents(geometry.value,diag.statMatchScore),initialStat=Math.min(geometry.value,clamp(diag.statMatchScore*.72+averageDiagnosticWordConfidence(diag.words)*.28));
+      const statChanged=diag.normalizedStat!==emblem.stat,statStrengthened=statRaw>initialStat+.03,decisiveInitialStat=!statChanged&&diag.statMatchScore>=.82&&diag.statMatchMargin>=.25&&statRaw>=.78;
+      let statReason:ScreenshotEvidenceClass='fuzzy-stat';
+      if(!isLegalStat(slot.color,emblem.stat)){statComponents.fieldConsistency=0;statReason='unresolved';}
+      else if(!statChanged&&diag.statMatchScore>=.99){statComponents.structuredEvidence=.97;statReason='exact-domain-stat';}
+      else if(decisiveInitialStat){statComponents.structuredEvidence=.95;statReason='decisive-domain-stat';}
+      else if(statRaw>=.9&&(statChanged||statStrengthened)){statComponents.targetedRetry=.95;statComponents.fieldConsistency=statChanged?.9:1;statReason='targeted-native-stat';}"""
+          if old not in s:
+              if new not in s: raise SystemExit('missing stat calibration block')
+          else:s=s.replace(old,new)
+          old="""      const tierPath=`banners.${role}.emblems.${index}.qualityTier`,tierRaw=confidenceFor(raw,tierPath),tierComponents=baseComponents(geometry.value,diag.tierMatchScore),tierSame=diag.normalizedTier===emblem.qualityTier;
+      let tierReason:ScreenshotEvidenceClass='fuzzy-tier';
+      const tierDirect=tierSame&&directTierText(diag.rawTierText,emblem.qualityTier);
+      if(tierDirect){"""
+          new="""      const tierPath=`banners.${role}.emblems.${index}.qualityTier`,tierRaw=confidenceFor(raw,tierPath),tierComponents=baseComponents(geometry.value,diag.tierMatchScore),tierSame=diag.normalizedTier===emblem.qualityTier;
+      let tierReason:ScreenshotEvidenceClass='fuzzy-tier';
+      const tierDirect=tierSame&&directTierText(diag.rawTierText,emblem.qualityTier),separatedNonTierRoman=tierSame&&emblem.qualityTier!==1&&diag.tierMatchScore>=.84;
+      if(tierDirect||separatedNonTierRoman){"""
+          if old not in s:
+              if new not in s: raise SystemExit('missing tier calibration block')
+          else:s=s.replace(old,new)
+          p.write_text(s)
+
+          # The broad full-emblem pass is useful for Tier/trait ambiguity, but it
+          # adds no information to a stat-only retry. Avoid that duplicate OCR.
+          p=Path('src/import/emblemOcrRefinement.ts'); s=p.read_text()
+          old="""    if(!shouldRetryStat(confidenceFor(raw,sp))&&confidenceFor(raw,qp)>=.9&&confidenceFor(raw,tp)>=.9)continue;
+    const roleBand=metrics.diagnostic.columnBands[role],rr=extractionToSource({left:Math.max(0,d.roi.left-d.roi.width*.05),top:Math.max(0,d.roi.top-d.roi.height*.08),width:d.roi.width*1.08,height:d.roi.height*1.16},metrics),emblemCanvas=canvas(src,rr),rec=await recognize(w,emblemCanvas,budget,`emblem:${role}:${i+1}:psm6`,6,rr),words=parse(rec.data.tsv),ls=lines(words);retries++;emblemRetries++;
+    let strongSupplementalTier=false;if(shouldRetryStat(confidenceFor(raw,sp))&&!budget.exhausted){"""
+          new="""    const retryStat=shouldRetryStat(confidenceFor(raw,sp)),retryTier=shouldRetryTier(confidenceFor(raw,qp)),retryTrait=confidenceFor(raw,tp)<.9;
+    if(!retryStat&&!retryTier&&!retryTrait)continue;
+    const roleBand=metrics.diagnostic.columnBands[role];let words:Word[]=[],ls:Line[]=[];
+    if(retryTier||retryTrait){const rr=extractionToSource({left:Math.max(0,d.roi.left-d.roi.width*.05),top:Math.max(0,d.roi.top-d.roi.height*.08),width:d.roi.width*1.08,height:d.roi.height*1.16},metrics),emblemCanvas=canvas(src,rr),rec=await recognize(w,emblemCanvas,budget,`emblem:${role}:${i+1}:psm6`,6,rr);words=parse(rec.data.tsv);ls=lines(words);retries++;emblemRetries++;}
+    let strongSupplementalTier=false;if(retryStat&&!budget.exhausted){"""
+          if old not in s:
+              if new not in s: raise SystemExit('missing broad-emblem retry block')
+          else:s=s.replace(old,new)
+          s=s.replace("d.normalizedStat=sm.value;d.statMatchScore=sm.score;", "d.normalizedStat=sm.value;d.statMatchScore=sm.score;d.statRunnerUpScore=sm.runnerUpScore;d.statMatchMargin=sm.score-sm.runnerUpScore;")
+          s=s.replace("d.normalizedStat=fallbackMatch.value;d.statMatchScore=fallbackMatch.score;", "d.normalizedStat=fallbackMatch.value;d.statMatchScore=fallbackMatch.score;d.statRunnerUpScore=fallbackMatch.runnerUpScore;d.statMatchMargin=fallbackMatch.score-fallbackMatch.runnerUpScore;")
+          p.write_text(s)
+
+          # Behavioral regression coverage.
+          p=Path('tests/ocr-domain-match.test.mjs'); s=p.read_text()
+          s=s.replace("matchActionText, matchStatText, matchTierText, matchTraitText", "matchActionText, matchStatText, matchStatTextWithMargin, matchTierText, matchTraitText")
+          marker="test('percentage bonuses are never direct quality-tier evidence', () => {"
+          addition="""test('stat matcher exposes decisive same-color candidate separation without changing the public result', () => {\n  const separated=matchStatTextWithMargin('TEAFIGHT PARTICIPATION', ['Teamfight Participation','Tormentor Kills','Roshan Kills','Stuns','Courier Kills','First Blood']);\n  assert.equal(separated.value,'Teamfight Participation');\n  assert.ok(separated.score>=.82);\n  assert.ok(separated.margin>=.25);\n  assert.deepEqual(matchStatText('TEAFIGHT PARTICIPATION', ['Teamfight Participation','Tormentor Kills']), {value:'Teamfight Participation',score:separated.score});\n});\n\ntest('non-Tier-I Roman evidence may follow trait/stat text while ambiguous Tier I remains weak',()=>{\n  assert.deepEqual(matchTierText('TIER BENEVOLENT TEAMFIGHT IV'),{value:4,score:.84});\n  assert.deepEqual(matchTierText('TIER UNIQUE TEAMFIGHT II'),{value:2,score:.84});\n  assert.deepEqual(matchTierText('TIER FRIENDLY TEAMFIGHT I'),{value:1,score:.2});\n});\n\n"""
+          if addition not in s:s=s.replace(marker,addition+marker)
+          # Update the old adjacency-only wording, preserving its actual safety boundary.
+          s=s.replace("test('tier token evidence supports roman and digit OCR only when adjacent to a TIER-like token'", "test('tier token evidence supports adjacent Roman/digit OCR while separated evidence excludes Tier I'")
+          s=s.replace("test('tier matcher accepts punctuation-stripped roman evidence only next to TIER'", "test('tier matcher accepts punctuation-stripped adjacent roman evidence'")
+          p.write_text(s)
+
+          p=Path('tests/p52-unresolved-semantics.test.mjs'); s=p.read_text()
+          marker="test('team auto-application requires candidate separation, not a fuzzy winner alone',()=>{"
+          addition="""test('decisive initial stat evidence requires same-color winner separation, not scalar confidence alone',()=>{\n  assert.ok(source.includes('diag.statMatchMargin>=.25'));\n  assert.ok(source.includes("statReason='decisive-domain-stat'"));\n});\n\ntest('non-Tier-I separated Roman evidence is field-specific and Tier I remains strict',()=>{\n  assert.ok(source.includes('separatedNonTierRoman'));\n  assert.ok(source.includes('emblem.qualityTier!==1'));\n});\n\n"""
+          if addition not in s:s=s.replace(marker,addition+marker)
+          p.write_text(s)
+
+          p=Path('tests/retry-consolidation-contract.test.mjs'); s=p.read_text()
+          marker="test('P51 keeps strict stat acceptance thresholds centralized and unchanged',()=>{"
+          addition="""test('stat-only uncertainty skips the duplicate full-emblem OCR pass',()=>{\n  assert.match(refinement,/if\(retryTier\|\|retryTrait\).*emblem:/s);\n  assert.match(refinement,/let strongSupplementalTier=false;if\(retryStat/);\n});\n\n"""
+          if addition not in s:s=s.replace(marker,addition+marker)
+          p.write_text(s)
+          PY
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - name: Commit source and generated output
+        run: |
+          if git diff --quiet -- src tests build docs; then
+            echo 'Patch already applied.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src tests build docs
+          git commit -m 'P52F reuse decisive field evidence and skip duplicate OCR'
+          git pull --rebase origin agent/p52f-fast-accurate-low-review
+          git push origin HEAD:agent/p52f-fast-accurate-low-review
