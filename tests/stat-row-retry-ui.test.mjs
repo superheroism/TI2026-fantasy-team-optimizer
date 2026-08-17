@@ -6,16 +6,19 @@ const read=path=>readFileSync(new URL(path,import.meta.url),'utf8');
 const refinement=read('../src/import/emblemOcrRefinement.ts');
 const boardView=read('../src/ui/boardView.ts');
 
-test('low-confidence stat uses one preprocessed native-resolution fallback after the emblem retry',()=>{
+test('low-confidence stat uses Otsu native-resolution retry before conditional raw fallback',()=>{
   assert.doesNotMatch(refinement,/statStrip=\{left:base\.left,top:base\.top,width:base\.width,height:base\.height\*\.38\}/);
   assert.doesNotMatch(refinement,/canvas\(src,statStrip\)/);
-  assert.match(refinement,/processed=otsuCanvas\(canvas\(src,statNameStrip\)\)/);
-  assert.match(refinement,/statRec=await w\.recognize\(processed,\{tessedit_pageseg_mode:'7'\}/);
-  assert.match(refinement,/sm\.score>=\.92&&sc>=\.9/);
+  assert.match(refinement,/runStatRepresentationFallbacks\(/);
+  assert.match(refinement,/rawStatCanvas=canvas\(src,statNameStrip\),processed=otsuCanvas\(rawStatCanvas\)/);
+  assert.match(refinement,/stat:\$\{role\}:\$\{i\+1\}:otsu/);
+  assert.match(refinement,/stat:\$\{role\}:\$\{i\+1\}:raw/);
+  assert.match(refinement,/acceptsStatEvidence\(sm\.score,sc\)/);
+  assert.ok(refinement.indexOf('stat:${role}:${i+1}:otsu')<refinement.indexOf('stat:${role}:${i+1}:raw'));
 });
 
 test('dedicated tier OCR runs only while the tier itself remains below review confidence',()=>{
-  assert.match(refinement,/else if\(!tier\.direct&&confidenceFor\(raw,qp\)<\.9\)/);
+  assert.match(refinement,/!tier\.direct&&shouldRetryTier\(confidenceFor\(raw,qp\)\)/);
 });
 
 test('successful stat retries synchronize final diagnostic stat values',()=>{
