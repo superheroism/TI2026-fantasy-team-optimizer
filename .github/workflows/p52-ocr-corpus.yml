@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 concurrency:
-  group: p52f-firefox-diagnostic-${{ github.event.pull_request.number }}
+  group: p52f-firefox-image-lifetime-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
@@ -25,41 +25,30 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Instrument unresolved layout evidence locally
+      - name: Keep decoded Blob URL alive for Firefox experiment
         run: |
           python - <<'PY'
           from pathlib import Path
           p=Path('src/import/localScreenshotOcr.ts')
           s=p.read_text()
-          old="else throw new Error('Screenshot layout is unresolved; review is required.');"
-          new="else throw new Error(`Screenshot layout is unresolved; review is required. evidence=${JSON.stringify(evidence)} global=${JSON.stringify(global)} perRole=${JSON.stringify(perRole)}`);"
-          if old not in s: raise SystemExit('missing layout rejection anchor')
+          old="i.onload=()=>{URL.revokeObjectURL(u);ok(i);};"
+          new="i.onload=()=>{ok(i);};"
+          if old not in s: raise SystemExit('missing decode lifetime anchor')
           p.write_text(s.replace(old,new))
           PY
       - run: npm run build
       - run: npm install --no-save --package-lock=false playwright@1.62.0
       - run: npx playwright install --with-deps firefox
-      - name: Firefox Board 2 diagnostic
+      - name: Firefox Board 2 image-lifetime experiment
         env:
           SCREENSHOT_E2E_OUT: artifacts/firefox-board2
         run: node scripts/test-screenshot-e2e.mjs --browser=firefox --board2 --report-only
-      - name: Print Firefox failure evidence
+      - name: Print result
         if: always()
-        run: |
-          node - <<'NODE'
-          const fs=require('fs');
-          const p='artifacts/firefox-board2/report.json';
-          if(!fs.existsSync(p)){console.log('no report');process.exit(0)}
-          const r=JSON.parse(fs.readFileSync(p,'utf8'));
-          for(const x of r.results){
-            console.log('\n',x.browser.name,x.board.sourceFile,x.mode);
-            console.log('status=',x.stages?.rendered?.status);
-            console.log('timeout=',x.timeout);
-          }
-          NODE
+        run: cat artifacts/firefox-board2/report.md || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: p52f-firefox-row-evidence
+          name: p52f-firefox-image-lifetime
           path: artifacts/firefox-board2
           if-no-files-found: warn
