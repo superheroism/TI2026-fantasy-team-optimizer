@@ -9,7 +9,7 @@ function rawFromBoard(board,operationIds,tokensRemaining=8){return {layoutId:boa
 function gtFromRaw(raw){return {layoutId:raw.layoutId,selectedTeams:{core:team,mid:team,support:team},banners:Object.fromEntries(roles.map(role=>[role,{emblems:raw.banners[role].emblems.map(e=>({stat:e.stat,qualityTier:e.qualityTier,trait:e.trait}))}])),actions:raw.operationIds.map(id=>({id})),tokensRemaining:raw.tokensRemaining};}
 
 test('low-confidence correct raw action preserves sentinel action and final comparator rejects it',()=>{
-  const board=createDefaultBoard('expanded_5'),sentinelMenu=structuredClone(defaultMenu),expectedIds=['green-stat-all','red-quality-all','blue-trait-all'];
+  const board=createDefaultBoard('expanded_5'),sentinelMenu=structuredClone(defaultMenu),expectedIds=['red-stat-all','quality-increase-one','blue-trait-first'];
   assert.notEqual(sentinelMenu[0].id,expectedIds[0]);
   const raw=rawFromBoard(board,expectedIds);raw.fieldConfidence=[{path:'operationIds.0',confidence:.85,reason:'action-ocr'}];
   const result=validateScreenshotImport(raw,data,board,sentinelMenu);assert.equal(result.menu[0].id,sentinelMenu[0].id);
