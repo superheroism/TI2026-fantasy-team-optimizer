@@ -1,23 +1,20 @@
-name: Regenerate multiline stat matcher
+name: CI
 
 on:
   push:
     branches:
-      - agent/screenshot-multiline-stat-retry
+      - main
+  pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  regenerate:
-    if: github.actor != 'github-actions[bot]'
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out follow-up branch
+      - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          ref: agent/screenshot-multiline-stat-retry
-          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -27,21 +24,5 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Apply multiline stat matcher fix
-        run: node scripts/apply-multiline-stat-retry.mjs
-
-      - name: Build and validate
-        run: |
-          npm run build
-          npm run test:ci
-
-      - name: Commit source, tests, and generated artifacts
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/import/ocrDomainMatch.ts src/import/emblemOcrRefinement.ts tests/multiline-stat-match.test.mjs build docs
-          if git diff --cached --quiet; then
-            exit 0
-          fi
-          git commit -m "Handle multiline screenshot stat names"
-          git push origin HEAD:agent/screenshot-multiline-stat-retry
+      - name: Typecheck, verify generated output, and test
+        run: npm run test:ci
