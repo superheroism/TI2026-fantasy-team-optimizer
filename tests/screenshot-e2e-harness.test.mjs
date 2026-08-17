@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import {createDefaultBoard,defaultMenu} from '../docs/js/data/defaultState.js';
 import {validateScreenshotImport} from '../docs/js/import/screenshotImport.js';
 import {DIVERGENCE,canonicalFromValidated,classifyField,compareStages,sourceIdentity,withWatchdog} from '../scripts/screenshot-e2e-lib.mjs';
@@ -31,5 +32,11 @@ test('stage classification distinguishes each pipeline boundary',()=>{
   assert.equal(classifyField({expected:'x',raw:'x',validated:'x',applied:'x',rendered:'z',sentinel:'s'}),DIVERGENCE.RENDER_MISMATCH);
 });
 
-test('Board 2 source identity parser reads the committed fixture',()=>{const id=sourceIdentity('tests/test_boards/TI2026 - Board 2.png');assert.equal(id.byteSize,5692486);assert.match(id.sha256,/^[a-f0-9]{64}$/);assert.ok(id.width>0&&id.height>0);assert.equal(id.mimeType,'image/png');});
+test('all committed corpus source identities match the frozen manifest',()=>{
+  const manifest=JSON.parse(fs.readFileSync('tests/fixtures/screenshot-e2e-ground-truth.json','utf8'));
+  assert.equal(manifest.schemaVersion,2);
+  for(const entry of manifest.boards)assert.deepEqual(sourceIdentity(entry.sourceFile),entry.source);
+});
+
+test('Board 2 source identity is frozen exactly',()=>{const id=sourceIdentity('tests/test_boards/TI2026 - Board 2.png');assert.deepEqual(id,{filename:'TI2026 - Board 2.png',width:3839,height:2159,byteSize:5692486,sha256:'c0438b4bfdb0b260242eb84f6cac068594680f621360e76601cae42c5bc05669',mimeType:'image/png'});});
 test('browser watchdog rejects unresolved work',async()=>{await assert.rejects(withWatchdog(()=>new Promise(()=>{}),10,'synthetic import'),error=>error.code==='E_WATCHDOG');});
