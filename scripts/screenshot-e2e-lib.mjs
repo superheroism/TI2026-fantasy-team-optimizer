@@ -14,6 +14,7 @@ export const DIVERGENCE = Object.freeze({
 const ROLES=['core','mid','support'];
 const roleLabel=role=>role[0].toUpperCase()+role.slice(1);
 const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+const menuIds=menu=>Array.isArray(menu)?menu.map(item=>typeof item==='string'||item==null?item:item.id):menu?.operationIds??menu?.actions?.map(item=>item?.id??item);
 
 export function groundTruthCanonical(gt){
   const out={layoutId:gt.layoutId,banners:{},operationIds:[...(gt.operations??[])],tokensRemaining:gt.tokens};
@@ -43,17 +44,11 @@ export function flattenCanonical(value){
 
 export function canonicalFromValidated(value){
   if(!value)return value;
-  return {layoutId:value.board?.layoutId,banners:value.board?.banners??value.board,operationIds:value.menu?.operationIds??value.menu?.actions??value.menu,tokensRemaining:value.tokensRemaining};
+  return {layoutId:value.board?.layoutId,banners:value.board?.banners??value.board,operationIds:menuIds(value.menu),tokensRemaining:value.tokensRemaining};
 }
+export const canonicalFromApplied=canonicalFromValidated;
 
-export function canonicalFromApplied(value){
-  if(!value)return value;
-  return {layoutId:value.board?.layoutId,banners:value.board?.banners??value.board,operationIds:value.menu?.operationIds??value.menu?.actions??value.menu,tokensRemaining:value.tokensRemaining};
-}
-
-export function confidenceByPath(raw){
-  return new Map((raw?.fieldConfidence??[]).map(item=>[item.path,item.confidence]));
-}
+export function confidenceByPath(raw){return new Map((raw?.fieldConfidence??[]).map(item=>[item.path,item.confidence]));}
 
 export function classifyField({expected,raw,validated,applied,rendered,sentinel,unmappable=false}){
   if(unmappable)return DIVERGENCE.GROUND_TRUTH_UNMAPPABLE;
@@ -102,8 +97,7 @@ function webpDimensions(buf){
 }
 
 export function sourceIdentity(filePath){
-  const buf=fs.readFileSync(filePath),ext=path.extname(filePath).toLowerCase();
-  const dimensions=ext==='.png'?pngDimensions(buf):ext==='.webp'?webpDimensions(buf):null;
+  const buf=fs.readFileSync(filePath),ext=path.extname(filePath).toLowerCase(),dimensions=ext==='.png'?pngDimensions(buf):ext==='.webp'?webpDimensions(buf):null;
   if(!dimensions)throw new Error(`Unsupported or invalid corpus image: ${filePath}`);
   return {filename:path.basename(filePath),...dimensions,byteSize:buf.length,sha256:crypto.createHash('sha256').update(buf).digest('hex'),mimeType:ext==='.png'?'image/png':'image/webp'};
 }
