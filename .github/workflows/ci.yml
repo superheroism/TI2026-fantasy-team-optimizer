@@ -1,4 +1,4 @@
-name: Regenerate stat-row retry
+name: Regenerate stat-row retry v2
 
 on:
   push:
