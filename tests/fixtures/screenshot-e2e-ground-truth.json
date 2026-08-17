@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "boards": [
+    {
+      "groundTruthFile": "tests/test_boards/TI2026 - Board 1.ground-truth.json",
+      "sourceFile": "tests/test_boards/TI2026 - Board 1.png",
+      "selectedTeams": {"core":"Team Vision","mid":"Team Falcons","support":"Team Liquid"}
+    },
+    {
+      "groundTruthFile": "tests/test_boards/TI2026 - Board 2.ground-truth.json",
+      "sourceFile": "tests/test_boards/TI2026 - Board 2.png",
+      "selectedTeams": {"core":"Team Vision","mid":"Team Vision","support":"Team Liquid"},
+      "canary": true
+    },
+    {
+      "groundTruthFile": "tests/test_boards/TI2026 - Board 3.ground-truth.json",
+      "sourceFile": "tests/test_boards/TI2026 - Board 3.png",
+      "selectedTeams": {"core":"Team Liquid","mid":"Team Vision","support":{"expected":null,"expectedReview":true,"sourceText":"Save- & Kataomi`"}}
+    },
+    {
+      "groundTruthFile": "tests/test_boards/Ti2026 - board 4.ground-truth.json",
+      "sourceFile": "tests/test_boards/Ti2026 - board 4.png",
+      "selectedTeams": {"core":"Team Spirit","mid":"Team Liquid","support":"Iron Wing"}
+    },
+    {
+      "groundTruthFile": "tests/test_boards/Ti2026 - board 5.ground-truth.json",
+      "sourceFile": "tests/test_boards/Ti2026 - board 5.webp",
+      "selectedTeams": {"core":"Team Vision","mid":"Team Liquid","support":"Team Yandex"}
+    },
+    {
+      "groundTruthFile": "tests/test_boards/Ti2026 - board 6.ground-truth.json",
+      "sourceFile": "tests/test_boards/Ti2026 - board 6.png",
+      "selectedTeams": {"core":"Team Vision","mid":"Team Falcons","support":"Team Vision"}
+    }
+  ]
+}
