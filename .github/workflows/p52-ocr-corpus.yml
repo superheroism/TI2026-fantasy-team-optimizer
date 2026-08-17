@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 concurrency:
-  group: p52f-firefox-image-lifetime-${{ github.event.pull_request.number }}
+  group: p52f-firefox-payload-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
@@ -25,30 +25,36 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Keep decoded Blob URL alive for Firefox experiment
+      - name: Instrument localization OCR payload
         run: |
           python - <<'PY'
           from pathlib import Path
           p=Path('src/import/localScreenshotOcr.ts')
           s=p.read_text()
-          old="i.onload=()=>{URL.revokeObjectURL(u);ok(i);};"
-          new="i.onload=()=>{ok(i);};"
-          if old not in s: raise SystemExit('missing decode lifetime anchor')
+          old="async function run(w:Worker,c:HTMLCanvasElement,budget:OcrExecutionBudget,stage:string,crop?:Rect):Promise<Pass>{const t=performance.now(),r=await recognizeWithBudget(w,c,budget,{stage,psm:3,...(crop?{crop}:{}),canvasWidth:c.width,canvasHeight:c.height},{},{tsv:true},resetWorker);return{words:parse(r.data.tsv),elapsedMs:performance.now()-t,width:c.width,height:c.height};}"
+          new="async function run(w:Worker,c:HTMLCanvasElement,budget:OcrExecutionBudget,stage:string,crop?:Rect):Promise<Pass>{const t=performance.now(),r=await recognizeWithBudget(w,c,budget,{stage,psm:3,...(crop?{crop}:{}),canvasWidth:c.width,canvasHeight:c.height},{},{tsv:true},resetWorker),words=parse(r.data.tsv);if(stage==='localization'&&words.length===0)throw new Error(`EMPTY_LOCALIZATION textLen=${(r.data.text??'').length} tsvLen=${(r.data.tsv??'').length} text=${JSON.stringify((r.data.text??'').slice(0,300))} tsv=${JSON.stringify((r.data.tsv??'').slice(0,300))}`);return{words,elapsedMs:performance.now()-t,width:c.width,height:c.height};}"
+          if old not in s: raise SystemExit('missing run anchor')
           p.write_text(s.replace(old,new))
           PY
       - run: npm run build
       - run: npm install --no-save --package-lock=false playwright@1.62.0
       - run: npx playwright install --with-deps firefox
-      - name: Firefox Board 2 image-lifetime experiment
+      - name: Firefox Board 2 payload diagnostic
         env:
           SCREENSHOT_E2E_OUT: artifacts/firefox-board2
         run: node scripts/test-screenshot-e2e.mjs --browser=firefox --board2 --report-only
-      - name: Print result
+      - name: Print status payload
         if: always()
-        run: cat artifacts/firefox-board2/report.md || true
+        run: |
+          node - <<'NODE'
+          const fs=require('fs'); const p='artifacts/firefox-board2/report.json';
+          if(!fs.existsSync(p)) process.exit(0);
+          const r=JSON.parse(fs.readFileSync(p,'utf8'));
+          for(const x of r.results) console.log(x.mode, JSON.stringify(x.stages?.rendered?.status));
+          NODE
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: p52f-firefox-image-lifetime
+          name: p52f-firefox-payload
           path: artifacts/firefox-board2
           if-no-files-found: warn
