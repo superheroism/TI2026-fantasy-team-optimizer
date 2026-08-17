@@ -1,23 +1,20 @@
-name: Regenerate screenshot retry consolidation
+name: CI
 
 on:
   push:
     branches:
-      - agent/screenshot-retry-consolidation-corpus
+      - main
+  pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  regenerate:
-    if: github.actor != 'github-actions[bot]'
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out branch
+      - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          ref: agent/screenshot-retry-consolidation-corpus
-          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -27,19 +24,5 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Apply retry consolidation
-        run: node scripts/apply-screenshot-retry-consolidation.mjs
-
-      - name: Build and validate
-        run: |
-          npm run build
-          npm run test:ci
-
-      - name: Commit source and generated artifacts
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/import/emblemOcrRefinement.ts build docs
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Consolidate stat-specific screenshot retries"
-          git push origin HEAD:agent/screenshot-retry-consolidation-corpus
+      - name: Typecheck, verify generated output, and test
+        run: npm run test:ci
