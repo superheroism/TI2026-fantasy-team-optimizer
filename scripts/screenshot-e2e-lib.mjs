@@ -14,6 +14,7 @@ const ROLES=['core','mid','support'];
 const roleLabel=role=>role[0].toUpperCase()+role.slice(1);
 const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const menuIds=menu=>Array.isArray(menu)?menu.map(item=>typeof item==='string'||item==null?item:item.id):menu?.operationIds??menu?.actions?.map(item=>item?.id??item);
+const boardLayout=board=>board?.layoutId??((board?.core?.emblems?.length??board?.banners?.core?.emblems?.length)===5?'expanded_5':'legacy_3');
 
 export function groundTruthCanonical(gt){
   const actions=gt.operations??gt.actions?.map(item=>item?.id??item)??[];
@@ -40,9 +41,19 @@ export function flattenCanonical(value){
   fields.set('tokensRemaining',value?.tokensRemaining);return fields;
 }
 
-export function canonicalFromValidated(value){if(!value)return value;return {layoutId:value.board?.layoutId,banners:value.board?.banners??value.board,operationIds:menuIds(value.menu),tokensRemaining:value.tokensRemaining};}
+export function canonicalFromValidated(value){
+  if(!value)return value;
+  const board=value.board??value;
+  return {layoutId:boardLayout(board),banners:board?.banners??board,operationIds:menuIds(value.menu??value.operationIds),tokensRemaining:value.tokensRemaining};
+}
 export const canonicalFromApplied=canonicalFromValidated;
-export function confidenceByPath(raw){return new Map((raw?.fieldConfidence??[]).map(item=>[item.path,item.confidence]));}
+export function confidenceByPath(raw){
+  return new Map((raw?.fieldConfidence??[]).flatMap(item=>{
+    const entries=[[item.path,item.confidence]];
+    if(typeof item.path==='string'&&/^(core|mid|support)\./.test(item.path))entries.push([`banners.${item.path}`,item.confidence]);
+    return entries;
+  }));
+}
 
 export function classifyField({expected,raw,validated,applied,rendered,sentinel,unmappable=false}){
   if(unmappable)return DIVERGENCE.GROUND_TRUTH_UNMAPPABLE;
