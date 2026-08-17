@@ -7,9 +7,28 @@ import { diagnoseLocalScreenshotOcr, warmLocalScreenshotOcr } from '../import/lo
 const $ = <T extends HTMLElement = HTMLElement>(selector: string): T => document.querySelector(selector) as T;
 export interface ScreenshotImportCallbacks { getData:()=>DataBundle|undefined;renderStructure:()=>void;afterApply:()=>void; }
 
+export interface ScreenshotImportTraceEvent {
+  stage:'raw'|'validated'|'applied';
+  value:unknown;
+  localOcrMetrics?:unknown;
+}
+
+declare global {
+  interface Window {
+    __TI2026_TEST_HOOKS__?: {
+      onScreenshotImportStage?:(event:ScreenshotImportTraceEvent)=>void;
+    };
+  }
+}
+
 let latestDiagnosticJson:string|undefined;
 let diagnosticToastTimer:number|undefined;
 
+function emitScreenshotImportStage(event:ScreenshotImportTraceEvent):void {
+  const hook=window.__TI2026_TEST_HOOKS__?.onScreenshotImportStage;
+  if(!hook)return;
+  try{hook(structuredClone(event));}catch{}
+}
 function setStatus(text:string,kind:'idle'|'working'|'success'|'error'='idle'):void { const status=$('#screenshot-import-status');status.textContent=text;status.dataset.kind=kind; }
 function reviewPaths(result:ValidatedScreenshotImport):string[] { return result.lowConfidenceFields.map(field=>field.path); }
 
@@ -61,6 +80,7 @@ export function bindScreenshotImport(state:ApplicationState,callbacks:Screenshot
   });
   const applyImport=(result:ValidatedScreenshotImport,elapsedMs:number):void=>{
     state.importScreenshot(result.board,result.menu,result.tokensRemaining);callbacks.renderStructure();callbacks.afterApply();
+    emitScreenshotImportStage({stage:'applied',value:{board:state.board,menu:state.menu,tokensRemaining:state.tokensRemaining}});
     const paths=reviewPaths(result);applyScreenshotReviewHighlights(paths);applyActionReviewHighlights(paths);applyTokenReviewHighlight(paths);
     const elapsed=elapsedMs<1000?`${Math.round(elapsedMs)} ms`:`${(elapsedMs/1000).toFixed(1)} s`;
     if(result.requiresReview){const count=paths.length;setStatus(`Imported in ${elapsed} · review ${count} flagged field${count===1?'':'s'} outlined in red before optimizing.`,'error');}
@@ -74,7 +94,10 @@ export function bindScreenshotImport(state:ApplicationState,callbacks:Screenshot
     button.disabled=true;button.textContent='Reading Screenshot…';clearDiagnostic(diagnosticButton,diagnosticToast);setStatus('Local OCR: locating board and reading visible fields…','working');
     const started=performance.now();
     try{
-      const raw=await requestScreenshotImport(file,data),validated=validateScreenshotImport(raw,data,state.board,state.menu),productionDiagnostic=getLastLocalOcrMetrics();
+      const raw=await requestScreenshotImport(file,data),productionDiagnostic=getLastLocalOcrMetrics();
+      emitScreenshotImportStage({stage:'raw',value:raw,localOcrMetrics:productionDiagnostic});
+      const validated=validateScreenshotImport(raw,data,state.board,state.menu);
+      emitScreenshotImportStage({stage:'validated',value:validated});
       if(productionDiagnostic)setDiagnostic(productionDiagnostic,diagnosticButton);
       applyImport(validated,performance.now()-started);
     }catch(error){
