@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { calibrateConfidenceEvidence } from '../build/js/import/screenshotImport.js';
+import { calibrateConfidenceEvidence, directTierText } from '../build/js/import/screenshotImport.js';
 
 const components=(overrides={})=>({geometry:1,domainMatch:.95,structuredEvidence:0,targetedRetry:0,fieldConsistency:1,...overrides});
 const calibrate=(overrides={})=>calibrateConfidenceEvidence('field',{resolved:true,rawConfidence:.45,reason:'raw-ocr',components:components(),...overrides});
@@ -44,4 +44,10 @@ test('unresolved fields are always zero confidence',()=>{
   const field=calibrate({resolved:false,reason:'unresolved',rawConfidence:.99,components:components({domainMatch:1,structuredEvidence:1,targetedRetry:1})});
   assert.equal(field.confidence,0);
   assert.equal(field.reason,'unresolved');
+});
+
+test('Tier I direct evidence does not misread Tier II as Tier I',()=>{
+  assert.equal(directTierText('TIER I FRIENDLY',1),true);
+  assert.equal(directTierText('TIER II FRIENDLY',1),false);
+  assert.equal(directTierText('TIER II FRIENDLY',2),true);
 });
