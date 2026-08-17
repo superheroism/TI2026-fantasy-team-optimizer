@@ -1,13 +1,7 @@
 name: Screenshot import production E2E
 
 on:
-  pull_request:
-    branches: [main]
   workflow_dispatch:
-
-concurrency:
-  group: screenshot-import-e2e-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -18,8 +12,6 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -38,12 +30,12 @@ jobs:
       - name: Board 2 canary first
         env:
           SCREENSHOT_E2E_OUT: artifacts/board2
-          P52E_GIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          P52E_GIT_SHA: ${{ github.sha }}
         run: npm run test:screenshot-e2e:board2 -- --report-only
       - name: Full production E2E corpus
         env:
           SCREENSHOT_E2E_OUT: artifacts/full
-          P52E_GIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          P52E_GIT_SHA: ${{ github.sha }}
         run: npm run test:screenshot-e2e -- --report-only
       - name: Capture generated application files
         if: always()
