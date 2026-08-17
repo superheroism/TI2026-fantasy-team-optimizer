@@ -137,7 +137,7 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
                 d.normalizedTier = tier.match.value;
                 d.tierMatchScore = tier.match.score;
             }
-            else if (!tier.direct) {
+            else if (!tier.direct && confidenceFor(raw, qp) < .9) {
                 const base = extractionToSource(d.roi, metrics), strip = { left: base.left + base.width * .02, top: base.top + base.height * .30, width: base.width * .96, height: base.height * .38 }, tierRec = await w.recognize(canvas(src, strip), { tessedit_pageseg_mode: '7' }, { tsv: true }), tierWords = parse(tierRec.data.tsv), tierLines = lines(tierWords), retryTier = bestTierLine(tierLines);
                 retries++;
                 emblemRetries++;
