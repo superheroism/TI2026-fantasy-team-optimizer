@@ -20,10 +20,9 @@ test('P51 keeps strict stat acceptance thresholds centralized and unchanged',()=
   assert.match(retryPolicy,/matchScore>=STAT_MATCH_GATE&&confidence>=STRUCTURED_CONFIDENCE_GATE/);
 });
 
-test('dedicated Tier retry remains conditioned on unresolved Tier confidence',()=>{
-  assert.match(refinement,/!tier\.direct&&!strongSupplementalTier&&shouldRetryTier\(confidenceFor\(raw,qp\)\)/);
+test('dedicated Tier retry remains bounded to unresolved or ambiguous Tier evidence',()=>{
+  assert.match(refinement,/\(!tier\.direct\|\|tier\.match\.value===1\|\|tier\.match\.score<\.9\)&&!strongSupplementalTier&&shouldRetryTier\(confidenceFor\(raw,qp\)\)/);
 });
-
 
 test('a lone direct textual Tier read may recover the value but remains below review confidence',()=>{
   assert.ok(refinement.includes('direct.length===1'));
