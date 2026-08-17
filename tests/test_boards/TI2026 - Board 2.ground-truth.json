@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "sourceFile": "TI2026 - Board 2.png",
+  "layoutId": "expanded_5",
+  "banners": {
+    "core": {"visibleSelectionText": "Satanic & Noticed", "emblems": [
+      {"visibleStat":"GPM","stat":"GPM","qualityTier":4,"trait":"Fractal"},
+      {"visibleStat":"TEAMFIGHT","stat":"Teamfight Participation","qualityTier":3,"trait":"Vampiric"},
+      {"visibleStat":"CREEP SCORE","stat":"Creep Score","qualityTier":5,"trait":"Vampiric"},
+      {"visibleStat":"ROSHAN KILLS","stat":"Roshan Kills","qualityTier":3,"trait":"Unique"},
+      {"visibleStat":"TOWER KILLS","stat":"Tower Kills","qualityTier":2,"trait":"Fractal"}
+    ]},
+    "mid": {"visibleSelectionText": "No[o]ne-", "emblems": [
+      {"visibleStat":"TOWER KILLS","stat":"Tower Kills","qualityTier":5,"trait":"Friendly"},
+      {"visibleStat":"RUNES GRABBED","stat":"Runes","qualityTier":5,"trait":"Benevolent"},
+      {"visibleStat":"TEAMFIGHT","stat":"Teamfight Participation","qualityTier":5,"trait":"Benevolent"},
+      {"visibleStat":"MADSTONE COLLECTED","stat":"Madstone","qualityTier":2,"trait":"Friendly"},
+      {"visibleStat":"ROSHAN KILLS","stat":"Roshan Kills","qualityTier":5,"trait":"Fractal"}
+    ]},
+    "support": {"visibleSelectionText": "Boxi & tOfu", "emblems": [
+      {"visibleStat":"RUNES GRABBED","stat":"Runes","qualityTier":5,"trait":"Friendly"},
+      {"visibleStat":"TEAMFIGHT","stat":"Teamfight Participation","qualityTier":1,"trait":"Unique"},
+      {"visibleStat":"CAMPS STACKED","stat":"Camps Stacked","qualityTier":5,"trait":"Vampiric"},
+      {"visibleStat":"ROSHAN KILLS","stat":"Roshan Kills","qualityTier":2,"trait":"Benevolent"},
+      {"visibleStat":"SMOKES USED","stat":"Smokes Used","qualityTier":3,"trait":"Vampiric"}
+    ]}
+  },
+  "actions": [
+    {"visibleLabel":"REROLL TRAIT FOR THE FIRST BLUE EMBLEM","id":"blue-trait-first"},
+    {"visibleLabel":"RANDOMLY INCREASE ONE QUALITY","id":"quality-increase-one"},
+    {"visibleLabel":"REROLL TRAIT FOR RED EMBLEMS","id":"red-trait-all"}
+  ],
+  "tokensRemaining": 30
+}

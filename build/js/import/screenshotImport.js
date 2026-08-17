@@ -78,15 +78,15 @@ function confidences(v) {
 }
 function confidenceFor(raw, path) { return raw.fieldConfidence?.find(field => field.path === path)?.confidence ?? 0; }
 function averageDiagnosticWordConfidence(words) { return words.length ? clamp(words.reduce((sum, word) => sum + word.confidence, 0) / words.length / 100) : 0; }
-function directTierText(text, tier) {
-    const bonusByTier = { 1: '10', 2: '30', 3: '60', 4: '100', 5: '150' };
+export function directTierText(text, tier) {
     const upper = text.toUpperCase().replace(/[“”'`]/g, '');
-    if (new RegExp(`(?:^|\\s)\\+?${bonusByTier[tier]}%(?:\\s|$)`).test(upper))
-        return true;
     const roman = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V' };
     return new RegExp(`TIER[^A-Z0-9]{0,8}${roman[tier]}(?:[^IV]|$)`, 'i').test(upper);
 }
 function geometryConfidence(metrics) {
+    const directTierRowCount = Object.values(metrics.diagnostic.tierRowsByColumn).reduce((sum, rows) => sum + rows.length, 0);
+    if (directTierRowCount === 0)
+        return { value: .84, reason: 'geometry-fallback' };
     if (metrics.diagnostic.synthesizedRows)
         return { value: .85, reason: 'synthesized-row' };
     if (metrics.diagnostic.extractionColumnMethod === 'fallback')
@@ -144,8 +144,9 @@ export function calibrateScreenshotImportConfidence(raw, metrics) {
             calibrated.push(calibrateConfidenceEvidence(statPath, { resolved: isLegalStat(slot.color, emblem.stat), rawConfidence: statRaw, reason: statReason, components: statComponents }));
             const tierPath = `banners.${role}.emblems.${index}.qualityTier`, tierRaw = confidenceFor(raw, tierPath), tierComponents = baseComponents(geometry.value, diag.tierMatchScore), tierSame = diag.normalizedTier === emblem.qualityTier;
             let tierReason = 'fuzzy-tier';
-            if ((tierSame && directTierText(diag.rawTierText, emblem.qualityTier)) || diag.tierMatchScore >= .97) {
-                tierComponents.structuredEvidence = .98;
+            const tierDirect = tierSame && directTierText(diag.rawTierText, emblem.qualityTier);
+            if (tierDirect) {
+                tierComponents.structuredEvidence = tierRaw >= .98 ? .98 : .89;
                 tierReason = 'direct-native-tier';
             }
             else if (!tierSame) {
@@ -154,7 +155,7 @@ export function calibrateScreenshotImportConfidence(raw, metrics) {
             }
             if (geometry.reason)
                 tierReason = geometry.reason;
-            calibrated.push(calibrateConfidenceEvidence(tierPath, { resolved: true, rawConfidence: tierRaw, reason: tierReason, components: tierComponents }));
+            calibrated.push(calibrateConfidenceEvidence(tierPath, { resolved: tierDirect || tierRaw > .2, rawConfidence: tierRaw, reason: (tierDirect || tierRaw > .2) ? tierReason : 'unresolved', components: tierComponents }));
             const traitPath = `banners.${role}.emblems.${index}.trait`, traitRaw = confidenceFor(raw, traitPath), traitComponents = baseComponents(geometry.value, diag.traitMatchScore), traitSame = diag.normalizedTrait === emblem.trait;
             let traitReason = 'fuzzy-trait';
             if (traitSame && (diag.traitMatchScore >= .99 || normalized(diag.rawTraitText).includes(normalized(emblem.trait)))) {
@@ -172,14 +173,13 @@ export function calibrateScreenshotImportConfidence(raw, metrics) {
     }
     raw.operationIds.forEach((operationId, index) => {
         const path = `operationIds.${index}`, rawConfidence = confidenceFor(raw, path), components = baseComponents(geometry.value, rawConfidence);
-        let reason = operationId === null ? 'unresolved' : 'fuzzy-action';
-        if (operationId !== null && rawConfidence >= .9) {
+        const actionResolved = operationId !== null && rawConfidence >= .9;
+        let reason = actionResolved ? 'dedicated-action-crop' : 'unresolved';
+        if (actionResolved)
             components.structuredEvidence = .95;
-            reason = 'dedicated-action-crop';
-        }
         if (geometry.reason && operationId !== null)
             reason = geometry.reason;
-        calibrated.push(calibrateConfidenceEvidence(path, { resolved: operationId !== null, rawConfidence, reason, components }));
+        calibrated.push(calibrateConfidenceEvidence(path, { resolved: actionResolved, rawConfidence, reason, components }));
     });
     const tokenPath = 'tokensRemaining', tokenRaw = confidenceFor(raw, tokenPath), tokenEvidence = metrics.diagnostic.tokenEvidence, tokenComponents = baseComponents(geometry.value, tokenEvidence.confidence);
     let tokenReason = raw.tokensRemaining === undefined ? 'unresolved' : 'fuzzy-token';
@@ -248,6 +248,12 @@ export function validateScreenshotImport(raw, data, currentBoard, currentMenu) {
         }
         if (typeof v !== 'string' || !ACTION_BY_ID.has(v))
             throw new Error(`Screenshot parser returned unknown action: ${String(v)}.`);
+        const actionConfidence = fc.find(x => x.path === `operationIds.${index}`)?.confidence ?? 0;
+        if (actionConfidence < REVIEW_THRESHOLD) {
+            resolved.push(currentMenu[index].id);
+            warnings.push(`Action ${index + 1} OCR was not strong enough to replace the existing action; preserved until reviewed.`);
+            return;
+        }
         resolved.push(v);
     });
     const visible = raw.operationIds.filter((v) => typeof v === 'string');

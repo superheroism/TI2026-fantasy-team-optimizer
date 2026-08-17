@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "sourceFile": "Ti2026 - board 6.png",
+  "layoutId": "expanded_5",
+  "banners": {
+    "core": {"visibleSelectionText": "Noticed & Satanic", "emblems": [
+      {"visibleStat":"DEATHS","stat":"Deaths","qualityTier":4,"trait":"Unique"},
+      {"visibleStat":"TEAMFIGHT","stat":"Teamfight Participation","qualityTier":2,"trait":"Friendly"},
+      {"visibleStat":"CREEP SCORE","stat":"Creep Score","qualityTier":4,"trait":"Vampiric"},
+      {"visibleStat":"TORMENTOR KILLS","stat":"Tormentor Kills","qualityTier":1,"trait":"Vampiric"},
+      {"visibleStat":"GPM","stat":"GPM","qualityTier":1,"trait":"Benevolent"}
+    ]},
+    "mid": {"visibleSelectionText": "Malr1ne", "emblems": [
+      {"visibleStat":"GPM","stat":"GPM","qualityTier":4,"trait":"Vampiric"},
+      {"visibleStat":"CAMPS STACKED","stat":"Camps Stacked","qualityTier":3,"trait":"Benevolent"},
+      {"visibleStat":"TEAMFIGHT","stat":"Teamfight Participation","qualityTier":4,"trait":"Benevolent"},
+      {"visibleStat":"TOWER KILLS","stat":"Tower Kills","qualityTier":2,"trait":"Friendly"},
+      {"visibleStat":"STUNS","stat":"Stuns","qualityTier":3,"trait":"Vampiric"}
+    ]},
+    "support": {"visibleSelectionText": "Dukalis & 9Class", "emblems": [
+      {"visibleStat":"SMOKES USED","stat":"Smokes Used","qualityTier":5,"trait":"Vampiric"},
+      {"visibleStat":"TEAMFIGHT","stat":"Teamfight Participation","qualityTier":2,"trait":"Unique"},
+      {"visibleStat":"WATCHERS TAKEN","stat":"Watchers","qualityTier":5,"trait":"Friendly"},
+      {"visibleStat":"TORMENTOR KILLS","stat":"Tormentor Kills","qualityTier":2,"trait":"Friendly"},
+      {"visibleStat":"RUNES GRABBED","stat":"Runes","qualityTier":1,"trait":"Benevolent"}
+    ]}
+  },
+  "actions": [
+    {"visibleLabel":"REROLL STAT FOR RED EMBLEMS","id":"red-stat-all"},
+    {"visibleLabel":"REROLL TRAIT FOR RED EMBLEMS","id":"red-trait-all"},
+    {"visibleLabel":"REROLL QUALITY FOR ONE RANDOM RED EMBLEM","id":"red-quality-random"}
+  ],
+  "tokensRemaining": 30
+}

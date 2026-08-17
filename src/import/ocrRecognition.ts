@@ -29,8 +29,9 @@ export interface OcrCallDiagnostic {
   pixelCount:number;
   elapsedMs:number;
   wordCount:number;
-  outcome:'success'|'timeout'|'error';
+  outcome:'success'|'timeout'|'error'|'invalid-geometry';
   timeoutReason?:'call-timeout'|'overall-budget';
+  geometryReason?:string;
 }
 
 export interface OcrExecutionBudget {
@@ -47,6 +48,8 @@ export interface OcrRecognitionMeta {
   crop?:OcrRect;
   canvasWidth:number;
   canvasHeight:number;
+  sourceWidth?:number;
+  sourceHeight?:number;
 }
 
 export const DEFAULT_OCR_CALL_TIMEOUT_MS=10_000;
@@ -61,6 +64,23 @@ export function createOcrExecutionBudget(
 
 export function remainingOcrBudgetMs(budget:OcrExecutionBudget):number{
   return Math.max(0,budget.totalBudgetMs-(performance.now()-budget.startedAtMs));
+}
+
+export function validateOcrRect(rect:OcrRect,sourceWidth?:number,sourceHeight?:number):string|undefined{
+  const values=[rect.left,rect.top,rect.width,rect.height];
+  if(values.some(value=>!Number.isFinite(value)))return'non-finite';
+  if(rect.width<=0||rect.height<=0)return'non-positive-area';
+  if(rect.left<0||rect.top<0)return'negative-origin';
+  if(sourceWidth!==undefined||sourceHeight!==undefined){
+    if(!Number.isFinite(sourceWidth)||!Number.isFinite(sourceHeight)||(sourceWidth??0)<=0||(sourceHeight??0)<=0)return'invalid-source-bounds';
+    if(rect.left+rect.width>(sourceWidth as number)+1||rect.top+rect.height>(sourceHeight as number)+1)return'out-of-bounds';
+  }
+  return undefined;
+}
+
+function recognitionGeometryReason(meta:OcrRecognitionMeta):string|undefined{
+  if(!Number.isFinite(meta.canvasWidth)||!Number.isFinite(meta.canvasHeight)||meta.canvasWidth<=0||meta.canvasHeight<=0)return'invalid-canvas';
+  return meta.crop?validateOcrRect(meta.crop,meta.sourceWidth,meta.sourceHeight):undefined;
 }
 
 function wordCount(tsv?:string):number{
@@ -81,13 +101,14 @@ class OcrTimeoutError extends Error{
 }
 
 function diagnosticBase(meta:OcrRecognitionMeta){
+  const pixelCount=Number.isFinite(meta.canvasWidth)&&Number.isFinite(meta.canvasHeight)&&meta.canvasWidth>0&&meta.canvasHeight>0?meta.canvasWidth*meta.canvasHeight:0;
   return{
     stage:meta.stage,
     psm:String(meta.psm),
     ...(meta.crop?{crop:meta.crop}:{}),
     canvasWidth:meta.canvasWidth,
     canvasHeight:meta.canvasHeight,
-    pixelCount:meta.canvasWidth*meta.canvasHeight,
+    pixelCount,
   };
 }
 
@@ -100,6 +121,12 @@ export async function recognizeWithBudget(
   output:Record<string,boolean>={tsv:true},
   onTimeout?:()=>Promise<unknown>|unknown,
 ):Promise<{data:OcrRecognitionData}>{
+  const geometryReason=recognitionGeometryReason(meta);
+  if(geometryReason){
+    budget.calls.push({...diagnosticBase(meta),elapsedMs:0,wordCount:0,outcome:'invalid-geometry',geometryReason});
+    return{data:{text:'',tsv:''}};
+  }
+
   const remaining=remainingOcrBudgetMs(budget);
   if(budget.exhausted||remaining<=0){
     budget.exhausted=true;

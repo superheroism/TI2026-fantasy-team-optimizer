@@ -114,14 +114,14 @@ function confidences(v:unknown):ScreenshotFieldConfidence[] {
 }
 function confidenceFor(raw:RawScreenshotImport,path:string):number { return raw.fieldConfidence?.find(field=>field.path===path)?.confidence??0; }
 function averageDiagnosticWordConfidence(words:readonly {confidence:number}[]):number { return words.length?clamp(words.reduce((sum,word)=>sum+word.confidence,0)/words.length/100):0; }
-function directTierText(text:string,tier:QualityTier):boolean {
-  const bonusByTier:Record<QualityTier,string>={1:'10',2:'30',3:'60',4:'100',5:'150'};
+export function directTierText(text:string,tier:QualityTier):boolean {
   const upper=text.toUpperCase().replace(/[“”'`]/g,'');
-  if(new RegExp(`(?:^|\\s)\\+?${bonusByTier[tier]}%(?:\\s|$)`).test(upper)) return true;
   const roman:Record<QualityTier,string>={1:'I',2:'II',3:'III',4:'IV',5:'V'};
   return new RegExp(`TIER[^A-Z0-9]{0,8}${roman[tier]}(?:[^IV]|$)`,'i').test(upper);
 }
 function geometryConfidence(metrics:LocalScreenshotOcrMetrics):{value:number;reason?:ScreenshotEvidenceClass} {
+  const directTierRowCount=Object.values(metrics.diagnostic.tierRowsByColumn).reduce((sum,rows)=>sum+rows.length,0);
+  if(directTierRowCount===0) return {value:.84,reason:'geometry-fallback'};
   if(metrics.diagnostic.synthesizedRows) return {value:.85,reason:'synthesized-row'};
   if(metrics.diagnostic.extractionColumnMethod==='fallback') return {value:.85,reason:'geometry-fallback'};
   if(metrics.diagnostic.columnLocalizationMethod==='fallback') return {value:.92,reason:'geometry-fallback'};
@@ -159,10 +159,10 @@ export function calibrateScreenshotImportConfidence(raw:RawScreenshotImport, met
 
       const tierPath=`banners.${role}.emblems.${index}.qualityTier`,tierRaw=confidenceFor(raw,tierPath),tierComponents=baseComponents(geometry.value,diag.tierMatchScore),tierSame=diag.normalizedTier===emblem.qualityTier;
       let tierReason:ScreenshotEvidenceClass='fuzzy-tier';
-      if((tierSame&&directTierText(diag.rawTierText,emblem.qualityTier))||diag.tierMatchScore>=.97){tierComponents.structuredEvidence=.98;tierReason='direct-native-tier';}
+      const tierDirect=tierSame&&directTierText(diag.rawTierText,emblem.qualityTier);if(tierDirect){tierComponents.structuredEvidence=tierRaw>=.98?.98:.89;tierReason='direct-native-tier';}
       else if(!tierSame){tierComponents.fieldConsistency=.7;tierReason='conflicting-retry';}
       if(geometry.reason) tierReason=geometry.reason;
-      calibrated.push(calibrateConfidenceEvidence(tierPath,{resolved:true,rawConfidence:tierRaw,reason:tierReason,components:tierComponents}));
+      calibrated.push(calibrateConfidenceEvidence(tierPath,{resolved:tierDirect||tierRaw>.2,rawConfidence:tierRaw,reason:(tierDirect||tierRaw>.2)?tierReason:'unresolved',components:tierComponents}));
 
       const traitPath=`banners.${role}.emblems.${index}.trait`,traitRaw=confidenceFor(raw,traitPath),traitComponents=baseComponents(geometry.value,diag.traitMatchScore),traitSame=diag.normalizedTrait===emblem.trait;
       let traitReason:ScreenshotEvidenceClass='fuzzy-trait';
@@ -175,10 +175,10 @@ export function calibrateScreenshotImportConfidence(raw:RawScreenshotImport, met
 
   raw.operationIds.forEach((operationId,index)=>{
     const path=`operationIds.${index}`,rawConfidence=confidenceFor(raw,path),components=baseComponents(geometry.value,rawConfidence);
-    let reason:ScreenshotEvidenceClass=operationId===null?'unresolved':'fuzzy-action';
-    if(operationId!==null&&rawConfidence>=.9){components.structuredEvidence=.95;reason='dedicated-action-crop';}
+    const actionResolved=operationId!==null&&rawConfidence>=.9;let reason:ScreenshotEvidenceClass=actionResolved?'dedicated-action-crop':'unresolved';
+    if(actionResolved)components.structuredEvidence=.95;
     if(geometry.reason&&operationId!==null) reason=geometry.reason;
-    calibrated.push(calibrateConfidenceEvidence(path,{resolved:operationId!==null,rawConfidence,reason,components}));
+    calibrated.push(calibrateConfidenceEvidence(path,{resolved:actionResolved,rawConfidence,reason,components}));
   });
 
   const tokenPath='tokensRemaining',tokenRaw=confidenceFor(raw,tokenPath),tokenEvidence=metrics.diagnostic.tokenEvidence,tokenComponents=baseComponents(geometry.value,tokenEvidence.confidence);
@@ -227,6 +227,7 @@ export function validateScreenshotImport(raw:unknown,data:DataBundle,currentBoar
   raw.operationIds.forEach((v,index)=>{
     if(v===null){resolved.push(currentMenu[index]!.id);if(!fc.some(x=>x.path===`operationIds.${index}`))fc.push({path:`operationIds.${index}`,confidence:0,reason:'unresolved'});if(!warnings.some(x=>x.includes(`Action ${index+1}`)))warnings.push(`Action ${index+1} was not visible; existing action preserved until reviewed.`);return;}
     if(typeof v!=='string'||!ACTION_BY_ID.has(v)) throw new Error(`Screenshot parser returned unknown action: ${String(v)}.`);
+    const actionConfidence=fc.find(x=>x.path===`operationIds.${index}`)?.confidence??0;if(actionConfidence<REVIEW_THRESHOLD){resolved.push(currentMenu[index]!.id);warnings.push(`Action ${index+1} OCR was not strong enough to replace the existing action; preserved until reviewed.`);return;}
     resolved.push(v);
   });
   const visible=raw.operationIds.filter((v):v is string=>typeof v==='string'); if(new Set(visible).size!==visible.length) throw new Error('Screenshot parser returned duplicate offered actions.');
