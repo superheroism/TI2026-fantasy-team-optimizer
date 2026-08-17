@@ -3,6 +3,7 @@ import {compareStages,groundTruthCanonical,sourceIdentity,summarizeSafety,withWa
 const ROLES=['core','mid','support'];
 const teamSelector=role=>`.team-select[data-role="${role}"]`;
 const emblemSelector=(role,index)=>`.emblem[data-role="${role}"][data-index="${index}"]`;
+const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 
 export async function waitForApp(page){
   await page.waitForSelector('#screenshot-file');
@@ -21,9 +22,15 @@ export async function setSentinel(page,gt){
   await page.$eval('#tokens',(el,expectedTokens)=>{el.value=String(expectedTokens===0?37:0);el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));},expected.tokensRemaining);return await readRendered(page);
 }
 export async function installTrace(page){await page.evaluate(()=>{window.__P52E_TRACE__=[];window.__TI2026_TEST_HOOKS__={onScreenshotImportStage:event=>window.__P52E_TRACE__.push(event)};});}
+function reviewExpectation(validated){
+  const paths=validated?.lowConfidenceFields?.map(field=>field.path)??[],emblems=new Set();let fields=0,teams=0,actions=0,tokens=false;
+  for(const fieldPath of paths){if(/\.selectedTeam$/.test(fieldPath))teams++;if(/\.(stat|qualityTier|trait)$/.test(fieldPath)){fields++;const m=fieldPath.match(/(?:banners\.)?(core|mid|support)\.emblems(?:\.|\[)(\d+)/);if(m)emblems.add(`${m[1]}:${m[2]}`);}if(/^operationIds(?:\.|\[)/.test(fieldPath))actions++;if(fieldPath==='tokensRemaining')tokens=true;}
+  return {review:{fields,teams,emblems:emblems.size,actions,tokens},requiresReview:validated?.requiresReview===true,statusKind:validated?.requiresReview?'error':'success'};
+}
 export async function importScreenshotRun({page,entry,gt,root,mode,browserName,browserVersion,gitSha,watchdogMs=30000}){
   const imagePath=path.join(root,entry.sourceFile),source=sourceIdentity(imagePath);if(entry.source&&JSON.stringify(entry.source)!==JSON.stringify(source))throw new Error(`Source identity mismatch: ${entry.sourceFile}`);const sentinel=await setSentinel(page,gt);await installTrace(page);const before=await page.$eval('#screenshot-import-status',el=>el.textContent??''),started=Date.now();let timeout=null;
   try{await withWatchdog(async()=>{await page.setInputFiles('#screenshot-file',imagePath);await page.waitForFunction(old=>{const b=document.querySelector('#screenshot-import'),s=document.querySelector('#screenshot-import-status');return b&&!b.disabled&&b.textContent==='Import Screenshot'&&s?.textContent!==old;},before,{timeout:watchdogMs});},watchdogMs,`${browserName} ${path.basename(imagePath)} ${mode}`);}catch(error){timeout={message:String(error),status:await page.$eval('#screenshot-import-status',el=>({text:el.textContent,kind:el.dataset.kind}))};}
   const trace=await page.evaluate(()=>window.__P52E_TRACE__??[]),raw=trace.find(x=>x.stage==='raw'),validated=trace.find(x=>x.stage==='validated'),applied=trace.find(x=>x.stage==='applied'),rendered=await readRendered(page),comparison=raw&&validated&&applied?compareStages({groundTruth:gt,raw:raw.value,validated:validated.value,applied:applied.value,rendered,sentinel}):{rawExact:false,validatedExact:false,appliedExact:false,renderExact:false,falseHighConfidenceErrors:0,rawVsFinalDiscrepancyCount:0,mismatches:[{path:'__pipeline__',firstDivergence:'HARNESS_OR_TIMEOUT'}]},metrics=raw?.localOcrMetrics,safety=summarizeSafety(metrics);
+  if(validated){const expectedReview=reviewExpectation(validated.value),reviewExact=same(expectedReview.review,rendered.review)&&rendered.status.kind===expectedReview.statusKind;comparison.reviewExpected=expectedReview;comparison.reviewExact=reviewExact;if(!reviewExact){comparison.renderExact=false;comparison.mismatches.push({path:'__review__',expected:expectedReview,rendered:{review:rendered.review,status:rendered.status},firstDivergence:'RENDER_MISMATCH'});}}
   return {schemaVersion:1,gitSha,browser:{name:browserName,version:browserVersion},mode,board:{sourceFile:entry.sourceFile,sourceIdentity:source,groundTruthFile:entry.groundTruthFile},sentinel,timing:{importMs:Date.now()-started,ocrMs:metrics?.totalMs??null,pageStartupMs:null},stages:{raw:raw?.value??null,validated:validated?.value??null,applied:applied?.value??null,rendered},comparison,safety:{...safety,timeout:!!timeout},timeout,localOcrMetrics:metrics??null};
 }
