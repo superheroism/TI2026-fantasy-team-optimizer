@@ -1,7 +1,7 @@
 import type { DataBundle, QualityTier, Role, StatName, TraitName } from '../domain/types.js';
 import { BOARD_LAYOUTS, LEGAL_STAT_POOLS } from '../domain/rules.js';
 import type { LocalScreenshotOcrMetrics } from './localScreenshotOcr.js';
-import { matchActionText, matchStatText, matchTierText, matchTraitText, ocrSimilarity } from './ocrDomainMatch.js';
+import { matchActionText, matchStatLines, matchTierText, matchTraitText, ocrSimilarity } from './ocrDomainMatch.js';
 import type { RawScreenshotImport, ScreenshotFieldConfidence } from './screenshotImport.js';
 
 const ROLES:readonly Role[]=['core','mid','support'];
@@ -45,7 +45,7 @@ export async function refineUncertainScreenshotFields(file:File,data:DataBundle,
     const sp=`banners.${role}.emblems.${i}.stat`,qp=`banners.${role}.emblems.${i}.qualityTier`,tp=`banners.${role}.emblems.${i}.trait`,d=diagnostics.get(`${role}:${i}`);if(!d)continue;
     if(confidenceFor(raw,sp)>=.9&&confidenceFor(raw,qp)>=.9&&confidenceFor(raw,tp)>=.9)continue;
     const rr=extractionToSource({left:Math.max(0,d.roi.left-d.roi.width*.05),top:Math.max(0,d.roi.top-d.roi.height*.08),width:d.roi.width*1.08,height:d.roi.height*1.16},metrics),rec=await w.recognize(canvas(src,rr),{tessedit_pageseg_mode:'6'},{tsv:true}),words=parse(rec.data.tsv),ls=lines(words);retries++;emblemRetries++;
-    if(confidenceFor(raw,sp)<.9){const sm=matchStatText(ls[0]?.text??orderedText(words),LEGAL_STAT_POOLS[layout.roles[role][i]!.color]),sc=combined(sm.score,ls[0]?.words??words);if(sm.score>=.92&&sc>=.9&&sc>confidenceFor(raw,sp)){raw.banners[role].emblems[i]!.stat=sm.value;setConfidence(raw,sp,sc);}}
+    if(confidenceFor(raw,sp)<.9){const sm=matchStatLines(ls.map(line=>line.text),LEGAL_STAT_POOLS[layout.roles[role][i]!.color]),statWords=sm.lineIndices.flatMap(index=>ls[index]?.words??[]),sc=combined(sm.score,statWords.length?statWords:words);if(sm.score>=.92&&sc>=.9&&sc>confidenceFor(raw,sp)){raw.banners[role].emblems[i]!.stat=sm.value;setConfidence(raw,sp,sc);}}
     const tier=bestTierLine(ls),qc=combined(tier.match.score,tier.line?.words??words);if(tier.direct&&tier.match.score>=.72&&qc>confidenceFor(raw,qp)){raw.banners[role].emblems[i]!.qualityTier=tier.match.value;setConfidence(raw,qp,qc);d.normalizedTier=tier.match.value;d.tierMatchScore=tier.match.score;}else if(!tier.direct){const base=extractionToSource(d.roi,metrics),strip={left:base.left+base.width*.02,top:base.top+base.height*.30,width:base.width*.96,height:base.height*.38},tierRec=await w.recognize(canvas(src,strip),{tessedit_pageseg_mode:'7'},{tsv:true}),tierWords=parse(tierRec.data.tsv),tierLines=lines(tierWords),retryTier=bestTierLine(tierLines);retries++;emblemRetries++;if(retryTier.direct){const retryConfidence=combined(retryTier.match.score,retryTier.line?.words??tierWords);raw.banners[role].emblems[i]!.qualityTier=retryTier.match.value;replaceConfidence(raw,qp,retryConfidence);d.normalizedTier=retryTier.match.value;d.tierMatchScore=retryTier.match.score;}else replaceConfidence(raw,qp,Math.min(confidenceFor(raw,qp),.75));}
     const trait=bestTraitLine(ls),tc=combined(trait.match.score,trait.line?.words??words);if(trait.match.score>=.62&&tc>confidenceFor(raw,tp)){raw.banners[role].emblems[i]!.trait=trait.match.value;setConfidence(raw,tp,tc);d.normalizedTrait=trait.match.value;d.traitMatchScore=trait.match.score;}
     d.finalConfidence=Math.min(confidenceFor(raw,sp),confidenceFor(raw,qp),confidenceFor(raw,tp));d.reviewRequired=d.finalConfidence<.9;
