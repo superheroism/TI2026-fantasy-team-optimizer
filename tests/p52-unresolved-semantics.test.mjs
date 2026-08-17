@@ -23,6 +23,11 @@ test('team auto-application requires candidate separation, not a fuzzy winner al
   assert.ok(source.includes("teamComponents.fieldConsistency=.7"));
 });
 
+test('independent action agreement and nontrivial roster names are explicit evidence',()=>{
+  assert.ok(source.includes('independentAgreement'));
+  assert.ok(source.includes('normalized(playerName).length>=4'));
+});
+
 test('sub-threshold action evidence preserves the existing menu',()=>{
   assert.ok(source.includes('actionConfidence<REVIEW_THRESHOLD'));
   assert.ok(source.includes('preserved until reviewed'));

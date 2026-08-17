@@ -56,7 +56,7 @@ function phrases(s, maxWords = 3) { const t = s.toUpperCase().match(/[A-Z0-9_-]+
     for (let i = 0; i <= t.length - n; i++)
         out.push(t.slice(i, i + n).join(' ')); return out; }
 function teamMatch(s, role, data) { let best = { team: data.players.find(p => p.role === role)?.team ?? '', score: 0 }; const ps = phrases(s, 3); for (const p of data.players.filter(x => x.role === role)) {
-    const names = [p.name, ...p.attachedPlayers], scores = names.map(name => Math.max(0, ...ps.map(x => ocrSimilarity(x, name)))).sort((a, b) => b - a), strong = scores.filter(x => x >= .62), score = strong.length >= 2 ? Math.min(.99, (strong[0] + strong[1]) / 2) : scores[0] ?? 0;
+    const names = p.attachedPlayers.filter(name => name.toUpperCase().replace(/[^A-Z0-9]/g, '').length >= 4), scores = names.map(name => Math.max(0, ...ps.map(x => ocrSimilarity(x, name)))).sort((a, b) => b - a), strong = scores.filter(x => x >= .62), score = strong.length >= 2 ? Math.min(.99, (strong[0] + strong[1]) / 2) : scores[0] ?? 0;
     if (score > best.score)
         best = { team: p.team, score };
 } return best; }
@@ -181,7 +181,7 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
                 d.normalizedTier = tier.match.value;
                 d.tierMatchScore = tier.match.score;
             }
-            if (!budget.exhausted && !tier.direct && !strongSupplementalTier && shouldRetryTier(confidenceFor(raw, qp))) {
+            if (!budget.exhausted && (!tier.direct || tier.match.value === 1 || tier.match.score < .9) && !strongSupplementalTier && shouldRetryTier(confidenceFor(raw, qp))) {
                 const base = extractionToSource(d.roi, metrics), strip = { left: base.left + base.width * .02, top: base.top + base.height * .27, width: base.width * .74, height: base.height * .42 }, rawTierCanvas = canvas(src, strip), rawTierRec = await recognize(w, rawTierCanvas, budget, `tier:${role}:${i + 1}:raw`, 7, strip), rawTierWords = parse(rawTierRec.data.tsv), rawTier = bestTierLine(lines(rawTierWords)), processedTierCanvas = otsuCanvas(rawTierCanvas), otsuTierRec = await recognize(w, processedTierCanvas, budget, `tier:${role}:${i + 1}:otsu`, 7, strip), otsuTierWords = parse(otsuTierRec.data.tsv), otsuTier = bestTierLine(lines(otsuTierWords));
                 retries += 2;
                 emblemRetries += 2;
@@ -223,7 +223,7 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
         const path = `banners.${role}.selectedTeam`;
         if (budget.exhausted || confidenceFor(raw, path) >= .9)
             continue;
-        const band = metrics.diagnostic.columnBands[role], bw = band.right - band.left, rect = extractionToSource({ left: Math.max(0, band.left - bw * .08), top: 0, width: bw * .55, height: Math.min(metrics.extractionHeight, first + pitch * .75) }, metrics), teamCanvas = canvas(src, rect), rec = await recognize(w, teamCanvas, budget, `team:${role}`, 6, rect), words = parse(rec.data.tsv), s = orderedText(words), match = teamMatch(s, role, data), confidence = combined(match.score, words);
+        const band = metrics.diagnostic.columnBands[role], bw = band.right - band.left, teamLeft = Math.max(0, band.left - bw * .04), teamWidth = Math.min(metrics.extractionWidth - teamLeft, bw * 1.04), teamHeight = Math.min(metrics.extractionHeight, Math.max(pitch * .75, first - pitch * .18)), rect = extractionToSource({ left: teamLeft, top: 0, width: teamWidth, height: teamHeight }, metrics), teamCanvas = canvas(src, rect), rec = await recognize(w, teamCanvas, budget, `team:${role}`, 6, rect), words = parse(rec.data.tsv), s = orderedText(words), match = teamMatch(s, role, data), confidence = combined(match.score, words);
         retries++;
         teamRetries++;
         metrics.diagnostic.teamEvidence[role] = { rawText: s, normalizedTeam: match.team, matchScore: match.score };
@@ -232,6 +232,7 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
             setConfidence(raw, path, confidence);
         }
     }
+    const preFooterActionIds = [...raw.operationIds];
     if (!budget.exhausted && (raw.operationIds.some(x => x === null) || raw.tokensRemaining === undefined)) {
         const last = rows.at(-1) ?? metrics.extractionHeight * .58, footerTop = Math.min(metrics.extractionHeight * .82, last + pitch * .72), footerRect = extractionToSource({ left: metrics.extractionWidth * .22, top: footerTop, width: metrics.extractionWidth * .72, height: metrics.extractionHeight - footerTop }, metrics), footerCanvas = canvas(src, footerRect), rec = await recognize(w, footerCanvas, budget, 'footer', 6, footerRect), words = parse(rec.data.tsv), all = orderedText(words);
         retries++;
@@ -280,7 +281,8 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
             }
             resolved[i] = raw.operationIds[i] ?? null;
         }
-        metrics.diagnostic.actionEvidence = { resolved, reason: resolved.every(Boolean) ? 'resolved-by-native-button-crops' : 'native-button-crops-partial', cardTexts };
+        const independentAgreement = resolved.map((id, index) => id !== null && preFooterActionIds[index] === id);
+        metrics.diagnostic.actionEvidence = { resolved, reason: resolved.every(Boolean) ? 'resolved-by-native-button-crops' : 'native-button-crops-partial', cardTexts, independentAgreement };
     }
     if (budget.exhausted && !raw.warnings?.some(warning => warning.includes('OCR execution budget')))
         raw.warnings = [...(raw.warnings ?? []), 'OCR execution budget was exhausted; unresolved fields require review.'];

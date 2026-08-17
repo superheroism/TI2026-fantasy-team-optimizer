@@ -113,7 +113,7 @@ function matchTeamEvidence(rawText, role, data) {
     const byTeam = new Map();
     for (const profile of data.players.filter(player => player.role === role)) {
         const current = byTeam.get(profile.team) ?? { direct: phraseSimilarity(rawText, profile.team), players: new Map() };
-        for (const name of profile.attachedPlayers) {
+        for (const name of profile.attachedPlayers.filter(playerName => normalized(playerName).length >= 4)) {
             const score = phraseSimilarity(rawText, name);
             current.players.set(name, Math.max(score, current.players.get(name) ?? 0));
         }
@@ -135,7 +135,7 @@ function matchTeamEvidence(rawText, role, data) {
 }
 function trustedTeamEvidence(match, role) {
     const direct = match.directTeamScore >= .9 && match.margin >= .1;
-    const singlePlayer = match.bestPlayerScore >= .94 && match.score >= .92 && match.margin >= .08;
+    const singlePlayer = match.bestPlayerScore >= .82 && match.score >= .82 && match.margin >= .18;
     const roster = role === 'mid'
         ? match.bestPlayerScore >= .9 && match.score >= .9 && match.margin >= .1
         : match.strongPlayerCount >= 2 && match.score >= .84 && match.margin >= .08;
@@ -236,12 +236,14 @@ export function calibrateScreenshotImportConfidence(raw, metrics, data) {
     }
     raw.operationIds.forEach((operationId, index) => {
         const path = `operationIds.${index}`, rawConfidence = confidenceFor(raw, path), actionText = metrics.diagnostic.actionEvidence.cardTexts[index] ?? '', actionMatch = matchActionText(actionText), components = baseComponents(geometry.value, actionMatch?.score ?? rawConfidence);
-        const catalogAgreement = operationId !== null && actionMatch?.id === operationId && metrics.diagnostic.actionEvidence.resolved[index] === operationId;
-        const decisiveCatalogMatch = Boolean(catalogAgreement && actionMatch && actionMatch.score >= .65 && actionMatch.margin >= .06);
+        const actionEvidence = metrics.diagnostic.actionEvidence;
+        const independentAgreement = actionEvidence.independentAgreement?.[index] === true;
+        const catalogAgreement = operationId !== null && actionMatch?.id === operationId && actionEvidence.resolved[index] === operationId;
+        const decisiveCatalogMatch = Boolean(catalogAgreement && actionMatch && ((actionMatch.score >= .65 && actionMatch.margin >= .06) || (independentAgreement && actionMatch.score >= .5)));
         const actionResolved = operationId !== null && (decisiveCatalogMatch || rawConfidence >= .9);
         let reason = decisiveCatalogMatch ? 'dedicated-action-crop' : (operationId !== null ? 'fuzzy-action' : 'unresolved');
         if (decisiveCatalogMatch)
-            components.structuredEvidence = .96;
+            components.structuredEvidence = independentAgreement ? .98 : .96;
         else if (operationId !== null && rawConfidence >= .9)
             components.structuredEvidence = .95;
         if (geometry.reason && operationId !== null)
