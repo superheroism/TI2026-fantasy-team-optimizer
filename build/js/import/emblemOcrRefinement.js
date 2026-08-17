@@ -5,6 +5,7 @@ import { recognizeWithBudget, remainingOcrBudgetMs, validateOcrRect } from './oc
 import { acceptsStatEvidence, shouldRetryStat, shouldRetryTier } from './ocrRetryPolicy.js';
 const ROLES = ['core', 'mid', 'support'];
 const TRAITS = ['Fractal', 'Friendly', 'Vampiric', 'Unique', 'Benevolent'];
+const TIER_GLYPH_RETRY_CONFIDENCE_CEILING = 60;
 let workerPromise;
 function parse(tsv) { if (!tsv)
     return []; const out = []; for (const row of tsv.split(/\r?\n/).slice(1)) {
@@ -83,6 +84,13 @@ function bestTierLine(ls) { let best = { match: { value: 1, score: .2 }, direct:
             best = { match: { value: match.value, score }, line, direct: false };
     }
 } return best; }
+function ambiguousTierGlyph(tier) { if (!tier.direct || tier.match.value !== 1 || !tier.line)
+    return undefined; const ws = tier.line.words, tierIndex = ws.findIndex(w => ocrSimilarity(w.text, 'TIER') >= .62); if (tierIndex < 0)
+    return undefined; const tierWord = ws[tierIndex]; for (const glyphWord of ws.slice(tierIndex + 1, tierIndex + 3)) {
+    const token = glyphWord.text.toUpperCase().replace(/[^A-Z0-9\]|]/g, ''), confused = token.replace(/[1L|]/g, 'I').replace(/]/g, 'I');
+    if (confused === 'I' && glyphWord.confidence < TIER_GLYPH_RETRY_CONFIDENCE_CEILING)
+        return { tierWord, glyphWord };
+} return undefined; }
 function bestTraitLine(ls) { let best = { match: { value: 'Fractal', score: 0 } }; for (const line of ls) {
     const match = matchTraitText(line.text), score = Math.min(.99, match.score + (TRAITS.some(t => line.text.toUpperCase().includes(t.toUpperCase())) ? .08 : 0));
     if (score > best.match.score)
@@ -174,12 +182,26 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
                 }
             }
             ;
-            const tier = bestTierLine(ls), tierConfidence = combined(tier.match.score, tier.line?.words ?? words);
+            const tier = bestTierLine(ls), tierConfidence = combined(tier.match.score, tier.line?.words ?? words), ambiguousGlyph = ambiguousTierGlyph(tier);
             if (tier.direct && tierConfidence > confidenceFor(raw, qp)) {
                 raw.banners[role].emblems[i].qualityTier = tier.match.value;
                 replaceConfidence(raw, qp, Math.min(.84, tierConfidence));
                 d.normalizedTier = tier.match.value;
                 d.tierMatchScore = tier.match.score;
+            }
+            if (!budget.exhausted && ambiguousGlyph && shouldRetryTier(confidenceFor(raw, qp))) {
+                const { tierWord, glyphWord } = ambiguousGlyph, localPadX = Math.max(2, tierWord.height * .3), localPadY = Math.max(2, tierWord.height * .45), localLeft = Math.max(0, tierWord.left - localPadX), localTop = Math.max(0, Math.min(tierWord.top, glyphWord.top) - localPadY), localRight = Math.min(emblemCanvas.width, Math.max(tierWord.left + tierWord.width, glyphWord.left + glyphWord.width) + Math.max(4, tierWord.height * 1.1)), localBottom = Math.min(emblemCanvas.height, Math.max(tierWord.top + tierWord.height, glyphWord.top + glyphWord.height) + localPadY), sourceLeft = Math.max(0, Math.floor(rr.left)), sourceTop = Math.max(0, Math.floor(rr.top)), tightLeft = Math.max(0, sourceLeft + localLeft), tightTop = Math.max(0, sourceTop + localTop), tightRight = Math.min(src.naturalWidth, sourceLeft + localRight), tightBottom = Math.min(src.naturalHeight, sourceTop + localBottom), tightWidth = tightRight - tightLeft, tightHeight = tightBottom - tightTop;
+                if (tightWidth > 0 && tightHeight > 0) {
+                    const tightTierStrip = { left: tightLeft, top: tightTop, width: tightWidth, height: tightHeight }, tightTierCanvas = otsuCanvas(canvas(src, tightTierStrip)), tightTierRec = await recognize(w, tightTierCanvas, budget, `tier:${role}:${i + 1}:glyph`, 7, tightTierStrip), tightTierWords = parse(tightTierRec.data.tsv), tightTier = bestTierLine(lines(tightTierWords)), tightTierConfidence = combined(tightTier.match.score, tightTier.line?.words ?? tightTierWords);
+                    retries++;
+                    emblemRetries++;
+                    if (tightTier.direct && tightTierConfidence > tierConfidence) {
+                        raw.banners[role].emblems[i].qualityTier = tightTier.match.value;
+                        replaceConfidence(raw, qp, Math.min(.84, tightTierConfidence));
+                        d.normalizedTier = tightTier.match.value;
+                        d.tierMatchScore = tightTier.match.score;
+                    }
+                }
             }
             if (!budget.exhausted && !tier.direct && !strongSupplementalTier && shouldRetryTier(confidenceFor(raw, qp))) {
                 const base = extractionToSource(d.roi, metrics), strip = { left: base.left + base.width * .02, top: base.top + base.height * .27, width: base.width * .74, height: base.height * .42 }, rawTierCanvas = canvas(src, strip), rawTierRec = await recognize(w, rawTierCanvas, budget, `tier:${role}:${i + 1}:raw`, 7, strip), rawTierWords = parse(rawTierRec.data.tsv), rawTier = bestTierLine(lines(rawTierWords)), processedTierCanvas = otsuCanvas(rawTierCanvas), otsuTierRec = await recognize(w, processedTierCanvas, budget, `tier:${role}:${i + 1}:otsu`, 7, strip), otsuTierWords = parse(otsuTierRec.data.tsv), otsuTier = bestTierLine(lines(otsuTierWords));
