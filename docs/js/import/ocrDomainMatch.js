@@ -145,6 +145,10 @@ export function matchActionText(s) {
         }
         return { id: action.id, score: Math.max(0, Math.min(.99, score)) };
     }).sort((a, b) => b.score - a.score);
-    return ranked[0];
+    const best = ranked[0];
+    if (!best)
+        return undefined;
+    const runnerUpScore = ranked[1]?.score ?? 0;
+    return { ...best, runnerUpScore, margin: best.score - runnerUpScore };
 }
 //# sourceMappingURL=ocrDomainMatch.js.map
