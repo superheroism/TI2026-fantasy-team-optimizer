@@ -1,0 +1,52 @@
+name: P52E strict product certification
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: p52e-strict-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  production-e2e-strict:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install certification browsers
+        run: |
+          npm install --no-save --package-lock=false playwright@1.62.0
+          npx playwright install --with-deps chromium firefox
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run verify:generated
+      - name: Harness regression tests
+        run: node --test tests/screenshot-e2e-harness.test.mjs
+      - name: Board 2 canary first
+        env:
+          SCREENSHOT_E2E_OUT: artifacts/board2
+          P52E_GIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: npm run test:screenshot-e2e:board2 -- --report-only
+      - name: Full production E2E corpus — hard safety gate
+        env:
+          SCREENSHOT_E2E_OUT: artifacts/full
+          P52E_GIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: npm run test:screenshot-e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p52e-strict-product-certification
+          path: artifacts
