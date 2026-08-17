@@ -6,8 +6,9 @@ const refinement=await readFile(new URL('../src/import/emblemOcrRefinement.ts',i
 const retryPolicy=await readFile(new URL('../src/import/ocrRetryPolicy.ts',import.meta.url),'utf8');
 
 test('P51 retains full-emblem and Otsu stat stages and restores raw stat OCR only as a final fallback',()=>{
-  assert.match(refinement,/tessedit_pageseg_mode:'6'/);
-  assert.match(refinement,/processed=otsuCanvas\(canvas\(src,statNameStrip\)\)/);
+  assert.match(refinement,/emblem:\$\{role\}:\$\{i\+1\}:psm6/);
+  assert.match(refinement,/runStatRepresentationFallbacks\(/);
+  assert.match(refinement,/processed=otsuCanvas\(rawStatCanvas\)/);
   assert.match(refinement,/stat:\$\{role\}:\$\{i\+1\}:otsu/);
   assert.match(refinement,/stat:\$\{role\}:\$\{i\+1\}:raw/);
   assert.ok(refinement.indexOf('stat:${role}:${i+1}:otsu')<refinement.indexOf('stat:${role}:${i+1}:raw'));
