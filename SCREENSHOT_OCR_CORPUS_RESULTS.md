@@ -83,7 +83,7 @@ For example, a raw action ID can be correct while confidence is below 0.90. In t
 
 ## P52E Production E2E certification
 
-The new browser corpus:
+The browser corpus:
 
 - loads the actual `docs/` artifact;
 - drives the real hidden file input;
@@ -93,11 +93,11 @@ The new browser corpus:
 - verifies DOM/state parity and review highlighting;
 - runs Chromium and Firefox;
 - distinguishes cold and warm OCR-worker behavior;
-- records source SHA-256 and browser version;
-- uses a 30-second outer watchdog;
+- mechanically pins source dimensions, byte size, MIME type, and SHA-256;
+- uses a 30-second outer watchdog and records internal OCR timeouts/budget exhaustion;
 - checks public GitHub Pages OCR-asset parity.
 
-Final measured results, Board 2 root-cause classification, browser comparison, full-corpus product accuracy, and deployment parity are recorded in `P52E_PRODUCTION_E2E_CERTIFICATION.md` once the browser certification completes.
+P52E is complete. Final measured results, Board 2 root-cause classification, browser comparison, full-corpus product accuracy, safety failures, timing, and deployment parity are recorded in `P52E_PRODUCTION_E2E_CERTIFICATION_RESULTS.md`.
 
 ## Historical OCR/parser lessons retained
 
