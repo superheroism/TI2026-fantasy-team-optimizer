@@ -74,7 +74,7 @@ The strict gate fails on:
 - exhausted OCR execution budgets;
 - false-high-confidence recognition errors.
 
-The acceptance criteria are preserved in strict mode, but P52E does **not** make today's known product failures a blocking condition on the measurement package itself. On pull requests, `.github/workflows/p52e-strict-product-certification.yml` runs the full production E2E corpus in report-only mode: the measurement must execute successfully and produce artifacts, while the frozen product result may remain FAIL. A manual `workflow_dispatch` runs the same corpus in strict mode and is expected to fail until the product defects are fixed. Once P52F satisfies the frozen criteria, strict mode should be promoted back to an automatic blocking PR gate.
+The acceptance criteria are preserved in strict mode, but P52E does **not** make today's known product failures a blocking condition on the measurement package itself. On pull requests, the product-certification workflow runs the full production E2E corpus in report-only mode: the measurement must execute successfully and produce artifacts, while the frozen product result may remain FAIL. A manual `workflow_dispatch` runs the same corpus in strict mode and is expected to fail until the product defects are fixed. Once P52F satisfies the frozen criteria, strict mode should be promoted back to an automatic blocking PR gate.
 
 The separate report-only production-E2E workflow remains manual so the expensive corpus is not duplicated automatically.
 
