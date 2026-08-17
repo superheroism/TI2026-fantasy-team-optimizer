@@ -14,20 +14,20 @@ replaceOnce(
 
 replaceOnce(
   'src/ui/boardView.ts',
-  `import type { BannerState, BoardState, DataBundle, OfferedOperation, RecommendationResult, Role, TraitName } from '../domain/types.js';`,
-  `import type { BannerState, BoardState, DataBundle, OfferedOperation, RecommendationResult, Role, StatName, TraitName } from '../domain/types.js';`
+  "import type { BannerState, BoardState, DataBundle, OfferedOperation, RecommendationResult, Role, TraitName } from '../domain/types.js';",
+  "import type { BannerState, BoardState, DataBundle, OfferedOperation, RecommendationResult, Role, StatName, TraitName } from '../domain/types.js';"
 );
 
 replaceOnce(
   'src/ui/boardView.ts',
-  `function signedPct(value: number): string {\n  return \`${'${value >= 0 ? \'+' : \'\'}${value}%'}\`;\n}\n`,
-  `function signedPct(value: number): string {\n  return \`${'${value >= 0 ? \'+' : \'\'}${value}%'}\`;\n}\n\nfunction statDisplayName(stat: StatName): string {\n  return stat === 'Madstone' ? 'Madstone Collected' : stat;\n}\n`
+  'function emblemCard(role: Role, banner: BannerState, index: number): string {',
+  "function statDisplayName(stat: StatName): string {\n  return stat === 'Madstone' ? 'Madstone Collected' : stat;\n}\n\nfunction emblemCard(role: Role, banner: BannerState, index: number): string {"
 );
 
 replaceOnce(
   'src/ui/boardView.ts',
-  `${'${pool.map(stat => `<option ${stat === emblem.stat ? \'selected\' : \'\'}>${stat}</option>`).join(\'\')}'} `,
-  `${'${pool.map(stat => `<option value="${escapeHtml(stat)}" ${stat === emblem.stat ? \'selected\' : \'\'}>${escapeHtml(statDisplayName(stat))}</option>`).join(\'\')}'} `
+  "${pool.map(stat => `<option ${stat === emblem.stat ? 'selected' : ''}>${stat}</option>`).join('')}",
+  "${pool.map(stat => `<option value=\"${escapeHtml(stat)}\" ${stat === emblem.stat ? 'selected' : ''}>${escapeHtml(statDisplayName(stat))}</option>`).join('')}"
 );
 
-writeFileSync('tests/stat-row-retry-ui.test.mjs', `import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { readFileSync } from 'node:fs';\n\nconst read=path=>readFileSync(new URL(path,import.meta.url),'utf8');\nconst refinement=read('../src/import/emblemOcrRefinement.ts');\nconst boardView=read('../src/ui/boardView.ts');\n\ntest('low-confidence stat gets a dedicated native-resolution single-line retry',()=>{\n  assert.match(refinement,/statStrip=\\{left:base\\.left,top:base\\.top,width:base\\.width,height:base\\.height\\*\\.38\\}/);\n  assert.match(refinement,/statRec=await w\\.recognize\\(canvas\\(src,statStrip\\),\\{tessedit_pageseg_mode:'7'\\}/);\n  assert.match(refinement,/if\\(confidenceFor\\(raw,sp\\)<\\.9\\)/);\n  assert.match(refinement,/sm\\.score>=\\.92&&sc>=\\.9/);\n});\n\ntest('stat-row retry excludes multiplier percentages from OCR confidence evidence',()=>{\n  assert.match(refinement,/filter\\(word=>!\\\/\\^\\\\\\+\\?\\\\d\\+%\\$\\\/\\.test\\(word\\.text\\.trim\\(\\)\\)\\)/);\n});\n\ntest('successful stat retries synchronize final diagnostic stat values',()=>{\n  assert.match(refinement,/d\\.normalizedStat=sm\\.value;d\\.statMatchScore=sm\\.score/);\n});\n\ntest('Madstone keeps its engine key while displaying the client label',()=>{\n  assert.match(boardView,/stat === 'Madstone' \\? 'Madstone Collected' : stat/);\n  assert.match(boardView,/value="\\$\\{escapeHtml\\(stat\\)\\}"/);\n  assert.match(boardView,/escapeHtml\\(statDisplayName\\(stat\\)\\)/);\n});\n`);
+writeFileSync('tests/stat-row-retry-ui.test.mjs', `import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { readFileSync } from 'node:fs';\n\nconst read=path=>readFileSync(new URL(path,import.meta.url),'utf8');\nconst refinement=read('../src/import/emblemOcrRefinement.ts');\nconst boardView=read('../src/ui/boardView.ts');\n\ntest('low-confidence stat gets a dedicated native-resolution single-line retry',()=>{\n  assert.match(refinement,/statStrip=\\{left:base\\.left,top:base\\.top,width:base\\.width,height:base\\.height\\*\\.38\\}/);\n  assert.match(refinement,/statRec=await w\\.recognize\\(canvas\\(src,statStrip\\),\\{tessedit_pageseg_mode:'7'\\}/);\n  assert.match(refinement,/sm\\.score>=\\.92&&sc>=\\.9/);\n});\n\ntest('stat-row retry excludes multiplier percentages from OCR confidence evidence',()=>{\n  assert.match(refinement,/evidenceWords=.*filter\\(word=>!/);\n  assert.match(refinement,/\\\\d\\+%/);\n});\n\ntest('successful stat retries synchronize final diagnostic stat values',()=>{\n  assert.match(refinement,/d\\.normalizedStat=sm\\.value;d\\.statMatchScore=sm\\.score/);\n});\n\ntest('Madstone keeps its engine key while displaying the client label',()=>{\n  assert.match(boardView,/stat === 'Madstone' \\? 'Madstone Collected' : stat/);\n  assert.match(boardView,/value="\\$\\{escapeHtml\\(stat\\)\\}"/);\n  assert.match(boardView,/escapeHtml\\(statDisplayName\\(stat\\)\\)/);\n});\n`);
