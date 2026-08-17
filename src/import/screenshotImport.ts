@@ -1,6 +1,7 @@
 import type { BannerEmblems, BoardLayoutId, BoardState, DataBundle, EmblemState, MenuState, QualityTier, Role, SlotColor, StatName, TraitName } from '../domain/types.js';
 import { BOARD_LAYOUTS, isLegalStat } from '../domain/rules.js';
 import { ACTION_BY_ID, ACTION_CATALOG, cloneAction } from '../data/actionCatalog.js';
+import { matchActionText, ocrSimilarity } from './ocrDomainMatch.js';
 import { parseScreenshotLocally, type LocalScreenshotOcrMetrics } from './localScreenshotOcr.js';
 import { refineUncertainScreenshotFields } from './emblemOcrRefinement.js';
 
@@ -130,19 +131,67 @@ function geometryConfidence(metrics:LocalScreenshotOcrMetrics):{value:number;rea
 function baseComponents(geometry:number,domainMatch:number):ScreenshotConfidenceComponents {
   return {geometry,domainMatch:clamp(domainMatch),structuredEvidence:0,targetedRetry:0,fieldConsistency:1};
 }
+function phraseSimilarity(rawText:string,target:string):number {
+  const rawTokens=rawText.toUpperCase().match(/[A-Z0-9]+/g)??[];
+  const targetWords=Math.max(1,target.trim().split(/\s+/).length);
+  let best=ocrSimilarity(rawText,target);
+  for(let words=Math.max(1,targetWords-1);words<=Math.min(rawTokens.length,targetWords+1);words++){
+    for(let index=0;index+words<=rawTokens.length;index++) best=Math.max(best,ocrSimilarity(rawTokens.slice(index,index+words).join(' '),target));
+  }
+  return best;
+}
+interface TeamEvidenceMatch { team:string;score:number;runnerUpScore:number;margin:number;strongPlayerCount:number;directTeamScore:number; }
+function matchTeamEvidence(rawText:string,role:Role,data:DataBundle):TeamEvidenceMatch|undefined {
+  if(!rawText.trim()) return undefined;
+  const byTeam=new Map<string,{direct:number;players:number[]}>();
+  for(const profile of data.players.filter(player=>player.role===role)){
+    const current=byTeam.get(profile.team)??{direct:phraseSimilarity(rawText,profile.team),players:[]};
+    for(const name of [profile.name,...profile.attachedPlayers]) current.players.push(phraseSimilarity(rawText,name));
+    current.direct=Math.max(current.direct,phraseSimilarity(rawText,profile.team));
+    byTeam.set(profile.team,current);
+  }
+  const ranked=[...byTeam.entries()].map(([team,evidence])=>{
+    const playerScores=[...evidence.players].sort((a,b)=>b-a),strongPlayerCount=playerScores.filter(score=>score>=.82).length;
+    const rosterScore=role==='mid'?(playerScores[0]??0):((playerScores[0]??0)+(playerScores[1]??0))/2;
+    return {team,score:Math.max(evidence.direct,rosterScore),strongPlayerCount,directTeamScore:evidence.direct};
+  }).sort((a,b)=>b.score-a.score);
+  const best=ranked[0]; if(!best)return undefined;
+  const runnerUpScore=ranked[1]?.score??0;
+  return {...best,runnerUpScore,margin:best.score-runnerUpScore};
+}
+function trustedTeamEvidence(match:TeamEvidenceMatch,role:Role):boolean {
+  const direct=match.directTeamScore>=.9&&match.margin>=.1;
+  const roster=role==='mid'
+    ? match.strongPlayerCount>=1&&match.score>=.9&&match.margin>=.1
+    : match.strongPlayerCount>=2&&match.score>=.84&&match.margin>=.08;
+  return direct||roster;
+}
 
-/** Re-score already-recognized fields without changing any extracted value. */
-export function calibrateScreenshotImportConfidence(raw:RawScreenshotImport, metrics:LocalScreenshotOcrMetrics):void {
+/** Re-score already-recognized fields from field-specific evidence. Strong evidence may also repair a team winner. */
+export function calibrateScreenshotImportConfidence(raw:RawScreenshotImport, metrics:LocalScreenshotOcrMetrics, data:DataBundle):void {
   const geometry=geometryConfidence(metrics);
   const calibrated:ScreenshotFieldConfidence[]=[];
   const byEmblem=new Map(metrics.diagnostic.emblems.map(emblem=>[`${emblem.role}:${emblem.rowIndex}`,emblem] as const));
   const layout=BOARD_LAYOUTS[raw.layoutId];
   for(const role of ROLES){
-    const teamPath=`banners.${role}.selectedTeam`,team=metrics.diagnostic.teamEvidence[role],teamRaw=confidenceFor(raw,teamPath),teamComponents=baseComponents(geometry.value,team.matchScore);
-    let teamReason:ScreenshotEvidenceClass='fuzzy-team';
-    if(team.matchScore>=.9){teamComponents.structuredEvidence=.95;teamReason='roster-team';}
+    const teamPath=`banners.${role}.selectedTeam`,team=metrics.diagnostic.teamEvidence[role],teamRaw=confidenceFor(raw,teamPath),teamMatch=matchTeamEvidence(team.rawText,role,data);
+    const teamDomain=teamMatch?.score??team.matchScore,teamComponents=baseComponents(geometry.value,teamDomain);
+    let teamReason:ScreenshotEvidenceClass='fuzzy-team',teamResolved=Boolean(raw.banners[role].selectedTeam);
+    if(teamMatch&&trustedTeamEvidence(teamMatch,role)){
+      if(teamMatch.team!==raw.banners[role].selectedTeam){
+        raw.banners[role].selectedTeam=teamMatch.team;
+        team.normalizedTeam=teamMatch.team;
+        team.matchScore=teamMatch.score;
+      }
+      teamComponents.structuredEvidence=.96;
+      teamReason='roster-team';
+      teamResolved=true;
+    } else if(teamMatch&&teamMatch.team!==raw.banners[role].selectedTeam){
+      teamComponents.fieldConsistency=.7;
+      teamReason='conflicting-retry';
+    }
     if(geometry.reason) teamReason=geometry.reason;
-    calibrated.push(calibrateConfidenceEvidence(teamPath,{resolved:Boolean(raw.banners[role].selectedTeam),rawConfidence:teamRaw,reason:teamReason,components:teamComponents}));
+    calibrated.push(calibrateConfidenceEvidence(teamPath,{resolved:teamResolved,rawConfidence:teamRaw,reason:teamReason,components:teamComponents}));
 
     for(let index=0;index<layout.roles[role].length;index++){
       const emblem=raw.banners[role].emblems[index]!,diag=byEmblem.get(`${role}:${index}`),slot=layout.roles[role][index]!;
@@ -159,8 +208,14 @@ export function calibrateScreenshotImportConfidence(raw:RawScreenshotImport, met
 
       const tierPath=`banners.${role}.emblems.${index}.qualityTier`,tierRaw=confidenceFor(raw,tierPath),tierComponents=baseComponents(geometry.value,diag.tierMatchScore),tierSame=diag.normalizedTier===emblem.qualityTier;
       let tierReason:ScreenshotEvidenceClass='fuzzy-tier';
-      const tierDirect=tierSame&&directTierText(diag.rawTierText,emblem.qualityTier);if(tierDirect){tierComponents.structuredEvidence=tierRaw>=.98?.98:.89;tierReason='direct-native-tier';}
-      else if(!tierSame){tierComponents.fieldConsistency=.7;tierReason='conflicting-retry';}
+      const tierDirect=tierSame&&directTierText(diag.rawTierText,emblem.qualityTier);
+      if(tierDirect){
+        const corroborated=diag.tierMatchScore>=.95||tierRaw>=.98;
+        const unambiguousNonTierOne=emblem.qualityTier!==1&&diag.tierMatchScore>=.84;
+        if(corroborated||unambiguousNonTierOne) tierComponents.structuredEvidence=corroborated?.98:.96;
+        else tierComponents.structuredEvidence=.89;
+        tierReason='direct-native-tier';
+      } else if(!tierSame){tierComponents.fieldConsistency=.7;tierReason='conflicting-retry';}
       if(geometry.reason) tierReason=geometry.reason;
       calibrated.push(calibrateConfidenceEvidence(tierPath,{resolved:tierDirect||tierRaw>.2,rawConfidence:tierRaw,reason:(tierDirect||tierRaw>.2)?tierReason:'unresolved',components:tierComponents}));
 
@@ -174,9 +229,13 @@ export function calibrateScreenshotImportConfidence(raw:RawScreenshotImport, met
   }
 
   raw.operationIds.forEach((operationId,index)=>{
-    const path=`operationIds.${index}`,rawConfidence=confidenceFor(raw,path),components=baseComponents(geometry.value,rawConfidence);
-    const actionResolved=operationId!==null&&rawConfidence>=.9;let reason:ScreenshotEvidenceClass=actionResolved?'dedicated-action-crop':'unresolved';
-    if(actionResolved)components.structuredEvidence=.95;
+    const path=`operationIds.${index}`,rawConfidence=confidenceFor(raw,path),actionText=metrics.diagnostic.actionEvidence.cardTexts[index]??'',actionMatch=matchActionText(actionText),components=baseComponents(geometry.value,actionMatch?.score??rawConfidence);
+    const catalogAgreement=operationId!==null&&actionMatch?.id===operationId&&metrics.diagnostic.actionEvidence.resolved[index]===operationId;
+    const decisiveCatalogMatch=Boolean(catalogAgreement&&actionMatch&&actionMatch.score>=.7&&actionMatch.margin>=.06);
+    const actionResolved=operationId!==null&&(decisiveCatalogMatch||rawConfidence>=.9);
+    let reason:ScreenshotEvidenceClass=decisiveCatalogMatch?'dedicated-action-crop':(operationId!==null?'fuzzy-action':'unresolved');
+    if(decisiveCatalogMatch)components.structuredEvidence=.96;
+    else if(operationId!==null&&rawConfidence>=.9)components.structuredEvidence=.95;
     if(geometry.reason&&operationId!==null) reason=geometry.reason;
     calibrated.push(calibrateConfidenceEvidence(path,{resolved:actionResolved,rawConfidence,reason,components}));
   });
@@ -195,7 +254,7 @@ export function calibrateScreenshotImportConfidence(raw:RawScreenshotImport, met
     emblem.reviewRequired=fieldRows.some(field=>field.confidence<REVIEW_THRESHOLD);
   }
   const diagnostic=metrics.diagnostic as typeof metrics.diagnostic & {confidenceModel?:string;fieldConfidence?:ScreenshotFieldConfidence[]};
-  diagnostic.confidenceModel='structured-evidence-v1';
+  diagnostic.confidenceModel='structured-evidence-v2';
   diagnostic.fieldConfidence=calibrated.map(field=>({...field,components:field.components?{...field.components}:undefined}));
 }
 
@@ -254,13 +313,22 @@ async function visionFallback(file:File,data:DataBundle):Promise<RawScreenshotIm
 export async function requestScreenshotImport(file:File,data:DataBundle):Promise<RawScreenshotImport> {
   lastLocalOcrMetrics=undefined;
   try{
-    const local=await parseScreenshotLocally(file,data),refined=await refineUncertainScreenshotFields(file,data,local.result,local.metrics);
+    const local=await parseScreenshotLocally(file,data);
+    // Resolve fields from structured evidence before expensive targeted OCR. Refinement now runs only where it can change the decision.
+    calibrateScreenshotImportConfidence(local.result,local.metrics,data);
+    const refined=await refineUncertainScreenshotFields(file,data,local.result,local.metrics);
     local.metrics.targetedRetryMs+=refined.elapsedMs; local.metrics.totalMs+=refined.elapsedMs;
-    calibrateScreenshotImportConfidence(refined.result,local.metrics);
+    calibrateScreenshotImportConfidence(refined.result,local.metrics,data);
     lastLocalOcrMetrics=local.metrics;
     return refined.result;
   }catch(localError){
     const endpoint=document.querySelector<HTMLMetaElement>('meta[name="screenshot-import-endpoint"]')?.content; if(!endpoint) throw localError;
-    return await visionFallback(file,data);
+    try{return await visionFallback(file,data);}catch(fallbackError){
+      const localMessage=localError instanceof Error?`${localError.name}: ${localError.message}`:String(localError);
+      const fallbackMessage=fallbackError instanceof Error?`${fallbackError.name}: ${fallbackError.message}`:String(fallbackError);
+      const combined=new Error(`Local screenshot OCR failed (${localMessage}); hosted fallback also failed (${fallbackMessage}).`);
+      (combined as Error & {cause?:unknown}).cause=localError;
+      throw combined;
+    }
   }
 }
