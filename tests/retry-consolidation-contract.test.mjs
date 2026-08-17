@@ -9,7 +9,7 @@ test('P52 retains full-emblem recovery and replaces P51 stat representations wit
   assert.match(refinement,/emblem:\$\{role\}:\$\{i\+1\}:psm6/);
   assert.match(refinement,/statStrip=extractionToSource\(nameRoi,metrics\)/);
   assert.match(refinement,/stat:\$\{role\}:\$\{i\+1\}:psm6/);
-  assert.match(refinement,/acceptsStatEvidence\(sm\.score,sc,sm\.score-sm\.runnerUpScore\)/);
+  assert.ok(refinement.includes("acceptsStatEvidence(sm.score,sc,sm.score-sm.runnerUpScore,sm.value.replace(/[^A-Za-z0-9]/g,'').length,confidenceFor(raw,sp))"));
   assert.doesNotMatch(refinement,/stat:\$\{role\}:\$\{i\+1\}:otsu/);
   assert.doesNotMatch(refinement,/stat:\$\{role\}:\$\{i\+1\}:raw/);
 });

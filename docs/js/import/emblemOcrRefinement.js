@@ -144,7 +144,7 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
                 const cardAlignedStat = metrics.diagnostic.extractionColumnMethod === 'role-labels', statLeft = cardAlignedStat ? Math.max(roleBand.left, d.roi.left - d.roi.width * .08) : roleBand.left, statWidth = cardAlignedStat ? Math.max(1, roleBand.right - statLeft) : (roleBand.right - roleBand.left) * .78, nameRoi = { left: statLeft, top: d.roi.top, width: statWidth, height: d.roi.height }, statStrip = extractionToSource(nameRoi, metrics), statCanvas = canvas(src, statStrip), statRec = await recognize(w, statCanvas, budget, `stat:${role}:${i + 1}:psm6`, 6, statStrip), statWords = parse(statRec.data.tsv), statLines = lines(statWords), statTier = bestTierLine(statLines), sm = matchStatLines(statLines.map(line => line.text), LEGAL_STAT_POOLS[layout.roles[role][i].color]), evidenceWords = sm.lineIndices.flatMap(index => statLines[index]?.words ?? []), sc = combined(sm.score, evidenceWords);
                 retries++;
                 emblemRetries++;
-                if (acceptsStatEvidence(sm.score, sc, sm.score - sm.runnerUpScore) && sc > confidenceFor(raw, sp)) {
+                if (acceptsStatEvidence(sm.score, sc, sm.score - sm.runnerUpScore, sm.value.replace(/[^A-Za-z0-9]/g, '').length, confidenceFor(raw, sp)) && sc > confidenceFor(raw, sp)) {
                     raw.banners[role].emblems[i].stat = sm.value;
                     setConfidence(raw, sp, sc);
                     d.normalizedStat = sm.value;
@@ -166,7 +166,7 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
                 const fallbackLeft = Math.max(roleBand.left, d.roi.left - d.roi.width * .08), fallbackRoi = { left: fallbackLeft, top: d.roi.top, width: Math.max(1, roleBand.right - fallbackLeft), height: d.roi.height }, fallbackStrip = extractionToSource(fallbackRoi, metrics), fallbackCanvas = canvas(src, fallbackStrip), fallbackRec = await recognize(w, fallbackCanvas, budget, `stat:${role}:${i + 1}:card-psm6`, 6, fallbackStrip), fallbackWords = parse(fallbackRec.data.tsv), fallbackLines = lines(fallbackWords), fallbackMatch = matchStatLines(fallbackLines.map(line => line.text), LEGAL_STAT_POOLS[layout.roles[role][i].color]), fallbackEvidence = fallbackMatch.lineIndices.flatMap(index => fallbackLines[index]?.words ?? []), fallbackConfidence = combined(fallbackMatch.score, fallbackEvidence);
                 retries++;
                 emblemRetries++;
-                if (acceptsStatEvidence(fallbackMatch.score, fallbackConfidence, fallbackMatch.score - fallbackMatch.runnerUpScore) && fallbackConfidence > confidenceFor(raw, sp)) {
+                if (acceptsStatEvidence(fallbackMatch.score, fallbackConfidence, fallbackMatch.score - fallbackMatch.runnerUpScore, fallbackMatch.value.replace(/[^A-Za-z0-9]/g, '').length, confidenceFor(raw, sp)) && fallbackConfidence > confidenceFor(raw, sp)) {
                     raw.banners[role].emblems[i].stat = fallbackMatch.value;
                     setConfidence(raw, sp, fallbackConfidence);
                     d.normalizedStat = fallbackMatch.value;
