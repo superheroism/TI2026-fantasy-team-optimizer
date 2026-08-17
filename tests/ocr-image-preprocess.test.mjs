@@ -29,10 +29,11 @@ test('whiteness Otsu produces dark text from bright low-saturation pixels on col
   assert.ok(result.contrastHigh>result.contrastLow);
 });
 
-test('stat-specific fallback goes directly to the strict Otsu retry',()=>{
+test('stat-specific fallback uses strict Otsu first and delegates acceptance to the frozen P51 policy',()=>{
   const refinement=readFileSync(new URL('../src/import/emblemOcrRefinement.ts',import.meta.url),'utf8');
   assert.doesNotMatch(refinement,/statStrip=/);
-  assert.match(refinement,/if\(confidenceFor\(raw,sp\)<\.9\).*otsuCanvas/s);
-  assert.match(refinement,/tessedit_pageseg_mode:'7'/);
-  assert.match(refinement,/sm\.score>=\.92&&sc>=\.9/);
+  assert.match(refinement,/runStatRepresentationFallbacks\(/);
+  assert.match(refinement,/processed=otsuCanvas\(rawStatCanvas\)/);
+  assert.match(refinement,/stat:\$\{role\}:\$\{i\+1\}:otsu/);
+  assert.match(refinement,/acceptsStatEvidence\(sm\.score,sc\)/);
 });

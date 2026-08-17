@@ -1,6 +1,8 @@
 import { BOARD_LAYOUTS, LEGAL_STAT_POOLS } from '../domain/rules.js';
 import { matchActionText, matchStatLines, matchTierText, matchTraitText, ocrSimilarity } from './ocrDomainMatch.js';
 import { otsuWhitenessRgba } from './ocrImagePreprocess.js';
+import { recognizeWithBudget, remainingOcrBudgetMs } from './ocrRecognition.js';
+import { acceptsStatEvidence, runStatRepresentationFallbacks, shouldRetryStat, shouldRetryTier } from './ocrRetryPolicy.js';
 const ROLES = ['core', 'mid', 'support'];
 const TRAITS = ['Fractal', 'Friendly', 'Vampiric', 'Unique', 'Benevolent'];
 let workerPromise;
@@ -15,6 +17,13 @@ function parse(tsv) { if (!tsv)
 } return out; }
 async function worker() { workerPromise ??= (async () => { const T = window.Tesseract; if (!T)
     throw new Error('Local OCR runtime is unavailable for screenshot refinement.'); const w = await T.createWorker('eng'); await w.setParameters({ tessedit_pageseg_mode: '6' }); return w; })(); return workerPromise; }
+async function resetWorker() { const pending = workerPromise; workerPromise = undefined; if (!pending)
+    return; try {
+    const w = await pending;
+    await w.terminate?.();
+}
+catch { /* best-effort reset after timeout */ } }
+async function recognize(w, c, budget, stage, psm, crop) { return await recognizeWithBudget(w, c, budget, { stage, psm, crop, canvasWidth: c.width, canvasHeight: c.height }, { tessedit_pageseg_mode: String(psm) }, { tsv: true }, resetWorker); }
 async function image(file) { return await new Promise((ok, no) => { const i = new Image(), u = URL.createObjectURL(file); i.onload = () => { URL.revokeObjectURL(u); ok(i); }; i.onerror = () => { URL.revokeObjectURL(u); no(new Error('Could not decode screenshot for refinement.')); }; i.src = u; }); }
 function canvas(i, r) { const left = Math.max(0, Math.floor(r.left)), top = Math.max(0, Math.floor(r.top)), right = Math.min(i.naturalWidth, Math.ceil(r.left + r.width)), bottom = Math.min(i.naturalHeight, Math.ceil(r.top + r.height)), c = document.createElement('canvas'); c.width = Math.max(1, right - left); c.height = Math.max(1, bottom - top); const x = c.getContext('2d'); if (!x)
     throw new Error('Canvas unavailable.'); x.drawImage(i, left, top, c.width, c.height, 0, 0, c.width, c.height); return c; }
@@ -97,39 +106,60 @@ function cluster3(words) {
 function parseTokens(s) { const m = s.match(/ROLL\s*TOKENS?\s*[:\-]?\s*(\d+)/i) ?? s.match(/TOKENS?\s*[:\-]?\s*(\d+)/i); return m ? Number(m[1]) : undefined; }
 /** Retry only unresolved structured fields from native-resolution regions derived from observed geometry. */
 export async function refineUncertainScreenshotFields(file, data, raw, metrics) {
-    const started = performance.now(), src = await image(file), w = await worker(), layout = BOARD_LAYOUTS[raw.layoutId];
+    const started = performance.now(), budget = metrics.ocrExecution, layout = BOARD_LAYOUTS[raw.layoutId];
     let retries = 0, emblemRetries = 0, teamRetries = 0, footerRetries = 0;
+    if (budget.exhausted || remainingOcrBudgetMs(budget) <= 0) {
+        budget.exhausted = true;
+        if (!raw.warnings?.some(warning => warning.includes('OCR execution budget')))
+            raw.warnings = [...(raw.warnings ?? []), 'OCR execution budget was exhausted; unresolved fields require review.'];
+        return { result: raw, elapsedMs: performance.now() - started, retries };
+    }
+    const src = await image(file), w = await worker();
     const diagnostics = new Map(metrics.diagnostic.emblems.map(e => [`${e.role}:${e.rowIndex}`, e]));
     for (const role of ROLES) {
         for (let i = 0; i < layout.roles[role].length; i++) {
             const sp = `banners.${role}.emblems.${i}.stat`, qp = `banners.${role}.emblems.${i}.qualityTier`, tp = `banners.${role}.emblems.${i}.trait`, d = diagnostics.get(`${role}:${i}`);
             if (!d)
                 continue;
-            if (confidenceFor(raw, sp) >= .9 && confidenceFor(raw, qp) >= .9 && confidenceFor(raw, tp) >= .9)
+            if (!shouldRetryStat(confidenceFor(raw, sp)) && confidenceFor(raw, qp) >= .9 && confidenceFor(raw, tp) >= .9)
                 continue;
-            const rr = extractionToSource({ left: Math.max(0, d.roi.left - d.roi.width * .05), top: Math.max(0, d.roi.top - d.roi.height * .08), width: d.roi.width * 1.08, height: d.roi.height * 1.16 }, metrics), rec = await w.recognize(canvas(src, rr), { tessedit_pageseg_mode: '6' }, { tsv: true }), words = parse(rec.data.tsv), ls = lines(words);
+            const rr = extractionToSource({ left: Math.max(0, d.roi.left - d.roi.width * .05), top: Math.max(0, d.roi.top - d.roi.height * .08), width: d.roi.width * 1.08, height: d.roi.height * 1.16 }, metrics), emblemCanvas = canvas(src, rr), rec = await recognize(w, emblemCanvas, budget, `emblem:${role}:${i + 1}:psm6`, 6, rr), words = parse(rec.data.tsv), ls = lines(words);
             retries++;
             emblemRetries++;
-            if (confidenceFor(raw, sp) < .9) {
+            if (shouldRetryStat(confidenceFor(raw, sp))) {
                 const sm = matchStatLines(ls.map(line => line.text), LEGAL_STAT_POOLS[layout.roles[role][i].color]), statWords = sm.lineIndices.flatMap(index => ls[index]?.words ?? []), sc = combined(sm.score, statWords.length ? statWords : words);
-                if (sm.score >= .92 && sc >= .9 && sc > confidenceFor(raw, sp)) {
+                if (acceptsStatEvidence(sm.score, sc) && sc > confidenceFor(raw, sp)) {
                     raw.banners[role].emblems[i].stat = sm.value;
                     setConfidence(raw, sp, sc);
                     d.normalizedStat = sm.value;
                     d.statMatchScore = sm.score;
                 }
             }
-            if (confidenceFor(raw, sp) < .9) {
-                const pct = d.words.find(word => /^\+?\d+%$/.test(word.text.trim())), left = d.roi.left + d.roi.width * .06, right = pct ? Math.max(d.roi.left + d.roi.width * .45, pct.x - d.roi.width * .08) : d.roi.left + d.roi.width * .70, nameRoi = { left, top: d.roi.top, width: Math.max(d.roi.width * .35, right - left), height: d.roi.height * .38 }, statNameStrip = extractionToSource(nameRoi, metrics), processed = otsuCanvas(canvas(src, statNameStrip)), statRec = await w.recognize(processed, { tessedit_pageseg_mode: '7' }, { tsv: true }), statRetryWords = parse(statRec.data.tsv), statRetryLines = lines(statRetryWords), sm = matchStatLines(statRetryLines.map(line => line.text), LEGAL_STAT_POOLS[layout.roles[role][i].color]), evidenceWords = sm.lineIndices.flatMap(index => statRetryLines[index]?.words ?? []), sc = combined(sm.score, evidenceWords);
+            await runStatRepresentationFallbacks(() => confidenceFor(raw, sp), async () => {
+                if (budget.exhausted)
+                    return;
+                const pct = d.words.find(word => /^\+?\d+%$/.test(word.text.trim())), left = d.roi.left + d.roi.width * .06, right = pct ? Math.max(d.roi.left + d.roi.width * .45, pct.x - d.roi.width * .08) : d.roi.left + d.roi.width * .70, nameRoi = { left, top: d.roi.top, width: Math.max(d.roi.width * .35, right - left), height: d.roi.height * .38 }, statNameStrip = extractionToSource(nameRoi, metrics), rawStatCanvas = canvas(src, statNameStrip), processed = otsuCanvas(rawStatCanvas), statRec = await recognize(w, processed, budget, `stat:${role}:${i + 1}:otsu`, 7, statNameStrip), statRetryWords = parse(statRec.data.tsv), statRetryLines = lines(statRetryWords), sm = matchStatLines(statRetryLines.map(line => line.text), LEGAL_STAT_POOLS[layout.roles[role][i].color]), evidenceWords = sm.lineIndices.flatMap(index => statRetryLines[index]?.words ?? []), sc = combined(sm.score, evidenceWords);
                 retries++;
                 emblemRetries++;
-                if (sm.score >= .92 && sc >= .9 && sc > confidenceFor(raw, sp)) {
+                if (acceptsStatEvidence(sm.score, sc) && sc > confidenceFor(raw, sp)) {
                     raw.banners[role].emblems[i].stat = sm.value;
                     setConfidence(raw, sp, sc);
                     d.normalizedStat = sm.value;
                     d.statMatchScore = sm.score;
                 }
-            }
+            }, async () => {
+                if (budget.exhausted)
+                    return;
+                const pct = d.words.find(word => /^\+?\d+%$/.test(word.text.trim())), left = d.roi.left + d.roi.width * .06, right = pct ? Math.max(d.roi.left + d.roi.width * .45, pct.x - d.roi.width * .08) : d.roi.left + d.roi.width * .70, nameRoi = { left, top: d.roi.top, width: Math.max(d.roi.width * .35, right - left), height: d.roi.height * .38 }, statNameStrip = extractionToSource(nameRoi, metrics), rawStatCanvas = canvas(src, statNameStrip), rawRec = await recognize(w, rawStatCanvas, budget, `stat:${role}:${i + 1}:raw`, 7, statNameStrip), rawWords = parse(rawRec.data.tsv), rawLines = lines(rawWords), rawMatch = matchStatLines(rawLines.map(line => line.text), LEGAL_STAT_POOLS[layout.roles[role][i].color]), rawEvidence = rawMatch.lineIndices.flatMap(index => rawLines[index]?.words ?? []), rawConfidence = combined(rawMatch.score, rawEvidence);
+                retries++;
+                emblemRetries++;
+                if (acceptsStatEvidence(rawMatch.score, rawConfidence) && rawConfidence > confidenceFor(raw, sp)) {
+                    raw.banners[role].emblems[i].stat = rawMatch.value;
+                    setConfidence(raw, sp, rawConfidence);
+                    d.normalizedStat = rawMatch.value;
+                    d.statMatchScore = rawMatch.score;
+                }
+            });
             const tier = bestTierLine(ls), qc = combined(tier.match.score, tier.line?.words ?? words);
             if (tier.direct && tier.match.score >= .72 && qc > confidenceFor(raw, qp)) {
                 raw.banners[role].emblems[i].qualityTier = tier.match.value;
@@ -137,8 +167,8 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
                 d.normalizedTier = tier.match.value;
                 d.tierMatchScore = tier.match.score;
             }
-            else if (!tier.direct && confidenceFor(raw, qp) < .9) {
-                const base = extractionToSource(d.roi, metrics), strip = { left: base.left + base.width * .02, top: base.top + base.height * .30, width: base.width * .96, height: base.height * .38 }, tierRec = await w.recognize(canvas(src, strip), { tessedit_pageseg_mode: '7' }, { tsv: true }), tierWords = parse(tierRec.data.tsv), tierLines = lines(tierWords), retryTier = bestTierLine(tierLines);
+            else if (!budget.exhausted && !tier.direct && shouldRetryTier(confidenceFor(raw, qp))) {
+                const base = extractionToSource(d.roi, metrics), strip = { left: base.left + base.width * .02, top: base.top + base.height * .30, width: base.width * .96, height: base.height * .38 }, tierCanvas = canvas(src, strip), tierRec = await recognize(w, tierCanvas, budget, `tier:${role}:${i + 1}`, 7, strip), tierWords = parse(tierRec.data.tsv), tierLines = lines(tierWords), retryTier = bestTierLine(tierLines);
                 retries++;
                 emblemRetries++;
                 if (retryTier.direct) {
@@ -165,9 +195,9 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
     const rows = metrics.diagnostic.globalRows, pitch = rows.length > 1 ? rows.slice(1).map((y, i) => y - rows[i]).sort((a, b) => a - b)[Math.floor((rows.length - 1) / 2)] : Math.max(55, metrics.extractionHeight * .08), first = rows[0] ?? metrics.extractionHeight * .12;
     for (const role of ROLES) {
         const path = `banners.${role}.selectedTeam`;
-        if (confidenceFor(raw, path) >= .9)
+        if (budget.exhausted || confidenceFor(raw, path) >= .9)
             continue;
-        const band = metrics.diagnostic.columnBands[role], bw = band.right - band.left, rect = extractionToSource({ left: Math.max(0, band.left - bw * .08), top: 0, width: bw * .55, height: Math.min(metrics.extractionHeight, first + pitch * .75) }, metrics), rec = await w.recognize(canvas(src, rect), { tessedit_pageseg_mode: '6' }, { tsv: true }), words = parse(rec.data.tsv), s = orderedText(words), match = teamMatch(s, role, data), confidence = combined(match.score, words);
+        const band = metrics.diagnostic.columnBands[role], bw = band.right - band.left, rect = extractionToSource({ left: Math.max(0, band.left - bw * .08), top: 0, width: bw * .55, height: Math.min(metrics.extractionHeight, first + pitch * .75) }, metrics), teamCanvas = canvas(src, rect), rec = await recognize(w, teamCanvas, budget, `team:${role}`, 6, rect), words = parse(rec.data.tsv), s = orderedText(words), match = teamMatch(s, role, data), confidence = combined(match.score, words);
         retries++;
         teamRetries++;
         metrics.diagnostic.teamEvidence[role] = { rawText: s, normalizedTeam: match.team, matchScore: match.score };
@@ -176,8 +206,8 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
             setConfidence(raw, path, confidence);
         }
     }
-    if (raw.operationIds.some(x => x === null) || raw.tokensRemaining === undefined) {
-        const last = rows.at(-1) ?? metrics.extractionHeight * .58, footerTop = Math.min(metrics.extractionHeight * .82, last + pitch * .72), footerRect = extractionToSource({ left: metrics.extractionWidth * .22, top: footerTop, width: metrics.extractionWidth * .72, height: metrics.extractionHeight - footerTop }, metrics), rec = await w.recognize(canvas(src, footerRect), { tessedit_pageseg_mode: '6' }, { tsv: true }), words = parse(rec.data.tsv), all = orderedText(words);
+    if (!budget.exhausted && (raw.operationIds.some(x => x === null) || raw.tokensRemaining === undefined)) {
+        const last = rows.at(-1) ?? metrics.extractionHeight * .58, footerTop = Math.min(metrics.extractionHeight * .82, last + pitch * .72), footerRect = extractionToSource({ left: metrics.extractionWidth * .22, top: footerTop, width: metrics.extractionWidth * .72, height: metrics.extractionHeight - footerTop }, metrics), footerCanvas = canvas(src, footerRect), rec = await recognize(w, footerCanvas, budget, 'footer', 6, footerRect), words = parse(rec.data.tsv), all = orderedText(words);
         retries++;
         footerRetries++;
         if (raw.tokensRemaining === undefined) {
@@ -192,7 +222,7 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
         }
         const centers = metrics.diagnostic.extractionColumnCenters, buttonCenters = [(centers.core + centers.mid) / 2, centers.mid, (centers.mid + centers.support) / 2], spacing = Math.min(buttonCenters[1] - buttonCenters[0], buttonCenters[2] - buttonCenters[1]), sx = metrics.diagnostic.sourceCrop.width / metrics.extractionWidth, tokenWords = words.filter(x => ocrSimilarity(x.text, 'TOKENS') >= .62 || /^\d+$/.test(x.text)), tokenY = tokenWords.length ? tokenWords.reduce((sum, x) => sum + x.top + x.height / 2, 0) / tokenWords.length : footerRect.height * .88, buttonTop = Math.max(0, tokenY - footerRect.height * .34), buttonHeight = Math.min(footerRect.height - buttonTop, footerRect.height * .24), buttonWidth = spacing * sx * 1.08, resolved = [null, null, null], cardTexts = [];
         for (let i = 0; i < 3; i++) {
-            const centerSource = metrics.diagnostic.sourceCrop.left + buttonCenters[i] * sx, rect = { left: centerSource - buttonWidth / 2, top: footerRect.top + buttonTop, width: buttonWidth, height: buttonHeight }, buttonRec = await w.recognize(canvas(src, rect), { tessedit_pageseg_mode: '6' }, { tsv: true }), buttonWords = parse(buttonRec.data.tsv), buttonText = orderedText(buttonWords), match = matchActionText(buttonText);
+            const centerSource = metrics.diagnostic.sourceCrop.left + buttonCenters[i] * sx, rect = { left: centerSource - buttonWidth / 2, top: footerRect.top + buttonTop, width: buttonWidth, height: buttonHeight }, buttonCanvas = canvas(src, rect), buttonRec = await recognize(w, buttonCanvas, budget, `action:${i + 1}`, 6, rect), buttonWords = parse(buttonRec.data.tsv), buttonText = orderedText(buttonWords), match = matchActionText(buttonText);
             retries++;
             footerRetries++;
             cardTexts.push(buttonText);
@@ -204,6 +234,8 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
         }
         metrics.diagnostic.actionEvidence = { resolved, reason: resolved.every(Boolean) ? 'resolved-by-native-button-crops' : 'native-button-crops-partial', cardTexts };
     }
+    if (budget.exhausted && !raw.warnings?.some(warning => warning.includes('OCR execution budget')))
+        raw.warnings = [...(raw.warnings ?? []), 'OCR execution budget was exhausted; unresolved fields require review.'];
     const elapsedMs = performance.now() - started;
     const diagnostic = metrics.diagnostic;
     diagnostic.refinementEvidence = { attempted: true, emblemRetries, teamRetries, footerRetries, elapsedMs };

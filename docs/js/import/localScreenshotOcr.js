@@ -1,5 +1,7 @@
 import { BOARD_LAYOUTS, LEGAL_STAT_POOLS } from '../domain/rules.js';
 import { matchActionText, matchStatText, matchTierText, matchTraitText } from './ocrDomainMatch.js';
+import { createOcrExecutionBudget, recognizeWithBudget } from './ocrRecognition.js';
+import { selectCoherentRoleTriplet } from './roleColumnGeometry.js';
 const ROLES = ['core', 'mid', 'support'];
 const TRAITS = ['Fractal', 'Friendly', 'Vampiric', 'Unique', 'Benevolent'];
 const OCR_CDN = 'https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js';
@@ -45,7 +47,13 @@ async function runtime() { if (window.Tesseract)
 } const s = document.createElement('script'); s.src = OCR_CDN; s.async = true; s.dataset.localOcr = '1'; s.onload = () => ok(); s.onerror = () => no(new Error('Local OCR failed to load.')); document.head.appendChild(s); }); if (!window.Tesseract)
     throw new Error('Local OCR runtime is unavailable.'); return window.Tesseract; }
 async function getWorker() { workerPromise ??= (async () => { const T = await runtime(), w = await T.createWorker('eng'); await w.setParameters({ tessedit_pageseg_mode: '3' }); return w; })(); return await workerPromise; }
-export async function diagnoseLocalScreenshotOcr(file) { const img = await decode(file), w = await getWorker(), started = performance.now(); const r = await w.recognize(file, {}, { tsv: true }); const rawText = r.data.text ?? '', rawTsv = r.data.tsv ?? '', words = parse(rawTsv); return { sourceWidth: img.naturalWidth, sourceHeight: img.naturalHeight, fileType: file.type, fileBytes: file.size, elapsedMs: performance.now() - started, textLength: rawText.length, tsvLength: rawTsv.length, tsvLines: rawTsv ? rawTsv.split(/\r?\n/).length : 0, parsedWordCount: words.length, sampleText: rawText.replace(/\s+/g, ' ').trim().slice(0, 500), sampleWords: words.slice(0, 30).map(x => x.text) }; }
+async function resetWorker() { const pending = workerPromise; workerPromise = undefined; if (!pending)
+    return; try {
+    const w = await pending;
+    await w.terminate?.();
+}
+catch { /* best-effort reset after timeout */ } }
+export async function diagnoseLocalScreenshotOcr(file) { const budget = createOcrExecutionBudget(), img = await decode(file), w = await getWorker(), started = performance.now(), crop = { left: 0, top: 0, width: img.naturalWidth, height: img.naturalHeight }; const r = await recognizeWithBudget(w, file, budget, { stage: 'diagnostic', psm: 3, crop, canvasWidth: img.naturalWidth, canvasHeight: img.naturalHeight }, {}, { tsv: true }, resetWorker); const rawText = r.data.text ?? '', rawTsv = r.data.tsv ?? '', words = parse(rawTsv); return { sourceWidth: img.naturalWidth, sourceHeight: img.naturalHeight, fileType: file.type, fileBytes: file.size, elapsedMs: performance.now() - started, textLength: rawText.length, tsvLength: rawTsv.length, tsvLines: rawTsv ? rawTsv.split(/\r?\n/).length : 0, parsedWordCount: words.length, sampleText: rawText.replace(/\s+/g, ' ').trim().slice(0, 500), sampleWords: words.slice(0, 30).map(x => x.text), ocrCalls: budget.calls }; }
 export async function warmLocalScreenshotOcr() { await getWorker(); }
 async function decode(file) { if (!file.type.startsWith('image/'))
     throw new Error('Choose an image screenshot (PNG, JPEG, or WebP).'); return await new Promise((ok, no) => { const i = new Image(), u = URL.createObjectURL(file); i.onload = () => { URL.revokeObjectURL(u); ok(i); }; i.onerror = () => { URL.revokeObjectURL(u); no(new Error('The selected screenshot could not be decoded.')); }; i.src = u; }); }
@@ -60,7 +68,7 @@ function parse(tsv) { if (!tsv)
     if (t)
         out.push({ text: t, confidence: Number(c[10]) || 0, left: Number(c[6]) || 0, top: Number(c[7]) || 0, width: Number(c[8]) || 0, height: Number(c[9]) || 0, lineKey: `${c[1]}:${c[2]}:${c[3]}:${c[4]}` });
 } return out; }
-async function run(w, c) { const t = performance.now(), r = await w.recognize(c, {}, { tsv: true }); return { words: parse(r.data.tsv), elapsedMs: performance.now() - t, width: c.width, height: c.height }; }
+async function run(w, c, budget, stage, crop) { const t = performance.now(), r = await recognizeWithBudget(w, c, budget, { stage, psm: 3, ...(crop ? { crop } : {}), canvasWidth: c.width, canvasHeight: c.height }, {}, { tsv: true }, resetWorker); return { words: parse(r.data.tsv), elapsedMs: performance.now() - t, width: c.width, height: c.height }; }
 function cropRecognizedPass(p, c) { const words = p.words.filter(w => cx(w) >= c.left && cx(w) < c.left + c.width && cy(w) >= c.top && cy(w) < c.top + c.height).map(w => ({ ...w, left: w.left - c.left, top: w.top - c.top })); return { words, elapsedMs: 0, width: c.width, height: c.height }; }
 function cardAnchorScore(w) { return Math.max(...CARD_ANCHORS.map(a => sim(w.text, a))); }
 function cardAnchor(w) { return cardAnchorScore(w) >= .72; }
@@ -82,16 +90,16 @@ function cluster3(xs, width) { if (xs.length < 6)
 } if (m[2] - m[0] < width * .35)
     return null; const d1 = m[1] - m[0], d2 = m[2] - m[1]; if (Math.min(d1, d2) / Math.max(d1, d2) < .55)
     return null; return m; }
-function centerResult(ws, width) { const f = {}, roleCandidates = []; for (const r of ROLES) {
+function centerResult(ws, width, height) { const roleCandidates = []; for (const r of ROLES) {
     const a = ws.map(w => ({ w, similarity: sim(w.text, r.toUpperCase()) })).filter(x => x.similarity >= .72).sort((x, y) => y.w.confidence - x.w.confidence);
     for (const x of a)
         roleCandidates.push({ ...wordDiagnostic(x.w), role: r, similarity: x.similarity });
-    if (a[0])
-        f[r] = cx(a[0].w);
-} const anchors = ws.map(w => ({ w, similarity: cardAnchorScore(w) })).filter(x => x.similarity >= .72).map(x => ({ ...wordDiagnostic(x.w), similarity: x.similarity })); if (Object.keys(f).length === 3)
-    return { centers: f, method: 'role-labels', roleCandidates, cardAnchors: anchors }; const clustered = cluster3(anchors.map(x => x.x), width); if (clustered)
-    return { centers: { core: clustered[0], mid: clustered[1], support: clustered[2] }, method: 'card-anchor-clustering', roleCandidates, cardAnchors: anchors }; return { centers: { core: width / 6, mid: width / 2, support: width * 5 / 6 }, method: 'fallback', roleCandidates, cardAnchors: anchors }; }
-function cropBox(p, sw, sh) { const g = centerResult(p.words, p.width), c = g.centers, d = Math.min(c.mid - c.core, c.support - c.mid), l = Math.max(0, c.core - d * .62), r = Math.min(p.width, c.support + d * .62), h = p.words.filter(w => ROLES.some(x => sim(w.text, x.toUpperCase()) >= .72)), card = p.words.filter(cardAnchor), topEvidence = h.length ? h : card, t = topEvidence.length ? Math.max(0, Math.min(...topEvidence.map(w => w.top)) - Math.max(20, p.height * .05)) : 0, sx = sw / p.width, sy = sh / p.height, localization = { left: l, top: t, width: r - l, height: p.height - t }, source = { left: Math.floor(l * sx), top: Math.floor(t * sy), width: Math.ceil((r - l) * sx), height: Math.ceil(sh - t * sy) }; return { source, localization, geometry: g }; }
+} const anchors = ws.map(w => ({ w, similarity: cardAnchorScore(w) })).filter(x => x.similarity >= .72).map(x => ({ ...wordDiagnostic(x.w), similarity: x.similarity })); const triplet = selectCoherentRoleTriplet(roleCandidates, width, height); if (triplet) {
+    const selectedRoleCandidates = [triplet.core, triplet.mid, triplet.support];
+    return { centers: { core: triplet.core.x, mid: triplet.mid.x, support: triplet.support.x }, method: 'role-labels', roleCandidates, selectedRoleCandidates, cardAnchors: anchors };
+} const clustered = cluster3(anchors.map(x => x.x), width); if (clustered)
+    return { centers: { core: clustered[0], mid: clustered[1], support: clustered[2] }, method: 'card-anchor-clustering', roleCandidates, selectedRoleCandidates: [], cardAnchors: anchors }; return { centers: { core: width / 6, mid: width / 2, support: width * 5 / 6 }, method: 'fallback', roleCandidates, selectedRoleCandidates: [], cardAnchors: anchors }; }
+function cropBox(p, sw, sh) { const g = centerResult(p.words, p.width, p.height), c = g.centers, d = Math.min(c.mid - c.core, c.support - c.mid), l = Math.max(0, c.core - d * .62), r = Math.min(p.width, c.support + d * .62), card = p.words.filter(cardAnchor), roleTop = g.selectedRoleCandidates.length ? Math.min(...g.selectedRoleCandidates.map(w => w.y)) : undefined, cardTop = card.length ? Math.min(...card.map(w => w.top)) : undefined, topEvidence = roleTop ?? cardTop, t = topEvidence === undefined ? 0 : Math.max(0, topEvidence - Math.max(20, p.height * .05)), sx = sw / p.width, sy = sh / p.height, localization = { left: l, top: t, width: r - l, height: p.height - t }, source = { left: Math.floor(l * sx), top: Math.floor(t * sy), width: Math.ceil((r - l) * sx), height: Math.ceil(sh - t * sy) }; return { source, localization, geometry: g }; }
 function bandsFromCenters(c, width) { const a = (c.core + c.mid) / 2, b = (c.mid + c.support) / 2; return { core: { left: Math.max(0, c.core - (a - c.core) * 1.05), right: a }, mid: { left: a, right: b }, support: { left: b, right: Math.min(width, c.support + (c.support - b) * 1.05) } }; }
 function clusteredYs(ys, tolerance) { const s = [...ys].sort((a, b) => a - b), g = []; for (const y of s) {
     if (!g.length || Math.abs(y - g.at(-1)) > tolerance)
@@ -140,9 +148,9 @@ function tokenCount(ws) { for (const line of lineRecords(ws)) {
         return { value: Number(nums[0].text), confidence: Math.min(.95, nums[0].confidence / 100), rawText: `${a.text} ${nums[0].text}` };
 } return undefined; }
 function actionGeometry(ex, rows) { const lines = lineRecords(ex.words), anchor = lines.filter(l => norm(l.s).includes('REROLLOPERATIONS') || norm(l.s).includes('ROLLTOKENS')).sort((a, b) => b.y - a.y)[0]; if (!anchor)
-    return undefined; const c = centerResult(ex.words, ex.width).centers, d = Math.min(c.mid - c.core, c.support - c.mid), pitch = rows.length > 1 ? rows.slice(1).map((y, i) => y - rows[i]).sort((a, b) => a - b)[Math.floor((rows.length - 1) / 2)] : Math.max(55, ex.height * .08), total = Math.min(ex.width * .8, d * 1.9), center = norm(anchor.s).includes('REROLLOPERATIONS') ? anchor.x : c.mid, left = Math.max(0, center - total / 2), top = Math.max(0, anchor.y - pitch * 1.15), height = Math.max(32, pitch * .78), gap = Math.max(4, total * .012), cardW = (total - gap * 2) / 3; return { cards: [0, 1, 2].map(i => ({ left: left + i * (cardW + gap), top, width: cardW, height })), anchorY: anchor.y }; }
+    return undefined; const c = centerResult(ex.words, ex.width, ex.height).centers, d = Math.min(c.mid - c.core, c.support - c.mid), pitch = rows.length > 1 ? rows.slice(1).map((y, i) => y - rows[i]).sort((a, b) => a - b)[Math.floor((rows.length - 1) / 2)] : Math.max(55, ex.height * .08), total = Math.min(ex.width * .8, d * 1.9), center = norm(anchor.s).includes('REROLLOPERATIONS') ? anchor.x : c.mid, left = Math.max(0, center - total / 2), top = Math.max(0, anchor.y - pitch * 1.15), height = Math.max(32, pitch * .78), gap = Math.max(4, total * .012), cardW = (total - gap * 2) / 3; return { cards: [0, 1, 2].map(i => ({ left: left + i * (cardW + gap), top, width: cardW, height })), anchorY: anchor.y }; }
 function sourceRect(r, crop, ex, sw, sh) { const sx = crop.width / ex.width, sy = crop.height / ex.height; const left = Math.max(0, Math.floor(crop.left + r.left * sx)), top = Math.max(0, Math.floor(crop.top + r.top * sy)), right = Math.min(sw, Math.ceil(crop.left + (r.left + r.width) * sx)), bottom = Math.min(sh, Math.ceil(crop.top + (r.top + r.height) * sy)); return { left, top, width: Math.max(1, right - left), height: Math.max(1, bottom - top) }; }
-async function parseActions(worker, img, ex, crop, rows, fc, warnings) { const ops = [null, null, null], g = actionGeometry(ex, rows), cardTexts = ['', '', '']; if (!g) {
+async function parseActions(worker, img, ex, crop, rows, fc, warnings, budget) { const ops = [null, null, null], g = actionGeometry(ex, rows), cardTexts = ['', '', '']; if (!g) {
     for (let i = 0; i < 3; i++) {
         fc.push({ path: `operationIds.${i}`, confidence: 0 });
         warnings.push(`Action ${i + 1} is missing or unreadable.`);
@@ -153,7 +161,7 @@ async function parseActions(worker, img, ex, crop, rows, fc, warnings) { const o
     cardTexts[i] = text(existing);
     let best = actionMatch(cardTexts[i]);
     if (!best || best.score < .82) {
-        const sr = sourceRect(r, crop, ex, img.naturalWidth, img.naturalHeight), p = await run(worker, canvas(img, Number.POSITIVE_INFINITY, sr));
+        const sr = sourceRect(r, crop, ex, img.naturalWidth, img.naturalHeight), p = await run(worker, canvas(img, Number.POSITIVE_INFINITY, sr), budget, `action:${i + 1}`, sr);
         extraMs += p.elapsedMs;
         cardTexts[i] = text(p.words);
         best = actionMatch(cardTexts[i]);
@@ -177,11 +185,11 @@ async function parseActions(worker, img, ex, crop, rows, fc, warnings) { const o
     return { ops, extraMs, cardTexts, reason: 'action-candidates-not-unique' };
 } return { ops, extraMs, cardTexts, reason: ops.every(Boolean) ? 'resolved' : 'one-or-more-actions-unresolved' }; }
 export async function parseScreenshotLocally(file, data) {
-    const start = performance.now(), img = await decode(file), worker = await getWorker(), nativePixels = img.naturalWidth * img.naturalHeight;
+    const start = performance.now(), budget = createOcrExecutionBudget(), img = await decode(file), worker = await getWorker(), nativePixels = img.naturalWidth * img.naturalHeight;
     let local, ex, crop, localizationCrop, localGeometry;
     if (nativePixels <= DIRECT_NATIVE_MAX_PIXELS) {
         const native = canvas(img, Number.POSITIVE_INFINITY);
-        local = await run(worker, native);
+        local = await run(worker, native, budget, 'localization', { left: 0, top: 0, width: img.naturalWidth, height: img.naturalHeight });
         const box = cropBox(local, img.naturalWidth, img.naturalHeight);
         crop = box.source;
         localizationCrop = box.localization;
@@ -190,15 +198,15 @@ export async function parseScreenshotLocally(file, data) {
     }
     else {
         const lc = canvas(img, LOCALIZE_MAX);
-        local = await run(worker, lc);
+        local = await run(worker, lc, budget, 'localization', { left: 0, top: 0, width: img.naturalWidth, height: img.naturalHeight });
         const box = cropBox(local, img.naturalWidth, img.naturalHeight);
         crop = box.source;
         localizationCrop = box.localization;
         localGeometry = box.geometry;
         const ec = canvas(img, EXTRACT_MAX, crop);
-        ex = await run(worker, ec);
+        ex = await run(worker, ec, budget, 'extraction', crop);
     }
-    const extractionGeometry = centerResult(ex.words, ex.width), bs = bandsFromCenters(extractionGeometry.centers, ex.width), detected = Object.fromEntries(ROLES.map(r => [r, tiers(ex.words, bs[r], ex.height)])), pooledResult = globalRows(ex.words, bs, ex.height), pooled = pooledResult.rows, layoutId = layoutOf(detected, pooled), layout = BOARD_LAYOUTS[layoutId], rows = Object.fromEntries(ROLES.map(r => [r, (layoutId === 'expanded_5' && pooled.length >= 5) || (layoutId === 'legacy_3' && pooled.length >= 3) ? pooled.slice(0, layout.roles[r].length) : detected[r]]));
+    const extractionGeometry = centerResult(ex.words, ex.width, ex.height), bs = bandsFromCenters(extractionGeometry.centers, ex.width), detected = Object.fromEntries(ROLES.map(r => [r, tiers(ex.words, bs[r], ex.height)])), pooledResult = globalRows(ex.words, bs, ex.height), pooled = pooledResult.rows, layoutId = layoutOf(detected, pooled), layout = BOARD_LAYOUTS[layoutId], rows = Object.fromEntries(ROLES.map(r => [r, (layoutId === 'expanded_5' && pooled.length >= 5) || (layoutId === 'legacy_3' && pooled.length >= 3) ? pooled.slice(0, layout.roles[r].length) : detected[r]]));
     const fc = [], warnings = [], banners = {}, emblemDiagnostics = [], teamEvidence = {};
     const geometryConfidenceCap = extractionGeometry.method === 'fallback' || pooledResult.synthesized ? .85 : localGeometry.method === 'fallback' ? .92 : 1;
     if (localGeometry.method === 'fallback')
@@ -216,12 +224,12 @@ export async function parseScreenshotLocally(file, data) {
             warnings.push(`${role} emblem ${i + 1} OCR should be reviewed.`); emblemDiagnostics.push({ role, rowIndex: i, roi, synthesizedRow: rw.synthesized, words: ww.map(wordDiagnostic), inferredColor: slot.color, rawText: s, normalizedStat: sm.value, statMatchScore: sm.score, rawTierText: s, normalizedTier: qt.value, tierMatchScore: qt.score, rawTraitText: s, normalizedTrait: tr.value, traitMatchScore: tr.score, finalConfidence, reviewRequired: finalConfidence < REVIEW_THRESHOLD }); return { position: slot.index, color: slot.color, stat: sm.value, qualityTier: qt.value, trait: tr.value }; });
         banners[role] = { selectedTeam: tm.team, emblems };
     }
-    const actionRows = pooled.length ? pooled : ROLES.flatMap(r => rows[r]), actions = await parseActions(worker, img, ex, crop, actionRows, fc, warnings);
+    const actionRows = pooled.length ? pooled : ROLES.flatMap(r => rows[r]), actions = await parseActions(worker, img, ex, crop, actionRows, fc, warnings, budget);
     let tokens = tokenCount(ex.words), tokenRetryMs = 0;
     if (!tokens) {
         const ag = actionGeometry(ex, actionRows);
         if (ag) {
-            const pitch = actionRows.length > 1 ? actionRows.slice(1).map((y, i) => y - actionRows[i]).sort((a, b) => a - b)[Math.floor((actionRows.length - 1) / 2)] : Math.max(55, ex.height * .08), r = { left: Math.max(0, ag.cards[1].left), top: Math.max(0, ag.anchorY - pitch * .4), width: Math.min(ex.width - ag.cards[1].left, ag.cards[1].width * 2.35), height: Math.min(ex.height - (ag.anchorY - pitch * .4), pitch * .95) }, sr = sourceRect(r, crop, ex, img.naturalWidth, img.naturalHeight), retry = await run(worker, canvas(img, Number.POSITIVE_INFINITY, sr));
+            const pitch = actionRows.length > 1 ? actionRows.slice(1).map((y, i) => y - actionRows[i]).sort((a, b) => a - b)[Math.floor((actionRows.length - 1) / 2)] : Math.max(55, ex.height * .08), r = { left: Math.max(0, ag.cards[1].left), top: Math.max(0, ag.anchorY - pitch * .4), width: Math.min(ex.width - ag.cards[1].left, ag.cards[1].width * 2.35), height: Math.min(ex.height - (ag.anchorY - pitch * .4), pitch * .95) }, sr = sourceRect(r, crop, ex, img.naturalWidth, img.naturalHeight), retry = await run(worker, canvas(img, Number.POSITIVE_INFINITY, sr), budget, 'footer', sr);
             tokenRetryMs = retry.elapsedMs;
             tokens = tokenCount(retry.words);
         }
@@ -240,8 +248,10 @@ export async function parseScreenshotLocally(file, data) {
         fc.push({ path: 'tokensRemaining', confidence: 0 });
         warnings.push('Roll token count is missing or unreadable.');
     }
+    if (budget.exhausted && !warnings.some(warning => warning.includes('OCR execution budget')))
+        warnings.push('OCR execution budget was exhausted; unresolved fields require review.');
     const tierCandidates = ROLES.flatMap(role => tierWords(ex.words, bs[role]).map(w => ({ ...wordDiagnostic(w), role, similarity: sim(w.text, 'TIER') })));
     const diagnostic = { localizationWordCount: local.words.length, extractionWordCount: ex.words.length, roleCandidates: localGeometry.roleCandidates, cardAnchors: localGeometry.cardAnchors, columnLocalizationMethod: localGeometry.method, localizationColumnCenters: localGeometry.centers, localizationCrop, sourceCrop: crop, extractionColumnMethod: extractionGeometry.method, extractionColumnCenters: extractionGeometry.centers, columnBands: bs, tierCandidates, tierRowsByColumn: detected, globalRows: pooled, inferredLayout: layoutId, synthesizedRows, emblems: emblemDiagnostics, teamEvidence, actionEvidence: { resolved: actions.ops, reason: actions.reason, cardTexts: actions.cardTexts }, tokenEvidence: { rawText: tokens?.rawText ?? '', value: tokens?.value ?? null, confidence: tokens?.confidence ?? 0 } };
-    return { result, metrics: { sourceWidth: img.naturalWidth, sourceHeight: img.naturalHeight, localizationWidth: local.width, localizationHeight: local.height, extractionWidth: ex.width, extractionHeight: ex.height, localizationMs: local.elapsedMs, extractionMs: ex.elapsedMs, targetedRetryMs: actions.extraMs + tokenRetryMs, totalMs: performance.now() - start, croppedPixelFraction: (crop.width * crop.height) / (img.naturalWidth * img.naturalHeight), processedPixels: { localization: local.width * local.height, extraction: ex.width * ex.height }, diagnostic } };
+    return { result, metrics: { sourceWidth: img.naturalWidth, sourceHeight: img.naturalHeight, localizationWidth: local.width, localizationHeight: local.height, extractionWidth: ex.width, extractionHeight: ex.height, localizationMs: local.elapsedMs, extractionMs: ex.elapsedMs, targetedRetryMs: actions.extraMs + tokenRetryMs, totalMs: performance.now() - start, croppedPixelFraction: (crop.width * crop.height) / (img.naturalWidth * img.naturalHeight), processedPixels: { localization: local.width * local.height, extraction: ex.width * ex.height }, diagnostic, ocrExecution: budget } };
 }
 //# sourceMappingURL=localScreenshotOcr.js.map
