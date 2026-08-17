@@ -21,6 +21,9 @@ function teamOptions(role, selected, data) {
 function signedPct(value) {
     return `${value >= 0 ? '+' : ''}${value}%`;
 }
+function statDisplayName(stat) {
+    return stat === 'Madstone' ? 'Madstone Collected' : stat;
+}
 function emblemCard(role, banner, index) {
     const emblem = banner.emblems[index];
     const derived = evaluateBanner(banner)[index];
@@ -33,7 +36,7 @@ function emblemCard(role, banner, index) {
     return `<div class="emblem ${emblem.color}" data-role="${role}" data-index="${index}">
     <div class="client-row client-row-stat" data-element="stat">
       <span class="client-kind">STAT</span>
-      <select class="client-select stat-select" data-field="stat" aria-label="Slot ${index + 1} stat">${pool.map(stat => `<option ${stat === emblem.stat ? 'selected' : ''}>${stat}</option>`).join('')}</select>
+      <select class="client-select stat-select" data-field="stat" aria-label="Slot ${index + 1} stat">${pool.map(stat => `<option value="${escapeHtml(stat)}" ${stat === emblem.stat ? 'selected' : ''}>${escapeHtml(statDisplayName(stat))}</option>`).join('')}</select>
       <strong class="client-total" title="Effective multiplier calculated from quality and all active trait effects">${derived.effectiveMultiplierPct}%</strong>
     </div>
     <div class="client-divider"></div>
