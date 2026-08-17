@@ -16,6 +16,7 @@ export type ScreenshotEvidenceClass =
   | 'targeted-native-stat'
   | 'fuzzy-stat'
   | 'direct-native-tier'
+  | 'targeted-native-tier'
   | 'fuzzy-tier'
   | 'exact-domain-trait'
   | 'targeted-native-trait'
@@ -123,7 +124,6 @@ export function directTierText(text:string,tier:QualityTier):boolean {
 function geometryConfidence(metrics:LocalScreenshotOcrMetrics):{value:number;reason?:ScreenshotEvidenceClass} {
   const directTierRowCount=Object.values(metrics.diagnostic.tierRowsByColumn).reduce((sum,rows)=>sum+rows.length,0);
   if(directTierRowCount===0) return {value:.84,reason:'geometry-fallback'};
-  if(metrics.diagnostic.synthesizedRows) return {value:.85,reason:'synthesized-row'};
   if(metrics.diagnostic.extractionColumnMethod==='fallback') return {value:.85,reason:'geometry-fallback'};
   if(metrics.diagnostic.columnLocalizationMethod==='fallback') return {value:.92,reason:'geometry-fallback'};
   return {value:1};
@@ -140,20 +140,25 @@ function phraseSimilarity(rawText:string,target:string):number {
   }
   return best;
 }
-interface TeamEvidenceMatch { team:string;score:number;runnerUpScore:number;margin:number;strongPlayerCount:number;directTeamScore:number; }
+interface TeamEvidenceMatch { team:string;score:number;runnerUpScore:number;margin:number;strongPlayerCount:number;bestPlayerScore:number;directTeamScore:number; }
 function matchTeamEvidence(rawText:string,role:Role,data:DataBundle):TeamEvidenceMatch|undefined {
   if(!rawText.trim()) return undefined;
-  const byTeam=new Map<string,{direct:number;players:number[]}>();
+  const byTeam=new Map<string,{direct:number;players:Map<string,number>}>();
   for(const profile of data.players.filter(player=>player.role===role)){
-    const current=byTeam.get(profile.team)??{direct:phraseSimilarity(rawText,profile.team),players:[]};
-    for(const name of [profile.name,...profile.attachedPlayers]) current.players.push(phraseSimilarity(rawText,name));
+    const current=byTeam.get(profile.team)??{direct:phraseSimilarity(rawText,profile.team),players:new Map<string,number>()};
+    for(const name of profile.attachedPlayers){
+      const score=phraseSimilarity(rawText,name);
+      current.players.set(name,Math.max(score,current.players.get(name)??0));
+    }
     current.direct=Math.max(current.direct,phraseSimilarity(rawText,profile.team));
     byTeam.set(profile.team,current);
   }
   const ranked=[...byTeam.entries()].map(([team,evidence])=>{
-    const playerScores=[...evidence.players].sort((a,b)=>b-a),strongPlayerCount=playerScores.filter(score=>score>=.82).length;
-    const rosterScore=role==='mid'?(playerScores[0]??0):((playerScores[0]??0)+(playerScores[1]??0))/2;
-    return {team,score:Math.max(evidence.direct,rosterScore),strongPlayerCount,directTeamScore:evidence.direct};
+    const playerScores=[...evidence.players.values()].sort((a,b)=>b-a),bestPlayerScore=playerScores[0]??0,strongPlayerCount=playerScores.filter(score=>score>=.82).length;
+    const pairScore=((playerScores[0]??0)+(playerScores[1]??0))/2;
+    const singleAnchor=bestPlayerScore>=.94?bestPlayerScore*.98:0;
+    const rosterScore=role==='mid'?bestPlayerScore:Math.max(pairScore,singleAnchor);
+    return {team,score:Math.max(evidence.direct,rosterScore),strongPlayerCount,bestPlayerScore,directTeamScore:evidence.direct};
   }).sort((a,b)=>b.score-a.score);
   const best=ranked[0]; if(!best)return undefined;
   const runnerUpScore=ranked[1]?.score??0;
@@ -161,10 +166,11 @@ function matchTeamEvidence(rawText:string,role:Role,data:DataBundle):TeamEvidenc
 }
 function trustedTeamEvidence(match:TeamEvidenceMatch,role:Role):boolean {
   const direct=match.directTeamScore>=.9&&match.margin>=.1;
+  const singlePlayer=match.bestPlayerScore>=.94&&match.score>=.92&&match.margin>=.08;
   const roster=role==='mid'
-    ? match.strongPlayerCount>=1&&match.score>=.9&&match.margin>=.1
+    ? match.bestPlayerScore>=.9&&match.score>=.9&&match.margin>=.1
     : match.strongPlayerCount>=2&&match.score>=.84&&match.margin>=.08;
-  return direct||roster;
+  return direct||singlePlayer||roster;
 }
 
 /** Re-score already-recognized fields from field-specific evidence. Strong evidence may also repair a team winner. */
@@ -215,6 +221,9 @@ export function calibrateScreenshotImportConfidence(raw:RawScreenshotImport, met
         if(corroborated||unambiguousNonTierOne) tierComponents.structuredEvidence=corroborated?.98:.96;
         else tierComponents.structuredEvidence=.89;
         tierReason='direct-native-tier';
+      } else if(tierSame&&diag.tierMatchScore>=.95){
+        tierComponents.targetedRetry=.97;
+        tierReason='targeted-native-tier';
       } else if(!tierSame){tierComponents.fieldConsistency=.7;tierReason='conflicting-retry';}
       if(geometry.reason) tierReason=geometry.reason;
       calibrated.push(calibrateConfidenceEvidence(tierPath,{resolved:tierDirect||tierRaw>.2,rawConfidence:tierRaw,reason:(tierDirect||tierRaw>.2)?tierReason:'unresolved',components:tierComponents}));
@@ -231,7 +240,7 @@ export function calibrateScreenshotImportConfidence(raw:RawScreenshotImport, met
   raw.operationIds.forEach((operationId,index)=>{
     const path=`operationIds.${index}`,rawConfidence=confidenceFor(raw,path),actionText=metrics.diagnostic.actionEvidence.cardTexts[index]??'',actionMatch=matchActionText(actionText),components=baseComponents(geometry.value,actionMatch?.score??rawConfidence);
     const catalogAgreement=operationId!==null&&actionMatch?.id===operationId&&metrics.diagnostic.actionEvidence.resolved[index]===operationId;
-    const decisiveCatalogMatch=Boolean(catalogAgreement&&actionMatch&&actionMatch.score>=.7&&actionMatch.margin>=.06);
+    const decisiveCatalogMatch=Boolean(catalogAgreement&&actionMatch&&actionMatch.score>=.65&&actionMatch.margin>=.06);
     const actionResolved=operationId!==null&&(decisiveCatalogMatch||rawConfidence>=.9);
     let reason:ScreenshotEvidenceClass=decisiveCatalogMatch?'dedicated-action-crop':(operationId!==null?'fuzzy-action':'unresolved');
     if(decisiveCatalogMatch)components.structuredEvidence=.96;
