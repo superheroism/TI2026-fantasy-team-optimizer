@@ -5,9 +5,10 @@ import { readFileSync } from 'node:fs';
 const refinement=readFileSync(new URL('../src/import/emblemOcrRefinement.ts',import.meta.url),'utf8');
 const calibration=readFileSync(new URL('../src/import/screenshotImport.ts',import.meta.url),'utf8');
 
-test('low-confidence stat alone triggers native emblem refinement',()=>{
-  assert.match(refinement,/if\(!shouldRetryStat\(confidenceFor\(raw,sp\)\)&&confidenceFor\(raw,qp\)>=\.9&&confidenceFor\(raw,tp\)>=\.9\)continue/);
-  assert.doesNotMatch(refinement,/if\(confidenceFor\(raw,qp\)>=\.9&&confidenceFor\(raw,tp\)>=\.9\)continue/);
+test('low-confidence stat alone triggers dedicated stat refinement without duplicate full-emblem OCR',()=>{
+  assert.match(refinement,/const retryStat=shouldRetryStat\(confidenceFor\(raw,sp\)\),retryTier=shouldRetryTier\(confidenceFor\(raw,qp\)\),retryTrait=confidenceFor\(raw,tp\)<\.9/);
+  assert.match(refinement,/if\(retryTier\|\|retryTrait\).*emblem:/s);
+  assert.match(refinement,/let strongSupplementalTier=false;if\(retryStat/);
 });
 
 test('strong native stat retry can supersede weak initial evidence',()=>{
