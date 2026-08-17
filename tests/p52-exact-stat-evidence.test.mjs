@@ -31,11 +31,11 @@ test('decisive color-constrained fuzzy evidence requires match, margin, and meas
 
 test('long legal stat tokens can use a narrower same-color margin only while the existing field is weak',()=>{
   assert.equal(LONG_TOKEN_STAT_LENGTH_GATE,6);
-  assert.equal(LONG_TOKEN_STAT_MARGIN_GATE,.12);
+  assert.equal(LONG_TOKEN_STAT_MARGIN_GATE,.10);
   assert.equal(LONG_TOKEN_STAT_EXISTING_CONFIDENCE_CEILING,.70);
   assert.equal(acceptsStatEvidence(.714,.50,.143,7,0),true);
   assert.equal(acceptsStatEvidence(.714,.50,.143,5,0),false);
-  assert.equal(acceptsStatEvidence(.714,.50,.119,7,0),false);
+  assert.equal(acceptsStatEvidence(.714,.50,.099,7,0),false);
   assert.equal(acceptsStatEvidence(.699,.50,.143,7,0),false);
   assert.equal(acceptsStatEvidence(.714,.50,.143,7,.70),false);
 });
