@@ -5,6 +5,7 @@ export const FUZZY_STAT_MATCH_GATE=.70;
 export const FUZZY_STAT_MARGIN_GATE=.25;
 export const FUZZY_STAT_CONFIDENCE_GATE=.68;
 export const LONG_TOKEN_STAT_LENGTH_GATE=6;
+// Real-image calibration: noisy long tokens can retain a meaningful legal-pool lead near 0.10 even when short tokens remain ambiguous.
 export const LONG_TOKEN_STAT_MARGIN_GATE=.10;
 export const LONG_TOKEN_STAT_EXISTING_CONFIDENCE_CEILING=.70;
 
