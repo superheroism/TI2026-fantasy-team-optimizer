@@ -1,0 +1,80 @@
+name: Screenshot import production E2E
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  raw-main-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 677f17b38d7aba89308b182017ca6118e5236814
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test:ci
+      - name: Capture unchanged OCR-core baseline
+        run: |
+          mkdir -p artifacts/raw-main
+          npm run test:ocr-corpus 2>&1 | tee artifacts/raw-main/ocr-core.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p52e-raw-main-baseline
+          path: artifacts/raw-main
+
+  production-e2e:
+    needs: raw-main-baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install certification browsers
+        run: |
+          npm install --no-save --package-lock=false playwright@1.62.0
+          npx playwright install --with-deps chromium firefox
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run lint
+      - name: Harness tests
+        run: node --test tests/*.test.mjs
+      - name: Board 2 canary first
+        env:
+          SCREENSHOT_E2E_OUT: artifacts/board2
+          P52E_GIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: npm run test:screenshot-e2e:board2 -- --report-only
+      - name: Full production E2E corpus
+        env:
+          SCREENSHOT_E2E_OUT: artifacts/full
+          P52E_GIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: npm run test:screenshot-e2e -- --report-only
+      - name: Capture generated application files
+        if: always()
+        run: |
+          mkdir -p artifacts/generated
+          cp build/js/ui/screenshotImport.js artifacts/generated/
+          cp build/js/ui/screenshotImport.js.map artifacts/generated/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p52e-production-e2e
+          path: artifacts
