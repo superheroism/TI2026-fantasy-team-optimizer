@@ -99,6 +99,8 @@ The browser corpus:
 
 P52E is complete. Final measured results, Board 2 root-cause classification, browser comparison, full-corpus product accuracy, safety failures, timing, and deployment parity are recorded in `P52E_PRODUCTION_E2E_CERTIFICATION_RESULTS.md`.
 
+The automatic PR workflow runs this production-E2E corpus in report-only mode so the P52E measurement package can merge while the frozen current-product result remains FAIL. The same corpus remains available through manual `workflow_dispatch` in strict mode; once P52F satisfies the frozen criteria, strict mode should become the automatic blocking PR gate.
+
 ## Historical OCR/parser lessons retained
 
 Earlier OCR work established several useful parser-level findings that remain valid diagnostic context:
