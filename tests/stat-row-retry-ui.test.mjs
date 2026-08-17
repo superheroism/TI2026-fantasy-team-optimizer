@@ -14,6 +14,10 @@ test('low-confidence stat uses one preprocessed native-resolution fallback after
   assert.match(refinement,/sm\.score>=\.92&&sc>=\.9/);
 });
 
+test('dedicated tier OCR runs only while the tier itself remains below review confidence',()=>{
+  assert.match(refinement,/else if\(!tier\.direct&&confidenceFor\(raw,qp\)<\.9\)/);
+});
+
 test('successful stat retries synchronize final diagnostic stat values',()=>{
   assert.match(refinement,/d\.normalizedStat=sm\.value;d\.statMatchScore=sm\.score/);
 });
