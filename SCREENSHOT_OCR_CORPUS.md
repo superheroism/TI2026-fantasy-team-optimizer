@@ -1,60 +1,151 @@
-# Screenshot OCR Verification Corpus
+# Screenshot Import Verification Corpora
 
 ## Purpose
 
-Verify screenshot import against manually established ground truth across variable crops, resolutions, 3/5-emblem layouts, optional reroll regions, and full-desktop captures. The primary metric is **final normalized imported state**, not raw OCR character accuracy.
+Screenshot import now has two intentionally separate verification layers.
 
-Ground truth is stored in `tests/fixtures/screenshot-corpus-ground-truth.json`.
+### OCR-core corpus
 
-## Current corpus
+`scripts/test-ocr-corpus.mjs` exercises the OCR/parser layer and compares the raw `requestScreenshotImport()` result with manually established field labels.
 
-Seven manually labeled screenshots cover:
+Its purpose is diagnostic:
+
+> Did localization, OCR, normalization, or parsing regress?
+
+**Raw OCR/parser exactness is a diagnostic metric.** It is not the final product-accuracy metric because it does not exercise validation, preserved current values, application-state import, rerendering, or review highlighting.
+
+### Production E2E corpus
+
+`scripts/test-screenshot-e2e.mjs` serves the actual `docs/` application, loads `docs/index.html`, waits for normal model/application initialization, establishes a deterministic sentinel state, and supplies the committed screenshot through the real hidden `#screenshot-file` input.
+
+It exercises:
+
+```text
+bindScreenshotImport(...)
+    ↓
+requestScreenshotImport(...)
+    ↓
+validateScreenshotImport(...)
+    ↓
+state.importScreenshot(...)
+    ↓
+renderStructure()
+    ↓
+review highlighting / status
+```
+
+**Production E2E exactness is the authoritative screenshot-import product metric.**
+
+## Current committed corpus
+
+Six real screenshots and their manually labeled sidecars are committed under `tests/test_boards/`.
+
+The corpus covers:
 
 - `expanded_5` and `legacy_3` layouts;
-- tight/manual crops and full Dota desktop/client captures with substantial irrelevant UI;
-- source sizes from roughly 1 MP through 4.1 MP;
-- all emblem colors and quality tiers I–V;
-- punctuation-sensitive player/team strings, including `Malr1ne` and `No[o]ne-`;
+- cropped and full-client/full-desktop captures;
+- variable source resolutions;
+- all three legal emblem colors;
+- quality tiers I–V;
+- all canonical traits;
 - long and multiline stat names;
-- positive, zero, and negative trait bonuses;
-- four screenshots with the reroll-action region absent;
-- three screenshots with all three reroll actions visible;
-- visible token counts of 4, 5, and 30.
+- action-visible and difficult action-region cases;
+- multiple visible token counts;
+- punctuation-sensitive roster text such as `No[o]ne-` and `Malr1ne`.
 
-The newest corpus case, `expanded5-actions-full-client-noone-2048x1151`, is the full Dota-client capture supplied during retry-performance validation. Its source dimensions and SHA-256 are recorded in the ground-truth fixture so manual/browser reruns can verify that they are using the same capture. It intentionally stresses irrelevant-client-UI localization and the punctuation-heavy `No[o]ne-` Mid roster name.
+`tests/fixtures/screenshot-e2e-ground-truth.json` adds canonical selected-team labels needed for final-state scoring. The production E2E runner records source filename, dimensions, byte size, SHA-256, and MIME type for every image so manual and automated reproduction can prove that the same bytes were used.
 
-For action-absent fixtures, correct behavior is to import the visible board, preserve existing action values, assign missing/low confidence to all three action slots, and show red review outlines on all three action controls.
+## Deterministic sentinel state
+
+Validation is allowed to preserve current application values for unresolved/low-confidence fields. Therefore each production E2E case begins from a known sentinel state whose teams, emblem values, three operation IDs, and token count deliberately differ from screenshot truth where possible.
+
+This makes preservation observable. For example:
+
+```text
+raw action = expected screenshot action
+raw confidence = 0.85
+validator preserves sentinel action
+final applied action = sentinel action
+```
+
+The OCR-core layer may call the raw value correct. The Production E2E layer must call the final action incorrect and classify the first divergence as validation.
 
 ## Verification metrics
 
-For each image report:
+For every production E2E run report:
 
-1. board localization success;
-2. layout exactness;
-3. team exactness where current roster mapping is valid (`/3`);
-4. stat exactness (`/N`);
-5. tier exactness (`/N`);
-6. trait exactness (`/N`);
-7. action exactness or correctly-missing classification (`/3`);
-8. token exactness when visible;
-9. false-high-confidence errors;
-10. complete imported-board exactness;
-11. cold and warm elapsed time;
-12. source pixels, analyzed pixels, and analyzed-pixel fraction;
-13. targeted-refinement retry count and elapsed time.
+1. layout correctness;
+2. selected-team correctness `/3`;
+3. stat correctness `/N`;
+4. tier correctness `/N`;
+5. trait correctness `/N`;
+6. final applied actions `/3`;
+7. token correctness;
+8. review-state correctness;
+9. raw exactness;
+10. validated exactness;
+11. applied-state exactness;
+12. rendered-state exactness;
+13. raw-to-final discrepancy count;
+14. false-high-confidence errors;
+15. OCR timeout count;
+16. invalid OCR geometry count;
+17. cold/warm import time;
+18. browser family/version;
+19. source image identity;
+20. first-divergence category for every final mismatch.
 
 `N=15` for expanded-five and `N=9` for legacy-three.
 
-## Accuracy policy
+First-divergence categories are:
 
-A speed or preprocessing change may not reduce final normalized accuracy on the labeled corpus. False-high-confidence errors are higher severity than explicit review states. Missing or ambiguous information must not be invented.
+```text
+RAW_OCR_ERROR
+VALIDATION_REJECTED_CORRECT_RAW_VALUE
+VALIDATION_CHANGED_VALUE
+APPLY_STATE_ERROR
+RENDER_MISMATCH
+GROUND_TRUTH_UNMAPPABLE
+```
+
+## Browser and timing policy
+
+Permanent production certification covers real Chromium and Firefox engines.
+
+- **Cold:** fresh browser context with no live OCR worker for that case.
+- **Warm:** same application session after OCR worker initialization.
+
+Board 2 is the canary and is repeated cold, warm-1, and warm-2 per browser. Every import is guarded by a 30-second browser-level watchdog.
+
+Native Tesseract subprocess timing and browser Tesseract.js timing are different measurements and must not be compared as equivalent.
+
+## Accuracy and safety policy
+
+A production change may not create a new final-state regression relative to the accepted Production E2E baseline.
+
+Regardless of known accuracy mismatches, the following remain hard failures:
+
+- false-high-confidence recognition errors;
+- invalid OCR geometry;
+- unbounded imports / watchdog timeouts;
+- browser/harness crashes that prevent certification.
+
+Missing or ambiguous fields must remain explicit review states rather than fabricated confident values.
 
 ## Geometry policy
 
-Do not normalize arbitrary manual crops to a predetermined screenshot resolution. Preserve native pixels for normal-sized images, localize/crop first, and only downscale when the relevant crop itself is computationally excessive. Large source images may use a low-resolution localization copy, but extraction crops must be mapped back to original source pixels before OCR.
+Do not normalize arbitrary manual crops to a predetermined screenshot resolution. Preserve native pixels for normal-sized images, localize/crop first, and only downscale when the relevant crop is computationally excessive. Large source images may use a low-resolution localization copy, but extraction crops must be mapped back to original source pixels before OCR.
 
-The production parser uses redundant geometry signals: role headings when confidently present, otherwise three-column clustering over closed-vocabulary card anchors; row evidence is pooled across banners and regularized by repeated pitch. Reroll actions use a separate strip/card ROI and source-resolution retry path.
+The parser uses role-heading anchors when available, repeated closed-vocabulary card anchors as a three-column fallback, pooled row evidence for 3/5-emblem layout inference, and a separate action-strip path.
 
-## Certification status
+## Commands
 
-The seven captures are manually labeled, but source screenshots are not committed as binary fixtures. Repository CI therefore validates corpus structure and ground-truth contracts rather than image-level OCR accuracy. Live browser OCR sweeps remain authoritative for final normalized recognition and latency. Source identity metadata is recorded for the newest full-client case to make that rerun reproducible.
+```text
+npm run test:ocr-corpus
+npm run test:screenshot-e2e
+npm run test:screenshot-e2e:chromium
+npm run test:screenshot-e2e:firefox
+npm run test:screenshot-e2e:board2
+```
+
+The OCR-core command remains useful for parser diagnosis. The Production E2E commands define user-facing screenshot-import certification.
