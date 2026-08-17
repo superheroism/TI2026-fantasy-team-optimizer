@@ -15,7 +15,7 @@
     {
       "groundTruthFile": "tests/test_boards/TI2026 - Board 3.ground-truth.json",
       "sourceFile": "tests/test_boards/TI2026 - Board 3.png",
-      "selectedTeams": {"core":"Team Liquid","mid":"Team Vision","support":{"expected":null,"expectedReview":true,"sourceText":"Save- & Kataomi`"}}
+      "selectedTeams": {"core":"Team Liquid","mid":"Team Vision","support":"BoomBoys"}
     },
     {
       "groundTruthFile": "tests/test_boards/Ti2026 - board 4.ground-truth.json",
