@@ -36,6 +36,20 @@ test('action matcher resolves the three noisy live-corpus action strings', () =>
   assert.equal(matchActionText('TAD é ERC IN EN RANDOM REROLL STAT GREE')?.id, 'green-stat-random');
 });
 
+test('action matcher reports candidate separation for evidence-based application', () => {
+  for (const text of [
+    'REROLL LAST GREEN STAT F E',
+    'TAD é ERC IN EN RANDOM REROLL STAT GREE',
+    'OLL TRAIT FOR THE RA RST BLUE EMBLEM',
+    'OR RED REROLL TRAT 1S EMBLE',
+  ]) {
+    const match=matchActionText(text);
+    assert.ok(match, text);
+    assert.ok(match.score >= match.runnerUpScore, text);
+    assert.ok(match.margin > 0, text);
+    assert.equal(match.margin, match.score-match.runnerUpScore);
+  }
+});
 
 test('action matcher preserves scope and kind discriminators in noisy dedicated button OCR', () => {
   assert.equal(matchActionText('OLL TRAIT FOR THE RA RST BLUE EMBLEM')?.id, 'blue-trait-first');
