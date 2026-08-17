@@ -84,4 +84,10 @@ export async function withWatchdog(factory,timeoutMs=30000,label='operation'){
 function pngDimensions(buf){if(buf.length<24||buf.toString('hex',0,8)!=='89504e470d0a1a0a')return null;return {width:buf.readUInt32BE(16),height:buf.readUInt32BE(20)};}
 function webpDimensions(buf){if(buf.length<30||buf.toString('ascii',0,4)!=='RIFF'||buf.toString('ascii',8,12)!=='WEBP')return null;const kind=buf.toString('ascii',12,16);if(kind==='VP8X')return {width:1+buf.readUIntLE(24,3),height:1+buf.readUIntLE(27,3)};if(kind==='VP8L'){const b1=buf[21],b2=buf[22],b3=buf[23],b4=buf[24];return {width:1+b1+((b2&0x3f)<<8),height:1+(b2>>6)+(b3<<2)+((b4&0x0f)<<10)};}if(kind==='VP8 '){const marker=buf.indexOf(Buffer.from([0x9d,0x01,0x2a]),20);if(marker>=0&&marker+7<buf.length)return {width:buf.readUInt16LE(marker+3)&0x3fff,height:buf.readUInt16LE(marker+5)&0x3fff};}return null;}
 export function sourceIdentity(filePath){const buf=fs.readFileSync(filePath),ext=path.extname(filePath).toLowerCase(),dimensions=ext==='.png'?pngDimensions(buf):ext==='.webp'?webpDimensions(buf):null;if(!dimensions)throw new Error(`Unsupported or invalid corpus image: ${filePath}`);return {filename:path.basename(filePath),...dimensions,byteSize:buf.length,sha256:crypto.createHash('sha256').update(buf).digest('hex'),mimeType:ext==='.png'?'image/png':'image/webp'};}
-export function summarizeSafety(localOcrMetrics){const text=JSON.stringify(localOcrMetrics??{}).toLowerCase();const num=(...names)=>{for(const n of names){const v=localOcrMetrics?.[n];if(Number.isFinite(v))return v;}return 0;};return {timeouts:num('timeoutCount','ocrTimeoutCount'),invalidGeometry:num('invalidRoiCount','invalidGeometryCount'),diagnosticMentionsTimeout:text.includes('timeout')};}
+export function summarizeSafety(localOcrMetrics){
+  const calls=localOcrMetrics?.ocrExecution?.calls??[];
+  const timeoutCalls=calls.filter(call=>call?.outcome==='timeout');
+  const invalidCalls=calls.filter(call=>call?.outcome==='invalid-geometry');
+  const errorCalls=calls.filter(call=>call?.outcome==='error');
+  return {timeouts:timeoutCalls.length,invalidGeometry:invalidCalls.length,ocrErrors:errorCalls.length,recognizeCalls:calls.length,budgetExhausted:localOcrMetrics?.ocrExecution?.exhausted===true};
+}
