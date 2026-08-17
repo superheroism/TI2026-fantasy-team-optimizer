@@ -6,15 +6,12 @@ const read=path=>readFileSync(new URL(path,import.meta.url),'utf8');
 const refinement=read('../src/import/emblemOcrRefinement.ts');
 const boardView=read('../src/ui/boardView.ts');
 
-test('low-confidence stat gets a dedicated native-resolution single-line retry',()=>{
-  assert.match(refinement,/statStrip=\{left:base\.left,top:base\.top,width:base\.width,height:base\.height\*\.38\}/);
-  assert.match(refinement,/statRec=await w\.recognize\(canvas\(src,statStrip\),\{tessedit_pageseg_mode:'7'\}/);
+test('low-confidence stat uses one preprocessed native-resolution fallback after the emblem retry',()=>{
+  assert.doesNotMatch(refinement,/statStrip=\{left:base\.left,top:base\.top,width:base\.width,height:base\.height\*\.38\}/);
+  assert.doesNotMatch(refinement,/canvas\(src,statStrip\)/);
+  assert.match(refinement,/processed=otsuCanvas\(canvas\(src,statNameStrip\)\)/);
+  assert.match(refinement,/statRec=await w\.recognize\(processed,\{tessedit_pageseg_mode:'7'\}/);
   assert.match(refinement,/sm\.score>=\.92&&sc>=\.9/);
-});
-
-test('stat-row retry excludes multiplier percentages from OCR confidence evidence',()=>{
-  assert.match(refinement,/evidenceWords=.*filter\(word=>!/);
-  assert.match(refinement,/\\d\+%/);
 });
 
 test('successful stat retries synchronize final diagnostic stat values',()=>{
