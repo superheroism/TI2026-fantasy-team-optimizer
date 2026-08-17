@@ -1,5 +1,6 @@
 import { BOARD_LAYOUTS, LEGAL_STAT_POOLS } from '../domain/rules.js';
 import { matchActionText, matchStatLines, matchTierText, matchTraitText, ocrSimilarity } from './ocrDomainMatch.js';
+import { otsuWhitenessRgba } from './ocrImagePreprocess.js';
 const ROLES = ['core', 'mid', 'support'];
 const TRAITS = ['Fractal', 'Friendly', 'Vampiric', 'Unique', 'Benevolent'];
 let workerPromise;
@@ -17,6 +18,8 @@ async function worker() { workerPromise ??= (async () => { const T = window.Tess
 async function image(file) { return await new Promise((ok, no) => { const i = new Image(), u = URL.createObjectURL(file); i.onload = () => { URL.revokeObjectURL(u); ok(i); }; i.onerror = () => { URL.revokeObjectURL(u); no(new Error('Could not decode screenshot for refinement.')); }; i.src = u; }); }
 function canvas(i, r) { const left = Math.max(0, Math.floor(r.left)), top = Math.max(0, Math.floor(r.top)), right = Math.min(i.naturalWidth, Math.ceil(r.left + r.width)), bottom = Math.min(i.naturalHeight, Math.ceil(r.top + r.height)), c = document.createElement('canvas'); c.width = Math.max(1, right - left); c.height = Math.max(1, bottom - top); const x = c.getContext('2d'); if (!x)
     throw new Error('Canvas unavailable.'); x.drawImage(i, left, top, c.width, c.height, 0, 0, c.width, c.height); return c; }
+function otsuCanvas(source) { const c = document.createElement('canvas'); c.width = source.width; c.height = source.height; const x = c.getContext('2d'); if (!x)
+    throw new Error('Canvas unavailable.'); x.drawImage(source, 0, 0); const image = x.getImageData(0, 0, c.width, c.height), processed = otsuWhitenessRgba(image.data); image.data.set(processed.rgba); x.putImageData(image, 0, 0); return c; }
 function confidenceFor(raw, path) { return raw.fieldConfidence?.find(x => x.path === path)?.confidence ?? 0; }
 function setConfidence(raw, path, confidence) { raw.fieldConfidence ??= []; const old = raw.fieldConfidence.find(x => x.path === path); if (old)
     old.confidence = Math.max(old.confidence, confidence);
@@ -118,6 +121,17 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
             }
             if (confidenceFor(raw, sp) < .9) {
                 const base = extractionToSource(d.roi, metrics), statStrip = { left: base.left, top: base.top, width: base.width, height: base.height * .38 }, statRec = await w.recognize(canvas(src, statStrip), { tessedit_pageseg_mode: '7' }, { tsv: true }), statRetryWords = parse(statRec.data.tsv), statRetryLines = lines(statRetryWords), sm = matchStatLines(statRetryLines.map(line => line.text), LEGAL_STAT_POOLS[layout.roles[role][i].color]), evidenceWords = sm.lineIndices.flatMap(index => statRetryLines[index]?.words ?? []).filter(word => !/^\+?\d+%$/.test(word.text.trim())), sc = combined(sm.score, evidenceWords);
+                retries++;
+                emblemRetries++;
+                if (sm.score >= .92 && sc >= .9 && sc > confidenceFor(raw, sp)) {
+                    raw.banners[role].emblems[i].stat = sm.value;
+                    setConfidence(raw, sp, sc);
+                    d.normalizedStat = sm.value;
+                    d.statMatchScore = sm.score;
+                }
+            }
+            if (confidenceFor(raw, sp) < .9) {
+                const pct = d.words.find(word => /^\+?\d+%$/.test(word.text.trim())), left = d.roi.left + d.roi.width * .06, right = pct ? Math.max(d.roi.left + d.roi.width * .45, pct.x - d.roi.width * .08) : d.roi.left + d.roi.width * .70, nameRoi = { left, top: d.roi.top, width: Math.max(d.roi.width * .35, right - left), height: d.roi.height * .38 }, statNameStrip = extractionToSource(nameRoi, metrics), processed = otsuCanvas(canvas(src, statNameStrip)), statRec = await w.recognize(processed, { tessedit_pageseg_mode: '7' }, { tsv: true }), statRetryWords = parse(statRec.data.tsv), statRetryLines = lines(statRetryWords), sm = matchStatLines(statRetryLines.map(line => line.text), LEGAL_STAT_POOLS[layout.roles[role][i].color]), evidenceWords = sm.lineIndices.flatMap(index => statRetryLines[index]?.words ?? []), sc = combined(sm.score, evidenceWords);
                 retries++;
                 emblemRetries++;
                 if (sm.score >= .92 && sc >= .9 && sc > confidenceFor(raw, sp)) {
