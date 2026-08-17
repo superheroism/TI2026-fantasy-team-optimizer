@@ -6,7 +6,7 @@ const emblemSelector=(role,index)=>`.emblem[data-role="${role}"][data-index="${i
 const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 
 export async function waitForApp(page){
-  await page.waitForSelector('#screenshot-file');
+  await page.waitForSelector('#screenshot-file',{state:'attached'});
   await page.waitForFunction(()=>['core','mid','support'].every(role=>{const el=document.querySelector(`.team-select[data-role="${role}"]`);return el instanceof HTMLSelectElement&&el.options.length>1;}),null,{timeout:30000});
 }
 async function chooseDifferent(page,selector,avoid){
