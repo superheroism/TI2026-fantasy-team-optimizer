@@ -47,12 +47,12 @@ export function canonicalFromValidated(value){
   return {layoutId:boardLayout(board),banners:board?.banners??board,operationIds:menuIds(value.menu??value.operationIds),tokensRemaining:value.tokensRemaining};
 }
 export const canonicalFromApplied=canonicalFromValidated;
+function canonicalPath(fieldPath){
+  const dotted=String(fieldPath??'').replace(/\[(\d+)\]/g,'.$1');
+  return /^(core|mid|support)\./.test(dotted)?`banners.${dotted}`:dotted;
+}
 export function confidenceByPath(raw){
-  return new Map((raw?.fieldConfidence??[]).flatMap(item=>{
-    const entries=[[item.path,item.confidence]];
-    if(typeof item.path==='string'&&/^(core|mid|support)\./.test(item.path))entries.push([`banners.${item.path}`,item.confidence]);
-    return entries;
-  }));
+  return new Map((raw?.fieldConfidence??[]).flatMap(item=>[[item.path,item.confidence],[canonicalPath(item.path),item.confidence]]));
 }
 
 export function classifyField({expected,raw,validated,applied,rendered,sentinel,unmappable=false}){
