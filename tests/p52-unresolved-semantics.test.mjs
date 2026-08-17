@@ -18,6 +18,11 @@ test('fitted row synthesis does not globally cap otherwise independent field evi
   assert.equal(source.includes("if(metrics.diagnostic.synthesizedRows) return {value:.85,reason:'synthesized-row'}"),false);
 });
 
+test('team auto-application requires candidate separation, not a fuzzy winner alone',()=>{
+  assert.ok(source.includes('match.margin>=.08'));
+  assert.ok(source.includes("teamComponents.fieldConsistency=.7"));
+});
+
 test('sub-threshold action evidence preserves the existing menu',()=>{
   assert.ok(source.includes('actionConfidence<REVIEW_THRESHOLD'));
   assert.ok(source.includes('preserved until reviewed'));
