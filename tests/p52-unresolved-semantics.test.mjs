@@ -9,12 +9,21 @@ test('tier auto-trust requires direct text plus corroboration, with a stricter T
   assert.ok(source.includes('tierComponents.structuredEvidence=.89'));
 });
 
+test('native direct tier retries can become authoritative without weakening Tier I initial evidence',()=>{
+  assert.ok(source.includes("tierComponents.targetedRetry=.97"));
+  assert.ok(source.includes("tierReason='targeted-native-tier'"));
+});
+
+test('fitted row synthesis does not globally cap otherwise independent field evidence',()=>{
+  assert.equal(source.includes("if(metrics.diagnostic.synthesizedRows) return {value:.85,reason:'synthesized-row'}"),false);
+});
+
 test('sub-threshold action evidence preserves the existing menu',()=>{
   assert.ok(source.includes('actionConfidence<REVIEW_THRESHOLD'));
   assert.ok(source.includes('preserved until reviewed'));
 });
 
 test('action auto-application requires decisive closed-catalog evidence or strong raw confidence',()=>{
-  assert.ok(source.includes('actionMatch.score>=.7&&actionMatch.margin>=.06'));
+  assert.ok(source.includes('actionMatch.score>=.65&&actionMatch.margin>=.06'));
   assert.ok(source.includes('const actionResolved=operationId!==null&&(decisiveCatalogMatch||rawConfidence>=.9)'));
 });
