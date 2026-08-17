@@ -134,13 +134,20 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
             const sp = `banners.${role}.emblems.${i}.stat`, qp = `banners.${role}.emblems.${i}.qualityTier`, tp = `banners.${role}.emblems.${i}.trait`, d = diagnostics.get(`${role}:${i}`);
             if (!d)
                 continue;
-            if (!shouldRetryStat(confidenceFor(raw, sp)) && confidenceFor(raw, qp) >= .9 && confidenceFor(raw, tp) >= .9)
+            const retryStat = shouldRetryStat(confidenceFor(raw, sp)), retryTier = shouldRetryTier(confidenceFor(raw, qp)), retryTrait = confidenceFor(raw, tp) < .9;
+            if (!retryStat && !retryTier && !retryTrait)
                 continue;
-            const roleBand = metrics.diagnostic.columnBands[role], rr = extractionToSource({ left: Math.max(0, d.roi.left - d.roi.width * .05), top: Math.max(0, d.roi.top - d.roi.height * .08), width: d.roi.width * 1.08, height: d.roi.height * 1.16 }, metrics), emblemCanvas = canvas(src, rr), rec = await recognize(w, emblemCanvas, budget, `emblem:${role}:${i + 1}:psm6`, 6, rr), words = parse(rec.data.tsv), ls = lines(words);
-            retries++;
-            emblemRetries++;
+            const roleBand = metrics.diagnostic.columnBands[role];
+            let words = [], ls = [];
+            if (retryTier || retryTrait) {
+                const rr = extractionToSource({ left: Math.max(0, d.roi.left - d.roi.width * .05), top: Math.max(0, d.roi.top - d.roi.height * .08), width: d.roi.width * 1.08, height: d.roi.height * 1.16 }, metrics), emblemCanvas = canvas(src, rr), rec = await recognize(w, emblemCanvas, budget, `emblem:${role}:${i + 1}:psm6`, 6, rr);
+                words = parse(rec.data.tsv);
+                ls = lines(words);
+                retries++;
+                emblemRetries++;
+            }
             let strongSupplementalTier = false;
-            if (shouldRetryStat(confidenceFor(raw, sp)) && !budget.exhausted) {
+            if (retryStat && !budget.exhausted) {
                 const cardAlignedStat = metrics.diagnostic.extractionColumnMethod === 'role-labels', statLeft = cardAlignedStat ? Math.max(roleBand.left, d.roi.left - d.roi.width * .08) : roleBand.left, statWidth = cardAlignedStat ? Math.max(1, roleBand.right - statLeft) : (roleBand.right - roleBand.left) * .78, nameRoi = { left: statLeft, top: d.roi.top, width: statWidth, height: d.roi.height }, statStrip = extractionToSource(nameRoi, metrics), statCanvas = canvas(src, statStrip), statRec = await recognize(w, statCanvas, budget, `stat:${role}:${i + 1}:psm6`, 6, statStrip), statWords = parse(statRec.data.tsv), statLines = lines(statWords), statTier = bestTierLine(statLines), sm = matchStatLines(statLines.map(line => line.text), LEGAL_STAT_POOLS[layout.roles[role][i].color]), evidenceWords = sm.lineIndices.flatMap(index => statLines[index]?.words ?? []), sc = combined(sm.score, evidenceWords);
                 retries++;
                 emblemRetries++;
@@ -149,6 +156,8 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
                     setConfidence(raw, sp, sc);
                     d.normalizedStat = sm.value;
                     d.statMatchScore = sm.score;
+                    d.statRunnerUpScore = sm.runnerUpScore;
+                    d.statMatchMargin = sm.score - sm.runnerUpScore;
                 }
                 if (statTier.direct) {
                     const stc = combined(statTier.match.score, statTier.line?.words ?? statWords);
@@ -171,6 +180,8 @@ export async function refineUncertainScreenshotFields(file, data, raw, metrics) 
                     setConfidence(raw, sp, fallbackConfidence);
                     d.normalizedStat = fallbackMatch.value;
                     d.statMatchScore = fallbackMatch.score;
+                    d.statRunnerUpScore = fallbackMatch.runnerUpScore;
+                    d.statMatchMargin = fallbackMatch.score - fallbackMatch.runnerUpScore;
                 }
             }
             ;

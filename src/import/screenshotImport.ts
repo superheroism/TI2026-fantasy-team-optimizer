@@ -13,6 +13,7 @@ const normalized = (value:string):string => value.toUpperCase().replace(/[^A-Z0-
 
 export type ScreenshotEvidenceClass =
   | 'exact-domain-stat'
+  | 'decisive-domain-stat'
   | 'targeted-native-stat'
   | 'fuzzy-stat'
   | 'direct-native-tier'
@@ -202,10 +203,11 @@ export function calibrateScreenshotImportConfidence(raw:RawScreenshotImport, met
       const emblem=raw.banners[role].emblems[index]!,diag=byEmblem.get(`${role}:${index}`),slot=layout.roles[role][index]!;
       if(!diag) continue;
       const statPath=`banners.${role}.emblems.${index}.stat`,statRaw=confidenceFor(raw,statPath),statComponents=baseComponents(geometry.value,diag.statMatchScore),initialStat=Math.min(geometry.value,clamp(diag.statMatchScore*.72+averageDiagnosticWordConfidence(diag.words)*.28));
-      const statChanged=diag.normalizedStat!==emblem.stat,statStrengthened=statRaw>initialStat+.03;
+      const statChanged=diag.normalizedStat!==emblem.stat,statStrengthened=statRaw>initialStat+.03,decisiveInitialStat=!statChanged&&diag.statMatchScore>=.82&&diag.statMatchMargin>=.25&&statRaw>=.78;
       let statReason:ScreenshotEvidenceClass='fuzzy-stat';
       if(!isLegalStat(slot.color,emblem.stat)){statComponents.fieldConsistency=0;statReason='unresolved';}
       else if(!statChanged&&diag.statMatchScore>=.99){statComponents.structuredEvidence=.97;statReason='exact-domain-stat';}
+      else if(decisiveInitialStat){statComponents.structuredEvidence=.95;statReason='decisive-domain-stat';}
       else if(statRaw>=.9&&(statChanged||statStrengthened)){statComponents.targetedRetry=.95;statComponents.fieldConsistency=statChanged?.9:1;statReason='targeted-native-stat';}
       else if(statChanged){statComponents.targetedRetry=statRaw;statComponents.fieldConsistency=.7;statReason='conflicting-retry';}
       if(geometry.reason) statReason=geometry.reason;
@@ -213,8 +215,8 @@ export function calibrateScreenshotImportConfidence(raw:RawScreenshotImport, met
 
       const tierPath=`banners.${role}.emblems.${index}.qualityTier`,tierRaw=confidenceFor(raw,tierPath),tierComponents=baseComponents(geometry.value,diag.tierMatchScore),tierSame=diag.normalizedTier===emblem.qualityTier;
       let tierReason:ScreenshotEvidenceClass='fuzzy-tier';
-      const tierDirect=tierSame&&directTierText(diag.rawTierText,emblem.qualityTier);
-      if(tierDirect){
+      const tierDirect=tierSame&&directTierText(diag.rawTierText,emblem.qualityTier),separatedNonTierRoman=tierSame&&emblem.qualityTier!==1&&diag.tierMatchScore>=.84;
+      if(tierDirect||separatedNonTierRoman){
         const corroborated=diag.tierMatchScore>=.95||tierRaw>=.98;
         const unambiguousNonTierOne=emblem.qualityTier!==1&&diag.tierMatchScore>=.84;
         if(corroborated||unambiguousNonTierOne) tierComponents.structuredEvidence=corroborated?.98:.96;

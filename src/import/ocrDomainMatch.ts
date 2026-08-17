@@ -38,13 +38,19 @@ function bestPhraseSimilarity(s:string,target:string):number {
   return Math.max(0,...phrases(s,Math.max(2,target.trim().split(/\s+/).length+1)).map(p=>ocrSimilarity(p,target)));
 }
 
-export function matchStatText(s:string,legal:readonly StatName[]):{value:StatName;score:number}{
-  let best={value:legal[0]!,score:-1};
+export interface StatTextCandidateMatch { value:StatName;score:number;runnerUpScore:number;margin:number; }
+export function matchStatTextWithMargin(s:string,legal:readonly StatName[]):StatTextCandidateMatch{
+  let best={value:legal[0]!,score:-1},runnerUpScore=-1;
   for(const value of legal){
     const score=Math.max(...ALIASES[value].map(alias=>bestPhraseSimilarity(s,alias)));
-    if(score>best.score) best={value,score};
+    if(score>best.score){runnerUpScore=best.score;best={value,score};}
+    else if(score>runnerUpScore)runnerUpScore=score;
   }
-  return best;
+  const runner=Math.max(0,runnerUpScore);
+  return{...best,runnerUpScore:runner,margin:Math.max(0,best.score-runner)};
+}
+export function matchStatText(s:string,legal:readonly StatName[]):{value:StatName;score:number}{
+  const {value,score}=matchStatTextWithMargin(s,legal);return{value,score};
 }
 
 export interface StatLineMatch { value:StatName;score:number;runnerUpScore:number;lineIndices:number[];text:string; }
@@ -91,6 +97,8 @@ export function matchTierText(s:string):{value:QualityTier;score:number}{
     if(ocrSimilarity(token,'TIER')<.65) continue;
     const next=ts[i+1];
     if(next&&byRoman[next]) return{value:byRoman[next]!,score:/^[1-5]$/.test(next)?.72:.86};
+    const separated=ts.slice(i+1,i+6).filter(candidate=>/^(II|III|IV|V)$/.test(candidate));
+    if(separated.length===1)return{value:byRoman[separated[0]!]!,score:.84};
   }
   return{value:1,score:.2};
 }

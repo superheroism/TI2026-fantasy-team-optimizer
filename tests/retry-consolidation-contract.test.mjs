@@ -14,6 +14,11 @@ test('P52 retains full-emblem recovery and replaces P51 stat representations wit
   assert.doesNotMatch(refinement,/stat:\$\{role\}:\$\{i\+1\}:raw/);
 });
 
+test('stat-only uncertainty skips the duplicate full-emblem OCR pass',()=>{
+  assert.match(refinement,/if\(retryTier\|\|retryTrait\).*emblem:/s);
+  assert.match(refinement,/let strongSupplementalTier=false;if\(retryStat/);
+});
+
 test('P51 keeps strict stat acceptance thresholds centralized and unchanged',()=>{
   assert.match(retryPolicy,/STAT_MATCH_GATE=\.92/);
   assert.match(retryPolicy,/STRUCTURED_CONFIDENCE_GATE=\.90/);

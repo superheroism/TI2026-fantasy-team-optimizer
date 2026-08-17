@@ -27,6 +27,16 @@ test('team evidence fuses the role header with first-card roster text',()=>{
   assert.ok(source.includes('emblem.rowIndex===0'));
 });
 
+test('decisive initial stat evidence requires same-color winner separation, not scalar confidence alone',()=>{
+  assert.ok(source.includes('diag.statMatchMargin>=.25'));
+  assert.ok(source.includes("statReason='decisive-domain-stat'"));
+});
+
+test('non-Tier-I separated Roman evidence is field-specific and Tier I remains strict',()=>{
+  assert.ok(source.includes('separatedNonTierRoman'));
+  assert.ok(source.includes('emblem.qualityTier!==1'));
+});
+
 test('team auto-application requires candidate separation, not a fuzzy winner alone',()=>{
   assert.ok(source.includes('match.margin>=.08'));
   assert.ok(source.includes("teamComponents.fieldConsistency=.7"));

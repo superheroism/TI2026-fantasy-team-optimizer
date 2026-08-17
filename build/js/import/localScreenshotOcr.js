@@ -1,5 +1,5 @@
 import { BOARD_LAYOUTS, LEGAL_STAT_POOLS } from '../domain/rules.js';
-import { matchActionText, matchStatText, matchTierText, matchTraitText } from './ocrDomainMatch.js';
+import { matchActionText, matchStatText, matchStatTextWithMargin, matchTierText, matchTraitText } from './ocrDomainMatch.js';
 import { createOcrExecutionBudget, recognizeWithBudget, validateOcrRect } from './ocrRecognition.js';
 import { selectBalancedCardColumns, selectRoleColumnConsensus } from './roleColumnGeometry.js';
 import { classifyLayoutEvidence, fitRowLattice, fitTierAnchoredLattice, rowWindows } from './rowLattice.js';
@@ -145,7 +145,7 @@ else
     throw new Error('Screenshot layout is unresolved; review is required.'); const rowCount = layoutId === 'expanded_5' ? 5 : 3, fits = streams.map(stream => ({ stream, fit: fitRowLattice(global[stream], rowCount, height) })).filter((row) => row.fit !== null).sort((a, b) => b.fit.matchedRows - a.fit.matchedRows || b.fit.confidence - a.fit.confidence); if (!fits.length)
     throw new Error('Screenshot row geometry is unresolved; review is required.'); const broad = fits[0], tierAnchored = fitTierAnchoredLattice(global.tier, rowCount, height, broad.fit), best = tierAnchored ? { stream: 'tier', fit: tierAnchored } : broad; return { layoutId, rows: best.fit.rows, synthesized: best.fit.synthesized, source: best.stream, confidence: best.fit.confidence, tierRows: Object.fromEntries(ROLES.map(role => [role, perRole[role].tier])) }; }
 const within = (ws, l, r, t, b) => ws.filter(w => cx(w) >= l && cx(w) < r && cy(w) >= t && cy(w) < b);
-function statMatch(s, legal) { return matchStatText(s, legal); }
+function statMatch(s, legal) { return matchStatTextWithMargin(s, legal); }
 function traitMatch(s) { return matchTraitText(s); }
 function tierMatch(s) { return matchTierText(s); }
 function tierMatchWords(ws) { let best = { value: 1, score: .2 }; for (const line of groups(ws).values()) {
@@ -266,7 +266,7 @@ export async function parseScreenshotLocally(file, data) {
         if (teamConfidence < .9)
             warnings.push(`${role} team OCR should be reviewed.`);
         const emblems = layout.roles[role].map((slot, i) => { const rw = rowWindow(rs, i, ex.height); synthesizedRows ||= rw.synthesized; const statRoi = { left: b.left, top: rw.top, width: b.right - b.left, height: rw.bottom - rw.top }, roi = { left: b.left + (b.right - b.left) * .42, top: rw.top, width: b.right - (b.left + (b.right - b.left) * .42), height: rw.bottom - rw.top }, ww = within(ex.words, statRoi.left, statRoi.left + statRoi.width, statRoi.top, statRoi.top + statRoi.height), dw = within(ex.words, roi.left, roi.left + roi.width, roi.top, roi.top + roi.height), statText = text(ww), detailText = text(dw), sm = statMatch(statText, LEGAL_STAT_POOLS[slot.color]), tr = traitMatch(detailText), qt = tierMatchWords(dw), sc = Math.min(conf(sm.score, ww), geometryConfidenceCap), tc = Math.min(conf(tr.score, dw), geometryConfidenceCap), qc = Math.min(qt.score, geometryConfidenceCap), finalConfidence = Math.min(sc, qc, tc); fc.push({ path: `banners.${role}.emblems.${i}.stat`, confidence: sc }, { path: `banners.${role}.emblems.${i}.qualityTier`, confidence: qc }, { path: `banners.${role}.emblems.${i}.trait`, confidence: tc }); if (finalConfidence < .9)
-            warnings.push(`${role} emblem ${i + 1} OCR should be reviewed.`); emblemDiagnostics.push({ role, rowIndex: i, roi, synthesizedRow: rw.synthesized, words: dw.map(wordDiagnostic), inferredColor: slot.color, rawText: statText, normalizedStat: sm.value, statMatchScore: sm.score, rawTierText: detailText, normalizedTier: qt.value, tierMatchScore: qt.score, rawTraitText: detailText, normalizedTrait: tr.value, traitMatchScore: tr.score, finalConfidence, reviewRequired: finalConfidence < REVIEW_THRESHOLD }); return { position: slot.index, color: slot.color, stat: sm.value, qualityTier: qt.value, trait: tr.value }; });
+            warnings.push(`${role} emblem ${i + 1} OCR should be reviewed.`); emblemDiagnostics.push({ role, rowIndex: i, roi, synthesizedRow: rw.synthesized, words: dw.map(wordDiagnostic), inferredColor: slot.color, rawText: statText, normalizedStat: sm.value, statMatchScore: sm.score, statRunnerUpScore: sm.runnerUpScore, statMatchMargin: sm.margin, rawTierText: detailText, normalizedTier: qt.value, tierMatchScore: qt.score, rawTraitText: detailText, normalizedTrait: tr.value, traitMatchScore: tr.score, finalConfidence, reviewRequired: finalConfidence < REVIEW_THRESHOLD }); return { position: slot.index, color: slot.color, stat: sm.value, qualityTier: qt.value, trait: tr.value }; });
         banners[role] = { selectedTeam: tm.team, emblems };
     }
     const actionRows = pooled.length ? pooled : ROLES.flatMap(r => rows[r]), actions = await parseActions(worker, img, ex, crop, actionRows, fc, warnings, budget);
