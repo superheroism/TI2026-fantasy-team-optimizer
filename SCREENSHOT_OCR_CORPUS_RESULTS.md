@@ -1,99 +1,113 @@
-# Screenshot OCR Corpus — Verification Results
+# Screenshot Import Corpus — Verification Results
 
 Date: 2026-08-17
 
-Exploratory native-Tesseract/Linux measurements are used to expose OCR/localization failure modes. Browser Tesseract.js timing will differ. Final acceptance remains normalized imported-state accuracy.
+## Measurement terminology
 
-## Seven-image corpus
+Two measurements are intentionally retained:
 
-The corpus now contains seven manually labeled screenshots: the original six cases plus `expanded5-actions-full-client-noone-2048x1151`, the 2048×1151 full Dota-client capture supplied during retry-performance validation. The new case has all three actions visible, 30 tokens, and punctuation-heavy Mid selection `No[o]ne-`. Its source dimensions and SHA-256 are pinned in the ground-truth JSON.
+- **OCR-core**: raw `requestScreenshotImport()` output. Diagnostic only.
+- **Production E2E**: final application behavior through the actual `docs/index.html` import path. Authoritative product metric.
 
-The screenshot binaries remain external to repository CI. Contract tests validate labels, action IDs, roster mapping, and source identity metadata; live browser runs remain authoritative for image-level accuracy and latency.
+Raw OCR/parser exactness is a diagnostic metric. Production E2E exactness is the authoritative screenshot-import product metric.
 
-## 2026-08-17 stat retry consolidation experiment
+Historical results that predate P52E measured the former, even where earlier documentation described them as final screenshot-import accuracy. Those results are preserved below rather than rewritten as if they had exercised validation/state/render behavior.
 
-Goal: determine whether the raw native stat-row PSM-7 retry can be removed so an unresolved stat goes directly from the existing full-emblem PSM-6 retry to the tight whiteness/Otsu PSM-7 fallback.
+## Frozen OCR-core reference at P52E kickoff
 
-Two available expanded screenshots were evaluated with native Tesseract 5.5 on the same tight stat-name regions used by the production fallback. This is an exploratory crop-level A/B, not browser certification.
+Base SHA: `677f17b38d7aba89308b182017ca6118e5236814` (PR #53 merge).
 
-| Source | Raw PSM-7 correct best match | Otsu PSM-7 correct best match | Raw correct with domain score ≥0.92 | Otsu correct with domain score ≥0.92 |
-|---|---:|---:|---:|---:|
-| prior expanded board | 14/15 | 14/15 | 14 | 13 |
-| new 2048×1151 full-client capture | 13/15 | **14/15** | 13 | 13 |
+The six committed real screenshots were run without changing OCR behavior.
 
-Important field-level findings:
+| Board | Layout | Stats | Tiers | Traits | Raw actions | Token | Raw exact | Elapsed |
+|---|---|---:|---:|---:|---:|---|---|---:|
+| 1 | exact | 15/15 | 15/15 | 15/15 | 3/3 | exact | yes | 11.696 s |
+| 2 | exact | 15/15 | 15/15 | 15/15 | 3/3 | exact | yes | 11.860 s |
+| 3 | exact | 15/15 | 15/15 | 15/15 | 3/3 | exact | yes | 11.061 s |
+| 4 | exact | 2/15 | 2/15 | 4/15 | 2/3 | incorrect | no | 5.468 s |
+| 5 | exact | 8/9 | 9/9 | 9/9 | 3/3 | exact | no | 6.193 s |
+| 6 | exact | 15/15 | 14/15 | 15/15 | 3/3 | exact | no | 9.274 s |
 
-- `Roshan Kills`, the field previously rescued by the raw stat-row retry, matched at 1.0 under both raw and Otsu tight-crop OCR in the tested screenshots.
-- `Camps Stacked` on the new full-client capture failed the raw tight crop but matched `CAMPS STACKED` at 1.0 after whiteness/Otsu preprocessing.
-- `Madstone Collected` was not reliably recovered by either tight single-line representation. The existing full-emblem multiline PSM-6 stage therefore remains necessary and is retained.
-- One `Runes` Otsu crop remained the correct best legal match but scored below the strict 0.92 domain gate. This does not establish a production regression because Otsu is only reached after the full-emblem retry has failed; prior live browser runs resolved that `Runes` field before the stat-specific fallback.
-- Median native subprocess recognition time was approximately 87.5 ms for the raw crop versus 85.3 ms for the Otsu crop. The image transform itself is therefore not the relevant cost; the extra `recognize()` invocation is.
+Summary:
 
-The candidate consequently removes the redundant raw stat-row OCR call while retaining the full-emblem multiline retry and the strict Otsu fallback. Confidence gates are unchanged.
+- raw-exact boards: **3/6**;
+- layouts: **6/6**;
+- false-high-confidence errors: **0**;
+- invalid OCR geometry: **0**;
+- OCR timeouts: **0**;
+- aggregate OCR-core elapsed time: **55.552 s**.
 
-A second avoidable retry was found during code review: when an emblem was entered for refinement because some other field was weak, dedicated Tier OCR could run whenever the new full-emblem pass lacked direct Tier evidence even if the existing Tier confidence was already ≥0.90. The candidate now runs the Tier strip only while `qualityTier` itself remains below 0.90.
+Board 2 is the P52E canary because this raw layer reports it exact while manual web use appeared materially worse.
 
-The current-main full-client browser run was observed by the user to exceed one minute without completing. That is recorded as a qualitative worst-case performance failure, not an exact benchmark. The consolidated branch must be rerun on that same capture before merge.
+This reference did **not** score selected teams and did **not** pass the result through validation, preservation semantics, `state.importScreenshot`, rerendering, or review highlighting. Therefore `3/6 raw exact` must not be interpreted as `3/6 product exact`.
 
-## Earlier six-image findings
+## Why the previous acceptance surface was insufficient
 
-The earlier corpus included four board-only screenshots plus two legacy-three screenshots with all three reroll cards and token counts visible.
+The earlier OCR-core harness was conceptually:
 
-Action fixture A: 1232×824 (1.015 MP), tight board/action crop, tokens = 4.
+```text
+raw screenshot
+    ↓
+requestScreenshotImport()
+    ↓
+raw structured OCR result
+    ↓
+compare to labels
+```
 
-- actions: `blue-trait-first`, `red-trait-all`, `green-stat-first`.
-- native whole-image OCR: ~0.55 s exploratory run.
-- whole-image OCR sees the action region but merges/garbles adjacent card labels.
-- correction from the user-supplied authoritative action table: the third card is **Reroll Stat for the first Green Emblem**. The current 20-action `ACTION_CATALOG` is complete for the supplied evidence.
+The real product is:
 
-Action fixture B: 2560×1600 (4.096 MP), full Dota desktop, tokens = 5.
+```text
+actual docs/index.html
+    ↓
+real application initialization
+    ↓
+#screenshot-file
+    ↓
+requestScreenshotImport()
+    ↓
+validateScreenshotImport(...)
+    ↓
+low-confidence preservation / review policy
+    ↓
+state.importScreenshot(...)
+    ↓
+renderStructure()
+    ↓
+review highlighting/status
+    ↓
+user-visible board/menu/tokens
+```
 
-- actions: `green-stat-last`, `quality-increase-one`, `green-stat-random`.
-- native whole-image OCR: ~1.19 s exploratory run.
-- generic whole-image OCR sees `REROLL OPERATIONS` / token text but does not reliably recover the three individual card labels.
+For example, a raw action ID can be correct while confidence is below 0.90. In that case validation may preserve the pre-import action, making the user-visible final action different from screenshot truth. The old raw comparator could count the recognition as correct; P52E correctly scores the final action as wrong and identifies validation as the first divergence.
 
-## Baseline geometry findings
+## P52E Production E2E certification
 
-| Fixture | Expected | Baseline result before geometry change |
-|---|---|---|
-| original reference | expanded_5 | PASS: 5/5/5 TIER rows |
-| crimson cropped board | expanded_5 | PASS layout; Support only 2/5 TIER anchors |
-| full desktop capture | expanded_5 | **FAIL: legacy_3** under equal-third fallback |
-| golden cropped board | legacy_3 | PASS: 3/3/3 |
+The new browser corpus:
 
-## Implemented parser changes
+- loads the actual `docs/` artifact;
+- drives the real hidden file input;
+- begins from a deterministic sentinel state;
+- scores selected teams;
+- captures raw → validated → applied → rendered stages;
+- verifies DOM/state parity and review highlighting;
+- runs Chromium and Firefox;
+- distinguishes cold and warm OCR-worker behavior;
+- records source SHA-256 and browser version;
+- uses a 30-second outer watchdog;
+- checks public GitHub Pages OCR-asset parity.
 
-The importer now addresses the failure mechanisms found by the corpus:
+Final measured results, Board 2 root-cause classification, browser comparison, full-corpus product accuracy, and deployment parity are recorded in `P52E_PRODUCTION_E2E_CERTIFICATION.md` once the browser certification completes.
 
-1. **Three-column fallback.** If all `CORE` / `MID` / `SUPPORT` headings are not confidently found, repeated closed-vocabulary card anchors (`TIER`, stat tokens, traits) are clustered into three horizontal card columns instead of dividing the entire uploaded screenshot into equal thirds.
-2. **Pooled row geometry.** `TIER` evidence is pooled across all three banners. A role no longer needs to OCR every row independently. Four-row evidence can be regularized to a five-row grid from the repeated pitch, preventing the observed 5→3 collapse.
-3. **Native/crop-first policy retained.** Large screenshots use a low-resolution localization copy, then map extraction back to original pixels. No source is blindly normalized to a predetermined resolution.
-4. **Dedicated action-strip path.** `REROLL OPERATIONS` / `ROLL TOKENS` anchor the strip. Each action region is evaluated independently and weak text can be retried at source resolution against the closed 20-action catalog.
-5. **Token extraction.** The same action region parses an integer token count when visible.
-6. **Multiline/native stat refinement.** Weak stats first receive the native full-emblem retry, which can recover multiline names such as `Madstone Collected`.
-7. **Whiteness/Otsu stat fallback.** Stats still unresolved are isolated to a tight stat-name region, transformed using `min(R,G,B)` whiteness, contrast-stretched, Otsu-thresholded, and matched only against the legal same-color stat pool.
-8. **Failure remains review-safe.** Missing or unreadable fields remain explicitly low-confidence rather than fabricated.
+## Historical OCR/parser lessons retained
 
-## Build and contract validation
+Earlier OCR work established several useful parser-level findings that remain valid diagnostic context:
 
-The implementation typechecks and lints under the repository's strict TypeScript configuration. Generated `build/` and `docs/` artifacts are reproducible from canonical source. Corpus contract tests verify both layouts, action-visible/absent cases, emblem counts, token ground truth, canonical action IDs/labels, and the identity/current-roster mapping of the seventh full-client capture.
+1. role-heading plus repeated-card-anchor localization is more robust than equal-third full-image splitting;
+2. pooling `TIER` row geometry across banners prevents some five-to-three layout collapses;
+3. source-resolution retry crops are important for difficult multiline stats and reroll cards;
+4. Otsu/whiteness preprocessing can recover selected tight stat crops;
+5. confidence/review safety is more important than forcing every ambiguous field to a guessed value;
+6. browser Tesseract.js latency must not be treated as equivalent to native Tesseract subprocess timing.
 
-## Remaining verification
-
-Run the seven actual screenshots through the browser OCR path and record:
-
-- exact layout;
-- exact teams where roster mapping is valid;
-- exact stat / tier / trait fields;
-- exact action order;
-- exact token count;
-- false-high-confidence errors;
-- cold/warm latency and analyzed-pixel fraction;
-- targeted retry count and elapsed time.
-
-For the retry-consolidation candidate, the immediate merge gates are:
-
-1. the previously successful 3719×1827 expanded fixture retains exact structured-field extraction and zero false-high-confidence fields;
-2. the new 2048×1151 full-client capture completes promptly rather than entering the >60 s retry pathology;
-3. `Camps Stacked`, `Roshan Kills`, and `Madstone Collected` remain correct;
-4. no corpus fixture loses normalized accuracy because the raw stat-row pass was removed.
+Those findings guide OCR diagnosis, but future user-facing acceptance decisions use the Production E2E corpus.
