@@ -84,6 +84,7 @@ export function clearRecommendationHighlights(root: ParentNode = document): void
 
 export function clearScreenshotReviewHighlights(root: ParentNode = document): void {
   root.querySelectorAll<HTMLElement>('.emblem.screenshot-review-target-emblem').forEach(element => element.classList.remove('screenshot-review-target-emblem'));
+  root.querySelectorAll<HTMLElement>('.client-select.screenshot-review-target-field').forEach(element => element.classList.remove('screenshot-review-target-field'));
   root.querySelectorAll<HTMLElement>('.team-select.screenshot-review-target-team').forEach(element => element.classList.remove('screenshot-review-target-team'));
 }
 
@@ -102,7 +103,10 @@ export function applyScreenshotReviewHighlights(paths: readonly string[]): void 
     if (!match) continue;
     const index = Number(match[1]);
     if (!Number.isInteger(index)) continue;
-    banner.querySelector<HTMLElement>(`.emblem[data-index="${index}"]`)?.classList.add('screenshot-review-target-emblem');
+    const emblem = banner.querySelector<HTMLElement>(`.emblem[data-index="${index}"]`);
+    emblem?.classList.add('screenshot-review-target-emblem');
+    const field = path.match(/\.(stat|qualityTier|trait)$/)?.[1];
+    if (field) emblem?.querySelector<HTMLElement>(`.client-select[data-field="${field}"]`)?.classList.add('screenshot-review-target-field');
   }
 }
 

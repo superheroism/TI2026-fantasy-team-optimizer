@@ -76,6 +76,7 @@ export function clearRecommendationHighlights(root = document) {
 }
 export function clearScreenshotReviewHighlights(root = document) {
     root.querySelectorAll('.emblem.screenshot-review-target-emblem').forEach(element => element.classList.remove('screenshot-review-target-emblem'));
+    root.querySelectorAll('.client-select.screenshot-review-target-field').forEach(element => element.classList.remove('screenshot-review-target-field'));
     root.querySelectorAll('.team-select.screenshot-review-target-team').forEach(element => element.classList.remove('screenshot-review-target-team'));
 }
 export function applyScreenshotReviewHighlights(paths) {
@@ -97,7 +98,11 @@ export function applyScreenshotReviewHighlights(paths) {
         const index = Number(match[1]);
         if (!Number.isInteger(index))
             continue;
-        banner.querySelector(`.emblem[data-index="${index}"]`)?.classList.add('screenshot-review-target-emblem');
+        const emblem = banner.querySelector(`.emblem[data-index="${index}"]`);
+        emblem?.classList.add('screenshot-review-target-emblem');
+        const field = path.match(/\.(stat|qualityTier|trait)$/)?.[1];
+        if (field)
+            emblem?.querySelector(`.client-select[data-field="${field}"]`)?.classList.add('screenshot-review-target-field');
     }
 }
 export function applyRecommendationHighlights(result, board) {
