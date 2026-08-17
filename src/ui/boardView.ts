@@ -1,4 +1,4 @@
-import type { BannerState, BoardState, DataBundle, OfferedOperation, RecommendationResult, Role, TraitName } from '../domain/types.js';
+import type { BannerState, BoardState, DataBundle, OfferedOperation, RecommendationResult, Role, StatName, TraitName } from '../domain/types.js';
 import { legalStats } from '../domain/rules.js';
 import { evaluateBanner } from '../domain/bannerEvaluator.js';
 import { ACTION_BY_ID } from '../data/actionCatalog.js';
@@ -28,6 +28,10 @@ function signedPct(value: number): string {
   return `${value >= 0 ? '+' : ''}${value}%`;
 }
 
+function statDisplayName(stat: StatName): string {
+  return stat === 'Madstone' ? 'Madstone Collected' : stat;
+}
+
 function emblemCard(role: Role, banner: BannerState, index: number): string {
   const emblem = banner.emblems[index];
   const derived = evaluateBanner(banner)[index];
@@ -39,7 +43,7 @@ function emblemCard(role: Role, banner: BannerState, index: number): string {
   return `<div class="emblem ${emblem.color}" data-role="${role}" data-index="${index}">
     <div class="client-row client-row-stat" data-element="stat">
       <span class="client-kind">STAT</span>
-      <select class="client-select stat-select" data-field="stat" aria-label="Slot ${index + 1} stat">${pool.map(stat => `<option ${stat === emblem.stat ? 'selected' : ''}>${stat}</option>`).join('')}</select>
+      <select class="client-select stat-select" data-field="stat" aria-label="Slot ${index + 1} stat">${pool.map(stat => `<option value="${escapeHtml(stat)}" ${stat === emblem.stat ? 'selected' : ''}>${escapeHtml(statDisplayName(stat))}</option>`).join('')}</select>
       <strong class="client-total" title="Effective multiplier calculated from quality and all active trait effects">${derived.effectiveMultiplierPct}%</strong>
     </div>
     <div class="client-divider"></div>
