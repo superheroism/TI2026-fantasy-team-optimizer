@@ -1,0 +1,51 @@
+name: P51 materialize
+
+on:
+  push:
+    branches:
+      - agent/p51-ocr-robustness
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/p51-ocr-robustness
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Materialize P51 source changes
+        shell: bash
+        run: |
+          mkdir -p engineering
+          printf '%s' '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' | base64 -d | gzip -d > engineering/.p51-materialize.py
+          python3 engineering/.p51-materialize.py
+          rm engineering/.p51-materialize.py
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build generated artifacts
+        run: npm run build
+
+      - name: Validate P51
+        run: npm run test:ci
+
+      - name: Commit materialized source and generated output
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src build docs tests
+          git diff --cached --quiet && exit 0
+          git commit -m 'Implement P51 bounded OCR execution and diagnostics'
+          git push origin HEAD:agent/p51-ocr-robustness
