@@ -1,36 +1,42 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "boards": [
     {
       "groundTruthFile": "tests/test_boards/TI2026 - Board 1.ground-truth.json",
       "sourceFile": "tests/test_boards/TI2026 - Board 1.png",
-      "selectedTeams": {"core":"Team Vision","mid":"Team Falcons","support":"Team Liquid"}
+      "source": {"filename":"TI2026 - Board 1.png","width":3719,"height":1827,"byteSize":4599750,"sha256":"e375d1429c0d6adf0bc69b5d025d041f09dac9de47dd20b76dc2f5f079693a04","mimeType":"image/png"},
+      "selectedTeams": {"core":"TEAM VISION","mid":"Team Falcons","support":"Team Liquid"}
     },
     {
       "groundTruthFile": "tests/test_boards/TI2026 - Board 2.ground-truth.json",
       "sourceFile": "tests/test_boards/TI2026 - Board 2.png",
-      "selectedTeams": {"core":"Team Vision","mid":"Team Vision","support":"Team Liquid"},
+      "source": {"filename":"TI2026 - Board 2.png","width":3839,"height":2159,"byteSize":5692486,"sha256":"c0438b4bfdb0b260242eb84f6cac068594680f621360e76601cae42c5bc05669","mimeType":"image/png"},
+      "selectedTeams": {"core":"TEAM VISION","mid":"TEAM VISION","support":"Team Liquid"},
       "canary": true
     },
     {
       "groundTruthFile": "tests/test_boards/TI2026 - Board 3.ground-truth.json",
       "sourceFile": "tests/test_boards/TI2026 - Board 3.png",
-      "selectedTeams": {"core":"Team Liquid","mid":"Team Vision","support":"BoomBoys"}
+      "source": {"filename":"TI2026 - Board 3.png","width":3839,"height":2159,"byteSize":5488434,"sha256":"f2a9afda5a6bb1eeb2f12269b4ae267e1476705e9b61a563e58c3485f78b5ca8","mimeType":"image/png"},
+      "selectedTeams": {"core":"Team Liquid","mid":"TEAM VISION","support":"BoomBoys"}
     },
     {
       "groundTruthFile": "tests/test_boards/Ti2026 - board 4.ground-truth.json",
       "sourceFile": "tests/test_boards/Ti2026 - board 4.png",
+      "source": {"filename":"Ti2026 - board 4.png","width":954,"height":672,"byteSize":698936,"sha256":"ac07945057ea114d82b18bfd59159ec9cfdcd5eff358070abb56e027f58aa49b","mimeType":"image/png"},
       "selectedTeams": {"core":"Team Spirit","mid":"Team Liquid","support":"Iron Wing"}
     },
     {
       "groundTruthFile": "tests/test_boards/Ti2026 - board 5.ground-truth.json",
       "sourceFile": "tests/test_boards/Ti2026 - board 5.webp",
-      "selectedTeams": {"core":"Team Vision","mid":"Team Liquid","support":"Team Yandex"}
+      "source": {"filename":"Ti2026 - board 5.webp","width":1940,"height":1131,"byteSize":211200,"sha256":"f9ef6ae7b40dc51e7aa44cb744141e2f908ea7ed937c40d0a2e0bb5ac27622f2","mimeType":"image/webp"},
+      "selectedTeams": {"core":"TEAM VISION","mid":"Team Liquid","support":"Team Yandex"}
     },
     {
       "groundTruthFile": "tests/test_boards/Ti2026 - board 6.ground-truth.json",
       "sourceFile": "tests/test_boards/Ti2026 - board 6.png",
-      "selectedTeams": {"core":"Team Vision","mid":"Team Falcons","support":"Team Vision"}
+      "source": {"filename":"Ti2026 - board 6.png","width":2973,"height":1813,"byteSize":2623183,"sha256":"a45f41637f374e23554ca0729cc3bdc150e3715f773a8234799f28bd51210b41","mimeType":"image/png"},
+      "selectedTeams": {"core":"TEAM VISION","mid":"Team Falcons","support":"TEAM VISION"}
     }
   ]
 }
