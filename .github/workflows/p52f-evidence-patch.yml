@@ -1,0 +1,86 @@
+name: P52F apply discriminating retry evidence pass
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.event.pull_request.head.ref == 'agent/p52f-fast-accurate-low-review'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/p52f-fast-accurate-low-review
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Apply focused source patches
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new):
+              p=Path(path); s=p.read_text()
+              if old not in s:
+                  if new in s:
+                      return
+                  raise SystemExit(f'missing patch anchor in {path}: {old[:120]}')
+              p.write_text(s.replace(old,new))
+
+          replace('src/import/screenshotImport.ts',
+            'for(const name of profile.attachedPlayers){',
+            "for(const name of profile.attachedPlayers.filter(playerName=>normalized(playerName).length>=4)){" )
+          replace('src/import/screenshotImport.ts',
+            'const singlePlayer=match.bestPlayerScore>=.94&&match.score>=.92&&match.margin>=.08;',
+            'const singlePlayer=match.bestPlayerScore>=.82&&match.score>=.82&&match.margin>=.18;')
+          replace('src/import/screenshotImport.ts',
+            "const catalogAgreement=operationId!==null&&actionMatch?.id===operationId&&metrics.diagnostic.actionEvidence.resolved[index]===operationId;\n    const decisiveCatalogMatch=Boolean(catalogAgreement&&actionMatch&&actionMatch.score>=.65&&actionMatch.margin>=.06);",
+            "const actionEvidence=metrics.diagnostic.actionEvidence as typeof metrics.diagnostic.actionEvidence & {independentAgreement?:boolean[]};\n    const independentAgreement=actionEvidence.independentAgreement?.[index]===true;\n    const catalogAgreement=operationId!==null&&actionMatch?.id===operationId&&actionEvidence.resolved[index]===operationId;\n    const decisiveCatalogMatch=Boolean(catalogAgreement&&actionMatch&&((actionMatch.score>=.65&&actionMatch.margin>=.06)||(independentAgreement&&actionMatch.score>=.5)));" )
+          replace('src/import/screenshotImport.ts',
+            'if(decisiveCatalogMatch)components.structuredEvidence=.96;',
+            'if(decisiveCatalogMatch)components.structuredEvidence=independentAgreement?.98:.96;')
+
+          replace('src/import/emblemOcrRefinement.ts',
+            'const names=[p.name,...p.attachedPlayers],scores=names.map(name=>Math.max(0,...ps.map(x=>ocrSimilarity(x,name)))).sort((a,b)=>b-a)',
+            "const names=p.attachedPlayers.filter(name=>name.toUpperCase().replace(/[^A-Z0-9]/g,'').length>=4),scores=names.map(name=>Math.max(0,...ps.map(x=>ocrSimilarity(x,name)))).sort((a,b)=>b-a)" )
+          replace('src/import/emblemOcrRefinement.ts',
+            'if(!budget.exhausted&&!tier.direct&&!strongSupplementalTier&&shouldRetryTier(confidenceFor(raw,qp)))',
+            "if(!budget.exhausted&&(!tier.direct||tier.match.value===1||tier.match.score<.9)&&!strongSupplementalTier&&shouldRetryTier(confidenceFor(raw,qp)))" )
+          replace('src/import/emblemOcrRefinement.ts',
+            "for(const role of ROLES){const path=`banners.${role}.selectedTeam`;if(budget.exhausted||confidenceFor(raw,path)>=.9)continue;const band=metrics.diagnostic.columnBands[role],bw=band.right-band.left,rect=extractionToSource({left:Math.max(0,band.left-bw*.08),top:0,width:bw*.55,height:Math.min(metrics.extractionHeight,first+pitch*.75)},metrics),teamCanvas=canvas(src,rect),rec=await recognize(w,teamCanvas,budget,`team:${role}`,6,rect),words=parse(rec.data.tsv),s=orderedText(words),match=teamMatch(s,role,data),confidence=combined(match.score,words);retries++;teamRetries++;metrics.diagnostic.teamEvidence[role]={rawText:s,normalizedTeam:match.team,matchScore:match.score};if(match.score>=.62&&confidence>confidenceFor(raw,path)){raw.banners[role].selectedTeam=match.team;setConfidence(raw,path,confidence);}}",
+            "for(const role of ROLES){const path=`banners.${role}.selectedTeam`;if(budget.exhausted||confidenceFor(raw,path)>=.9)continue;const band=metrics.diagnostic.columnBands[role],bw=band.right-band.left,teamLeft=Math.max(0,band.left-bw*.04),teamWidth=Math.min(metrics.extractionWidth-teamLeft,bw*1.04),teamHeight=Math.min(metrics.extractionHeight,Math.max(pitch*.75,first-pitch*.18)),rect=extractionToSource({left:teamLeft,top:0,width:teamWidth,height:teamHeight},metrics),teamCanvas=canvas(src,rect),rec=await recognize(w,teamCanvas,budget,`team:${role}`,6,rect),words=parse(rec.data.tsv),s=orderedText(words),match=teamMatch(s,role,data),confidence=combined(match.score,words);retries++;teamRetries++;metrics.diagnostic.teamEvidence[role]={rawText:s,normalizedTeam:match.team,matchScore:match.score};if(match.score>=.62&&confidence>confidenceFor(raw,path)){raw.banners[role].selectedTeam=match.team;setConfidence(raw,path,confidence);}}" )
+          replace('src/import/emblemOcrRefinement.ts',
+            "  if(!budget.exhausted&&(raw.operationIds.some(x=>x===null)||raw.tokensRemaining===undefined)){",
+            "  const preFooterActionIds=[...raw.operationIds] as [string|null,string|null,string|null];\n  if(!budget.exhausted&&(raw.operationIds.some(x=>x===null)||raw.tokensRemaining===undefined)){" )
+          replace('src/import/emblemOcrRefinement.ts',
+            "metrics.diagnostic.actionEvidence={resolved,reason:resolved.every(Boolean)?'resolved-by-native-button-crops':'native-button-crops-partial',cardTexts};",
+            "const independentAgreement=resolved.map((id,index)=>id!==null&&preFooterActionIds[index]===id);metrics.diagnostic.actionEvidence=({resolved,reason:resolved.every(Boolean)?'resolved-by-native-button-crops':'native-button-crops-partial',cardTexts,independentAgreement} as typeof metrics.diagnostic.actionEvidence & {independentAgreement:boolean[]});" )
+
+          p=Path('tests/p52-unresolved-semantics.test.mjs'); s=p.read_text()
+          marker="test('sub-threshold action evidence preserves the existing menu',()=>{"
+          addition="""test('independent action agreement and nontrivial roster names are explicit evidence',()=>{\n  assert.ok(source.includes('independentAgreement'));\n  assert.ok(source.includes('normalized(playerName).length>=4'));\n});\n\n"""
+          if addition not in s:
+              s=s.replace(marker,addition+marker)
+              p.write_text(s)
+          PY
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test -- --test-name-pattern='action|tier|screenshot|unresolved|confidence'
+      - name: Commit source and generated output
+        run: |
+          if git diff --quiet -- src tests build docs; then
+            echo 'Patch already applied.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src tests build docs
+          git commit -m 'P52F add discriminating retry evidence'
+          git push origin HEAD:agent/p52f-fast-accurate-low-review
