@@ -10,6 +10,7 @@
     "verify:generated": "node scripts/verify-generated.mjs --check-committed",
     "test": "npm run build && node --test tests/*.test.mjs",
     "test:ci": "npm run typecheck && npm run lint && npm run verify:generated && node --test tests/*.test.mjs",
+    "test:ocr-corpus": "npm run build && node scripts/test-ocr-corpus.mjs",
     "benchmark": "npm run build && node scripts/benchmark.mjs",
     "benchmark:m5": "npm run build && node scripts/benchmark-m5-four-token.mjs",
     "benchmark:m5d": "npm run test:ci && node scripts/benchmark-m5d.mjs",

@@ -6,19 +6,21 @@ const read=path=>readFileSync(new URL(path,import.meta.url),'utf8');
 const refinement=read('../src/import/emblemOcrRefinement.ts');
 const boardView=read('../src/ui/boardView.ts');
 
-test('low-confidence stat uses Otsu native-resolution retry before conditional raw fallback',()=>{
-  assert.doesNotMatch(refinement,/statStrip=\{left:base\.left,top:base\.top,width:base\.width,height:base\.height\*\.38\}/);
-  assert.doesNotMatch(refinement,/canvas\(src,statStrip\)/);
-  assert.match(refinement,/runStatRepresentationFallbacks\(/);
-  assert.match(refinement,/rawStatCanvas=canvas\(src,statNameStrip\),processed=otsuCanvas\(rawStatCanvas\)/);
-  assert.match(refinement,/stat:\$\{role\}:\$\{i\+1\}:otsu/);
-  assert.match(refinement,/stat:\$\{role\}:\$\{i\+1\}:raw/);
-  assert.match(refinement,/acceptsStatEvidence\(sm\.score,sc\)/);
-  assert.ok(refinement.indexOf('stat:${role}:${i+1}:otsu')<refinement.indexOf('stat:${role}:${i+1}:raw'));
+test('low-confidence stat uses one bounded PSM6 retry aligned to localization evidence',()=>{
+  assert.match(refinement,/cardAlignedStat=metrics\.diagnostic\.extractionColumnMethod==='role-labels'/);
+  assert.match(refinement,/statLeft=cardAlignedStat\?Math\.max\(roleBand\.left,d\.roi\.left-d\.roi\.width\*\.08\):roleBand\.left/);
+  assert.match(refinement,/statWidth=cardAlignedStat\?Math\.max\(1,roleBand\.right-statLeft\):\(roleBand\.right-roleBand\.left\)\*\.78/);
+  assert.match(refinement,/nameRoi=\{left:statLeft,top:d\.roi\.top,width:statWidth,height:d\.roi\.height\}/);
+  assert.match(refinement,/statStrip=extractionToSource\(nameRoi,metrics\)/);
+  assert.match(refinement,/statCanvas=canvas\(src,statStrip\)/);
+  assert.match(refinement,/stat:\$\{role\}:\$\{i\+1\}:psm6/);
+  assert.match(refinement,/acceptsStatEvidence\(sm\.score,sc,sm\.score-sm\.runnerUpScore\)/);
+  assert.doesNotMatch(refinement,/stat:\$\{role\}:\$\{i\+1\}:otsu/);
+  assert.doesNotMatch(refinement,/stat:\$\{role\}:\$\{i\+1\}:raw/);
 });
 
 test('dedicated tier OCR runs only while the tier itself remains below review confidence',()=>{
-  assert.match(refinement,/!tier\.direct&&shouldRetryTier\(confidenceFor\(raw,qp\)\)/);
+  assert.match(refinement,/!tier\.direct&&!strongSupplementalTier&&shouldRetryTier\(confidenceFor\(raw,qp\)\)/);
 });
 
 test('successful stat retries synchronize final diagnostic stat values',()=>{

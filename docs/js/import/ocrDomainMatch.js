@@ -4,9 +4,9 @@ const ALIASES = {
     'Creep Score': ['CREEP SCORE', 'CREEP'], GPM: ['GPM'], Deaths: ['DEATHS'], 'Tower Kills': ['TOWER KILLS', 'TOWER'],
     Madstone: ['MADSTONE COLLECTED', 'MADSTONE'], Kills: ['KILLS'], 'Teamfight Participation': ['TEAMFIGHT PARTICIPATION', 'TEAMFIGHT'],
     'Tormentor Kills': ['TORMENTOR KILLS', 'TORMENTOR'], 'Roshan Kills': ['ROSHAN KILLS', 'ROSHAN'], Stuns: ['STUNS'],
-    'Courier Kills': ['COURIER KILLS', 'COURIER'], 'First Blood': ['FIRST BLOOD'], Runes: ['RUNES GRABBED', 'RUNES'],
-    Watchers: ['WATCHERS'], 'Wards Placed': ['WARDS PLACED', 'WARDS'], 'Smokes Used': ['SMOKES USED', 'SMOKES'],
-    'Camps Stacked': ['CAMPS STACKED', 'CAMPS'], Lotuses: ['LOTUSES'],
+    'Courier Kills': ['COURIER KILLS', 'COURIER'], 'First Blood': ['FIRST BLOOD'], Runes: ['RUNES GRABBED', 'RUNES', 'GRABBED'],
+    Watchers: ['WATCHERS', 'TAKEN'], 'Wards Placed': ['WARDS PLACED', 'WARDS', 'PLANTED'], 'Smokes Used': ['SMOKES USED', 'SMOKES', 'USED'],
+    'Camps Stacked': ['CAMPS STACKED', 'CAMPS', 'STACKED'], Lotuses: ['LOTUSES', 'GAINED'],
 };
 const norm = (s) => s.toUpperCase().replace(/[^A-Z0-9]/g, '');
 function distance(a, b) {
@@ -52,13 +52,18 @@ function statLineText(s) { return tokens(s).filter(token => !/^\d+%$/.test(token
 /** Match a stat across OCR line breaks without treating the displayed percentage as part of the stat name. */
 export function matchStatLines(lines, legal) {
     let best = { value: legal[0], score: -1, lineIndices: [], text: '' };
+    const bestByStat = new Map(legal.map(stat => [stat, -1]));
     const cleaned = lines.map(statLineText);
     const consider = (text, lineIndices) => {
         if (!text.trim())
             return;
-        const match = matchStatText(text, legal);
-        if (match.score > best.score)
-            best = { ...match, lineIndices, text };
+        for (const stat of legal) {
+            const match = matchStatText(text, [stat]);
+            if (match.score > (bestByStat.get(stat) ?? -1))
+                bestByStat.set(stat, match.score);
+            if (match.score > best.score)
+                best = { ...match, lineIndices, text };
+        }
     };
     cleaned.forEach((text, index) => consider(text, [index]));
     for (let index = 0; index + 1 < cleaned.length; index++) {
@@ -68,7 +73,8 @@ export function matchStatLines(lines, legal) {
     const nonempty = cleaned.map((text, index) => ({ text, index })).filter(row => row.text);
     if (nonempty.length > 1)
         consider(nonempty.map(row => row.text).join(' '), nonempty.map(row => row.index));
-    return best;
+    const ranked = [...bestByStat.entries()].sort((a, b) => b[1] - a[1]);
+    return { ...best, runnerUpScore: ranked.find(([stat]) => stat !== best.value)?.[1] ?? 0 };
 }
 export function matchTraitText(s) {
     let best = { value: TRAITS[0], score: -1 };
@@ -81,15 +87,15 @@ export function matchTraitText(s) {
 }
 export function matchTierText(s) {
     const ts = tokens(s);
-    const byBonus = { '10%': 1, '30%': 2, '60%': 3, '100%': 4, '150%': 5 };
-    for (const token of ts) {
-        const value = byBonus[token];
-        if (value)
-            return { value, score: .99 };
-    }
     const byRoman = { I: 1, II: 2, III: 3, IV: 4, V: 5, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5 };
     for (let i = 0; i < ts.length; i++) {
-        if (ocrSimilarity(ts[i] ?? '', 'TIER') < .65)
+        const token = ts[i] ?? '';
+        const fused = token.match(/^TIER(I|II|III|IV|V|[1-5])$/);
+        if (fused) {
+            const value = byRoman[fused[1]];
+            return { value, score: /^[1-5]$/.test(fused[1]) ? .72 : .86 };
+        }
+        if (ocrSimilarity(token, 'TIER') < .65)
             continue;
         const next = ts[i + 1];
         if (next && byRoman[next])
@@ -97,14 +103,14 @@ export function matchTierText(s) {
     }
     return { value: 1, score: .2 };
 }
-const STOPWORDS = new Set(['FOR', 'THE', 'ONE', 'AND', 'OF']);
+const STOPWORDS = new Set(['FOR', 'THE', 'AND', 'OF']);
 const SCOPE_WORDS = ['FIRST', 'LAST', 'RANDOM'];
 const COLOR_WORDS = ['GREEN', 'RED', 'BLUE'];
 const KIND_WORDS = ['STAT', 'QUALITY', 'TRAIT'];
 function actionTokens(s) { return tokens(s).filter(t => !STOPWORDS.has(t)); }
 function observedMatch(ocr, target) {
     const fuzzy = Math.max(0, ...ocr.map(t => ocrSimilarity(t, target)));
-    const stems = { INCREASE: ['INC'], QUALITY: ['QUAL'], RANDOM: ['RANDOM'], GREEN: ['GRE'], RED: ['RED'], BLUE: ['BLU'] };
+    const stems = { INCREASE: ['INC'], QUALITY: ['QUAL'], RANDOM: ['RANDOM'], GREEN: ['GRE'], RED: ['RED'], BLUE: ['BLU'], FIRST: ['FIR', 'RST'], LAST: ['LAS'], TRAIT: ['TRA', 'TRAT'], STAT: ['STA'] };
     const stemHit = (stems[target] ?? []).some(stem => ocr.some(token => token.startsWith(stem)));
     return stemHit ? Math.max(fuzzy, .78) : fuzzy;
 }

@@ -29,11 +29,15 @@ test('whiteness Otsu produces dark text from bright low-saturation pixels on col
   assert.ok(result.contrastHigh>result.contrastLow);
 });
 
-test('stat-specific fallback uses strict Otsu first and delegates acceptance to the frozen P51 policy',()=>{
+test('weak-stat refinement uses one bounded PSM6 retry aligned to localization evidence',()=>{
   const refinement=readFileSync(new URL('../src/import/emblemOcrRefinement.ts',import.meta.url),'utf8');
-  assert.doesNotMatch(refinement,/statStrip=/);
-  assert.match(refinement,/runStatRepresentationFallbacks\(/);
-  assert.match(refinement,/processed=otsuCanvas\(rawStatCanvas\)/);
-  assert.match(refinement,/stat:\$\{role\}:\$\{i\+1\}:otsu/);
-  assert.match(refinement,/acceptsStatEvidence\(sm\.score,sc\)/);
+  assert.match(refinement,/cardAlignedStat=metrics\.diagnostic\.extractionColumnMethod==='role-labels'/);
+  assert.match(refinement,/statLeft=cardAlignedStat\?Math\.max\(roleBand\.left,d\.roi\.left-d\.roi\.width\*\.08\):roleBand\.left/);
+  assert.match(refinement,/statWidth=cardAlignedStat\?Math\.max\(1,roleBand\.right-statLeft\):\(roleBand\.right-roleBand\.left\)\*\.78/);
+  assert.match(refinement,/nameRoi=\{left:statLeft,top:d\.roi\.top,width:statWidth,height:d\.roi\.height\}/);
+  assert.match(refinement,/statStrip=extractionToSource\(nameRoi,metrics\)/);
+  assert.match(refinement,/stat:\$\{role\}:\$\{i\+1\}:psm6/);
+  assert.match(refinement,/acceptsStatEvidence\(sm\.score,sc,sm\.score-sm\.runnerUpScore\)/);
+  assert.doesNotMatch(refinement,/stat:\$\{role\}:\$\{i\+1\}:otsu/);
+  assert.doesNotMatch(refinement,/stat:\$\{role\}:\$\{i\+1\}:raw/);
 });

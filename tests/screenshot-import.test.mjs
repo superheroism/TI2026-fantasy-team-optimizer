@@ -41,11 +41,13 @@ test('low-confidence emblem field requires review without invalidating an otherw
 
 test('resolved warning text does not force review when calibrated fields are confident', () => {
   const current = createDefaultBoard('legacy_3');
-  const raw = rawFromBoard(current, { fieldConfidence:[{path:'banners.core.emblems.1.trait',confidence:0.96,reason:'targeted-native-trait'}], warnings:['core emblem 2 OCR should be reviewed.'] });
+  const diagnosticWarning='core emblem 2 OCR should be reviewed.';
+  const raw = rawFromBoard(current, { fieldConfidence:[{path:'banners.core.emblems.1.trait',confidence:0.96,reason:'targeted-native-trait'}], warnings:[diagnosticWarning] });
   const result = validateScreenshotImport(raw, data, current, menu);
   assert.equal(result.requiresReview, false);
   assert.equal(result.lowConfidenceFields.length, 0);
-  assert.equal(result.warnings.length, 1, 'warnings remain available diagnostically');
+  assert.ok(result.warnings.includes(diagnosticWarning), 'original warning remains available diagnostically');
+  assert.equal(result.warnings.filter(warning=>warning===diagnosticWarning).length, 1, 'original diagnostic warning is not duplicated');
 });
 
 test('confidence diagnostics preserve final reason and component evidence', () => {

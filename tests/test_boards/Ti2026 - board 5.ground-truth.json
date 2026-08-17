@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "sourceFile": "Ti2026 - board 5.webp",
+  "layoutId": "legacy_3",
+  "banners": {
+    "core": {"visibleSelectionText": "Noticed & Satanic", "emblems": [
+      {"visibleStat":"TOWER KILLS","stat":"Tower Kills","qualityTier":3,"trait":"Fractal"},
+      {"visibleStat":"TEAMFIGHT","stat":"Teamfight Participation","qualityTier":4,"trait":"Fractal"},
+      {"visibleStat":"CREEP SCORE","stat":"Creep Score","qualityTier":3,"trait":"Benevolent"}
+    ]},
+    "mid": {"visibleSelectionText": "Nisha", "emblems": [
+      {"visibleStat":"GPM","stat":"GPM","qualityTier":5,"trait":"Benevolent"},
+      {"visibleStat":"RUNES GRABBED","stat":"Runes","qualityTier":1,"trait":"Friendly"},
+      {"visibleStat":"STUNS","stat":"Stuns","qualityTier":4,"trait":"Benevolent"}
+    ]},
+    "support": {"visibleSelectionText": "Maladych & Saksa", "emblems": [
+      {"visibleStat":"CAMPS STACKED","stat":"Camps Stacked","qualityTier":1,"trait":"Vampiric"},
+      {"visibleStat":"TORMENTOR KILLS","stat":"Tormentor Kills","qualityTier":4,"trait":"Fractal"},
+      {"visibleStat":"LOTUSES GAINED","stat":"Lotuses","qualityTier":2,"trait":"Vampiric"}
+    ]}
+  },
+  "actions": [
+    {"visibleLabel":"REROLL STAT FOR RED EMBLEMS","id":"red-stat-all"},
+    {"visibleLabel":"REROLL STAT FOR ONE RANDOM GREEN EMBLEM","id":"green-stat-random"},
+    {"visibleLabel":"REROLL QUALITY FOR ONE RANDOM RED EMBLEM","id":"red-quality-random"}
+  ],
+  "tokensRemaining": 23
+}

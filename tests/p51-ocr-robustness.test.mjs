@@ -104,5 +104,7 @@ test('initial extraction and targeted refinement contain no direct Tesseract rec
   ]);
   assert.equal(initial.includes('.recognize('),false);
   assert.equal(refinement.includes('.recognize('),false);
-  assert.ok(refinement.indexOf('stat:${role}:${i+1}:otsu')<refinement.indexOf('stat:${role}:${i+1}:raw'));
+  assert.ok(refinement.includes('stat:${role}:${i+1}:psm6'));
+  assert.equal(refinement.includes('stat:${role}:${i+1}:otsu'),false);
+  assert.equal(refinement.includes('stat:${role}:${i+1}:raw'),false);
 });

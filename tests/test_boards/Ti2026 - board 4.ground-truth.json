@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "sourceFile": "Ti2026 - board 4.png",
+  "layoutId": "expanded_5",
+  "banners": {
+    "core": {"visibleSelectionText": "Collapse & Yatoro", "emblems": [
+      {"visibleStat":"GPM","stat":"GPM","qualityTier":5,"trait":"Benevolent"},
+      {"visibleStat":"STUNS","stat":"Stuns","qualityTier":2,"trait":"Benevolent"},
+      {"visibleStat":"DEATHS","stat":"Deaths","qualityTier":5,"trait":"Friendly"},
+      {"visibleStat":"TORMENTOR KILLS","stat":"Tormentor Kills","qualityTier":4,"trait":"Unique"},
+      {"visibleStat":"MADSTONE COLLECTED","stat":"Madstone","qualityTier":2,"trait":"Friendly"}
+    ]},
+    "mid": {"visibleSelectionText": "Nisha", "emblems": [
+      {"visibleStat":"MADSTONE COLLECTED","stat":"Madstone","qualityTier":5,"trait":"Vampiric"},
+      {"visibleStat":"OBS WARDS PLANTED","stat":"Wards Placed","qualityTier":3,"trait":"Unique"},
+      {"visibleStat":"TEAMFIGHT","stat":"Teamfight Participation","qualityTier":3,"trait":"Friendly"},
+      {"visibleStat":"DEATHS","stat":"Deaths","qualityTier":1,"trait":"Friendly"},
+      {"visibleStat":"COURIER KILLS","stat":"Courier Kills","qualityTier":3,"trait":"Friendly"}
+    ]},
+    "support": {"visibleSelectionText": "Whitemon & Ari", "emblems": [
+      {"visibleStat":"WATCHERS TAKEN","stat":"Watchers","qualityTier":1,"trait":"Unique"},
+      {"visibleStat":"TEAMFIGHT","stat":"Teamfight Participation","qualityTier":3,"trait":"Fractal"},
+      {"visibleStat":"OBS WARDS PLANTED","stat":"Wards Placed","qualityTier":2,"trait":"Vampiric"},
+      {"visibleStat":"TORMENTOR KILLS","stat":"Tormentor Kills","qualityTier":4,"trait":"Friendly"},
+      {"visibleStat":"SMOKES USED","stat":"Smokes Used","qualityTier":4,"trait":"Friendly"}
+    ]}
+  },
+  "actions": [
+    {"visibleLabel":"REROLL TRAIT FOR THE LAST BLUE EMBLEM","id":"blue-trait-last"},
+    {"visibleLabel":"REROLL STAT FOR GREEN EMBLEMS","id":"green-stat-all"},
+    {"visibleLabel":"REROLL TRAIT FOR GREEN EMBLEMS","id":"green-trait-all"}
+  ],
+  "tokensRemaining": 13,
+  "stressCase": "low-resolution"
+}
