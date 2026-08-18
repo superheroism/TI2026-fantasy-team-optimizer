@@ -7,6 +7,7 @@ const $ = <T extends HTMLElement = HTMLElement>(selector: string): T => document
 export interface DynamicControlCallbacks {
   renderStructure: () => void;
   teamChanged: (role: Role) => void;
+  reviewFieldEdited: (path: string) => void;
 }
 
 export function bindDynamicControls(state: ApplicationState, callbacks: DynamicControlCallbacks): void {
@@ -23,6 +24,7 @@ export function bindDynamicControls(state: ApplicationState, callbacks: DynamicC
       else if (field === 'qualityTier') target.qualityTier = Number(input.value) as 1 | 2 | 3 | 4 | 5;
       else if (field === 'trait') target.trait = input.value as TraitName;
     }, false);
+    if (field) callbacks.reviewFieldEdited(`banners.${role}.emblems.${index}.${field}`);
     callbacks.renderStructure();
   }));
 
@@ -35,6 +37,7 @@ export function bindDynamicControls(state: ApplicationState, callbacks: DynamicC
   document.querySelectorAll<HTMLSelectElement>('.team-select').forEach(input => input.addEventListener('change', () => {
     const role = input.dataset.role as Role;
     state.mutateBoard(board => { board[role].selectedTeam = input.value; }, true);
+    callbacks.reviewFieldEdited(`banners.${role}.selectedTeam`);
     callbacks.renderStructure();
     callbacks.teamChanged(role);
   }));
@@ -44,6 +47,7 @@ export function bindDynamicControls(state: ApplicationState, callbacks: DynamicC
     const next = ACTION_BY_ID.get(input.value);
     if (!next) return;
     state.replaceMenuOperation(index, cloneAction(next), true);
+    callbacks.reviewFieldEdited(`operationIds.${index}`);
     callbacks.renderStructure();
   })));
 }
@@ -54,10 +58,14 @@ export interface StaticControlCallbacks {
   reset: () => void;
   layoutChanged: () => void;
   themeChanged: (theme: 'dark' | 'light') => void;
+  reviewFieldEdited: (path: string) => void;
 }
 
 export function bindStaticControls(state: ApplicationState, callbacks: StaticControlCallbacks): void {
-  $<HTMLInputElement>('#tokens').addEventListener('change', input => state.updateControls({ tokensRemaining: Number((input.currentTarget as HTMLInputElement).value) || 0 }, true));
+  $<HTMLInputElement>('#tokens').addEventListener('change', input => {
+    state.updateControls({ tokensRemaining: Number((input.currentTarget as HTMLInputElement).value) || 0 }, true);
+    callbacks.reviewFieldEdited('tokensRemaining');
+  });
   $<HTMLInputElement>('#username').addEventListener('change', input => state.updateControls({ username: (input.currentTarget as HTMLInputElement).value }, true));
   $<HTMLInputElement>('#target').addEventListener('change', input => state.updateControls({ targetScore: Number((input.currentTarget as HTMLInputElement).value) || 0 }, true));
   $<HTMLSelectElement>('#objective').addEventListener('change', input => state.updateControls({ objective: (input.currentTarget as HTMLSelectElement).value as OptimizerState['objective'] }, true));

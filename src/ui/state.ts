@@ -1,5 +1,5 @@
 import type { BoardLayoutId, BoardState, MenuState, OfferedOperation, OptimizerState, Role } from '../domain/types.js';
-import { convertBoardLayout, createDefaultBoard, defaultBoard, defaultMenu, resolvedLayoutId } from '../data/defaultState.js';
+import { DEFAULT_EXPECTED_SERIES_BY_LAYOUT, convertBoardLayout, createDefaultBoard, defaultBoard, defaultMenu, resolvedLayoutId } from '../data/defaultState.js';
 
 export interface OptimizerStateInvalidation {
   preserveComparison: boolean;
@@ -55,7 +55,13 @@ export class ApplicationState {
   }
 
   importScreenshot(board: BoardState, menu: MenuState, tokensRemaining?: number): void {
+    const previousLayout = resolvedLayoutId(this.board);
+    const importedLayout = resolvedLayoutId(board);
     this.board = structuredClone(board);
+    if (previousLayout !== importedLayout) {
+      const expectedSeries = DEFAULT_EXPECTED_SERIES_BY_LAYOUT[importedLayout];
+      for (const role of ['core', 'mid', 'support'] as const) this.board[role].expectedSeries = expectedSeries;
+    }
     this.menu = structuredClone(menu);
     if (tokensRemaining !== undefined) this.tokensRemaining = Math.max(0, tokensRemaining);
     this.invalidate(false);

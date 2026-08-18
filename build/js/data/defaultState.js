@@ -7,6 +7,11 @@ export const DEFAULT_STATS_BY_ROLE = {
     support: ['Watchers', 'Teamfight Participation', 'Wards Placed', 'Stuns', 'Smokes Used'],
 };
 const teamDefaults = { core: 'LGD Gaming', mid: 'Team Liquid', support: 'LGD Gaming' };
+/** Product defaults for retained-series opportunity under each physical board layout. */
+export const DEFAULT_EXPECTED_SERIES_BY_LAYOUT = {
+    legacy_3: 5,
+    expanded_5: 3,
+};
 function defaultEmblem(role, position, color) {
     const stat = DEFAULT_STATS_BY_ROLE[role][position];
     if (!stat || !isLegalStat(color, stat))
@@ -21,7 +26,7 @@ export function createDefaultBoard(layoutId = DEFAULT_LAYOUT_ID) {
     const roleBanner = (role) => ({
         role,
         selectedTeam: teamDefaults[role],
-        expectedSeries: 5,
+        expectedSeries: DEFAULT_EXPECTED_SERIES_BY_LAYOUT[layoutId],
         emblems: layout.roles[role].map(slot => defaultEmblem(role, slot.index, slot.color)),
     });
     const board = { core: roleBanner('core'), mid: roleBanner('mid'), support: roleBanner('support') };
@@ -31,6 +36,8 @@ export function createDefaultBoard(layoutId = DEFAULT_LAYOUT_ID) {
     return board;
 }
 export function convertBoardLayout(source, targetLayoutId) {
+    if (resolvedLayoutId(source) === targetLayoutId)
+        return structuredClone(source);
     const layout = BOARD_LAYOUTS[targetLayoutId];
     const convertRole = (role) => {
         const current = source[role];
@@ -43,7 +50,7 @@ export function convertBoardLayout(source, targetLayoutId) {
             }
             return defaultEmblem(role, slot.index, slot.color);
         });
-        return { role, selectedTeam: current.selectedTeam, expectedSeries: current.expectedSeries, emblems };
+        return { role, selectedTeam: current.selectedTeam, expectedSeries: DEFAULT_EXPECTED_SERIES_BY_LAYOUT[targetLayoutId], emblems };
     };
     const converted = { core: convertRole('core'), mid: convertRole('mid'), support: convertRole('support') };
     if (targetLayoutId !== 'legacy_3')

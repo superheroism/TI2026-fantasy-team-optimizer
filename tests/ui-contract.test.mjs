@@ -1,9 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { ACTION_CATALOG } from '../build/js/data/actionCatalog.js';
+import { groupedActionOptions } from '../build/js/ui/actionView.js';
 
 const read=path=>readFileSync(new URL(path,import.meta.url),'utf8');
 const index=read('../site/index.html');
+const css=read('../site/styles.css');
 const app=read('../src/ui/app.ts');
 const state=read('../src/ui/state.ts');
 const controls=read('../src/ui/controls.ts');
@@ -81,6 +84,28 @@ test('decision UI centers the three offered actions and exposes terminal outcome
   assert.match(app,/rank-head/);
 });
 
+test('Available Action dropdowns group the complete catalog as Red Blue Green Boosts with family ordering',()=>{
+  const html=groupedActionOptions('green-stat-all',new Set());
+  const groups=[...html.matchAll(/<optgroup label="([^"]+)">([\s\S]*?)<\/optgroup>/g)].map(match=>({label:match[1],body:match[2]}));
+  assert.deepEqual(groups.map(group=>group.label),['Red','Blue','Green','Boosts']);
+  const ids=groups.flatMap(group=>[...group.body.matchAll(/<option value="([^"]+)"/g)].map(match=>match[1]));
+  assert.equal(ids.length,ACTION_CATALOG.length);
+  assert.equal(new Set(ids).size,ACTION_CATALOG.length);
+  assert.deepEqual([...ids].sort(),ACTION_CATALOG.map(action=>action.id).sort());
+  const familyOrder=['stat_reroll','quality_reroll','trait_reroll'];
+  for(const color of ['red','blue','green']){
+    const group=groups.find(candidate=>candidate.label?.toLowerCase()===color);
+    assert.ok(group);
+    const actual=[...group.body.matchAll(/<option value="([^"]+)"/g)].map(match=>match[1]);
+    const expected=familyOrder.flatMap(kind=>ACTION_CATALOG.filter(action=>'color' in action&&action.color===color&&action.kind===kind).map(action=>action.id));
+    assert.deepEqual(actual,expected);
+  }
+  const boosts=groups.find(group=>group.label==='Boosts');
+  assert.ok(boosts);
+  assert.deepEqual([...boosts.body.matchAll(/<option value="([^"]+)"/g)].map(match=>match[1]),ACTION_CATALOG.filter(action=>!('color' in action)).map(action=>action.id));
+  assert.equal(html.includes('Misc'),false);
+});
+
 test('emblem cards omit redundant tiny slot-tier footer',()=>{
   assert.equal(boardView.includes('slot-number'),false);
   assert.equal(boardView.includes('SLOT ${index+1}'),false);
@@ -98,8 +123,15 @@ test('banner editor separates selectable teams from attached player labels and k
   assert.match(boardView,/derived\.traitModifierPct/);
 });
 
+test('emblem fields share one derived-value column and all editable values use normal weight',()=>{
+  assert.match(css,/input,select,option\{font-weight:400;letter-spacing:normal\}/);
+  assert.match(css,/\.team-picker select,\.client-select,\.stat-select,\.op-select\{font-weight:400;letter-spacing:normal\}/);
+  assert.match(css,/\.client-row\{grid-template-columns:42px minmax\(0,1fr\) 60px\}/);
+  assert.match(css,/\.client-total,\.client-bonus\{min-width:0;text-align:right\}/);
+  assert.match(css,/\.recommended-target-element \.client-select\{font-weight:400!important\}/);
+});
+
 test('visual system supports purple-gold night and cream themes without changing RGB emblem semantics',()=>{
-  const css=read('../site/styles.css');
   assert.match(index,/id="theme-toggle"[^>]*type="checkbox"[^>]*checked/);
   assert.match(index,/Dark Theme/);
   assert.match(css,/--purple:#7652a3/);
@@ -165,9 +197,10 @@ test('recommendation highlights the target banner and affected stat tier or trai
   assert.match(boardView,/data-element="trait"/);
 });
 
-test('recommendation confidence has a hover explanation and best current setup copy',()=>{
-  assert.match(index,/confidence-tooltip/);
-  assert.match(actionView,/confidenceExplanation/);
+test('recommendation omits the obsolete confidence explainer and keeps best current setup copy',()=>{
+  assert.doesNotMatch(index,/rec-confidence|confidence-tooltip|confidence-help/);
+  assert.doesNotMatch(actionView,/confidenceExplanation/);
+  assert.doesNotMatch(app,/rec-confidence|confidence-tooltip|confidenceExplanation/);
   assert.match(index,/BEST CURRENT SETUP/);
   assert.match(index,/Score with best available team \+ title/);
   assert.equal(index.includes('best-free'),false);

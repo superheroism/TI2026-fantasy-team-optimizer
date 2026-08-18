@@ -19,6 +19,8 @@ export function bindDynamicControls(state, callbacks) {
             else if (field === 'trait')
                 target.trait = input.value;
         }, false);
+        if (field)
+            callbacks.reviewFieldEdited(`banners.${role}.emblems.${index}.${field}`);
         callbacks.renderStructure();
     }));
     document.querySelectorAll('.series').forEach(input => input.addEventListener('change', () => {
@@ -29,6 +31,7 @@ export function bindDynamicControls(state, callbacks) {
     document.querySelectorAll('.team-select').forEach(input => input.addEventListener('change', () => {
         const role = input.dataset.role;
         state.mutateBoard(board => { board[role].selectedTeam = input.value; }, true);
+        callbacks.reviewFieldEdited(`banners.${role}.selectedTeam`);
         callbacks.renderStructure();
         callbacks.teamChanged(role);
     }));
@@ -38,11 +41,15 @@ export function bindDynamicControls(state, callbacks) {
         if (!next)
             return;
         state.replaceMenuOperation(index, cloneAction(next), true);
+        callbacks.reviewFieldEdited(`operationIds.${index}`);
         callbacks.renderStructure();
     })));
 }
 export function bindStaticControls(state, callbacks) {
-    $('#tokens').addEventListener('change', input => state.updateControls({ tokensRemaining: Number(input.currentTarget.value) || 0 }, true));
+    $('#tokens').addEventListener('change', input => {
+        state.updateControls({ tokensRemaining: Number(input.currentTarget.value) || 0 }, true);
+        callbacks.reviewFieldEdited('tokensRemaining');
+    });
     $('#username').addEventListener('change', input => state.updateControls({ username: input.currentTarget.value }, true));
     $('#target').addEventListener('change', input => state.updateControls({ targetScore: Number(input.currentTarget.value) || 0 }, true));
     $('#objective').addEventListener('change', input => state.updateControls({ objective: input.currentTarget.value }, true));

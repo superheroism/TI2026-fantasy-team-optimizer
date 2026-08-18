@@ -6,10 +6,10 @@ import { evaluateSelectedBoard } from '../engine/scoring.js';
 import { OptimizerRequestCancelledError, OptimizerWorkerClient } from './optimizerClient.js';
 import { ApplicationState } from './state.js';
 import { attachedPlayerLabel, escapeHtml, renderBoardHtml, UI_ROLES } from './boardView.js';
-import { clearActionResults, confidenceExplanation, renderActionResults, renderOperationEditors, utilityDeltaText, utilityText } from './actionView.js';
+import { clearActionResults, renderActionResults, renderOperationEditors, utilityDeltaText, utilityText } from './actionView.js';
 import { clearHistogram, drawHistogram, renderComparisonTabs, renderTeamComparison } from './plots.js';
 import { bindDynamicControls, bindStaticControls, reflectTokens, updateLayoutToggle } from './controls.js';
-import { bindScreenshotImport } from './screenshotImport.js';
+import { bindScreenshotImport, discardScreenshotReviewState, renderActiveScreenshotReviewHighlights, resolveScreenshotReviewPath } from './screenshotImport.js';
 const $ = (selector) => document.querySelector(selector);
 const fmt = (value) => Number.isFinite(value) ? Math.round(value).toLocaleString() : '—';
 const pct = (value) => value === undefined ? '—' : `${(value * 100).toFixed(1)}%`;
@@ -29,8 +29,6 @@ function invalidateOptimizerPresentation(preserveComparison) {
     $('#calc-status').textContent = 'Setup changed — Run Optimizer to refresh the selected setup';
     $('#rec-action').textContent = 'Setup changed';
     $('#rec-note').textContent = 'Run Optimizer to refresh the score distribution and evaluate the next move.';
-    $('#rec-confidence').textContent = '—';
-    $('#confidence-tooltip').textContent = 'Confidence explanation will appear after optimization.';
     $('#menu-ev').textContent = '—';
     $('#menu-delta').textContent = '—';
     $('#stop-ev').textContent = '—';
@@ -63,7 +61,9 @@ function renderStructure() {
             if (appState.comparisonRole === role)
                 renderComparison();
         },
+        reviewFieldEdited: resolveScreenshotReviewPath,
     });
+    renderActiveScreenshotReviewHighlights();
 }
 function equivalentTeam(sourceTeam, role) {
     const target = rosterForTeam(sourceTeam)?.canonical;
@@ -176,8 +176,6 @@ async function runOptimizer() {
         lastOptimizerState = state;
         renderCurrentActionResults();
         $('#rec-action').textContent = formatAction(recommendation.action, state);
-        $('#rec-confidence').textContent = recommendation.confidence.toUpperCase();
-        $('#confidence-tooltip').textContent = confidenceExplanation(recommendation.confidence);
         $('#rec-note').textContent = `${recommendation.note ?? ''}${recommendation.note ? ' · ' : ''}Recalculated + optimized in ${elapsed < 1000 ? `${Math.round(elapsed)} ms` : `${(elapsed / 1000).toFixed(2)} s`}.`;
         const menuRow = result.ranking.find(row => row.action.kind === 'menu_reroll');
         const stopRow = result.ranking.find(row => row.action.kind === 'stop');
@@ -223,6 +221,7 @@ function advanceToNextRoll() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function resetBoard() {
+    discardScreenshotReviewState('Board reset. Screenshot review cleared.');
     appState.resetBoard();
     reflectTokens(appState.tokensRemaining);
     if (!data)
@@ -248,9 +247,13 @@ export function mount() {
         nextRoll: () => { if (data)
             advanceToNextRoll(); },
         reset: resetBoard,
-        layoutChanged: () => { if (data)
-            renderStructure(); },
+        layoutChanged: () => {
+            discardScreenshotReviewState('Layout changed. Screenshot review cleared.');
+            if (data)
+                renderStructure();
+        },
         themeChanged: theme => applyTheme(theme, true),
+        reviewFieldEdited: resolveScreenshotReviewPath,
     });
     bindScreenshotImport(appState, {
         getData: () => data,
