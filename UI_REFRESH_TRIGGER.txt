@@ -1,2 +1,0 @@
-Trigger the one-time UI language refresh workflow. This file is temporary and will not be included in the final PR tree.
-Second push activates the branch workflow after registration.
