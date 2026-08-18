@@ -46,7 +46,7 @@ test('Run Optimizer recalculates selected board before taking the worker snapsho
   const optimizer=app.slice(start,end);
   const recalcAt=optimizer.indexOf('await runSelected(false)');
   const snapshotAt=optimizer.indexOf('const state = appState.optimizerState()');
-  const recommendAt=optimizer.indexOf('optimizerClient.optimize(state)');
+  const recommendAt=optimizer.indexOf('optimizerClient.optimize(state,appState.statisticalDatasetId)');
   assert.ok(recalcAt>=0,'optimizer must await selected-board recalculation');
   assert.ok(snapshotAt>recalcAt,'optimizer state must be captured after recalculation');
   assert.ok(recommendAt>snapshotAt,'worker recommendation must run after the refreshed state is captured');
@@ -219,7 +219,7 @@ test('layout selector is the only product geometry control and exposes both supp
   assert.match(state,/convertBoardLayout\(this\.board, target\)/);
   assert.match(state,/createDefaultBoard\(layoutId\)/);
   assert.match(app,/optimizerClient\.invalidate\(\)/);
-  assert.match(app,/optimizerClient\.optimize\(state\)/);
+  assert.match(app,/optimizerClient\.optimize\(state,appState\.statisticalDatasetId\)/);
   assert.match(controls,/data-layout-slots/);
 });
 

@@ -1,5 +1,18 @@
-import { attachedPlayers, teamRoleLabel } from './ti2026Rosters.js';
-export const LOCAL_STATISTICAL_MODEL_URL = './data/ti2026-statistical-model.json';
+import { attachedPlayers, isMainEventEligibleTeam, teamRoleLabel } from './ti2026Rosters.js';
+export const DEFAULT_STATISTICAL_DATASET_ID = 'pre-ti2026-correlations';
+export const STATISTICAL_DATASETS = {
+    'pre-ti2026-correlations': {
+        id: 'pre-ti2026-correlations', label: 'Pre-TI2026-Correlations', modelUrl: './data/ti2026-statistical-model.json', kind: 'correlations',
+    },
+    'group-stage-correlations': {
+        id: 'group-stage-correlations', label: 'GroupStage-Correlations', modelUrl: './data/ti2026-group-stage-statistical-model.json', kind: 'correlations',
+    },
+};
+export const STATISTICAL_DATASET_OPTIONS = Object.values(STATISTICAL_DATASETS);
+export function statisticalDatasetDefinition(id = DEFAULT_STATISTICAL_DATASET_ID) {
+    return STATISTICAL_DATASETS[id];
+}
+export const LOCAL_STATISTICAL_MODEL_URL = STATISTICAL_DATASETS[DEFAULT_STATISTICAL_DATASET_ID].modelUrl;
 export const LOCAL_TITLE_MODEL_URL = './data/ti2026-title-model.json';
 export const STATISTICAL_MODEL_SCHEMA_ID = 'ti2026-statistical-model-v1';
 export const TITLE_MODEL_SCHEMA_VERSION = 1;
@@ -80,9 +93,10 @@ function validateStatisticalModel(value) {
             throw new Error(`${STATISTICAL_MODEL_SCHEMA_ID} ${role} correlations reference unknown stats.`);
     }
 }
-export function convertStatisticalModel(raw, titles) {
+export function convertStatisticalModel(raw, titles, datasetId = DEFAULT_STATISTICAL_DATASET_ID, applyMainEventEligibility = false) {
     validateStatisticalModel(raw);
     validateTitleCatalog(titles);
+    const dataset = statisticalDatasetDefinition(datasetId);
     const levels = raw.levels.map(x => x / 100);
     const players = [];
     const roleCorrelations = {};
@@ -123,19 +137,29 @@ export function convertStatisticalModel(raw, titles) {
         if (!roleCorrelations[role]?.stats.length)
             throw new Error(`Statistical model is missing ${role} correlations.`);
     }
+    const selectablePlayers = applyMainEventEligibility ? players.filter(player => isMainEventEligibleTeam(player.team)) : players;
+    if (applyMainEventEligibility) {
+        for (const role of ['core', 'mid', 'support']) {
+            if (!selectablePlayers.some(player => player.role === role))
+                throw new Error(`Main Event eligibility produced no selectable ${role} profiles.`);
+        }
+    }
     return {
         label: 'Precomputed team/role distributions',
         isDemo: false,
-        sourceUrl: LOCAL_STATISTICAL_MODEL_URL,
-        players,
+        sourceUrl: dataset.modelUrl,
+        statisticalDatasetId: dataset.id,
+        players: selectablePlayers,
+        historicalPlayers: players,
         titles,
         simulation: { iterations: 20000, optimizerIterations: 48, rankingIterations: 6000, seed: 20260809, maxLookaheadTokens: 2, continuationOutcomeStrata: 8, continuationEntryStrata: 12, scoring: { retainedGamesPerSeries: 2, retainedSeries: 1, thirdGameProbability: 0.407 } },
         roleCorrelations
     };
 }
-export async function loadStatisticalModel() {
+export async function loadStatisticalModel(datasetId = DEFAULT_STATISTICAL_DATASET_ID) {
+    const dataset = statisticalDatasetDefinition(datasetId);
     const [modelResponse, titleResponse] = await Promise.all([
-        fetch(LOCAL_STATISTICAL_MODEL_URL, { cache: 'no-store' }),
+        fetch(dataset.modelUrl, { cache: 'no-store' }),
         fetch(LOCAL_TITLE_MODEL_URL, { cache: 'no-store' })
     ]);
     if (!modelResponse.ok)
@@ -143,7 +167,7 @@ export async function loadStatisticalModel() {
     if (!titleResponse.ok)
         throw new Error(`Local title model failed to load: ${titleResponse.status} ${titleResponse.statusText}`);
     const [raw, titles] = await Promise.all([modelResponse.json(), titleResponse.json()]);
-    return convertStatisticalModel(raw, titles);
+    return convertStatisticalModel(raw, titles, datasetId, true);
 }
 /** Exported only for adapter/schema tests. */
 export const statisticalModelAdapterInternals = { canonicalStat, validateStatisticalModel, validateTitleCatalog };

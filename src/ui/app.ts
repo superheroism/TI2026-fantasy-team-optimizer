@@ -1,6 +1,6 @@
-import type { DataBundle, OptimizerState, RecommendationResult, Role } from '../domain/types.js';
+import type { DataBundle, OptimizerState, RecommendationResult, Role, StatisticalDatasetId } from '../domain/types.js';
 import { resolvedLayoutId } from '../data/defaultState.js';
-import { loadStatisticalModel } from '../data/statisticalModel.js';
+import { DEFAULT_STATISTICAL_DATASET_ID, STATISTICAL_DATASETS, loadStatisticalModel } from '../data/statisticalModel.js';
 import { displayTeamName, rosterForTeam } from '../data/ti2026Rosters.js';
 import { formatAction } from '../engine/actionUtils.js';
 import { evaluateSelectedBoard } from '../engine/scoring.js';
@@ -9,7 +9,7 @@ import { ApplicationState } from './state.js';
 import { attachedPlayerLabel, escapeHtml, renderBoardHtml, UI_ROLES } from './boardView.js';
 import { clearActionResults, renderActionResults, renderOperationEditors, utilityDeltaText, utilityText } from './actionView.js';
 import { clearHistogram, drawHistogram, renderComparisonTabs, renderTeamComparison } from './plots.js';
-import { bindDynamicControls, bindStaticControls, reflectTokens, updateLayoutToggle } from './controls.js';
+import { bindDynamicControls, bindStaticControls, reflectStatisticalDataset, reflectTokens, updateLayoutToggle } from './controls.js';
 import { bindScreenshotImport, discardScreenshotReviewState, renderActiveScreenshotReviewHighlights, resolveScreenshotReviewPath } from './screenshotImport.js';
 
 const $ = <T extends HTMLElement = HTMLElement>(selector: string): T => document.querySelector(selector) as T;
@@ -19,7 +19,8 @@ const pct = (value: number | undefined): string => value === undefined ? '—' :
 const appState = new ApplicationState();
 const optimizerClient = new OptimizerWorkerClient();
 const actionTargetSelection = new Map<number, Role>();
-let data!: DataBundle;
+let data:DataBundle|undefined;
+let dataLoadSequence=0;
 let lastResult: RecommendationResult | null = null;
 let lastOptimizerState: OptimizerState | null = null;
 
@@ -54,6 +55,7 @@ function renderComparison(): void {
 }
 
 function renderStructure(): void {
+  if(!data)return;
   $('#board').innerHTML = renderBoardHtml(appState.board, data);
   $('#ops').innerHTML = renderOperationEditors(appState.menu);
   updateLayoutToggle(appState, resolvedLayoutId);
@@ -72,12 +74,14 @@ function renderStructure(): void {
 }
 
 function equivalentTeam(sourceTeam: string, role: Role): string | undefined {
+  if(!data)return undefined;
   const target = rosterForTeam(sourceTeam)?.canonical;
   if (!target) return data.players.find(player => player.role === role && player.team === sourceTeam)?.team;
   return data.players.find(player => player.role === role && rosterForTeam(player.team)?.canonical === target)?.team;
 }
 
 function normalizeSelectedTeams(): void {
+  if(!data)return;
   for (const role of UI_ROLES) {
     const current = appState.board[role].selectedTeam;
     appState.board[role].selectedTeam = equivalentTeam(current, role) ?? data.players.find(player => player.role === role)?.team ?? current;
@@ -98,11 +102,15 @@ function applyTheme(next: 'dark' | 'light', recalculate = false): void {
 }
 
 function runSelected(refreshComparison = true): Promise<boolean> {
+  if(!data)return Promise.resolve(false);
+  const selectedData=data;
+  const selectedDatasetId=appState.statisticalDatasetId;
   document.body.classList.add('busy');
   $('#calc-status').textContent = 'Calculating selected setup…';
   return new Promise(resolve => requestAnimationFrame(() => setTimeout(() => {
     try {
-      const selected = evaluateSelectedBoard(appState.board, appState.username, data, appState.targetScore > 0 ? appState.targetScore : undefined);
+      if(data!==selectedData||appState.statisticalDatasetId!==selectedDatasetId){resolve(false);return;}
+      const selected = evaluateSelectedBoard(appState.board, appState.username, selectedData, appState.targetScore > 0 ? appState.targetScore : undefined);
       const finite = selected.samples.filter(Number.isFinite);
       if (finite.length !== selected.samples.length || !finite.some(value => value > 0)) throw new Error('The simulation produced no positive finite scores. The statistical model did not map correctly to the selected banner.');
       $('#score-expected').textContent = fmt(selected.expected);
@@ -121,7 +129,7 @@ function runSelected(refreshComparison = true): Promise<boolean> {
       }
       drawHistogram(selected.samples, appState.targetScore, selected.expected, selected.median, selected.p10, selected.p90);
       if (refreshComparison) renderComparison();
-      $('#calc-status').textContent = `${data.simulation.iterations.toLocaleString()} simulations · top 2 games in each series · best 1 series`;
+      $('#calc-status').textContent = `${selectedData.simulation.iterations.toLocaleString()} simulations · ${STATISTICAL_DATASETS[selectedDatasetId].label} · top 2 games in each series · best 1 series`;
       resolve(true);
     } catch (error) {
       $('#score-expected').textContent = '—';
@@ -150,6 +158,7 @@ function renderCurrentActionResults(): void {
 }
 
 async function runOptimizer(): Promise<void> {
+  if(!data)return;
   const button = $<HTMLButtonElement>('#optimize');
   const started = performance.now();
   button.disabled = true;
@@ -167,7 +176,7 @@ async function runOptimizer(): Promise<void> {
     button.textContent = 'Optimizing…';
     $('#rec-action').textContent = 'Calculating all legal action targets…';
     await new Promise<void>(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
-    const workerRun = await optimizerClient.optimize(state);
+    const workerRun = await optimizerClient.optimize(state,appState.statisticalDatasetId);
     const result = workerRun.result;
     const recommendation = result.recommendation;
     const elapsed = performance.now() - started;
@@ -229,12 +238,41 @@ function resetBoard(): void {
   void runSelected();
 }
 
+async function loadDataset(datasetId:StatisticalDatasetId):Promise<void>{
+  const sequence=++dataLoadSequence;
+  data=undefined;
+  optimizerClient.invalidate();
+  clearResultState('Loading statistical dataset…');
+  $('#board').innerHTML = `<section class="loading-panel"><b>Loading ${escapeHtml(STATISTICAL_DATASETS[datasetId].label)}…</b><small>Loading team/role distributions and attached rosters.</small></section>`;
+  $('#ops').innerHTML = '<div class="loading-inline">Operations will appear after the tournament model loads.</div>';
+  $('#calc-status').textContent = `Loading ${STATISTICAL_DATASETS[datasetId].label}…`;
+  try{
+    const bundle=await loadStatisticalModel(datasetId);
+    if(sequence!==dataLoadSequence||appState.statisticalDatasetId!==datasetId)return;
+    data=bundle;
+    try{localStorage.setItem('dota2-fantasy-data-source',datasetId);}catch{}
+    reflectStatisticalDataset(datasetId);
+    normalizeSelectedTeams();
+    renderStructure();
+    void runSelected();
+  }catch(error){
+    if(sequence!==dataLoadSequence)return;
+    $('#board').innerHTML = '<section class="loading-panel error"><b>Tournament model could not be loaded.</b><small>Refresh the page or choose the other statistical dataset. No synthetic scoring data are being substituted.</small></section>';
+    $('#ops').innerHTML = '';
+    $('#calc-status').textContent = `Tournament model load failed: ${String(error)}`;
+  }
+}
+
 export function mount(): void {
   try {
     const saved = localStorage.getItem('dota2-fantasy-theme');
     if (saved === 'light' || saved === 'dark') appState.setTheme(saved);
+    const savedDataset=localStorage.getItem('dota2-fantasy-data-source') as StatisticalDatasetId|null;
+    if(savedDataset&&STATISTICAL_DATASETS[savedDataset])appState.statisticalDatasetId=savedDataset;
   } catch {}
+  if(!STATISTICAL_DATASETS[appState.statisticalDatasetId])appState.statisticalDatasetId=DEFAULT_STATISTICAL_DATASET_ID;
   applyTheme(appState.theme, false);
+  reflectStatisticalDataset(appState.statisticalDatasetId);
   $('#board').innerHTML = '<section class="loading-panel"><b>Loading tournament model…</b><small>Loading team/role distributions and attached rosters.</small></section>';
   $('#ops').innerHTML = '<div class="loading-inline">Operations will appear after the tournament model loads.</div>';
   $('#calc-status').textContent = 'Loading tournament model…';
@@ -246,6 +284,7 @@ export function mount(): void {
       discardScreenshotReviewState('Layout changed. Screenshot review cleared.');
       if (data) renderStructure();
     },
+    datasetChanged: datasetId => { void loadDataset(datasetId); },
     themeChanged: theme => applyTheme(theme, true),
     reviewFieldEdited: resolveScreenshotReviewPath,
   });
@@ -254,17 +293,10 @@ export function mount(): void {
     renderStructure,
     afterApply: () => {
       reflectTokens(appState.tokensRemaining);
+      normalizeSelectedTeams();
+      renderStructure();
       void runSelected();
     },
   });
-  void loadStatisticalModel().then(bundle => {
-    data = bundle;
-    normalizeSelectedTeams();
-    renderStructure();
-    void runSelected();
-  }).catch(error => {
-    $('#board').innerHTML = '<section class="loading-panel error"><b>Tournament model could not be loaded.</b><small>Refresh the page or check the network connection. No synthetic scoring data are being substituted.</small></section>';
-    $('#ops').innerHTML = '';
-    $('#calc-status').textContent = `Tournament model load failed: ${String(error)}`;
-  });
+  void loadDataset(appState.statisticalDatasetId);
 }

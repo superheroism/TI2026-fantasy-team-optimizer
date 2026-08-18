@@ -5,6 +5,7 @@ export type QualityTier = 1 | 2 | 3 | 4 | 5;
 export type Confidence = 'high' | 'medium' | 'low';
 export type ModelingMode = 'full_simulation' | 'distribution_aware_proxy' | 'average_proxy' | 'heuristic';
 export type Objective = 'expected_score' | 'target_probability';
+export type StatisticalDatasetId = 'pre-ti2026-correlations' | 'group-stage-correlations';
 
 export type StatName =
   | 'Creep Score' | 'GPM' | 'Deaths' | 'Tower Kills' | 'Madstone' | 'Kills'
@@ -105,7 +106,10 @@ export interface DataBundle {
   label: string;
   isDemo: boolean;
   sourceUrl?: string;
+  statisticalDatasetId?: StatisticalDatasetId;
+  /** Selectable Main Event profiles. Historical model profiles may be retained separately. */
   players: PlayerProfile[];
+  historicalPlayers?: PlayerProfile[];
   titles: TitleCatalog;
   simulation: SimulationSettings;
   roleCorrelations: Record<Role, RoleCorrelationModel>;

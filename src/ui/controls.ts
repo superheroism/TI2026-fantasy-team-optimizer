@@ -1,4 +1,4 @@
-import type { BoardLayoutId, OptimizerState, Role, StatName, TraitName } from '../domain/types.js';
+import type { BoardLayoutId, OptimizerState, Role, StatisticalDatasetId, StatName, TraitName } from '../domain/types.js';
 import { ACTION_BY_ID, cloneAction } from '../data/actionCatalog.js';
 import type { ApplicationState } from './state.js';
 
@@ -30,7 +30,7 @@ export function bindDynamicControls(state: ApplicationState, callbacks: DynamicC
 
   document.querySelectorAll<HTMLInputElement>('.series').forEach(input => input.addEventListener('change', () => {
     const role = input.dataset.role as Role;
-    state.mutateBoard(board => { board[role].expectedSeries = Math.max(1, Number(input.value) || 1); }, false);
+    state.setExpectedSeries(role,Math.max(1,Number(input.value)||1));
     callbacks.renderStructure();
   }));
 
@@ -57,6 +57,7 @@ export interface StaticControlCallbacks {
   nextRoll: () => void;
   reset: () => void;
   layoutChanged: () => void;
+  datasetChanged: (datasetId:StatisticalDatasetId) => void;
   themeChanged: (theme: 'dark' | 'light') => void;
   reviewFieldEdited: (path: string) => void;
 }
@@ -69,6 +70,10 @@ export function bindStaticControls(state: ApplicationState, callbacks: StaticCon
   $<HTMLInputElement>('#username').addEventListener('change', input => state.updateControls({ username: (input.currentTarget as HTMLInputElement).value }, true));
   $<HTMLInputElement>('#target').addEventListener('change', input => state.updateControls({ targetScore: Number((input.currentTarget as HTMLInputElement).value) || 0 }, true));
   $<HTMLSelectElement>('#objective').addEventListener('change', input => state.updateControls({ objective: (input.currentTarget as HTMLSelectElement).value as OptimizerState['objective'] }, true));
+  $<HTMLSelectElement>('#data-source').addEventListener('change', input => {
+    const datasetId=(input.currentTarget as HTMLSelectElement).value as StatisticalDatasetId;
+    if(state.setStatisticalDataset(datasetId))callbacks.datasetChanged(datasetId);
+  });
   $('#optimize').addEventListener('click', callbacks.optimize);
   $('#next-roll').addEventListener('click', callbacks.nextRoll);
   $('#reset').addEventListener('click', callbacks.reset);
@@ -81,6 +86,10 @@ export function bindStaticControls(state: ApplicationState, callbacks: StaticCon
 
 export function reflectTokens(tokensRemaining: number): void {
   $<HTMLInputElement>('#tokens').value = String(tokensRemaining);
+}
+
+export function reflectStatisticalDataset(datasetId:StatisticalDatasetId):void {
+  $<HTMLSelectElement>('#data-source').value=datasetId;
 }
 
 export function updateLayoutToggle(state: ApplicationState, resolvedLayoutId: (board: ApplicationState['board']) => BoardLayoutId): void {

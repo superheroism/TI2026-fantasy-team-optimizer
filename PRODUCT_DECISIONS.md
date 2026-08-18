@@ -16,6 +16,20 @@ A team is selected independently for each role:
 
 Player names are shown for context but are not separate controls.
 
+## Statistical dataset choice is a model-loading concern
+
+The product exposes exactly two distribution/correlation datasets: **Pre-TI2026-Correlations** and **GroupStage-Correlations**. Both use the same model adapter, retained-game simulation, scoring formulas, search policy, and result UI. There is no means-only scoring path.
+
+Dataset identity travels through the worker boundary and separates model-dependent caches. Changing the Data Source changes inputs to the optimizer; it does not select a different optimizer implementation.
+
+## Main Event eligibility is separate from historical observations
+
+Historical statistical observations are not treated as roster eligibility. The production roster filter contains the current Main Event field independently of the statistical datasets, so selecting the pre-TI model cannot make an eliminated team selectable. When a source dataset contains historical profiles for eliminated teams, those profiles remain available as model history rather than being deleted from the dataset.
+
+## Expected Series follows layout defaults until explicitly overridden
+
+The 3-emblem layout defaults Expected Series to **5** and the 5-emblem layout defaults it to **3**. Those values are conveniences, not hard bindings. After a user manually edits a role's Expected Series value, later layout changes preserve that explicit value for that role. Resetting the board restores automatic defaults.
+
 ## Emblem multipliers are derived
 
 Users edit Stat, Tier, and Trait. The tool calculates effective multipliers from the full banner so adjacency and trait activation stay consistent with scoring.
@@ -54,7 +68,7 @@ P10, Median, Expected, and P90 on an Available Action card are **changes relativ
 
 ## Team comparisons depend on the banner
 
-The Likely Results view compares teams under the current banner mechanics. Changing only the selected team can reuse those mechanics; changing a stat, tier, trait, or expected-series assumption requires a new evaluation.
+The Likely Results view compares teams under the current banner mechanics. Changing only the selected team can reuse those mechanics; changing a stat, tier, trait, expected-series assumption, or statistical dataset requires a new evaluation.
 
 ## Confidence means decision stability
 

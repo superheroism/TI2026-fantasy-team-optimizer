@@ -17,10 +17,25 @@ export const TI2026_ROSTERS = [
     { canonical: 'GamerLegion', aliases: ['GL'], positions: ['Ghost', 'RCY', 'Fayde', 'Bignum', 'Speeed'] },
     { canonical: 'LGD Gaming', aliases: ['LGD'], positions: ['Yuma', 'Topson', 'Wisper', 'Thiolicor', 'KJ'] },
 ];
+/** Main Event eligibility is separate from historical statistical-model coverage. */
+export const TI2026_MAIN_EVENT_ELIGIBLE_TEAMS = [
+    'Team Spirit',
+    'Team Vision',
+    'Team Falcons',
+    'BoomBoys',
+    'Iron Wing',
+    'Team Yandex',
+    'Team Liquid',
+    'Nigma Galaxy',
+];
 function norm(s) { return s.toLowerCase().replace(/[^a-z0-9]/g, ''); }
 export function rosterForTeam(team) {
     const n = norm(team);
     return TI2026_ROSTERS.find(r => [r.canonical, ...r.aliases].some(x => norm(x) === n));
+}
+export function isMainEventEligibleTeam(team) {
+    const canonical = rosterForTeam(team)?.canonical ?? team;
+    return TI2026_MAIN_EVENT_ELIGIBLE_TEAMS.includes(canonical);
 }
 export function attachedPlayers(team, role) {
     const r = rosterForTeam(team);
