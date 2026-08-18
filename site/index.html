@@ -27,20 +27,20 @@
   <div class="brand-lockup">
     <p class="eyebrow">DOTA 2 FANTASY · STOCHASTIC BOARD OPTIMIZER</p>
     <h1>Dota 2 Fantasy Optimizer</h1>
-    <p class="sub">Replicate the board. See every option. Optimize the next move.</p>
+    <p class="sub">Match your board. Compare your options. Choose the best move.</p>
   </div>
 </header>
 <main>
   <section class="control-strip" aria-label="Optimizer controls">
     <label>Username<input id="username" value="[Username]"></label>
-    <label>Roll tokens<input id="tokens" type="number" min="0" value="30"></label>
-    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:9px"><label>Model<select id="data-source"><option value="pre-ti2026-correlations">Group Stage</option><option value="group-stage-correlations" selected>Main Event</option></select></label><label>Objective<select id="objective"><option value="expected_score">Expected final score</option><option value="target_probability">P(score ≥ target)</option></select></label></div>
+    <label>Reroll tokens<input id="tokens" type="number" min="0" value="30"></label>
+    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:9px"><label>Tournament stage<select id="data-source"><option value="pre-ti2026-correlations">Group Stage</option><option value="group-stage-correlations" selected>Main Event</option></select></label><label>Objective<select id="objective"><option value="expected_score">Expected final score</option><option value="target_probability">P(score ≥ target)</option></select></label></div>
     <label>Target score<input id="target" type="number" min="0" placeholder="e.g. 50000"></label>
     <div class="control-buttons">
       <label class="theme-switch-wrap" for="theme-toggle">
-        <span class="theme-switch-label">Dark Theme</span>
+        <span class="theme-switch-label">Dark mode</span>
         <span class="theme-switch-control">
-          <input id="theme-toggle" type="checkbox" role="switch" aria-label="Dark Theme" checked>
+          <input id="theme-toggle" type="checkbox" role="switch" aria-label="Dark mode" checked>
           <span class="theme-switch-track"><span class="theme-switch-thumb"></span></span>
         </span>
       </label>
@@ -51,13 +51,13 @@
   <section class="workspace-section board-workspace">
     <div class="section-bar">
       <div class="board-section-title">
-        <div><p class="eyebrow">CURRENT BOARD</p><h2>Replicate Your Three War Banners</h2></div>
+        <div><p class="eyebrow">CURRENT BOARD</p><h2>Match Your War Banners</h2></div>
         <div class="board-tools">
           <div class="layout-control"><span>BANNER LAYOUT</span><div class="layout-segmented" role="group" aria-label="Banner layout"><button type="button" data-layout-slots="3" class="active" aria-pressed="true">3 Emblems</button><button type="button" data-layout-slots="5" aria-pressed="false">5 Emblems</button></div></div>
           <div class="screenshot-control"><span>SCREENSHOT</span><div class="screenshot-buttons"><button id="screenshot-import" type="button">Import Screenshot</button><button id="screenshot-ocr-diagnostic-copy" type="button" hidden disabled>OCR Diagnostic</button><span id="screenshot-ocr-diagnostic-toast" class="screenshot-diagnostic-toast" role="status" aria-live="polite" hidden></span></div><input id="screenshot-file" type="file" accept="image/png,image/jpeg,image/webp" hidden></div>
         </div>
       </div>
-      <small id="screenshot-import-status" data-kind="idle">Team is selectable · attached players are fixed · Stat / Tier / Trait are editable · percentages are derived</small>
+      <small id="screenshot-import-status" data-kind="idle">Choose a team, then match each emblem’s stat, tier, and trait. Player positions and bonuses update automatically.</small>
     </div>
     <div id="board" class="board"></div>
   </section>
@@ -70,10 +70,10 @@
 
   <section id="action-console" class="panel action-console">
     <div class="panel-head console-head">
-      <div class="section-title"><div><p class="eyebrow">AVAILABLE ACTIONS</p><h2>Match the Three Offers Shown</h2><small>Optimize to find the best offers. The best target for each offer will be shown by default; click to inspect.</small></div></div>
+      <div class="section-title"><div><p class="eyebrow">AVAILABLE ACTIONS</p><h2>Match Your Three Offers</h2><small>Run the optimizer to compare each offer. The best target appears first.</small></div></div>
       <div class="console-buttons">
-        <button id="optimize" class="primary optimize" type="button">Run Optimizer</button>
-        <button id="next-roll" type="button" disabled>Next Roll (-1 Token)</button>
+        <button id="optimize" class="primary optimize" type="button">Optimize Board</button>
+        <button id="next-roll" type="button" disabled>Next Reroll · 1 Token</button>
       </div>
     </div>
     <div id="ops" class="ops"></div>
@@ -81,13 +81,13 @@
       <div class="decision-summary">
         <div class="decision-title"><span class="decision-title-label">RECOMMENDATION</span></div>
         <b id="rec-action">Not calculated</b>
-        <small id="rec-note">Run the optimizer to compare the three in-game actions, menu reroll, and the best current setup.</small>
+        <small id="rec-note">Optimize the board to compare your three offers, a menu reroll, and keeping the board.</small>
       </div>
       <div id="menu-option" class="alternative-option">
-        <span>MENU REROLL</span><b id="menu-ev">—</b><small><span id="menu-delta">—</span> vs stop</small>
+        <span>MENU REROLL</span><b id="menu-ev">—</b><small><span id="menu-delta">—</span> vs keeping board</small>
       </div>
       <div id="stop-option" class="alternative-option stop-option">
-        <span>BEST CURRENT SETUP</span><b id="stop-ev">—</b><small>Score with best available team + title</small>
+        <span>KEEP BOARD</span><b id="stop-ev">—</b><small>Best score without spending a token</small>
       </div>
     </div>
   </section>
@@ -101,20 +101,20 @@
   </section>
 
   <section class="panel distribution-panel analytics-panel">
-    <div class="panel-head"><div><p class="eyebrow">SELECTED SETUP</p><h2>Expected score distribution</h2></div><small id="calc-status">20k simulations with statistical dataset · top 2 games / best 1 series</small></div>
+    <div class="panel-head"><div><p class="eyebrow">SCORE OUTLOOK</p><h2>Expected Score Range</h2></div><small id="calc-status">20k simulations with statistical dataset · top 2 games / best 1 series</small></div>
     <canvas id="hist"></canvas>
     <div class="hist-legend"><span><i class="legend-swatch distribution"></i>Distribution</span><span><i class="legend-line expected"></i>Expected</span><span><i class="legend-line median"></i>Median</span><span><i class="legend-line quantile"></i>P10 / P90</span><span><i class="legend-swatch target"></i>At/above target</span></div>
   </section>
 
   <section class="panel analytics-panel">
-    <div class="panel-head"><div><p class="eyebrow">LIKELY RESULTS</p><h2>Every team under the selected banner</h2></div><small>Fixed team role units: Core pos 1+3 · Mid pos 2 · Support pos 4+5</small></div>
+    <div class="panel-head"><div><p class="eyebrow">LIKELY RESULTS</p><h2>Compare Teams</h2></div><small>Core: positions 1 + 3 · Mid: position 2 · Support: positions 4 + 5</small></div>
     <div class="comparison-tabs" id="comparison-tabs"></div>
     <div id="team-comparisons" class="team-comparisons"></div>
   </section>
 
   <section class="panel secondary-panel">
-    <div class="panel-head"><div><p class="eyebrow">FULL DECISION SET</p><h2>Detailed action ranking</h2></div><small>Every legal operation × banner + menu reroll + stop</small></div>
-    <div id="ranking"><div class="ranking-empty">Run the optimizer to rank the current decision set.</div></div>
+    <div class="panel-head"><div><p class="eyebrow">ALL OPTIONS</p><h2>Action Ranking</h2></div><small>Compare every available action, menu reroll, and keeping the board.</small></div>
+    <div id="ranking"><div class="ranking-empty">Optimize the board to rank your current options.</div></div>
   </section>
 </main>
 <script type="module" src="./js/main.js"></script>
