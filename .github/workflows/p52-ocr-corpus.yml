@@ -32,9 +32,10 @@ jobs:
           p=Path('src/import/ocrRecognition.ts')
           s=p.read_text()
           anchor='export const DEFAULT_OCR_CALL_TIMEOUT_MS=10_000;'
-          helper="function recordOcrCall(budget:OcrExecutionBudget,call:OcrCallDiagnostic):void{budget.calls.push(call);console.log('[P52F_OCR_CALL]',JSON.stringify(call));}\n\n"
+          helper="function recordOcrCall(budget:OcrExecutionBudget,call:OcrCallDiagnostic):void{Array.prototype.push.call(budget.calls,call);console.log('[P52F_OCR_CALL]',JSON.stringify(call));}\n\n"
           if anchor not in s: raise SystemExit('missing OCR trace anchor')
-          s=s.replace(anchor,helper+anchor,1).replace('budget.calls.push(','recordOcrCall(budget,')
+          s=s.replace('budget.calls.push(','recordOcrCall(budget,')
+          s=s.replace(anchor,helper+anchor,1)
           p.write_text(s)
           PY
       - run: npm run build
