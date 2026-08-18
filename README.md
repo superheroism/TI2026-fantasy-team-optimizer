@@ -18,13 +18,15 @@ Core uses positions 1 and 3, Mid uses position 2, and Support uses positions 4 a
 
 ## What the model does
 
-The optimizer applies Dota Fantasy's best-game and best-series retention rules to simulated team and role performance. It compares every legal target for the three visible reroll actions, then re-optimizes free team and title choices after each possible result.
+The optimizer starts from precomputed team- and role-level fantasy-point distributions. It simulates correlated stat outcomes, applies Dota Fantasy's best-game and best-series retention rules, and compares every legal target for the three visible reroll actions. Free team and title choices are re-optimized after each possible result.
 
 It also considers rerolling the action menu and keeping the current board.
 
 The production search looks ahead at most two token spends. Three-emblem search uses the full production reference search at this horizon. Five-emblem, two-spend search uses a validated adaptive policy that spends more computation on close decisions and falls back to full reference search when needed.
 
 When comparing hypothetical boards, the optimizer reuses the same simulated tournament scenarios. This reduces simulation noise between competing actions.
+
+See `MODEL.md` for the statistical inputs, correlation model, simulation boundary, and model provenance.
 
 ## Probability assumptions
 
@@ -69,6 +71,7 @@ Run `npm run benchmark` for the general performance suite and `npm run benchmark
 
 ## Reference documentation
 
+- `MODEL.md` — statistical inputs, correlation model, simulation method, and provenance boundary.
 - `CLIENT_RULES_2026.md` — game rules and probability assumptions.
 - `PRODUCT_DECISIONS.md` — product and modeling choices that affect interpretation.
 - `ENGINEERING.md` — current architecture and search design.
