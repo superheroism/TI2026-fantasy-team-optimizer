@@ -203,7 +203,7 @@ async function runOptimizer() {
         $('#stop-option').classList.toggle('recommended', recommendation.action.kind === 'stop');
         const next = $('#next-roll');
         next.disabled = state.tokensRemaining <= 0;
-        next.textContent = state.tokensRemaining > 0 ? 'Next Roll (-1 Token)' : 'No Tokens Remaining';
+        next.textContent = state.tokensRemaining > 0 ? 'Next Reroll · 1 Token' : 'No Tokens Remaining';
         const metricHead = targetMode ? 'P≥TARGET' : 'EXPECTED FINAL';
         const lastHead = targetMode ? 'P(OBJECTIVE ↑)' : 'P(BOARD EV ↑)';
         $('#ranking').innerHTML = `<div class="rank-head"><span>#</span><span>ACTION</span><span>${metricHead}</span><span>Δ VS STOP</span><span>${lastHead}</span><span>P10 Δ</span><span>P50 Δ</span><span>P90 Δ</span></div>${result.ranking.slice(0, 12).map((row, index) => {
