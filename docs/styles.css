@@ -156,3 +156,13 @@ body[data-theme="light"] .op-number{color:var(--purple)}
 .layout-segmented button+button{border-left:1px solid var(--line2)}
 .layout-segmented button.active{background:var(--purple);color:#fff;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--purple2) 65%,transparent)}
 @media(max-width:720px){.section-bar{align-items:flex-start;flex-direction:column}.section-bar>small{text-align:left}.board-section-title{align-items:flex-start!important}.layout-control{min-width:min(100%,260px)}}
+
+/* P53 editable-control alignment and typography */
+input,select,option{font-weight:400;letter-spacing:normal}
+select optgroup{font-weight:700}
+select optgroup option{font-weight:400}
+.team-picker select,.client-select,.stat-select,.op-select{font-weight:400;letter-spacing:normal}
+.client-row{grid-template-columns:42px minmax(0,1fr) 60px}
+.client-total,.client-bonus{min-width:0;text-align:right}
+.recommended-target-element .client-select{font-weight:400!important}
+@media(max-width:720px){.client-row{grid-template-columns:40px minmax(0,1fr) 60px}}

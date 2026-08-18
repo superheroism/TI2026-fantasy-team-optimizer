@@ -1,4 +1,4 @@
-import { convertBoardLayout, createDefaultBoard, defaultBoard, defaultMenu, resolvedLayoutId } from '../data/defaultState.js';
+import { DEFAULT_EXPECTED_SERIES_BY_LAYOUT, convertBoardLayout, createDefaultBoard, defaultBoard, defaultMenu, resolvedLayoutId } from '../data/defaultState.js';
 export class ApplicationState {
     invalidator = () => { };
     board = structuredClone(defaultBoard);
@@ -34,7 +34,14 @@ export class ApplicationState {
         this.invalidate(preserveComparison);
     }
     importScreenshot(board, menu, tokensRemaining) {
+        const previousLayout = resolvedLayoutId(this.board);
+        const importedLayout = resolvedLayoutId(board);
         this.board = structuredClone(board);
+        if (previousLayout !== importedLayout) {
+            const expectedSeries = DEFAULT_EXPECTED_SERIES_BY_LAYOUT[importedLayout];
+            for (const role of ['core', 'mid', 'support'])
+                this.board[role].expectedSeries = expectedSeries;
+        }
         this.menu = structuredClone(menu);
         if (tokensRemaining !== undefined)
             this.tokensRemaining = Math.max(0, tokensRemaining);

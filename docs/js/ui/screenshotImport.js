@@ -2,8 +2,33 @@ import { applyScreenshotReviewHighlights, clearScreenshotReviewHighlights } from
 import { getLastLocalOcrMetrics, requestScreenshotImport, validateScreenshotImport } from '../import/screenshotImport.js';
 import { diagnoseLocalScreenshotOcr, warmLocalScreenshotOcr } from '../import/localScreenshotOcr.js';
 const $ = (selector) => document.querySelector(selector);
+export function canonicalScreenshotReviewPath(path) {
+    return path.replace(/\[(\d+)\]/g, '.$1');
+}
+/** DOM-independent source of truth for unresolved fields from the latest screenshot import. */
+export class ScreenshotReviewPathState {
+    unresolved = new Set();
+    sessionActive = false;
+    replace(paths) {
+        this.unresolved.clear();
+        for (const path of paths)
+            this.unresolved.add(canonicalScreenshotReviewPath(path));
+        this.sessionActive = true;
+    }
+    resolve(path) {
+        return this.unresolved.delete(canonicalScreenshotReviewPath(path));
+    }
+    clear() {
+        this.unresolved.clear();
+        this.sessionActive = false;
+    }
+    get paths() { return [...this.unresolved]; }
+    get count() { return this.unresolved.size; }
+    get active() { return this.sessionActive; }
+}
 let latestDiagnosticJson;
 let diagnosticToastTimer;
+const activeScreenshotReviewState = new ScreenshotReviewPathState();
 function emitScreenshotImportStage(event) {
     const hook = window.__TI2026_TEST_HOOKS__?.onScreenshotImportStage;
     if (!hook)
@@ -14,7 +39,7 @@ function emitScreenshotImportStage(event) {
     catch { }
 }
 function setStatus(text, kind = 'idle') { const status = $('#screenshot-import-status'); status.textContent = text; status.dataset.kind = kind; }
-function reviewPaths(result) { return result.lowConfidenceFields.map(field => field.path); }
+function reviewPaths(result) { return result.lowConfidenceFields.map(field => canonicalScreenshotReviewPath(field.path)); }
 export async function copyDiagnosticJson(json, writeText) {
     if (!writeText)
         return false;
@@ -65,6 +90,37 @@ function clearTokenReviewHighlight() { $('#tokens')?.classList.remove('screensho
 function applyTokenReviewHighlight(paths) { clearTokenReviewHighlight(); if (paths.some(path => path === 'tokensRemaining'))
     $('#tokens')?.classList.add('screenshot-review-target-token'); }
 function clearAllReviewHighlights() { clearScreenshotReviewHighlights(); clearActionReviewHighlights(); clearTokenReviewHighlight(); }
+export function renderActiveScreenshotReviewHighlights() {
+    const paths = activeScreenshotReviewState.paths;
+    applyScreenshotReviewHighlights(paths);
+    applyActionReviewHighlights(paths);
+    applyTokenReviewHighlight(paths);
+}
+function updateReviewProgressStatus() {
+    if (!activeScreenshotReviewState.active)
+        return;
+    const count = activeScreenshotReviewState.count;
+    if (count === 0) {
+        setStatus('All flagged screenshot fields reviewed. Run Optimizer to confirm.', 'success');
+        return;
+    }
+    setStatus(count === 1 ? '1 field still requires review.' : `${count} fields still require review.`, 'error');
+}
+export function resolveScreenshotReviewPath(path) {
+    const changed = activeScreenshotReviewState.resolve(path);
+    if (!changed)
+        return false;
+    renderActiveScreenshotReviewHighlights();
+    updateReviewProgressStatus();
+    return true;
+}
+export function discardScreenshotReviewState(message = 'Screenshot review cleared because the board changed.') {
+    const wasActive = activeScreenshotReviewState.active;
+    activeScreenshotReviewState.clear();
+    clearAllReviewHighlights();
+    if (wasActive)
+        setStatus(message, 'idle');
+}
 export function bindScreenshotImport(state, callbacks) {
     const button = $('#screenshot-import'), input = $('#screenshot-file'), optimize = $('#optimize'), diagnosticButton = $('#screenshot-ocr-diagnostic-copy'), diagnosticToast = $('#screenshot-ocr-diagnostic-toast');
     clearDiagnostic(diagnosticButton, diagnosticToast);
@@ -79,14 +135,13 @@ export function bindScreenshotImport(state, callbacks) {
         showDiagnosticToast(diagnosticToast, copied ? 'Copied!' : 'Copy failed', copied ? 'success' : 'error');
     });
     const applyImport = (result, elapsedMs) => {
+        const paths = reviewPaths(result);
+        activeScreenshotReviewState.replace(paths);
         state.importScreenshot(result.board, result.menu, result.tokensRemaining);
         callbacks.renderStructure();
         callbacks.afterApply();
         emitScreenshotImportStage({ stage: 'applied', value: { board: state.board, menu: state.menu, tokensRemaining: state.tokensRemaining } });
-        const paths = reviewPaths(result);
-        applyScreenshotReviewHighlights(paths);
-        applyActionReviewHighlights(paths);
-        applyTokenReviewHighlight(paths);
+        renderActiveScreenshotReviewHighlights();
         const elapsed = elapsedMs < 1000 ? `${Math.round(elapsedMs)} ms` : `${(elapsedMs / 1000).toFixed(1)} s`;
         if (result.requiresReview) {
             const count = paths.length;
@@ -95,8 +150,13 @@ export function bindScreenshotImport(state, callbacks) {
         else
             setStatus(`Imported ${result.board.core.emblems.length}-emblem board and three actions in ${elapsed}.`, 'success');
     };
-    optimize.addEventListener('click', () => { clearAllReviewHighlights(); if ($('#screenshot-import-status').dataset.kind === 'error')
-        setStatus('Imported screenshot confirmed by optimization.', 'success'); }, { capture: true });
+    optimize.addEventListener('click', () => {
+        if (!activeScreenshotReviewState.active)
+            return;
+        activeScreenshotReviewState.clear();
+        clearAllReviewHighlights();
+        setStatus('Imported screenshot confirmed by optimization.', 'success');
+    }, { capture: true });
     button.addEventListener('click', () => input.click());
     input.addEventListener('change', async () => {
         const file = input.files?.[0];
@@ -108,6 +168,8 @@ export function bindScreenshotImport(state, callbacks) {
             setStatus('Tournament model is still loading.', 'error');
             return;
         }
+        activeScreenshotReviewState.clear();
+        clearAllReviewHighlights();
         button.disabled = true;
         button.textContent = 'Reading Screenshot…';
         clearDiagnostic(diagnosticButton, diagnosticToast);
@@ -123,6 +185,7 @@ export function bindScreenshotImport(state, callbacks) {
             applyImport(validated, performance.now() - started);
         }
         catch (error) {
+            activeScreenshotReviewState.clear();
             clearAllReviewHighlights();
             setStatus(error instanceof Error ? error.message : String(error), 'error');
             const productionDiagnostic = getLastLocalOcrMetrics();
