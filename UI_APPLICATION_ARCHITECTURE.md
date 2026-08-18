@@ -5,11 +5,13 @@ The browser layer owns user interaction and presentation. It does **not** implem
 ```text
 UI state
   ↓
-BoardState / OptimizerState
+BoardState / OptimizerState + statistical dataset id
   ↓
 OptimizerWorkerClient
   ↓
 Web Worker
+  ↓
+dataset-specific DataBundle
   ↓
 optimizer engine
 ```
@@ -20,13 +22,19 @@ A **Web Worker** runs JavaScript off the browser's main UI thread. This lets exp
 
 | Module | Responsibility |
 |---|---|
-| `src/ui/state.ts` | Browser state and optimizer-relevant mutations |
-| `src/ui/controls.ts` | DOM events for board, menu, layout, tokens, objective, and theme |
+| `src/ui/state.ts` | Browser state and optimizer-relevant mutations, including dataset selection and Expected Series override state |
+| `src/ui/controls.ts` | DOM events for board, menu, layout, data source, tokens, objective, and theme |
 | `src/ui/boardView.ts` | Banner/emblem rendering and recommendation highlights |
 | `src/ui/actionView.ts` | Action editors, comparisons, and recommendation display |
 | `src/ui/plots.ts` | Score histogram and team-comparison plots |
-| `src/ui/optimizerClient.ts` | Worker lifecycle, request IDs, cancellation, stale-result protection |
-| `src/ui/app.ts` | Startup and coordination across the modules above |
+| `src/ui/optimizerClient.ts` | Worker lifecycle, request IDs, dataset identity, cancellation, stale-result protection |
+| `src/ui/app.ts` | Startup, dataset loading, and coordination across the modules above |
+
+## Statistical dataset boundary
+
+The browser exposes exactly two correlation datasets: `Pre-TI2026-Correlations` and `GroupStage-Correlations`. Selection occurs at the model-loading boundary. Both datasets pass through the same statistical adapter, scoring functions, search implementation, worker runtime, and result components.
+
+The worker maintains a separate long-lived `DataBundle` per dataset id. Scoring and target caches are keyed by `DataBundle` identity, so cached work from one statistical model cannot be served to the other. Main Event eligibility is applied when production bundles are loaded; historical profiles remain distinct from selectable profiles where the source dataset contains them.
 
 ## State invalidation
 
@@ -37,7 +45,11 @@ Any change that can affect the optimizer goes through `ApplicationState` and tri
 3. removes recommendation highlights/results;
 4. marks score/recommendation output stale.
 
-Presentation-only changes, such as theme or comparison tab, do not invalidate optimizer state.
+Changing Data Source additionally reloads the selected model and prevents a stale model render from winning a later load race. Presentation-only changes, such as theme or comparison tab, do not invalidate optimizer state.
+
+## Expected Series defaults
+
+`legacy_3` defaults each role to 5 Expected Series; `expanded_5` defaults each role to 3. These are automatic defaults, not constraints. A role becomes explicitly user-controlled when its Expected Series input is edited, and that manual value then survives ordinary 3↔5 layout switches. Resetting the board restores the active layout defaults.
 
 ## Engine boundary
 

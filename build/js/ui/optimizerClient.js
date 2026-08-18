@@ -60,7 +60,7 @@ export class OptimizerWorkerClient {
             this.retireIdleWorker();
         pending.resolve(result);
     }
-    optimize(state) {
+    optimize(state, datasetId) {
         if (this.pending)
             this.terminateCurrent('Optimizer request superseded by a newer optimization request.');
         const requestId = ++this.requestSequence, started = performance.now(), worker = this.ensureWorker();
@@ -69,7 +69,7 @@ export class OptimizerWorkerClient {
         const retireWorkerAfterResult = state.objective === 'target_probability' && state.tokensRemaining >= 2;
         return new Promise((resolve, reject) => {
             this.pending = { requestId, started, retireWorkerAfterResult, resolve, reject };
-            worker.postMessage({ type: 'optimize', requestId, state });
+            worker.postMessage(datasetId ? { type: 'optimize', requestId, state, datasetId } : { type: 'optimize', requestId, state });
         });
     }
     /** Invalidate prior UI state. Pending work is truly cancelled; an idle worker is retained for warm reuse. */

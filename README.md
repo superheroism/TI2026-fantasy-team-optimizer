@@ -25,11 +25,12 @@ For the five-emblem, two-spend route, the adaptive policy does less work when on
 ## How to use it
 
 1. Choose **3 Emblems** or **5 Emblems** and enter the Core, Mid, and Support banners.
-2. Select a team for each role.
-3. Enter your remaining tokens and the three actions currently offered in-game.
-4. Choose **Expected final score** or **P(score ≥ target)**.
-5. Run the optimizer.
-6. Apply the recommendation in-game, then update the board and menu.
+2. Choose **Pre-TI2026-Correlations** or **GroupStage-Correlations** as the Data Source.
+3. Select a team for each role.
+4. Enter your remaining tokens and the three actions currently offered in-game.
+5. Choose **Expected final score** or **P(score ≥ target)**.
+6. Run the optimizer.
+7. Apply the recommendation in-game, then update the board and menu.
 
 Core uses positions 1 + 3, Mid uses position 2, and Support uses positions 4 + 5. Core and Support player scores are averaged within the role.
 
@@ -37,7 +38,7 @@ For each emblem, enter its **stat**, **quality tier**, and **trait**. The tool d
 
 ## How scoring works
 
-The statistical model contains team- and role-level stat distributions plus correlations among stats on the same banner. Correlation matters because Fantasy rewards strong games, not just high averages.
+Both statistical datasets use the same team/role distribution and within-banner correlation pipeline. **Pre-TI2026-Correlations** preserves the pre-event model; **GroupStage-Correlations** adds the updated group-stage correlation/distribution estimates for Main Event decisions. Dataset selection changes model inputs, not scoring formulas or search semantics.
 
 For each role:
 
@@ -56,6 +57,8 @@ Core + Mid + Support retained scores
 Monte Carlo simulation estimates the selected board's expected score, median, P10, P90, and target probability when applicable. **P10/P90 are modeled ranges, not guarantees.**
 
 When comparing hypothetical boards, the optimizer reuses the same simulated underlying performances. This is a common-random-numbers design: competing actions are compared against the same modeled tournament worlds instead of unrelated random draws.
+
+Main Event team eligibility is separate from model history: statistical observations may remain in a dataset even when a team is no longer selectable. The optimizer only recommends teams still eligible for the Main Event.
 
 ## What the optimizer compares
 
@@ -86,7 +89,7 @@ It does not yet model exact game-level covariance between the two Core/Support p
 
 ## Board layouts and browser behavior
 
-**3 Emblems** is the backward-compatible default. Switching to **5 Emblems** preserves the first three emblem states, selected teams, expected series, tokens, and current menu; new slots receive deterministic legal defaults.
+**3 Emblems** is the backward-compatible default. Expected Series defaults to **5** for 3 Emblems and **3** for 5 Emblems. Switching layouts updates roles that are still using the automatic default; once a user manually edits a role's Expected Series value, that explicit override is preserved across later layout switches.
 
 Recommendation search runs in a Web Worker so heavier calculations do not freeze the page. Editing optimizer-relevant state cancels or invalidates stale work. Workers are also recycled periodically to bound long-session cache growth; this changes cache lifetime, not recommendation logic.
 
@@ -94,10 +97,11 @@ Recommendation search runs in a Web Worker so heavier calculations do not freeze
 
 Canonical model inputs live in `data/`:
 
-- `ti2026-statistical-model.json` — team/role distributions, sample support, and cross-stat correlations.
+- `ti2026-statistical-model.json` — pre-TI team/role distributions, sample support, and cross-stat correlations.
+- `ti2026-group-stage-statistical-model.json` — updated group-stage team/role distributions, sample support, and cross-stat correlations for the Main Event field.
 - `ti2026-title-model.json` — modeled title-prefix boosts and title metadata.
 
-`src/data/` contains application configuration and validated model loaders. `build/` and `docs/` are generated; do not hand-edit generated JavaScript. See `BUILD_AND_SOURCE_POLICY.md`.
+`src/data/` contains application configuration, Main Event eligibility, the dataset registry, and validated model loaders. `build/` and `docs/` are generated; do not hand-edit generated JavaScript. See `BUILD_AND_SOURCE_POLICY.md`.
 
 ## Local development
 

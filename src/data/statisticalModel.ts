@@ -1,7 +1,29 @@
-import type { DataBundle, PlayerProfile, QuantilePoint, Role, StatName, TitleCatalog } from '../domain/types.js';
-import { attachedPlayers, teamRoleLabel } from './ti2026Rosters.js';
+import type { DataBundle, PlayerProfile, QuantilePoint, Role, StatName, StatisticalDatasetId, TitleCatalog } from '../domain/types.js';
+import { attachedPlayers, isMainEventEligibleTeam, teamRoleLabel } from './ti2026Rosters.js';
 
-export const LOCAL_STATISTICAL_MODEL_URL='./data/ti2026-statistical-model.json';
+export interface StatisticalDatasetDefinition {
+  id: StatisticalDatasetId;
+  label: string;
+  modelUrl: string;
+  kind: 'correlations';
+}
+
+export const DEFAULT_STATISTICAL_DATASET_ID:StatisticalDatasetId='pre-ti2026-correlations';
+export const STATISTICAL_DATASETS:Readonly<Record<StatisticalDatasetId,StatisticalDatasetDefinition>>={
+  'pre-ti2026-correlations':{
+    id:'pre-ti2026-correlations',label:'Pre-TI2026-Correlations',modelUrl:'./data/ti2026-statistical-model.json',kind:'correlations',
+  },
+  'group-stage-correlations':{
+    id:'group-stage-correlations',label:'GroupStage-Correlations',modelUrl:'./data/ti2026-group-stage-statistical-model.json',kind:'correlations',
+  },
+};
+export const STATISTICAL_DATASET_OPTIONS:readonly StatisticalDatasetDefinition[]=Object.values(STATISTICAL_DATASETS);
+
+export function statisticalDatasetDefinition(id:StatisticalDatasetId=DEFAULT_STATISTICAL_DATASET_ID):StatisticalDatasetDefinition {
+  return STATISTICAL_DATASETS[id];
+}
+
+export const LOCAL_STATISTICAL_MODEL_URL=STATISTICAL_DATASETS[DEFAULT_STATISTICAL_DATASET_ID].modelUrl;
 export const LOCAL_TITLE_MODEL_URL='./data/ti2026-title-model.json';
 export const STATISTICAL_MODEL_SCHEMA_ID='ti2026-statistical-model-v1';
 export const TITLE_MODEL_SCHEMA_VERSION=1;
@@ -73,8 +95,9 @@ function validateStatisticalModel(value:unknown):asserts value is StatisticalMod
   }
 }
 
-export function convertStatisticalModel(raw:unknown,titles:unknown):DataBundle{
+export function convertStatisticalModel(raw:unknown,titles:unknown,datasetId:StatisticalDatasetId=DEFAULT_STATISTICAL_DATASET_ID,applyMainEventEligibility=false):DataBundle{
   validateStatisticalModel(raw);validateTitleCatalog(titles);
+  const dataset=statisticalDatasetDefinition(datasetId);
   const levels=raw.levels.map(x=>x/100);
   const players:PlayerProfile[]=[];
   const roleCorrelations={} as DataBundle['roleCorrelations'];
@@ -112,26 +135,36 @@ export function convertStatisticalModel(raw:unknown,titles:unknown):DataBundle{
     if(!roleCorrelations[role]?.stats.length)throw new Error(`Statistical model is missing ${role} correlations.`);
   }
 
+  const selectablePlayers=applyMainEventEligibility?players.filter(player=>isMainEventEligibleTeam(player.team)):players;
+  if(applyMainEventEligibility){
+    for(const role of ['core','mid','support'] as Role[]){
+      if(!selectablePlayers.some(player=>player.role===role))throw new Error(`Main Event eligibility produced no selectable ${role} profiles.`);
+    }
+  }
+
   return {
     label:'Precomputed team/role distributions',
     isDemo:false,
-    sourceUrl:LOCAL_STATISTICAL_MODEL_URL,
-    players,
+    sourceUrl:dataset.modelUrl,
+    statisticalDatasetId:dataset.id,
+    players:selectablePlayers,
+    historicalPlayers:players,
     titles,
     simulation:{iterations:20000,optimizerIterations:48,rankingIterations:6000,seed:20260809,maxLookaheadTokens:2,continuationOutcomeStrata:8,continuationEntryStrata:12,scoring:{retainedGamesPerSeries:2,retainedSeries:1,thirdGameProbability:0.407}},
     roleCorrelations
   };
 }
 
-export async function loadStatisticalModel():Promise<DataBundle>{
+export async function loadStatisticalModel(datasetId:StatisticalDatasetId=DEFAULT_STATISTICAL_DATASET_ID):Promise<DataBundle>{
+  const dataset=statisticalDatasetDefinition(datasetId);
   const [modelResponse,titleResponse]=await Promise.all([
-    fetch(LOCAL_STATISTICAL_MODEL_URL,{cache:'no-store'}),
+    fetch(dataset.modelUrl,{cache:'no-store'}),
     fetch(LOCAL_TITLE_MODEL_URL,{cache:'no-store'})
   ]);
   if(!modelResponse.ok)throw new Error(`Local statistical model failed to load: ${modelResponse.status} ${modelResponse.statusText}`);
   if(!titleResponse.ok)throw new Error(`Local title model failed to load: ${titleResponse.status} ${titleResponse.statusText}`);
   const [raw,titles]=await Promise.all([modelResponse.json(),titleResponse.json()]);
-  return convertStatisticalModel(raw,titles);
+  return convertStatisticalModel(raw,titles,datasetId,true);
 }
 
 /** Exported only for adapter/schema tests. */

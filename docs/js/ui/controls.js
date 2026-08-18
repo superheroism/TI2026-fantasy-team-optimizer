@@ -25,7 +25,7 @@ export function bindDynamicControls(state, callbacks) {
     }));
     document.querySelectorAll('.series').forEach(input => input.addEventListener('change', () => {
         const role = input.dataset.role;
-        state.mutateBoard(board => { board[role].expectedSeries = Math.max(1, Number(input.value) || 1); }, false);
+        state.setExpectedSeries(role, Math.max(1, Number(input.value) || 1));
         callbacks.renderStructure();
     }));
     document.querySelectorAll('.team-select').forEach(input => input.addEventListener('change', () => {
@@ -53,6 +53,11 @@ export function bindStaticControls(state, callbacks) {
     $('#username').addEventListener('change', input => state.updateControls({ username: input.currentTarget.value }, true));
     $('#target').addEventListener('change', input => state.updateControls({ targetScore: Number(input.currentTarget.value) || 0 }, true));
     $('#objective').addEventListener('change', input => state.updateControls({ objective: input.currentTarget.value }, true));
+    $('#data-source').addEventListener('change', input => {
+        const datasetId = input.currentTarget.value;
+        if (state.setStatisticalDataset(datasetId))
+            callbacks.datasetChanged(datasetId);
+    });
     $('#optimize').addEventListener('click', callbacks.optimize);
     $('#next-roll').addEventListener('click', callbacks.nextRoll);
     $('#reset').addEventListener('click', callbacks.reset);
@@ -65,6 +70,9 @@ export function bindStaticControls(state, callbacks) {
 }
 export function reflectTokens(tokensRemaining) {
     $('#tokens').value = String(tokensRemaining);
+}
+export function reflectStatisticalDataset(datasetId) {
+    $('#data-source').value = datasetId;
 }
 export function updateLayoutToggle(state, resolvedLayoutId) {
     const current = resolvedLayoutId(state.board);

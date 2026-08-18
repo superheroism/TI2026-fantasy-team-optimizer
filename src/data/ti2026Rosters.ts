@@ -26,11 +26,28 @@ export const TI2026_ROSTERS: TeamRoster[] = [
   {canonical:'LGD Gaming',aliases:['LGD'],positions:['Yuma','Topson','Wisper','Thiolicor','KJ']},
 ];
 
+/** Main Event eligibility is separate from historical statistical-model coverage. */
+export const TI2026_MAIN_EVENT_ELIGIBLE_TEAMS = [
+  'Team Spirit',
+  'Team Vision',
+  'Team Falcons',
+  'BoomBoys',
+  'Iron Wing',
+  'Team Yandex',
+  'Team Liquid',
+  'Nigma Galaxy',
+] as const;
+
 function norm(s:string):string { return s.toLowerCase().replace(/[^a-z0-9]/g,''); }
 
 export function rosterForTeam(team:string):TeamRoster | undefined {
   const n=norm(team);
   return TI2026_ROSTERS.find(r => [r.canonical,...r.aliases].some(x => norm(x)===n));
+}
+
+export function isMainEventEligibleTeam(team:string):boolean {
+  const canonical=rosterForTeam(team)?.canonical??team;
+  return TI2026_MAIN_EVENT_ELIGIBLE_TEAMS.includes(canonical as typeof TI2026_MAIN_EVENT_ELIGIBLE_TEAMS[number]);
 }
 
 export function attachedPlayers(team:string, role:Role):string[] {
@@ -49,4 +66,3 @@ export function teamRoleLabel(team:string, role:Role):string {
   const label=displayTeamName(team);
   return p.length ? `${label} (${p.join(' + ')})` : label;
 }
-

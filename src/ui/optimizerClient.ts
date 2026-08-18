@@ -1,4 +1,4 @@
-import type { OptimizerState } from '../domain/types.js';
+import type { OptimizerState, StatisticalDatasetId } from '../domain/types.js';
 import type { OptimizerWorkerResult } from './optimizerWorkerRuntime.js';
 
 interface OptimizeResponse {type:'result';requestId:number;payload:OptimizerWorkerResult}
@@ -81,7 +81,7 @@ export class OptimizerWorkerClient {
     pending.resolve(result);
   }
 
-  optimize(state:OptimizerState):Promise<OptimizerClientResult> {
+  optimize(state:OptimizerState,datasetId?:StatisticalDatasetId):Promise<OptimizerClientResult> {
     if(this.pending)this.terminateCurrent('Optimizer request superseded by a newer optimization request.');
     const requestId=++this.requestSequence,started=performance.now(),worker=this.ensureWorker();
     // Normal production search is capped at two modeled spends. A target request with at
@@ -89,7 +89,7 @@ export class OptimizerWorkerClient {
     const retireWorkerAfterResult=state.objective==='target_probability'&&state.tokensRemaining>=2;
     return new Promise((resolve,reject)=>{
       this.pending={requestId,started,retireWorkerAfterResult,resolve,reject};
-      worker.postMessage({type:'optimize',requestId,state});
+      worker.postMessage(datasetId?{type:'optimize',requestId,state,datasetId}:{type:'optimize',requestId,state});
     });
   }
 
