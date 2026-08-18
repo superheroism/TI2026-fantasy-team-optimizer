@@ -65,7 +65,7 @@ function bannerColumn(role: Role, board: BoardState, data: DataBundle): string {
   const banner = board[role];
   const players = attachedPlayerLabel(banner.selectedTeam, role);
   const automaticExpectedSeries = DEFAULT_EXPECTED_SERIES_BY_LAYOUT[resolvedLayoutId(board)];
-  return `<section class="banner" data-banner-role="${role}"><div class="banner-head"><div class="role-heading"><span>${role.toUpperCase()}</span><small>${role === 'mid' ? 'position 2' : 'fixed same-team pair'}</small></div><label class="series-control"><span>EXPECTED SERIES PLAYED <small>· AUTO ASSUMPTION: ${automaticExpectedSeries}</small></span><input class="series" data-role="${role}" type="number" min="1" max="8" value="${banner.expectedSeries}"></label></div>
+  return `<section class="banner" data-banner-role="${role}"><div class="banner-head"><div class="role-heading"><span>${role.toUpperCase()}</span><small>${role === 'mid' ? 'position 2' : 'fixed same-team pair'}</small></div><label class="series-control"><span>EXPECTED SERIES PLAYED <small>most likely: ${automaticExpectedSeries}</small></span><input class="series" data-role="${role}" type="number" min="1" max="8" value="${banner.expectedSeries}"></label></div>
     <div class="team-picker"><label>TEAM<select class="team-select" data-role="${role}">${teamOptions(role, banner.selectedTeam, data)}</select></label><div class="attached-players"><span>ATTACHED PLAYER${role === 'mid' ? '' : 'S'}</span><b>${escapeHtml(players)}</b></div></div>
     <div class="emblems">${banner.emblems.map((_, index) => emblemCard(role, banner, index)).join('')}</div><div id="selected-${role}" class="roster"><span>EXPECTED BANNER SCORE</span><b class="refresh-prompt">Run Optimizer to refresh</b></div></section>`;
 }
