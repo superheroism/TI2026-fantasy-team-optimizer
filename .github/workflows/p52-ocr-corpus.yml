@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 concurrency:
-  group: p52f-tier-retry-safety-${{ github.event.pull_request.number }}
+  group: p52f-tier-broad-only-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
@@ -20,45 +20,44 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: agent/p52f-fast-accurate-low-review
-          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Apply validated Tier experiment and corrected source contracts
+      - name: Apply Tier broad-reread-only experiment
         run: |
           python - <<'PY'
           from pathlib import Path
-          import subprocess
 
-          prior='b52757d379b22baecb15308fc97f296ad079d7a6'
-          y=subprocess.check_output(['git','show',f'{prior}:.github/workflows/p52-ocr-corpus.yml'],text=True)
-          marker="          python - <<'PY'\n"
-          body=y.split(marker,1)[1].split("\n          PY",1)[0]
-          body='\n'.join(line[10:] if line.startswith('          ') else line for line in body.splitlines())
-          exec(compile(body,'<prior-tier-experiment>','exec'),{})
+          p=Path('src/import/emblemOcrRefinement.ts')
+          s=p.read_text()
+          old='if(retryTier||retryTrait){const rr='
+          new='if(retryTrait){const rr='
+          if old not in s:
+              raise SystemExit('missing broad retry anchor')
+          p.write_text(s.replace(old,new,1))
 
-          p=Path('tests/retry-consolidation-contract.test.mjs'); t=p.read_text()
-          t=t.replace("assert.match(refinement,/if\\(retryTier\\|\\|retryTrait\\).*emblem:/s);","assert.match(refinement,/if\\(retryTrait\\).*emblem:/s);")
-          t=t.replace("assert.match(refinement,/\\(!tier\\.direct\\|\\|tier\\.match\\.value===1\\|\\|tier\\.match\\.score<\\.9\\)&&!strongSupplementalTier&&shouldRetryTier\\(confidenceFor\\(raw,qp\\)\\)/);","assert.match(refinement,/!strongSupplementalTier&&shouldRetryTier\\(confidenceFor\\(raw,qp\\)\\)/);\n  assert.match(refinement,/rawTier\\.direct&&rawTier\\.match\\.value!==1&&rawTier\\.match\\.value===initialTier&&rawTier\\.match\\.score>=\\.9/);")
-          p.write_text(t)
-
-          p=Path('tests/screenshot-refinement-contract.test.mjs'); t=p.read_text()
-          t=t.replace("assert.match(refinement,/if\\(retryTier\\|\\|retryTrait\\).*emblem:/s);","assert.match(refinement,/if\\(retryTrait\\).*emblem:/s);")
-          p.write_text(t)
+          for name in ['tests/retry-consolidation-contract.test.mjs','tests/screenshot-refinement-contract.test.mjs']:
+              p=Path(name)
+              t=p.read_text()
+              old='assert.match(refinement,/if\\(retryTier\\|\\|retryTrait\\).*emblem:/s);'
+              new='assert.match(refinement,/if\\(retryTrait\\).*emblem:/s);'
+              if old not in t:
+                  raise SystemExit(f'missing contract anchor in {name}')
+              p.write_text(t.replace(old,new,1))
           PY
       - run: npm run build
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
       - name: Run real-image regression gate
-        run: node scripts/test-ocr-corpus.mjs --report-only --output=artifacts/p52f-tier-retry.json
+        run: node scripts/test-ocr-corpus.mjs --report-only --output=artifacts/p52f-tier-broad-only.json
       - name: Enforce frozen readable-board safety
         run: |
           node - <<'NODE'
           const fs=require('fs');
-          const report=JSON.parse(fs.readFileSync('artifacts/p52f-tier-retry.json','utf8'));
+          const report=JSON.parse(fs.readFileSync('artifacts/p52f-tier-broad-only.json','utf8'));
           const byName=new Map(report.results.map(r=>[r.sourceFile,r]));
           for(const name of ['TI2026 - Board 1.png','TI2026 - Board 2.png','TI2026 - Board 3.png','Ti2026 - board 6.png']){
             const r=byName.get(name);
@@ -73,13 +72,13 @@ jobs:
         if: always()
         run: |
           node - <<'NODE'
-          const fs=require('fs');const p='artifacts/p52f-tier-retry.json';if(!fs.existsSync(p))process.exit(0);
+          const fs=require('fs');const p='artifacts/p52f-tier-broad-only.json';if(!fs.existsSync(p))process.exit(0);
           const r=JSON.parse(fs.readFileSync(p,'utf8'));
-          for(const x of r.results) console.log(x.sourceFile,'exact=',x.comparison?.exact,'ms=',Math.round(x.elapsedMs??0),'calls=',x.ocrCalls,'FHCE=',x.comparison?.falseHighConfidenceErrors);
+          for(const x of r.results) console.log(x.sourceFile,'exact=',x.comparison?.exact,'ms=',Math.round(x.elapsedMs??0),'calls=',Array.isArray(x.ocrCalls)?x.ocrCalls.length:x.ocrCalls,'FHCE=',x.comparison?.falseHighConfidenceErrors);
           NODE
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: p52f-tier-retry
-          path: artifacts/p52f-tier-retry.json
+          name: p52f-tier-broad-only
+          path: artifacts/p52f-tier-broad-only.json
           if-no-files-found: warn
