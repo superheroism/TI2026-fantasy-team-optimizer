@@ -1,85 +1,85 @@
 # Product and modeling decisions
 
-This document records current choices that affect product behavior or how results should be interpreted. Detailed game rules live in `CLIENT_RULES_2026.md`.
+This document records current product choices and explains how to interpret the results. See `CLIENT_RULES_2026.md` for detailed game rules.
 
-## Board entry supports manual and screenshot input
+## Enter a board manually or from a screenshot
 
-Users can enter the board with selectors or import a screenshot. Screenshot import highlights uncertain fields for review instead of silently accepting weak reads.
+Users can enter a board with selectors or import a screenshot. Screenshot import flags uncertain fields for review instead of accepting weak reads silently.
 
-## Teams are the roster controls
+## Select teams by role
 
-A team is selected independently for each role:
+Choose one team for each role:
 
 - Core — positions 1 and 3.
 - Mid — position 2.
 - Support — positions 4 and 5.
 
-Player names provide context but are not separate roster controls.
+Player names provide context but are not separate controls.
 
-## Dataset choice changes model inputs
+## Dataset selection changes statistical inputs
 
-The product exposes **Pre-TI2026-Correlations** and **GroupStage-Correlations**. Both use the same scoring formulas, retained-game simulation, search policy, and result UI.
+The available tournament datasets use the same scoring rules, retained-game simulation, search policy, and results UI.
 
-Changing the dataset changes statistical inputs. It does not select a different optimizer implementation.
+Changing the dataset changes the statistical inputs. It does not switch to a different optimizer.
 
-## Eligibility is separate from model history
+## Team eligibility is separate from model history
 
-Historical observations can remain in a statistical dataset after a team is no longer eligible for selection. The production roster filter controls current eligibility independently of the statistical history.
+A statistical dataset can contain historical results for a team that is no longer eligible for selection. The roster filter controls current eligibility separately from model history.
 
 ## Layouts have different Expected Series defaults
 
-The 3-emblem layout defaults Expected Series to 5. The 5-emblem layout defaults it to 3.
+The 3-emblem layout starts at 5 expected series. The 5-emblem layout starts at 3.
 
-These are starting values, not hard rules. After a user manually changes a role's value, later layout changes preserve that explicit choice. Resetting the board restores automatic defaults.
+These are defaults, not rules. If a user changes a role's value, switching layouts preserves that choice. Resetting the board restores the defaults.
 
-## Emblem multipliers are derived
+## The tool calculates emblem multipliers
 
-Users edit Stat, Tier, and Trait. The tool calculates the effective multiplier from the full banner so trait and adjacency effects remain consistent with scoring.
+Users enter Stat, Tier, and Trait. The tool calculates the effective banner multiplier so trait and adjacency effects stay consistent with scoring.
 
 ## Scoring uses distributions
 
-The model uses team and role performance distributions and within-banner stat correlation, then applies Fantasy's retained-game rules.
+The model uses team and role performance distributions and correlations between stats on each banner. It then applies the Fantasy retained-game rules.
 
-It remains a proxy. Exact pair-level game covariance, opponent effects, game duration, and shared tournament advancement are not yet modeled.
+The model is still an approximation. It does not yet include exact game-level relationships between paired Core or Support players, opponent effects, game duration, or one shared tournament-advancement path across all roles.
 
-## Search compares the full current decision set
+## Search compares every current option
 
-For each visible reroll action, the optimizer checks every legal target and then re-optimizes free team and title choices. It also considers rerolling the action menu and keeping the current board.
+For each visible reroll action, the optimizer checks every legal target and then selects the best team and title at no token cost. It also compares rerolling the action menu with keeping the current board.
 
-The objective is either expected final score or probability of reaching a chosen target.
+Users can optimize either expected final score or the probability of reaching a chosen target.
 
-## Unknown probabilities stay explicit
+## Unknown probabilities are explicit assumptions
 
-When client probabilities are unpublished, the optimizer uses the assumptions in `CLIENT_RULES_2026.md`. These assumptions are model inputs, not claims about hidden client RNG.
+When client probabilities are not published, the optimizer uses the assumptions in `CLIENT_RULES_2026.md`. These are model inputs, not claims about hidden client behavior.
 
-## Production lookahead is capped at two spends
+## Production search looks ahead at most two spends
 
-The browser models at most two token spends. The visible action uses the full adopted transition distribution. Deeper hypothetical continuation uses a validated lower-cost representation.
+The browser models at most two token spends. It models the visible action with the full adopted outcome distribution. For a possible second spend, it uses a validated lower-cost representation.
 
-This limits runtime without changing the legal actions available now or their immediate outcome probabilities.
+This keeps runtime manageable without changing the legal actions available now or their immediate probabilities.
 
-## Presentation and search use different simulation budgets
+## Results and search use different simulation budgets
 
-The selected-board distribution uses more Monte Carlo samples to produce a stable presentation. Search uses fewer shared scenarios and cached work because its job is to rank decisions quickly.
+The selected-board score range uses more Monte Carlo samples for a stable display. Search uses fewer shared scenarios and cached work because it needs to rank decisions quickly.
 
 See `PERFORMANCE.md` for current budgets and measured runtimes.
 
-## Action-card ranges are deltas
+## Action-card ranges show changes from keeping the board
 
-P10, Median, Expected, and P90 on an Available Action card are changes relative to keeping the best current setup after modeled continuation. They are not the same values as the absolute tournament-score distribution.
+P10, Median, Expected, and P90 on an Available Action card show score changes relative to keeping the best current board after modeled continuation. They are not absolute tournament scores.
 
 ## Team comparisons depend on the banner
 
-The Likely Results view compares teams under the current banner mechanics. Changing only the selected team can reuse those mechanics. Changing a stat, tier, trait, Expected Series value, layout, or statistical dataset requires a new evaluation.
+Likely Results compares teams using the current banner. Changing only the selected team can reuse the same banner calculation. Changing a stat, tier, trait, Expected Series value, layout, or dataset requires a new evaluation.
 
-## Confidence means decision stability
+## Confidence describes decision stability
 
-Confidence describes how stable the recommendation is within the current model. It is not a forecast-confidence statement about future Dota matches.
+Confidence describes how stable a recommendation is within the current model. It does not measure certainty about future Dota matches.
 
 ## Titles
 
-Title prefixes use modeled role boosts. The suffix is not assigned an invented expected value when its trigger value is unavailable.
+Title prefixes use modeled role boosts. The optimizer does not invent an expected value for a suffix when its trigger value is unavailable.
 
 ## Visual hierarchy
 
-Red, green, and blue are reserved for emblem and stat-pool meaning. Gold marks recommended or best outcomes. Purple is used for interaction and application structure.
+Red, green, and blue identify emblem and stat-pool meaning. Gold marks recommended or best outcomes. Purple identifies interactions and application structure.

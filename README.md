@@ -1,66 +1,66 @@
 # Dota 2 Fantasy Optimizer 2026
 
-A browser tool for building or importing a TI 2026 Fantasy board, comparing teams, and choosing how to spend the next reroll token.
+A browser tool for matching or importing a TI 2026 Fantasy board, comparing teams, and choosing how to spend your next reroll token.
 
-The optimizer models a range of plausible Fantasy outcomes instead of ranking players by average stats alone. It supports both 3-emblem and 5-emblem boards.
+The optimizer models a range of possible Fantasy outcomes instead of ranking players by averages alone. It supports both 3-emblem and 5-emblem boards.
 
 ## Use the optimizer
 
-1. Import a screenshot or enter the Core, Mid, and Support banners manually.
-2. Choose the statistical dataset you want to use.
+1. Import a screenshot or enter your Core, Mid, and Support banners.
+2. Choose a tournament dataset.
 3. Select a team for each role.
 4. Enter your remaining tokens and the three actions offered in-game.
-5. Choose an objective: **Expected final score** or **P(score ≥ target)**.
+5. Choose **Expected final score** or **P(score ≥ target)**.
 6. Run the optimizer.
-7. Apply the recommendation in-game, then update the board and menu.
+7. Apply the recommendation in-game, then update the board and available actions.
 
-Fresh boards also provide a model-backed starting point for each layout: Tier III emblems, legal high-value stats, a team selected for the completed banner, and a strong compatible trait setup. These defaults are a quick recommendation guide, not a substitute for matching your actual in-game board.
+New boards provide a recommended starting point for each layout. Every emblem starts at Tier III with strong legal stats from the selected tournament dataset. The optimizer then selects a strong team and compatible traits for each banner. Use these defaults as a quick guide; replace them with your actual board before optimizing.
 
-Core uses positions 1 and 3, Mid uses position 2, and Support uses positions 4 and 5. For each emblem, enter its stat, quality tier, and trait. The tool calculates the resulting banner multiplier.
+Core uses positions 1 and 3, Mid uses position 2, and Support uses positions 4 and 5. Enter each emblem's stat, quality tier, and trait. The tool calculates the banner multiplier.
 
-## What the model does
+## How optimization works
 
-The optimizer starts from precomputed team- and role-level fantasy-point distributions. It simulates correlated stat outcomes, applies Dota Fantasy's best-game and best-series retention rules, and compares every legal target for the three visible reroll actions. Free team and title choices are re-optimized after each possible result.
+The optimizer starts with precomputed fantasy-point distributions for each team and role. It simulates related stat outcomes, applies Dota Fantasy's best-game and best-series scoring rules, and compares every legal target for the three available reroll actions. After each possible result, it can also choose a better team or title at no token cost.
 
-It also considers rerolling the action menu and keeping the current board.
+It also compares rerolling the action menu with keeping the current board.
 
-The production search looks ahead at most two token spends. Three-emblem search uses the full production reference search at this horizon. Five-emblem, two-spend search uses a validated adaptive policy that spends more computation on close decisions and falls back to full reference search when needed.
+With one token left, the optimizer can model one spend. With two or more tokens, it looks ahead at most two spends. The 3-emblem layout uses the full production search at this horizon. The 5-emblem layout uses a validated adaptive search that spends more computation on close decisions and uses the full search when needed.
 
-When comparing hypothetical boards, the optimizer reuses the same simulated tournament scenarios. This reduces simulation noise between competing actions.
+The optimizer reuses the same simulated tournament scenarios when it compares boards. This reduces random simulation differences between competing actions.
 
-See `reference/MODEL.md` for the statistical inputs, correlation model, simulation boundary, and model provenance.
+See `reference/MODEL.md` for more about the statistical inputs, correlations, simulation method, and model provenance.
 
 ## Probability assumptions
 
-Valve does not publish every reroll probability. The optimizer therefore makes explicit assumptions for unknown probabilities, including replacement stats, qualities, traits, random targets, and future action menus.
+Valve does not publish every reroll probability. The optimizer therefore uses explicit assumptions for unknown probabilities, including replacement stats, qualities, traits, random targets, and future action menus.
 
-These assumptions are model inputs, not claims about hidden client RNG. See `reference/CLIENT_RULES_2026.md` for the current rules and assumptions.
+These are model inputs, not claims about hidden client behavior. See `reference/CLIENT_RULES_2026.md` for the current rules and assumptions.
 
 ## Limitations
 
-The model includes role-specific performance distributions, within-banner stat correlation, quality and trait effects, retained-game scoring, legal rerolls, and free team re-optimization.
+The model includes role-specific performance distributions, correlations between stats on a banner, quality and trait effects, retained-game scoring, legal rerolls, and free team selection.
 
-It does not yet model exact game-level covariance between paired Core or Support players, opponent effects, game duration, or one shared tournament-advancement path across all selected roles. Search beyond two spends remains research-only.
+It does not yet model exact game-level relationships between paired Core or Support players, opponent effects, game duration, or one shared tournament-advancement path across all selected roles. Search beyond two token spends remains research-only.
 
-P10 and P90 values are modeled ranges, not guarantees. Recommendation confidence describes decision stability within the model, not certainty about future Dota matches.
+P10 and P90 describe modeled ranges, not guarantees. Recommendation confidence describes how stable a decision is within the model, not certainty about future matches.
 
 ## Screenshot import
 
-Screenshot import reads the board, teams, reroll actions, and token count when they are visible. Uncertain fields are highlighted for review instead of being silently accepted.
+Screenshot import reads the board, teams, reroll actions, and token count when they are visible. It flags uncertain fields for review instead of accepting them silently.
 
-Chromium is the certified screenshot-import browser for v1.2. Firefox screenshot import is not certified in this release. Manual board entry and optimizer behavior are not affected by that limitation.
+Chromium is the certified browser for screenshot import in v1.2. Firefox screenshot import is not certified. This does not affect manual board entry or optimizer behavior.
 
 ## Data and source files
 
-Canonical model inputs live in `data/`. Application source lives in `src/`. Static source files used for the web application live in `site/`.
+Model inputs are in `data/`. Application source is in `src/`. Static web source is in `site/`.
 
-`build/` and `docs/` are generated. `docs/` is the current GitHub Pages deployment tree; despite its name, it is not the documentation source. Do not hand-edit generated JavaScript.
+`build/` and `docs/` are generated. `docs/` is the GitHub Pages deployment tree, not the documentation source. Do not edit generated JavaScript by hand.
 
-See `reference/BUILD_AND_SOURCE_POLICY.md` for the source-of-truth policy.
+See `reference/BUILD_AND_SOURCE_POLICY.md` for details.
 
 ## Local development
 
-Node 22 is the release and benchmark runtime.
+Use Node 22 for release and benchmark work.
 
 ```bash
 npm install
@@ -69,19 +69,19 @@ npm test
 npm run verify:generated
 ```
 
-Run `npm run benchmark` for the general performance suite and `npm run benchmark:v1` for the production-route release check.
+Run `npm run benchmark` for the general performance suite. Run `npm run benchmark:v1` for the production release check.
 
 ## Reference documentation
 
-Current documentation is grouped under `reference/`:
+For setup and normal use, start here. Use `reference/` when you need more detail:
 
 - `reference/MODEL.md` — statistical inputs and simulation method.
 - `reference/CLIENT_RULES_2026.md` — game rules and probability assumptions.
 - `reference/PRODUCT_DECISIONS.md` — product and modeling choices.
 - `reference/ENGINEERING.md` — current architecture and search design.
-- `reference/PERFORMANCE.md` — performance contract and production baseline.
+- `reference/PERFORMANCE.md` — performance requirements and production baseline.
 - `reference/SCREENSHOT_IMPORT_PIPELINE.md` — screenshot-import behavior and verification.
-- `reference/UI_APPLICATION_ARCHITECTURE.md` — browser module and worker boundaries.
+- `reference/UI_APPLICATION_ARCHITECTURE.md` — browser modules and worker boundaries.
 - `reference/BUILD_AND_SOURCE_POLICY.md` — editable sources and generated output.
 - `reference/ENGINEERING_ROADMAP.md` — longer-term engineering direction.
 - `reference/RELEASE_NOTES_1.2.0.md` — v1.2 release notes.
