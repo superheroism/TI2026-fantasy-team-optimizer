@@ -5,14 +5,14 @@ on:
     branches: [main]
 
 concurrency:
-  group: p52f-firefox-parser-trace-${{ github.event.pull_request.number }}
+  group: p52f-firefox-resolution-matrix-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  firefox-parser-trace:
+  firefox-resolution-matrix:
     if: github.event.pull_request.head.ref == 'agent/p52f-fast-accurate-low-review'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -25,39 +25,24 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Inject diagnostic-only OCR call trace
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('src/import/ocrRecognition.ts')
-          s=p.read_text()
-          anchor='export const DEFAULT_OCR_CALL_TIMEOUT_MS=10_000;'
-          helper="function recordOcrCall(budget:OcrExecutionBudget,call:OcrCallDiagnostic):void{Array.prototype.push.call(budget.calls,call);console.log('[P52F_OCR_CALL]',JSON.stringify(call));}\n\n"
-          if anchor not in s: raise SystemExit('missing OCR trace anchor')
-          s=s.replace('budget.calls.push(','recordOcrCall(budget,')
-          s=s.replace(anchor,helper+anchor,1)
-          p.write_text(s)
-          PY
-      - run: npm run build
       - name: Install Firefox diagnostic browser
         run: |
           npm install --no-save --package-lock=false playwright@1.62.0
           npx playwright install firefox
-      - name: Run exact local parser on Board 2
+      - name: Profile Board 2 localization resolutions
         run: |
           mkdir -p artifacts
           node --input-type=module <<'NODE'
           import fs from 'node:fs';import http from 'node:http';import path from 'node:path';import {firefox} from 'playwright';
-          const root=process.cwd(),docs=path.join(root,'docs'),boardPath=path.join(root,'tests/test_boards/TI2026 - Board 2.png');
-          const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml'};
-          const server=http.createServer((req,res)=>{try{const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);if(pathname==='/__board2.png'){res.writeHead(200,{'content-type':'image/png','cache-control':'no-store'});fs.createReadStream(boardPath).pipe(res);return;}const rel=(pathname==='/'?'/index.html':pathname).replace(/^\/+/,''),file=path.resolve(docs,rel);if(!file.startsWith(docs+path.sep)||!fs.existsSync(file)){res.writeHead(404).end();return;}res.writeHead(200,{'content-type':types[path.extname(file).toLowerCase()]??'application/octet-stream','cache-control':'no-store'});fs.createReadStream(file).pipe(res);}catch(error){res.writeHead(500).end(String(error));}});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-          const origin=`http://127.0.0.1:${server.address().port}`,browser=await firefox.launch({headless:true}),page=await browser.newPage(),consoleLines=[];page.on('console',msg=>consoleLines.push(`[${msg.type()}] ${msg.text()}`));page.on('pageerror',err=>consoleLines.push(`[pageerror] ${String(err)}`));await page.goto(`${origin}/`,{waitUntil:'domcontentloaded'});
-          const result=await page.evaluate(async()=>{const response=await fetch('/__board2.png'),file=new File([await response.blob()],'TI2026 - Board 2.png',{type:'image/png'}),started=performance.now();try{const [{loadStatisticalModel},{parseScreenshotLocally}]=await Promise.all([import('./js/data/statisticalModel.js'),import('./js/import/localScreenshotOcr.js')]),data=await loadStatisticalModel(),loadedMs=performance.now()-started,parsed=await parseScreenshotLocally(file,data);return{ok:true,loadedMs,totalMs:performance.now()-started,result:parsed.result,metrics:parsed.metrics};}catch(error){return{ok:false,totalMs:performance.now()-started,error:String(error),stack:error?.stack??null};}});
-          const report={browserVersion:browser.version(),result,consoleLines};fs.writeFileSync('artifacts/p52f-firefox-parser-trace.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));await browser.close();await new Promise(resolve=>server.close(resolve));
+          const boardPath=path.resolve('tests/test_boards/TI2026 - Board 2.png');
+          const server=http.createServer((req,res)=>{if(req.url==='/board2.png'){res.writeHead(200,{'content-type':'image/png','cache-control':'no-store'});fs.createReadStream(boardPath).pipe(res);return;}res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});res.end('<!doctype html><meta charset="utf-8"><title>P52F Firefox resolution matrix</title>');});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+          const origin=`http://127.0.0.1:${server.address().port}`,browser=await firefox.launch({headless:true}),page=await browser.newPage();await page.goto(origin);await page.addScriptTag({url:'https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js'});
+          const report=await page.evaluate(async boardUrl=>{const img=new Image();img.src=boardUrl;await img.decode();const worker=await window.Tesseract.createWorker('eng');await worker.setParameters({tessedit_pageseg_mode:'3'});const rows=[];try{for(const maxWidth of [1100,900,800,700,600]){const k=Math.min(1,maxWidth/Math.max(img.naturalWidth,img.naturalHeight)),canvas=document.createElement('canvas');canvas.width=Math.round(img.naturalWidth*k);canvas.height=Math.round(img.naturalHeight*k);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);const started=performance.now(),r=await worker.recognize(canvas,{}, {tsv:true}),elapsedMs=performance.now()-started,text=(r.data.text??'').toUpperCase(),tsv=r.data.tsv??'',words=tsv.split(/\r?\n/).slice(1).filter(line=>line.split('\t')[0]==='5'&&line.split('\t').slice(11).join('\t').trim()).length;rows.push({maxWidth,canvas:[canvas.width,canvas.height],pixels:canvas.width*canvas.height,elapsedMs,textLength:text.length,tsvLength:tsv.length,wordCount:words,anchors:{core:text.includes('CORE'),mid:text.includes('MID'),support:text.includes('SUPPORT'),tier:(text.match(/TIER/g)??[]).length,reroll:text.includes('REROLL'),tokens:text.includes('TOKENS')}});}return{browser:navigator.userAgent,rows};}finally{await worker.terminate();}},`${origin}/board2.png`);
+          fs.writeFileSync('artifacts/p52f-firefox-resolution-matrix.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));await browser.close();await new Promise(resolve=>server.close(resolve));
           NODE
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: p52f-firefox-parser-trace
-          path: artifacts/p52f-firefox-parser-trace.json
+          name: p52f-firefox-resolution-matrix
+          path: artifacts/p52f-firefox-resolution-matrix.json
           if-no-files-found: error
