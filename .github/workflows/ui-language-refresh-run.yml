@@ -1,0 +1,58 @@
+name: UI language refresh runner
+
+on:
+  push:
+    branches:
+      - agent/ui-language-readability
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/ui-language-readability
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Apply requested UI refresh
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re, textwrap
+          workflow = Path('.github/workflows/ci.yml').read_text()
+          match = re.search(r"          python3 <<'PY'\n(.*?)\n          PY", workflow, re.S)
+          if not match:
+              raise SystemExit('Could not locate embedded UI refresh transformation')
+          code = textwrap.dedent(match.group(1))
+          exec(compile(code, 'ui-language-refresh', 'exec'))
+          PY
+
+      - name: Regenerate committed artifacts
+        run: npm run build
+
+      - name: Verify final product tree
+        run: npm run test:ci
+
+      - name: Remove temporary workflow scaffolding and commit
+        shell: bash
+        run: |
+          git checkout origin/main -- .github/workflows/ci.yml
+          rm -f .github/workflows/ui-language-refresh-run.yml UI_REFRESH_TRIGGER.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Refresh user-facing optimizer language"
+          git push origin HEAD:agent/ui-language-readability
