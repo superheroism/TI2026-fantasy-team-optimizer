@@ -8,7 +8,7 @@ export class ApplicationState {
     username = '[Username]';
     targetScore = 0;
     objective = 'expected_score';
-    statisticalDatasetId = 'pre-ti2026-correlations';
+    statisticalDatasetId = 'group-stage-correlations';
     comparisonRole = 'core';
     theme = 'dark';
     setInvalidator(invalidator) {

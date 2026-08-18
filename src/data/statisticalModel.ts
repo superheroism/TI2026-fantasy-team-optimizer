@@ -8,7 +8,7 @@ export interface StatisticalDatasetDefinition {
   kind: 'correlations';
 }
 
-export const DEFAULT_STATISTICAL_DATASET_ID:StatisticalDatasetId='pre-ti2026-correlations';
+export const DEFAULT_STATISTICAL_DATASET_ID:StatisticalDatasetId='group-stage-correlations';
 export const STATISTICAL_DATASETS:Readonly<Record<StatisticalDatasetId,StatisticalDatasetDefinition>>={
   'pre-ti2026-correlations':{
     id:'pre-ti2026-correlations',label:'Group Stage',modelUrl:'./data/ti2026-statistical-model.json',kind:'correlations',
@@ -164,7 +164,7 @@ export async function loadStatisticalModel(datasetId:StatisticalDatasetId=DEFAUL
   if(!modelResponse.ok)throw new Error(`Local statistical model failed to load: ${modelResponse.status} ${modelResponse.statusText}`);
   if(!titleResponse.ok)throw new Error(`Local title model failed to load: ${titleResponse.status} ${titleResponse.statusText}`);
   const [raw,titles]=await Promise.all([modelResponse.json(),titleResponse.json()]);
-  return convertStatisticalModel(raw,titles,datasetId,true);
+  return convertStatisticalModel(raw,titles,datasetId,datasetId==='group-stage-correlations');
 }
 
 /** Exported only for adapter/schema tests. */

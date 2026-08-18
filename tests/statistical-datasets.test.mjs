@@ -15,8 +15,8 @@ const roles=['Core','Mid','Support'];
 const runtimeRoles=['core','mid','support'];
 const active=[...TI2026_MAIN_EVENT_ELIGIBLE_TEAMS].sort();
 
-test('exactly two correlation datasets are registered and the legacy dataset ID remains the default',()=>{
-  assert.equal(DEFAULT_STATISTICAL_DATASET_ID,'pre-ti2026-correlations');
+test('exactly two correlation datasets are registered and Main Event is the default',()=>{
+  assert.equal(DEFAULT_STATISTICAL_DATASET_ID,'group-stage-correlations');
   assert.deepEqual(STATISTICAL_DATASET_OPTIONS.map(x=>[x.id,x.label,x.kind]),[
     ['pre-ti2026-correlations','Group Stage','correlations'],
     ['group-stage-correlations','Main Event','correlations'],
@@ -50,24 +50,25 @@ test('group-stage artifact is source-neutral and matches the current statistical
   }
 });
 
-test('production eligibility filters selectable profiles without deleting historical pre-TI2026 observations',async()=>{
+test('Group Stage exposes its full field while Main Event eligibility keeps only current survivors',async()=>{
   const [pre,titles]=await Promise.all([
     readJson('../data/ti2026-statistical-model.json'),
     readJson('../data/ti2026-title-model.json'),
   ]);
-  const baseline=convertStatisticalModel(pre,titles);
-  assert.equal(baseline.players.length,48);
-  const production=convertStatisticalModel(pre,titles,'pre-ti2026-correlations',true);
-  assert.equal(production.historicalPlayers.length,48);
-  assert.equal(production.players.length,24);
-  assert.ok(production.historicalPlayers.some(p=>p.team==='OG'));
-  assert.equal(production.players.some(p=>p.team==='OG'),false);
+  const groupStage=convertStatisticalModel(pre,titles,'pre-ti2026-correlations',false);
+  assert.equal(groupStage.historicalPlayers.length,48);
+  assert.equal(groupStage.players.length,48);
+  assert.ok(groupStage.players.some(p=>p.team==='OG'));
+  const mainEventEligibility=convertStatisticalModel(pre,titles,'pre-ti2026-correlations',true);
+  assert.equal(mainEventEligibility.historicalPlayers.length,48);
+  assert.equal(mainEventEligibility.players.length,24);
+  assert.equal(mainEventEligibility.players.some(p=>p.team==='OG'),false);
   for(const role of runtimeRoles){
-    assert.deepEqual(production.players.filter(p=>p.role===role).map(p=>displayTeamName(p.team)).sort(),active);
+    assert.deepEqual(mainEventEligibility.players.filter(p=>p.role===role).map(p=>displayTeamName(p.team)).sort(),active);
   }
 });
 
-test('group-stage model converts through the same adapter and exposes only its active eight teams',async()=>{
+test('Main Event model converts through the same adapter and exposes only its active eight teams',async()=>{
   const [group,titles]=await Promise.all([
     readJson('../data/ti2026-group-stage-statistical-model.json'),
     readJson('../data/ti2026-title-model.json'),

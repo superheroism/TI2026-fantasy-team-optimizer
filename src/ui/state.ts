@@ -24,7 +24,7 @@ export class ApplicationState {
   username = '[Username]';
   targetScore = 0;
   objective: OptimizerState['objective'] = 'expected_score';
-  statisticalDatasetId:StatisticalDatasetId='pre-ti2026-correlations';
+  statisticalDatasetId:StatisticalDatasetId='group-stage-correlations';
 
   comparisonRole: Role = 'core';
   theme: 'dark' | 'light' = 'dark';

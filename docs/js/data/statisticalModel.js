@@ -1,5 +1,5 @@
 import { attachedPlayers, isMainEventEligibleTeam, teamRoleLabel } from './ti2026Rosters.js';
-export const DEFAULT_STATISTICAL_DATASET_ID = 'pre-ti2026-correlations';
+export const DEFAULT_STATISTICAL_DATASET_ID = 'group-stage-correlations';
 export const STATISTICAL_DATASETS = {
     'pre-ti2026-correlations': {
         id: 'pre-ti2026-correlations', label: 'Group Stage', modelUrl: './data/ti2026-statistical-model.json', kind: 'correlations',
@@ -167,7 +167,7 @@ export async function loadStatisticalModel(datasetId = DEFAULT_STATISTICAL_DATAS
     if (!titleResponse.ok)
         throw new Error(`Local title model failed to load: ${titleResponse.status} ${titleResponse.statusText}`);
     const [raw, titles] = await Promise.all([modelResponse.json(), titleResponse.json()]);
-    return convertStatisticalModel(raw, titles, datasetId, true);
+    return convertStatisticalModel(raw, titles, datasetId, datasetId === 'group-stage-correlations');
 }
 /** Exported only for adapter/schema tests. */
 export const statisticalModelAdapterInternals = { canonicalStat, validateStatisticalModel, validateTitleCatalog };

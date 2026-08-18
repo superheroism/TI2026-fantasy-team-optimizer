@@ -33,8 +33,8 @@
 <main>
   <section class="control-strip" aria-label="Optimizer controls">
     <label>Username<input id="username" value="[Username]"></label>
-    <label>Roll tokens<input id="tokens" type="number" min="0" value="10"></label>
-    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:9px"><label>Model<select id="data-source"><option value="pre-ti2026-correlations">Group Stage</option><option value="group-stage-correlations">Main Event</option></select></label><label>Objective<select id="objective"><option value="expected_score">Expected final score</option><option value="target_probability">P(score ≥ target)</option></select></label></div>
+    <label>Roll tokens<input id="tokens" type="number" min="0" value="30"></label>
+    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:9px"><label>Model<select id="data-source"><option value="pre-ti2026-correlations">Group Stage</option><option value="group-stage-correlations" selected>Main Event</option></select></label><label>Objective<select id="objective"><option value="expected_score">Expected final score</option><option value="target_probability">P(score ≥ target)</option></select></label></div>
     <label>Target score<input id="target" type="number" min="0" placeholder="e.g. 50000"></label>
     <div class="control-buttons">
       <label class="theme-switch-wrap" for="theme-toggle">
