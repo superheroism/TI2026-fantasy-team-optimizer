@@ -39,80 +39,20 @@ jobs:
           import path from 'node:path';
           import {firefox} from 'playwright';
 
-          const root=process.cwd();
-          const docs=path.join(root,'docs');
-          const boardPath=path.join(root,'tests/test_boards/TI2026 - Board 2.png');
-          if(!fs.existsSync(boardPath)) throw new Error(`missing Board 2 image: ${boardPath}`);
+          const root=process.cwd(),docs=path.join(root,'docs'),boardPath=path.join(root,'tests/test_boards/TI2026 - Board 2.png');
+          if(!fs.existsSync(boardPath))throw new Error(`missing Board 2 image: ${boardPath}`);
           const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml'};
-          const server=http.createServer((req,res)=>{
-            try{
-              const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
-              if(pathname==='/__board2.png'){
-                res.writeHead(200,{'content-type':'image/png','cache-control':'no-store'});
-                fs.createReadStream(boardPath).pipe(res);return;
-              }
-              const rel=(pathname==='/'?'/index.html':pathname).replace(/^\/+/,''),file=path.resolve(docs,rel);
-              if(!file.startsWith(docs+path.sep)||!fs.existsSync(file)){res.writeHead(404).end();return;}
-              res.writeHead(200,{'content-type':types[path.extname(file).toLowerCase()]??'application/octet-stream','cache-control':'no-store'});
-              fs.createReadStream(file).pipe(res);
-            }catch(error){res.writeHead(500).end(String(error));}
-          });
+          const server=http.createServer((req,res)=>{try{const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);if(pathname==='/__board2.png'){res.writeHead(200,{'content-type':'image/png','cache-control':'no-store'});fs.createReadStream(boardPath).pipe(res);return;}const rel=(pathname==='/'?'/index.html':pathname).replace(/^\/+/,''),file=path.resolve(docs,rel);if(!file.startsWith(docs+path.sep)||!fs.existsSync(file)){res.writeHead(404).end();return;}res.writeHead(200,{'content-type':types[path.extname(file).toLowerCase()]??'application/octet-stream','cache-control':'no-store'});fs.createReadStream(file).pipe(res);}catch(error){res.writeHead(500).end(String(error));}});
           await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-          const origin=`http://127.0.0.1:${server.address().port}`;
-          const browser=await firefox.launch({headless:true});
-          const results={browserVersion:browser.version(),origin,direct:null,production:null};
+          const origin=`http://127.0.0.1:${server.address().port}`,browser=await firefox.launch({headless:true}),results={browserVersion:browser.version(),origin,direct:null,production:null};
+          async function open(){const context=await browser.newContext(),page=await context.newPage(),consoleLines=[];page.on('console',msg=>consoleLines.push(`[${msg.type()}] ${msg.text()}`));page.on('pageerror',err=>consoleLines.push(`[pageerror] ${String(err)}`));await page.goto(`${origin}/`,{waitUntil:'domcontentloaded'});await page.waitForSelector('#screenshot-file',{state:'attached',timeout:30000});return{context,page,consoleLines};}
+          const getFile=async()=>{const response=await fetch('/__board2.png');if(!response.ok)throw new Error(`board fetch ${response.status}`);return new File([await response.blob()],'TI2026 - Board 2.png',{type:'image/png'});};
 
-          async function open(){
-            const context=await browser.newContext(),page=await context.newPage(),consoleLines=[];
-            page.on('console',msg=>consoleLines.push(`[${msg.type()}] ${msg.text()}`));
-            page.on('pageerror',err=>consoleLines.push(`[pageerror] ${String(err)}`));
-            await page.goto(`${origin}/`,{waitUntil:'domcontentloaded'});
-            await page.waitForSelector('#screenshot-file',{state:'attached',timeout:30000});
-            await page.setInputFiles('#screenshot-file',boardPath);
-            return{context,page,consoleLines};
-          }
+          {const {context,page,consoleLines}=await open();try{await page.addScriptTag({url:'https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js'});results.direct=await page.evaluate(async()=>{const file=await (async()=>{const response=await fetch('/__board2.png');return new File([await response.blob()],'TI2026 - Board 2.png',{type:'image/png'});})(),started=performance.now();let worker;try{const createStarted=performance.now();worker=await window.Tesseract.createWorker('eng');const createMs=performance.now()-createStarted;await worker.setParameters({tessedit_pageseg_mode:'3'});const recognizeStarted=performance.now(),r=await worker.recognize(file,{}, {tsv:true}),recognizeMs=performance.now()-recognizeStarted,text=r?.data?.text??'',tsv=r?.data?.tsv??'';return{createMs,recognizeMs,totalMs:performance.now()-started,textLength:text.length,tsvLength:tsv.length,sample:text.replace(/\s+/g,' ').trim().slice(0,220)};}catch(error){return{totalMs:performance.now()-started,error:String(error)};}finally{try{await worker?.terminate();}catch{}}});results.direct.consoleLines=consoleLines;}finally{await context.close();}}
 
-          {
-            const {context,page,consoleLines}=await open();
-            try{
-              await page.addScriptTag({url:'https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js'});
-              results.direct=await page.evaluate(async()=>{
-                const file=document.querySelector('#screenshot-file')?.files?.[0],started=performance.now();let worker;
-                if(!file)throw new Error('missing browser File');
-                try{
-                  const createStarted=performance.now();worker=await window.Tesseract.createWorker('eng');const createMs=performance.now()-createStarted;
-                  await worker.setParameters({tessedit_pageseg_mode:'3'});
-                  const recognizeStarted=performance.now(),r=await worker.recognize(file,{}, {tsv:true}),recognizeMs=performance.now()-recognizeStarted;
-                  const text=r?.data?.text??'',tsv=r?.data?.tsv??'';
-                  return{createMs,recognizeMs,totalMs:performance.now()-started,textLength:text.length,tsvLength:tsv.length,sample:text.replace(/\s+/g,' ').trim().slice(0,220)};
-                }catch(error){return{totalMs:performance.now()-started,error:String(error)};}
-                finally{try{await worker?.terminate();}catch{}}
-              });
-              results.direct.consoleLines=consoleLines;
-            }finally{await context.close();}
-          }
+          {const {context,page,consoleLines}=await open();try{results.production=await page.evaluate(async()=>{const file=await (async()=>{const response=await fetch('/__board2.png');return new File([await response.blob()],'TI2026 - Board 2.png',{type:'image/png'});})(),started=performance.now();try{const module=await import('./js/import/localScreenshotOcr.js'),importMs=performance.now()-started,diagStarted=performance.now(),diagnostic=await module.diagnoseLocalScreenshotOcr(file);return{importMs,diagnoseMs:performance.now()-diagStarted,totalMs:performance.now()-started,diagnostic};}catch(error){return{totalMs:performance.now()-started,error:String(error),stack:error?.stack??null};}});results.production.consoleLines=consoleLines;}finally{await context.close();}}
 
-          {
-            const {context,page,consoleLines}=await open();
-            try{
-              results.production=await page.evaluate(async()=>{
-                const file=document.querySelector('#screenshot-file')?.files?.[0],started=performance.now();
-                if(!file)throw new Error('missing browser File');
-                try{
-                  const module=await import('./js/import/localScreenshotOcr.js');
-                  const importMs=performance.now()-started,diagStarted=performance.now();
-                  const diagnostic=await module.diagnoseLocalScreenshotOcr(file);
-                  return{importMs,diagnoseMs:performance.now()-diagStarted,totalMs:performance.now()-started,diagnostic};
-                }catch(error){return{totalMs:performance.now()-started,error:String(error),stack:error?.stack??null};}
-              });
-              results.production.consoleLines=consoleLines;
-            }finally{await context.close();}
-          }
-
-          fs.writeFileSync('artifacts/p52f-firefox-app-integration.json',JSON.stringify(results,null,2));
-          console.log(JSON.stringify(results,null,2));
-          await browser.close();
-          await new Promise(resolve=>server.close(resolve));
+          fs.writeFileSync('artifacts/p52f-firefox-app-integration.json',JSON.stringify(results,null,2));console.log(JSON.stringify(results,null,2));await browser.close();await new Promise(resolve=>server.close(resolve));
           NODE
       - uses: actions/upload-artifact@v4
         if: always()
