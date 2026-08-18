@@ -33,4 +33,15 @@ jobs:
           fi
       - run: npm install --no-audit --no-fund
       - run: npm run test:ci
-      - run: node scripts/benchmark-m7b-v1.mjs
+      - name: Run production-route benchmark
+        run: node scripts/benchmark-m7b-v1.mjs
+      - name: Record benchmark pass
+        run: |
+          if [ ! -f release_gate_tmp.txt ]; then
+            printf 'v1.2.0 production-route benchmark passed on Node 22\n' > release_gate_tmp.txt
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add release_gate_tmp.txt
+            git commit -m "Record v1.2.0 release gate"
+            git push origin HEAD:agent/release-1.2.0
+          fi
