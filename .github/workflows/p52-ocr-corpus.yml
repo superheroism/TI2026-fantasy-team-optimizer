@@ -28,7 +28,7 @@ jobs:
       - name: Install Firefox diagnostic browser
         run: |
           npm install --no-save --package-lock=false playwright@1.62.0
-          npx playwright install --with-deps firefox
+          npx playwright install firefox
       - name: Compare Firefox Tesseract output requests
         run: |
           mkdir -p artifacts
