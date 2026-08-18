@@ -2,7 +2,7 @@ import type { BannerEmblems, BoardLayoutId, BoardState, EmblemState, MenuState, 
 import { BOARD_LAYOUTS, DEFAULT_LAYOUT_ID, isLegalStat } from '../domain/rules.js';
 import { ACTION_BY_ID, cloneAction } from './actionCatalog.js';
 
-/** Deterministic legal defaults for every canonical slot in both supported layouts. */
+/** Deterministic legal fallbacks for every canonical slot in both supported layouts. */
 export const DEFAULT_STATS_BY_ROLE:Readonly<Record<Role,readonly StatName[]>> = {
   core:['Creep Score','Teamfight Participation','GPM','Stuns','Deaths'],
   mid:['Creep Score','Runes','Teamfight Participation','GPM','Stuns'],
@@ -19,7 +19,7 @@ export const DEFAULT_EXPECTED_SERIES_BY_LAYOUT:Readonly<Record<BoardLayoutId,num
 function defaultEmblem(role:Role,position:number,color:SlotColor):EmblemState {
   const stat=DEFAULT_STATS_BY_ROLE[role][position];
   if(!stat||!isLegalStat(color,stat))throw new Error(`Missing legal default for ${role} slot ${position+1} (${color}).`);
-  return {id:`${role}-${position}`,position,color,stat,qualityTier:3,trait:'Fractal'};
+  return {id:`${role}-${position}`,position,color,stat,qualityTier:3,trait:'Friendly'};
 }
 
 export function resolvedLayoutId(board:Pick<BoardState,'layoutId'>):BoardLayoutId {
