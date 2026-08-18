@@ -1,25 +1,25 @@
-# Build and Source Authority
+# Build and source files
 
-This repository has one editable source of truth. Generated files are committed for deployment compatibility, but they are not independent implementations.
+The repository has one editable source of truth. Generated files remain committed because the current GitHub Pages deployment uses them, but they are not separate implementations.
 
-## Editable source
+## Edit these files
 
-- `src/` — TypeScript application and optimizer code
-- `site/` — static HTML/CSS
-- `data/` — statistical and title-model inputs
-- `scripts/` — build, verification, and benchmark tools
-- `tests/` — regression and integration tests
+- `src/` — TypeScript application and optimizer code.
+- `site/` — static HTML and CSS source.
+- `data/` — statistical and title-model inputs.
+- `scripts/` — active build, verification, test, and benchmark tools.
+- `tests/` — regression, integration, browser, and corpus tests.
 
-## Generated output
+## Generated files
 
-- `build/` — compiled JavaScript from `src/`
-- `docs/` — GitHub Pages output assembled from `build/`, `site/`, and `data/`
+- `build/` — compiled JavaScript from `src/`.
+- `docs/` — GitHub Pages output assembled from source files and data.
 
-Do not hand-edit `build/` or `docs/js/`. Make application changes in `src/`, then run the build.
+Despite its name, `docs/` is currently a deployment directory, not the documentation source.
 
-A root-level `js/` directory is not supported. An old compiled snapshot once lived there; it was removed before v1.0. Verification now rejects `/js/` so an accidental compiler run cannot create a third generated tree.
+Do not hand-edit `build/` or generated JavaScript under `docs/`. Make application changes in `src/`, then rebuild.
 
-`docs/` remains committed because GitHub Pages currently deploys from it. Changing that deployment model is a separate project decision.
+A root-level `js/` directory is not supported. Verification rejects it to prevent an accidental third generated tree.
 
 ## Required checks
 
@@ -29,21 +29,16 @@ npm test
 npm run verify:generated
 ```
 
-`verify:generated` performs a clean build and checks that committed generated files match the canonical inputs. It also rejects unsupported generated output.
+`verify:generated` performs a clean build and checks that committed generated files match the canonical inputs.
 
-CI runs the same contract:
+CI runs the same core contract through `npm run test:ci`.
 
-```text
-typecheck → generated-file verification → tests
-```
+If a source change affects compiled or deployed output, commit the regenerated `build/` and `docs/` files with the source change.
 
-If a source change affects compiled or deployed output, commit the regenerated `build/` and `docs/` files as well.
+## Deployment directory
 
-## Performance baseline
+Moving GitHub Pages output from `docs/` to a clearer name such as `dist/` would improve repository readability, but it also changes deployment configuration and generated-file tooling. Treat that as a separate migration rather than mixing it with documentation cleanup.
 
-```bash
-npm run benchmark
-npm run benchmark -- --json=m1-benchmark.json
-```
+## Historical engineering files
 
-The JSON report records runtime metadata and per-workload timings so later changes can be compared on the same machine/runtime instead of relying on a single elapsed-time number.
+Milestone-specific experiments, benchmark outputs, and one-off research tools are historical evidence rather than current product documentation. Keep active build and release tooling easy to find; archive historical material under the existing engineering history or benchmark archive when it is no longer part of the supported workflow.
