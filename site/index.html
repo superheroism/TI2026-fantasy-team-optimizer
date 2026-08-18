@@ -8,6 +8,19 @@
   <title>Dota 2 Fantasy Optimizer</title>
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./screenshot-import.css">
+  <style>
+    /* UI readability refinements: uses existing theme variables in both modes. */
+    .series-control{width:132px;gap:2px;text-align:right}
+    .series-control>span{font-size:9px;font-weight:850;letter-spacing:.06em;color:var(--muted)}
+    .series-control small{font-size:8px;color:var(--complement);letter-spacing:.04em}
+    .metrics .title b{font-size:17px;line-height:1.45}
+    .title-prefix,.title-suffix{display:inline-block;padding:1px 5px;border-radius:3px;color:var(--text)!important;font-weight:900}
+    .title-prefix{background:var(--purple-soft);border:1px solid var(--purple2)}
+    .title-user{color:var(--muted)}
+    .title-suffix{background:color-mix(in srgb,var(--gold) 16%,transparent);border:1px solid var(--gold2)}
+    .team-chart-head{display:block}
+    @media(max-width:720px){.series-control{width:132px}}
+  </style>
 </head>
 <body data-theme="dark">
 <header class="site-header">
@@ -21,7 +34,7 @@
   <section class="control-strip" aria-label="Optimizer controls">
     <label>Username<input id="username" value="[Username]"></label>
     <label>Roll tokens<input id="tokens" type="number" min="0" value="10"></label>
-    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:9px"><label>Data Source<select id="data-source"><option value="pre-ti2026-correlations">Pre-TI2026-Correlations</option><option value="group-stage-correlations">GroupStage-Correlations</option></select></label><label>Objective<select id="objective"><option value="expected_score">Expected final score</option><option value="target_probability">P(score ≥ target)</option></select></label></div>
+    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:9px"><label>Model<select id="data-source"><option value="pre-ti2026-correlations">Group Stage</option><option value="group-stage-correlations">Main Event</option></select></label><label>Objective<select id="objective"><option value="expected_score">Expected final score</option><option value="target_probability">P(score ≥ target)</option></select></label></div>
     <label>Target score<input id="target" type="number" min="0" placeholder="e.g. 50000"></label>
     <div class="control-buttons">
       <label class="theme-switch-wrap" for="theme-toggle">

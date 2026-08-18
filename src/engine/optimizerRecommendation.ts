@@ -1,5 +1,4 @@
 import type { ActionEvaluation, DataBundle, OptimizerState, RecommendationResult } from '../domain/types.js';
-import { TOTAL_UNIFORM_MENUS } from '../data/actionCatalog.js';
 import { evaluateBoard } from './scoring.js';
 import { evaluateBoardTarget } from './targetProbability.js';
 import { createTerminalSearchRuntime } from './optimizerTerminal.js';
@@ -65,8 +64,6 @@ export function recommendNextAction(
     }else adaptiveFallbackReason='invalid M6D certified adaptive-tight policy configuration';
   }
 
-  const continuationStrata=Math.max(1,data.simulation.continuationOutcomeStrata??8);
-  const continuationEntryStrata=Math.max(1,data.simulation.continuationEntryStrata??12);
   const overrideMenus=data.menuSamples?.filter(menu=>menu.length===3);
 
   const terminal=createTerminalSearchRuntime(state,data);
@@ -119,7 +116,7 @@ export function recommendNextAction(
         if(p90!==undefined)row.outcomeP90Utility=p90;
         if(Number.isFinite(worst))row.downside=worst-current.expected;
         if(state.tokensRemaining>horizon)row.note=`Decision lookahead capped at ${horizon} tokens for browser performance.`;
-        else if(horizon>1)row.note=`${horizon}-token continuation uses deterministic probability stratification (${continuationEntryStrata} entry / ${continuationStrata} fresh-menu strata max).`;
+        else if(horizon>1)row.note=`${horizon}-token lookahead uses a representative set of probability-weighted outcomes.`;
         rows.push(row);
       }
     }
@@ -136,7 +133,7 @@ export function recommendNextAction(
         rows.push({action:{kind:'menu_reroll'},expectedFinalUtility:ev,expectedFinalScore:current.expected,pImprove,tokensAfter:nextTokens,
           assetAtRisk:'1 token; board preserved',confidence:current.confidence,status:'evaluated',
           note:menuModel.mode==='known_uniform'
-            ?`Fresh menu is a uniform draw of 3 distinct actions from 20; expectation uses the exact combinatorial operator equivalent to ${TOTAL_UNIFORM_MENUS.toLocaleString()} menus.`
+            ?'Expected value derived from average maximum gain from all possible replacement menus.'
             :`Fresh-menu expectation uses ${overrideMenus?.length??0} supplied menu samples.`});
       }
     }
