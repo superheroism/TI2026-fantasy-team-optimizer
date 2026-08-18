@@ -1,22 +1,20 @@
-name: Prepare v1.1.0 lockfile
+name: CI
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
-    types: [opened, reopened]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  prepare:
-    if: github.event.pull_request.head.ref == 'agent/release-1.1.0-finalize'
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out release branch
+      - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          ref: agent/release-1.1.0-finalize
-          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -26,19 +24,5 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Synchronize lockfile version
-        run: npm install --package-lock-only --no-audit --no-fund
-
-      - name: Validate release tree
+      - name: Typecheck, verify generated output, and test
         run: npm run test:ci
-
-      - name: Restore permanent CI and commit lockfile
-        shell: bash
-        run: |
-          git checkout origin/main -- .github/workflows/ci.yml
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package-lock.json .github/workflows/ci.yml
-          git diff --cached --quiet && exit 0
-          git commit -m "Synchronize v1.1.0 lockfile metadata"
-          git push origin HEAD:agent/release-1.1.0-finalize
