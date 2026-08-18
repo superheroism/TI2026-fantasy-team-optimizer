@@ -10,13 +10,14 @@
   <link rel="stylesheet" href="./screenshot-import.css">
   <style>
     /* UI readability refinements: uses existing theme variables in both modes. */
+    button{font-size:11px;line-height:1.15;font-weight:760;white-space:nowrap}
     .control-strip{grid-template-columns:minmax(150px,1fr) 92px 150px minmax(190px,1.2fr) 118px auto;align-items:end}
     .control-strip>label{min-width:0}.control-strip input,.control-strip select,.control-buttons>button{height:36px;padding-top:7px;padding-bottom:7px}
     .control-tokens,.control-target{max-width:118px}.control-objective{min-width:190px}.control-objective select{padding-right:30px}
     .control-buttons{height:36px;align-items:center}.theme-switch-wrap{align-self:center;padding:0 2px 0 0}.control-buttons button{align-self:center}
     .board-section-title{display:flex;align-items:flex-end;gap:18px}.board-tools{display:flex;align-items:flex-end;gap:22px;margin-left:10px}.layout-control,.screenshot-control{display:grid;gap:4px}.layout-control>span,.screenshot-control>span{font-size:9px;font-weight:850;letter-spacing:.08em;color:var(--muted)}
     .layout-segmented,.screenshot-buttons{display:flex;align-items:center;gap:4px}.layout-segmented button,#screenshot-import,#screenshot-ocr-diagnostic-copy{height:32px;padding:6px 10px}.screenshot-control{margin-left:8px}
-    .series-control{width:188px;gap:3px;text-align:right}.series-control>span{font-size:9px;font-weight:850;letter-spacing:.055em;color:var(--muted);white-space:nowrap}.series-control>span small{font-size:8px;color:var(--complement);letter-spacing:.035em;font-weight:750}.series-control input{padding:5px 7px;text-align:center;font-variant-numeric:tabular-nums}
+    .series-control{width:148px;gap:2px;text-align:right}.series-control>span{font-size:9px;font-weight:850;letter-spacing:.055em;color:var(--muted);white-space:nowrap}.series-control>span small{display:block;margin-top:1px;font-size:10px;line-height:1.2;color:var(--muted);letter-spacing:0;font-weight:400}.series-control input{width:54px;justify-self:end;padding:5px;text-align:center;font-variant-numeric:tabular-nums}
     .roster b.refresh-prompt{font-family:inherit;font-size:10px;line-height:1.2;font-weight:700;color:var(--muted);letter-spacing:0}
     .metrics .title b{font-size:17px;line-height:1.45}
     .title-prefix,.title-suffix{display:inline-block;padding:1px 5px;border-radius:3px;color:var(--text)!important;font-weight:900}
@@ -26,7 +27,7 @@
     .team-chart-head{display:block}
     .analytics-panel .panel-head>div,.secondary-panel .panel-head>div{display:grid;gap:1px;min-width:0}.analytics-panel .panel-head>div>small,.secondary-panel .panel-head>div>small{display:block;text-align:left;margin-top:2px;max-width:none}
     @media(max-width:1100px){.control-strip{grid-template-columns:1fr 92px 150px minmax(190px,1fr) 118px}.control-buttons{grid-column:1/-1;justify-content:flex-end}.board-section-title{align-items:flex-start;flex-wrap:wrap}.board-tools{margin-left:0}}
-    @media(max-width:720px){.control-strip{grid-template-columns:1fr 1fr}.control-strip>label,.control-tokens,.control-target,.control-objective{max-width:none;min-width:0}.control-buttons{grid-column:1/-1}.board-tools{gap:12px;flex-wrap:wrap}.series-control{width:188px}}
+    @media(max-width:720px){.control-strip{grid-template-columns:1fr 1fr}.control-strip>label,.control-tokens,.control-target,.control-objective{max-width:none;min-width:0}.control-buttons{grid-column:1/-1}.board-tools{gap:12px;flex-wrap:wrap}.series-control{width:148px}}
   </style>
 </head>
 <body data-theme="dark">
@@ -42,7 +43,7 @@
     <label class="control-username">Username<input id="username" value="[Username]"></label>
     <label class="control-tokens">Reroll tokens<input id="tokens" type="number" min="0" value="30"></label>
     <label>Tournament stage<select id="data-source"><option value="pre-ti2026-correlations">Group Stage</option><option value="group-stage-correlations" selected>Main Event</option></select></label>
-    <label class="control-objective">Objective<select id="objective"><option value="expected_score">Expected final score</option><option value="target_probability">P(score ≥ target)</option></select></label>
+    <label class="control-objective">Objective<select id="objective"><option value="expected_score">Expected Final Score</option><option value="target_probability">P(score ≥ target)</option></select></label>
     <label class="control-target">Target score<input id="target" type="number" min="0" placeholder="e.g. 50000"></label>
     <div class="control-buttons">
       <label class="theme-switch-wrap" for="theme-toggle">
