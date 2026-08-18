@@ -5,14 +5,14 @@ on:
     branches: [main]
 
 concurrency:
-  group: p52f-firefox-app-integration-${{ github.event.pull_request.number }}
+  group: p52f-firefox-localization-timeout-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  firefox-app-integration:
+  firefox-localization-timeout:
     if: github.event.pull_request.head.ref == 'agent/p52f-fast-accurate-low-review'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -30,33 +30,25 @@ jobs:
         run: |
           npm install --no-save --package-lock=false playwright@1.62.0
           npx playwright install firefox
-      - name: Compare direct and production OCR inside built app
+      - name: Measure scaled localization with and without budget wrapper
         run: |
           mkdir -p artifacts
           node --input-type=module <<'NODE'
-          import fs from 'node:fs';
-          import http from 'node:http';
-          import path from 'node:path';
-          import {firefox} from 'playwright';
-
+          import fs from 'node:fs';import http from 'node:http';import path from 'node:path';import {firefox} from 'playwright';
           const root=process.cwd(),docs=path.join(root,'docs'),boardPath=path.join(root,'tests/test_boards/TI2026 - Board 2.png');
-          if(!fs.existsSync(boardPath))throw new Error(`missing Board 2 image: ${boardPath}`);
           const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml'};
-          const server=http.createServer((req,res)=>{try{const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);if(pathname==='/__board2.png'){res.writeHead(200,{'content-type':'image/png','cache-control':'no-store'});fs.createReadStream(boardPath).pipe(res);return;}const rel=(pathname==='/'?'/index.html':pathname).replace(/^\/+/,''),file=path.resolve(docs,rel);if(!file.startsWith(docs+path.sep)||!fs.existsSync(file)){res.writeHead(404).end();return;}res.writeHead(200,{'content-type':types[path.extname(file).toLowerCase()]??'application/octet-stream','cache-control':'no-store'});fs.createReadStream(file).pipe(res);}catch(error){res.writeHead(500).end(String(error));}});
-          await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-          const origin=`http://127.0.0.1:${server.address().port}`,browser=await firefox.launch({headless:true}),results={browserVersion:browser.version(),origin,direct:null,production:null};
-          async function open(){const context=await browser.newContext(),page=await context.newPage(),consoleLines=[];page.on('console',msg=>consoleLines.push(`[${msg.type()}] ${msg.text()}`));page.on('pageerror',err=>consoleLines.push(`[pageerror] ${String(err)}`));await page.goto(`${origin}/`,{waitUntil:'domcontentloaded'});await page.waitForSelector('#screenshot-file',{state:'attached',timeout:30000});return{context,page,consoleLines};}
-          const getFile=async()=>{const response=await fetch('/__board2.png');if(!response.ok)throw new Error(`board fetch ${response.status}`);return new File([await response.blob()],'TI2026 - Board 2.png',{type:'image/png'});};
-
-          {const {context,page,consoleLines}=await open();try{await page.addScriptTag({url:'https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js'});results.direct=await page.evaluate(async()=>{const file=await (async()=>{const response=await fetch('/__board2.png');return new File([await response.blob()],'TI2026 - Board 2.png',{type:'image/png'});})(),started=performance.now();let worker;try{const createStarted=performance.now();worker=await window.Tesseract.createWorker('eng');const createMs=performance.now()-createStarted;await worker.setParameters({tessedit_pageseg_mode:'3'});const recognizeStarted=performance.now(),r=await worker.recognize(file,{}, {tsv:true}),recognizeMs=performance.now()-recognizeStarted,text=r?.data?.text??'',tsv=r?.data?.tsv??'';return{createMs,recognizeMs,totalMs:performance.now()-started,textLength:text.length,tsvLength:tsv.length,sample:text.replace(/\s+/g,' ').trim().slice(0,220)};}catch(error){return{totalMs:performance.now()-started,error:String(error)};}finally{try{await worker?.terminate();}catch{}}});results.direct.consoleLines=consoleLines;}finally{await context.close();}}
-
-          {const {context,page,consoleLines}=await open();try{results.production=await page.evaluate(async()=>{const file=await (async()=>{const response=await fetch('/__board2.png');return new File([await response.blob()],'TI2026 - Board 2.png',{type:'image/png'});})(),started=performance.now();try{const module=await import('./js/import/localScreenshotOcr.js'),importMs=performance.now()-started,diagStarted=performance.now(),diagnostic=await module.diagnoseLocalScreenshotOcr(file);return{importMs,diagnoseMs:performance.now()-diagStarted,totalMs:performance.now()-started,diagnostic};}catch(error){return{totalMs:performance.now()-started,error:String(error),stack:error?.stack??null};}});results.production.consoleLines=consoleLines;}finally{await context.close();}}
-
-          fs.writeFileSync('artifacts/p52f-firefox-app-integration.json',JSON.stringify(results,null,2));console.log(JSON.stringify(results,null,2));await browser.close();await new Promise(resolve=>server.close(resolve));
+          const server=http.createServer((req,res)=>{try{const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);if(pathname==='/__board2.png'){res.writeHead(200,{'content-type':'image/png','cache-control':'no-store'});fs.createReadStream(boardPath).pipe(res);return;}const rel=(pathname==='/'?'/index.html':pathname).replace(/^\/+/,''),file=path.resolve(docs,rel);if(!file.startsWith(docs+path.sep)||!fs.existsSync(file)){res.writeHead(404).end();return;}res.writeHead(200,{'content-type':types[path.extname(file).toLowerCase()]??'application/octet-stream','cache-control':'no-store'});fs.createReadStream(file).pipe(res);}catch(error){res.writeHead(500).end(String(error));}});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+          const origin=`http://127.0.0.1:${server.address().port}`,browser=await firefox.launch({headless:true}),page=await browser.newPage();await page.goto(`${origin}/`,{waitUntil:'domcontentloaded'});await page.addScriptTag({url:'https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js'});
+          const report=await page.evaluate(async()=>{
+            const makeCanvas=async()=>{const blob=await (await fetch('/__board2.png')).blob(),url=URL.createObjectURL(blob),img=new Image();img.src=url;await img.decode();URL.revokeObjectURL(url);const k=Math.min(1,1100/Math.max(img.naturalWidth,img.naturalHeight)),canvas=document.createElement('canvas');canvas.width=Math.round(img.naturalWidth*k);canvas.height=Math.round(img.naturalHeight*k);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);return{canvas,sourceWidth:img.naturalWidth,sourceHeight:img.naturalHeight};};
+            const run=async(kind,perCallMs)=>{const {canvas,sourceWidth,sourceHeight}=await makeCanvas(),started=performance.now();let worker;try{worker=await window.Tesseract.createWorker('eng');await worker.setParameters({tessedit_pageseg_mode:'3'});const createdMs=performance.now()-started;if(kind==='direct'){const t=performance.now(),r=await worker.recognize(canvas,{}, {tsv:true});return{kind,createdMs,recognizeMs:performance.now()-t,totalMs:performance.now()-started,canvas:[canvas.width,canvas.height],textLength:(r.data.text??'').length,tsvLength:(r.data.tsv??'').length};}const mod=await import('./js/import/ocrRecognition.js'),budget=mod.createOcrExecutionBudget(30000,perCallMs),t=performance.now(),r=await mod.recognizeWithBudget(worker,canvas,budget,{stage:`scaled-${perCallMs}`,psm:3,crop:{left:0,top:0,width:sourceWidth,height:sourceHeight},canvasWidth:canvas.width,canvasHeight:canvas.height},{},{tsv:true});return{kind,perCallMs,createdMs,recognizeMs:performance.now()-t,totalMs:performance.now()-started,canvas:[canvas.width,canvas.height],textLength:(r.data.text??'').length,tsvLength:(r.data.tsv??'').length,calls:budget.calls};}catch(error){return{kind,perCallMs,totalMs:performance.now()-started,error:String(error)};}finally{try{await worker?.terminate();}catch{}}};
+            return{browser:navigator.userAgent,direct:await run('direct'),wrapped10:await run('wrapped',10000),wrapped15:await run('wrapped',15000),wrapped20:await run('wrapped',20000)};
+          });
+          fs.writeFileSync('artifacts/p52f-firefox-localization-timeout.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));await browser.close();await new Promise(resolve=>server.close(resolve));
           NODE
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: p52f-firefox-app-integration
-          path: artifacts/p52f-firefox-app-integration.json
+          name: p52f-firefox-localization-timeout
+          path: artifacts/p52f-firefox-localization-timeout.json
           if-no-files-found: error
