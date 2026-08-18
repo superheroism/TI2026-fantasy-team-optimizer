@@ -2,10 +2,10 @@ import { attachedPlayers, isMainEventEligibleTeam, teamRoleLabel } from './ti202
 export const DEFAULT_STATISTICAL_DATASET_ID = 'pre-ti2026-correlations';
 export const STATISTICAL_DATASETS = {
     'pre-ti2026-correlations': {
-        id: 'pre-ti2026-correlations', label: 'Pre-TI2026-Correlations', modelUrl: './data/ti2026-statistical-model.json', kind: 'correlations',
+        id: 'pre-ti2026-correlations', label: 'Group Stage', modelUrl: './data/ti2026-statistical-model.json', kind: 'correlations',
     },
     'group-stage-correlations': {
-        id: 'group-stage-correlations', label: 'GroupStage-Correlations', modelUrl: './data/ti2026-group-stage-statistical-model.json', kind: 'correlations',
+        id: 'group-stage-correlations', label: 'Main Event', modelUrl: './data/ti2026-group-stage-statistical-model.json', kind: 'correlations',
     },
 };
 export const STATISTICAL_DATASET_OPTIONS = Object.values(STATISTICAL_DATASETS);

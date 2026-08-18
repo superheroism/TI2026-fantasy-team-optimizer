@@ -228,3 +228,28 @@ test('expanded_5 exists in the engine and is reachable by the UI contract',()=>{
   assert.match(rules,/expanded_5/);
   assert.ok(index.includes('>5 Emblems</button>'));
 });
+
+test('plain-language UI copy keeps model and scoring concepts user-facing',()=>{
+  assert.match(index,/<label>Model<select id="data-source">/);
+  assert.match(index,/>Group Stage<\/option>/);
+  assert.match(index,/>Main Event<\/option>/);
+  assert.doesNotMatch(index,/Data Source|Pre-TI2026-Correlations|GroupStage-Correlations/);
+  assert.match(boardView,/EXPECTED SERIES PLAYED/);
+  assert.match(boardView,/AUTO ASSUMPTION:/);
+  assert.match(boardView,/EXPECTED BANNER SCORE/);
+  assert.match(app,/EXPECTED BANNER SCORE/);
+  assert.doesNotMatch(`${boardView}\n${app}`,/MODELED RETAINED ROLE/);
+  assert.match(plots,/10th – 90th percentile scoring ranges/);
+  assert.match(plots,/10TH–90TH PERCENTILE RANGE/);
+  assert.doesNotMatch(plots,/Retained-role distribution|class="team-scale"|median \$\{fmt\(p50\)\}/);
+  const exact=read('../src/engine/optimizerRecommendation.ts');
+  const adaptive=read('../src/engine/expandedT2Adaptive.ts');
+  for(const source of [exact,adaptive]){
+    assert.match(source,/lookahead uses a representative set of probability-weighted outcomes/);
+    assert.match(source,/Expected value derived from average maximum gain from all possible replacement menus/);
+    assert.doesNotMatch(source,/deterministic probability stratification|exact combinatorial operator equivalent/);
+  }
+  assert.match(index,/\.title-prefix,\.title-suffix\{[^}]*color:var\(--text\)!important;[^}]*font-weight:900/);
+  assert.match(index,/\.title-prefix\{[^}]*var\(--purple2\)/);
+  assert.match(index,/\.title-suffix\{[^}]*var\(--gold2\)/);
+});

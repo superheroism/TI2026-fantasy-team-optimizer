@@ -1,5 +1,4 @@
 import type { ActionEvaluation, DataBundle, Objective, OptimizerState, RecommendationResult } from '../domain/types.js';
-import { TOTAL_UNIFORM_MENUS } from '../data/actionCatalog.js';
 import { evaluateBoard } from './scoring.js';
 import { evaluateBoardTarget } from './targetProbability.js';
 import { createTerminalSearchRuntime } from './optimizerTerminal.js';
@@ -48,8 +47,6 @@ export function recommendExpandedT2Adaptive(
 ):{result:RecommendationResult;diagnostics:OptimizerEngineDiagnostics} {
   if((state.board.layoutId??'legacy_3')!=='expanded_5'||state.tokensRemaining<2||policy.horizon!==2)throw new Error('expanded t2 adaptive routing invariant failed');
 
-  const continuationStrata=Math.max(1,data.simulation.continuationOutcomeStrata??8);
-  const continuationEntryStrata=Math.max(1,data.simulation.continuationEntryStrata??12);
   const overrideMenus=data.menuSamples?.filter(menu=>menu.length===3);
   const terminal=createTerminalSearchRuntime(state,data);
   const continuation=createContinuationRuntime(state,data,terminal,uniformStatFallback);
@@ -83,14 +80,14 @@ export function recommendExpandedT2Adaptive(
   const menuRow:InternalRow|undefined=state.menuRerollAvailable?{
     action:{kind:'menu_reroll'},expectedFinalUtility:valueFunction.V(initialEngine,1),expectedFinalScore:current.expected,pImprove:continuation.freshMenuImprovementProbability(initialEngine,1),tokensAfter:state.tokensRemaining-1,
     assetAtRisk:'1 token; board preserved',confidence:current.confidence,status:'evaluated',
-    note:menuModel.mode==='known_uniform'?`Fresh menu is a uniform draw of 3 distinct actions from 20; expectation uses the exact combinatorial operator equivalent to ${TOTAL_UNIFORM_MENUS.toLocaleString()} menus.`:`Fresh-menu expectation uses ${overrideMenus?.length??0} supplied menu samples.`,order:order++
+    note:menuModel.mode==='known_uniform'?'Expected value derived from average maximum gain from all possible replacement menus.':`Fresh-menu expectation uses ${overrideMenus?.length??0} supplied menu samples.`,order:order++
   }:undefined;
   const screenOrder=[...screened].sort((a,b)=>b.screenUtility-a.screenUtility||a.order-b.order);
   const stageReports:ExpandedT2AdaptiveDiagnostics['stages'][number][]=[];
 
   const boardRow=(item:ScreenedRoot):InternalRow=>{
     const modeled=item.modeled??{value:item.screenUtility,utilityOutcomes:item.points},points=[...modeled.utilityOutcomes];
-    const row:InternalRow={action:{kind:'board_action',operationId:item.operation.id,banner:item.role},expectedFinalUtility:modeled.value,expectedFinalScore:item.scoreEv,pImprove:item.pImprove,tokensAfter:state.tokensRemaining-1,assetAtRisk:`${item.role} banner`,confidence:current.confidence,status:'evaluated',note:`2-token continuation uses deterministic probability stratification (${continuationEntryStrata} entry / ${continuationStrata} fresh-menu strata max).`,order:item.order};
+    const row:InternalRow={action:{kind:'board_action',operationId:item.operation.id,banner:item.role},expectedFinalUtility:modeled.value,expectedFinalScore:item.scoreEv,pImprove:item.pImprove,tokensAfter:state.tokensRemaining-1,assetAtRisk:`${item.role} banner`,confidence:current.confidence,status:'evaluated',note:'2-token lookahead uses a representative set of probability-weighted outcomes.',order:item.order};
     const p10=weightedQuantile(points,.10),median=weightedQuantile(points,.50),p90=weightedQuantile(points,.90);
     if(p10!==undefined)row.outcomeP10Utility=p10;if(median!==undefined)row.outcomeMedianUtility=median;if(p90!==undefined)row.outcomeP90Utility=p90;
     if(Number.isFinite(item.worst))row.downside=item.worst-current.expected;
