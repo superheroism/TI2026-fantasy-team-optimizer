@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { BOARD_LAYOUTS, LEGAL_STAT_POOLS } from '../docs/js/domain/rules.js';
+import { DEFAULT_EXPECTED_SERIES_BY_LAYOUT, convertBoardLayout, createDefaultBoard, defaultMenu } from '../docs/js/data/defaultState.js';
+import { ApplicationState } from '../docs/js/ui/state.js';
 import {
   LEGACY_BOARD_STATE_COUNT,
   TRAIT_ORDER,
@@ -204,4 +206,44 @@ test('transition cache cannot serve a legacy entry to expanded_5',()=>{
   enumerateCompactBannerOperation('core',0,op,true,'expanded_5');
   const d=getTransitionDiagnostics();
   assert.equal(d.cacheMisses,2);assert.equal(d.cacheHits,0);
+});
+
+test('layout-specific Expected Series defaults apply on creation and actual layout conversion only',()=>{
+  assert.deepEqual(DEFAULT_EXPECTED_SERIES_BY_LAYOUT,{legacy_3:5,expanded_5:3});
+  const legacy=createDefaultBoard('legacy_3');
+  const expanded=createDefaultBoard('expanded_5');
+  assert.deepEqual(ROLES.map(role=>legacy[role].expectedSeries),[5,5,5]);
+  assert.deepEqual(ROLES.map(role=>expanded[role].expectedSeries),[3,3,3]);
+  legacy.core.expectedSeries=7;
+  const converted=convertBoardLayout(legacy,'expanded_5');
+  assert.deepEqual(ROLES.map(role=>converted[role].expectedSeries),[3,3,3]);
+  converted.support.expectedSeries=6;
+  const sameLayout=convertBoardLayout(converted,'expanded_5');
+  assert.equal(sameLayout.support.expectedSeries,6);
+  const back=convertBoardLayout(converted,'legacy_3');
+  assert.deepEqual(ROLES.map(role=>back[role].expectedSeries),[5,5,5]);
+});
+
+test('ApplicationState preserves manual series within a layout and resets defaults on reset or screenshot layout replacement',()=>{
+  const state=new ApplicationState();
+  assert.equal(state.changeLayout('expanded_5'),true);
+  state.board.core.expectedSeries=6;
+  state.board.mid.expectedSeries=7;
+  state.board.support.expectedSeries=8;
+  assert.equal(state.changeLayout('expanded_5'),false);
+  assert.deepEqual(ROLES.map(role=>state.board[role].expectedSeries),[6,7,8]);
+
+  const sameLayout=structuredClone(state.board);
+  state.importScreenshot(sameLayout,structuredClone(defaultMenu));
+  assert.deepEqual(ROLES.map(role=>state.board[role].expectedSeries),[6,7,8]);
+
+  const legacyImport=createDefaultBoard('legacy_3');
+  for(const role of ROLES)legacyImport[role].expectedSeries=8;
+  state.importScreenshot(legacyImport,structuredClone(defaultMenu));
+  assert.deepEqual(ROLES.map(role=>state.board[role].expectedSeries),[5,5,5]);
+
+  state.changeLayout('expanded_5');
+  state.board.core.expectedSeries=8;
+  state.resetBoard();
+  assert.deepEqual(ROLES.map(role=>state.board[role].expectedSeries),[3,3,3]);
 });
