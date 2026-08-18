@@ -78,9 +78,9 @@ test('decision UI centers the three offered actions and exposes terminal outcome
   assert.match(actionView,/outcomeMedianUtility/);
   assert.match(actionView,/outcomeP90Utility/);
   assert.match(actionView,/BEST TARGET/);
-  assert.match(actionView,/MODELED REROLL \/ CONTINUATION OUTCOME Δ VS STOP/);
+  assert.match(actionView,/POSSIBLE SCORE CHANGE/);
   assert.match(actionView,/data-action-target/);
-  assert.match(actionView,/Δ VS STOP/);
+  assert.match(actionView,/VS KEEPING BOARD/);
   assert.match(app,/rank-head/);
 });
 
@@ -133,7 +133,7 @@ test('emblem fields share one derived-value column and all editable values use n
 
 test('visual system supports purple-gold night and cream themes without changing RGB emblem semantics',()=>{
   assert.match(index,/id="theme-toggle"[^>]*type="checkbox"[^>]*checked/);
-  assert.match(index,/Dark Theme/);
+  assert.match(index,/Dark mode/);
   assert.match(css,/--purple:#7652a3/);
   assert.match(css,/--gold:#d7a83e/);
   assert.match(css,/body\[data-theme="light"\]/);
@@ -159,12 +159,12 @@ test('detailed ranking includes continuation outcome quantiles for transparency'
 
 test('primary workflow copy and controls match the streamlined reroll loop',()=>{
   assert.match(index,/CURRENT BOARD/);
-  assert.match(index,/Replicate Your Three War Banners/);
+  assert.match(index,/Match Your War Banners/);
   assert.match(index,/AVAILABLE ACTIONS/);
-  assert.match(index,/Match the Three Offers Shown/);
-  assert.match(index,/Optimize to find the best offers\. The best target for each offer will be shown by default; click to inspect\./);
-  assert.match(index,/Run Optimizer/);
-  assert.match(index,/Next Roll \(-1 Token\)/);
+  assert.match(index,/Match Your Three Offers/);
+  assert.match(index,/Run the optimizer to compare each offer\. The best target appears first\./);
+  assert.match(index,/Optimize Board/);
+  assert.match(index,/Next Reroll · 1 Token/);
   assert.equal(index.includes('id="recalc"'),false);
   assert.equal(index.includes('Recalculate score'),false);
   assert.equal(index.includes('class="section-number">1'),false);
@@ -197,12 +197,12 @@ test('recommendation highlights the target banner and affected stat tier or trai
   assert.match(boardView,/data-element="trait"/);
 });
 
-test('recommendation omits the obsolete confidence explainer and keeps best current setup copy',()=>{
+test('recommendation omits the obsolete confidence explainer and keeps the keep-board copy',()=>{
   assert.doesNotMatch(index,/rec-confidence|confidence-tooltip|confidence-help/);
   assert.doesNotMatch(actionView,/confidenceExplanation/);
   assert.doesNotMatch(app,/rec-confidence|confidence-tooltip|confidenceExplanation/);
-  assert.match(index,/BEST CURRENT SETUP/);
-  assert.match(index,/Score with best available team \+ title/);
+  assert.match(index,/KEEP BOARD/);
+  assert.match(index,/Best score without spending a token/);
   assert.equal(index.includes('best-free'),false);
 });
 
@@ -230,7 +230,7 @@ test('expanded_5 exists in the engine and is reachable by the UI contract',()=>{
 });
 
 test('plain-language UI copy keeps model and scoring concepts user-facing',()=>{
-  assert.match(index,/<label>Model<select id="data-source">/);
+  assert.match(index,/<label>Tournament stage<select id="data-source">/);
   assert.match(index,/>Group Stage<\/option>/);
   assert.match(index,/>Main Event<\/option>/);
   assert.doesNotMatch(index,/Data Source|Pre-TI2026-Correlations|GroupStage-Correlations/);
