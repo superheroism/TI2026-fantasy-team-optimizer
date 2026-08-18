@@ -89,7 +89,7 @@ It does not yet model exact game-level covariance between the two Core/Support p
 
 ## Board layouts and browser behavior
 
-**3 Emblems** is the backward-compatible default. Expected Series defaults to **5** for 3 Emblems and **3** for 5 Emblems. Switching layouts updates roles that are still using the automatic default; once a user manually edits a role's Expected Series value, that explicit override is preserved across later layout switches.
+**5 Emblems** is the Main Event default. **3 Emblems** remains available for earlier boards. Expected Series defaults to **3** for 5 Emblems and **5** for 3 Emblems. New sessions start with **30 roll tokens**; edit the count to match your current client state. Switching layouts updates roles that are still using the automatic default; once a user manually edits a role's Expected Series value, that explicit override is preserved across later layout switches.
 
 Recommendation search runs in a Web Worker so heavier calculations do not freeze the page. Editing optimizer-relevant state cancels or invalidates stale work. Workers are also recycled periodically to bound long-session cache growth; this changes cache lifetime, not recommendation logic.
 

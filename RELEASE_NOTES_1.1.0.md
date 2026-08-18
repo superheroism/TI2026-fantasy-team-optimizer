@@ -9,7 +9,7 @@ The search horizon and core scoring/search semantics are unchanged from v1.0.
 - **Screenshot import:** OCR (optical character recognition) can populate layout, teams, emblem stat/tier/trait fields, visible reroll actions, and token count from a Dota Fantasy screenshot. Low-confidence or unresolved fields remain highlighted for review rather than being silently trusted.
 - **Two statistical datasets:** the Data Source selector now offers `Pre-TI2026-Correlations` and `GroupStage-Correlations`. Both use the same distribution- and correlation-aware scoring and optimizer pipeline.
 - **Main Event eligibility:** current selectable teams are separate from historical statistical observations. Eliminated teams can remain in historical data without being recommended.
-- **Expected Series defaults:** 3-emblem boards default to 5 series; 5-emblem boards default to 3. Manual overrides survive later layout switches.
+- **Main Event defaults:** new sessions start on the 5-emblem board with 30 roll tokens. Expected Series defaults to 3 for 5-emblem boards and 5 for 3-emblem boards. Manual overrides survive later layout switches.
 - **Available Actions UI:** options are grouped Red → Blue → Green → Boosts, with Stat → Quality → Trait ordering inside each color.
 - **Review UX:** screenshot uncertainty is highlighted at the specific editable field. Recommendation confidence labels that did not represent outcome probability were removed.
 - **Decision metrics:** menu reroll reports `P(Board EV ↑)` under the same future-menu model used for its EV. Stop is defined as 0% improvement probability.

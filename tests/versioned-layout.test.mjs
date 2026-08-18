@@ -226,7 +226,8 @@ test('layout-specific Expected Series defaults apply on creation and actual layo
 
 test('ApplicationState preserves manual series within a layout and resets defaults on reset or screenshot layout replacement',()=>{
   const state=new ApplicationState();
-  assert.equal(state.changeLayout('expanded_5'),true);
+  assert.equal(state.board.layoutId,'expanded_5');
+  assert.equal(state.changeLayout('expanded_5'),false);
   state.board.core.expectedSeries=6;
   state.board.mid.expectedSeries=7;
   state.board.support.expectedSeries=8;
