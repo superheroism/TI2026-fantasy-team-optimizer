@@ -15,11 +15,11 @@ const roles=['Core','Mid','Support'];
 const runtimeRoles=['core','mid','support'];
 const active=[...TI2026_MAIN_EVENT_ELIGIBLE_TEAMS].sort();
 
-test('exactly two correlation datasets are registered and Pre-TI2026 remains the default',()=>{
+test('exactly two correlation datasets are registered and the legacy dataset ID remains the default',()=>{
   assert.equal(DEFAULT_STATISTICAL_DATASET_ID,'pre-ti2026-correlations');
   assert.deepEqual(STATISTICAL_DATASET_OPTIONS.map(x=>[x.id,x.label,x.kind]),[
-    ['pre-ti2026-correlations','Pre-TI2026-Correlations','correlations'],
-    ['group-stage-correlations','GroupStage-Correlations','correlations'],
+    ['pre-ti2026-correlations','Group Stage','correlations'],
+    ['group-stage-correlations','Main Event','correlations'],
   ]);
   assert.equal(Object.keys(STATISTICAL_DATASETS).length,2);
 });
