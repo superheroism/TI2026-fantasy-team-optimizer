@@ -6,7 +6,7 @@ This document describes the optimizer as it works today. Detailed milestone repo
 
 The optimizer follows four main rules:
 
-- Keep Dota mechanics, scoring, search, and UI concerns separate.
+- Keep Dota mechanics, statistical inputs, scoring, search, and UI concerns separate.
 - Preserve a descriptive board model for the UI and a compact canonical representation for search.
 - Reuse simulated tournament scenarios when comparing actions.
 - Measure approximation error before using a faster search policy in production.
@@ -14,22 +14,22 @@ The optimizer follows four main rules:
 ## System boundaries
 
 ```text
-UI
+precomputed statistical model
  ↓
-optimizer worker
- ↓
+scoring engine
+ ↑
 search / policy
  ├─ menu model
- ├─ transition model
- └─ scoring engine
-     ├─ scenario generation
-     ├─ role scoring
-     └─ roster and title optimization
+ └─ transition model
+ ↑
+optimizer worker
+ ↑
+UI
 ```
 
-Rules determine what is legal. Transitions determine what can happen after an action. Scoring determines the value of a board. Search chooses among stop, menu reroll, and board-changing actions.
+Rules determine what is legal. Statistical inputs describe possible team and role outcomes. Scoring determines the value of a board. Search chooses among stop, menu reroll, and board-changing actions.
 
-This separation lets performance work change search internals without silently changing game mechanics.
+This separation lets performance work change search internals without silently changing game mechanics or the statistical model.
 
 ## Board state
 
@@ -52,7 +52,7 @@ Both layouts use the same rules and search architecture.
 
 ## Scoring and simulation
 
-The scoring engine models team and role performance distributions and applies the Fantasy retention rules.
+The scoring engine consumes precomputed team- and role-level stat distributions and role-specific correlation matrices. It generates correlated game outcomes, applies banner multipliers, and follows the Fantasy retention rules. See `MODEL.md` for the statistical inputs and provenance boundary.
 
 Competing boards use shared simulated tournament scenarios. A reroll changes how those scenarios score; it does not require a new simulated tournament. This improves both runtime and action-to-action comparability.
 
@@ -122,6 +122,7 @@ Production therefore remains capped at two modeled spends. Deeper search is rese
 
 ## Where to find more detail
 
+- `MODEL.md` — statistical inputs, correlation model, simulation method, and provenance boundary.
 - `CLIENT_RULES_2026.md` — mechanics and probability assumptions.
 - `PERFORMANCE.md` — current runtime and memory baseline.
 - `PRODUCT_DECISIONS.md` — product and modeling choices.
