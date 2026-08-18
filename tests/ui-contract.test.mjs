@@ -235,7 +235,7 @@ test('plain-language UI copy keeps model and scoring concepts user-facing',()=>{
   assert.match(index,/>Main Event<\/option>/);
   assert.doesNotMatch(index,/Data Source|Pre-TI2026-Correlations|GroupStage-Correlations/);
   assert.match(boardView,/EXPECTED SERIES PLAYED/);
-  assert.match(boardView,/AUTO ASSUMPTION:/);
+  assert.match(boardView,/most likely:/);
   assert.match(boardView,/EXPECTED BANNER SCORE/);
   assert.match(app,/EXPECTED BANNER SCORE/);
   assert.doesNotMatch(`${boardView}\n${app}`,/MODELED RETAINED ROLE/);
