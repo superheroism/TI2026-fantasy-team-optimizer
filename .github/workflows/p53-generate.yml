@@ -1,0 +1,34 @@
+name: P53 Generate Outputs
+
+on:
+  push:
+    branches:
+      - agent/p53-pre-data-ui-refresh
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/p53-pre-data-ui-refresh
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run build
+      - name: Commit generated output
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add build docs
+          if git diff --cached --quiet; then
+            echo "Generated output already synchronized."
+            exit 0
+          fi
+          git commit -m "P53 regenerate committed outputs [skip ci]"
+          git push origin HEAD:agent/p53-pre-data-ui-refresh
