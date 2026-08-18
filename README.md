@@ -26,13 +26,13 @@ The production search looks ahead at most two token spends. Three-emblem search 
 
 When comparing hypothetical boards, the optimizer reuses the same simulated tournament scenarios. This reduces simulation noise between competing actions.
 
-See `MODEL.md` for the statistical inputs, correlation model, simulation boundary, and model provenance.
+See `reference/MODEL.md` for the statistical inputs, correlation model, simulation boundary, and model provenance.
 
 ## Probability assumptions
 
 Valve does not publish every reroll probability. The optimizer therefore makes explicit assumptions for unknown probabilities, including replacement stats, qualities, traits, random targets, and future action menus.
 
-These assumptions are model inputs, not claims about hidden client RNG. See `CLIENT_RULES_2026.md` for the current rules and assumptions.
+These assumptions are model inputs, not claims about hidden client RNG. See `reference/CLIENT_RULES_2026.md` for the current rules and assumptions.
 
 ## Limitations
 
@@ -54,7 +54,7 @@ Canonical model inputs live in `data/`. Application source lives in `src/`. Stat
 
 `build/` and `docs/` are generated. `docs/` is the current GitHub Pages deployment tree; despite its name, it is not the documentation source. Do not hand-edit generated JavaScript.
 
-See `BUILD_AND_SOURCE_POLICY.md` for the source-of-truth policy.
+See `reference/BUILD_AND_SOURCE_POLICY.md` for the source-of-truth policy.
 
 ## Local development
 
@@ -71,12 +71,16 @@ Run `npm run benchmark` for the general performance suite and `npm run benchmark
 
 ## Reference documentation
 
-- `MODEL.md` — statistical inputs, correlation model, simulation method, and provenance boundary.
-- `CLIENT_RULES_2026.md` — game rules and probability assumptions.
-- `PRODUCT_DECISIONS.md` — product and modeling choices that affect interpretation.
-- `ENGINEERING.md` — current architecture and search design.
-- `PERFORMANCE.md` — current performance contract and production baseline.
-- `SCREENSHOT_IMPORT_PIPELINE.md` — screenshot-import behavior and verification.
-- `UI_APPLICATION_ARCHITECTURE.md` — browser module and worker boundaries.
-- `BUILD_AND_SOURCE_POLICY.md` — editable sources and generated output.
+Current documentation is grouped under `reference/`:
+
+- `reference/MODEL.md` — statistical inputs and simulation method.
+- `reference/CLIENT_RULES_2026.md` — game rules and probability assumptions.
+- `reference/PRODUCT_DECISIONS.md` — product and modeling choices.
+- `reference/ENGINEERING.md` — current architecture and search design.
+- `reference/PERFORMANCE.md` — performance contract and production baseline.
+- `reference/SCREENSHOT_IMPORT_PIPELINE.md` — screenshot-import behavior and verification.
+- `reference/UI_APPLICATION_ARCHITECTURE.md` — browser module and worker boundaries.
+- `reference/BUILD_AND_SOURCE_POLICY.md` — editable sources and generated output.
+- `reference/ENGINEERING_ROADMAP.md` — longer-term engineering direction.
+- `reference/RELEASE_NOTES_1.1.0.md` — v1.1 release notes.
 - `engineering/history/` — archived milestone records for deeper engineering research.
