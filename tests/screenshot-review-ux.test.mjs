@@ -89,8 +89,7 @@ test('remaining review highlights are reapplied after board and menu rerender',(
   assert.match(screenshotUi,/applyActionReviewHighlights\(paths\)/);
   assert.match(screenshotUi,/applyTokenReviewHighlight\(paths\)/);
   assert.match(app,/bindDynamicControls[\s\S]*renderActiveScreenshotReviewHighlights\(\)/);
-  assert.match(boardView,/flaggedEmblems/);
-  assert.match(boardView,/screenshot-review-target-emblem/);
+  assert.match(boardView,/for \(const path of paths\)[\s\S]*emblem\?\.classList\.add\('screenshot-review-target-emblem'\)/);
 });
 
 test('optimizer confirmation clears all unresolved review state and styling',()=>{
