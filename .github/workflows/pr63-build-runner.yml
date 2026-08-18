@@ -1,0 +1,45 @@
+name: PR63 generated-artifact runner
+
+on:
+  push:
+    branches:
+      - agent/pr63-build-runner
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/ui-language-readability-clean
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Regenerate and verify
+        run: |
+          npm run build
+          npm run test:ci
+
+      - name: Commit generated artifacts to PR branch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add build docs
+          if git diff --cached --quiet; then
+            echo "Generated artifacts already current"
+            exit 0
+          fi
+          git commit -m "Regenerate UI artifacts"
+          git push origin HEAD:agent/ui-language-readability-clean
