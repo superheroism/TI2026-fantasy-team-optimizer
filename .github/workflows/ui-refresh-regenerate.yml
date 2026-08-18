@@ -1,0 +1,36 @@
+name: Refresh UI generated artifacts
+
+on:
+  push:
+    branches:
+      - fix/steady-next-reroll-copy-ci
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/steady-next-reroll-copy-ci
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+      - name: Commit generated output
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add build docs
+          if git diff --cached --quiet; then
+            echo "Generated output already current."
+          else
+            git commit -m "Regenerate UI build artifacts"
+            git push origin HEAD:fix/steady-next-reroll-copy-ci
+          fi
