@@ -1,4 +1,4 @@
-import type { BoardLayoutId, BoardState, DataBundle, Role, SlotColor, StatName } from '../domain/types.js';
+import type { BoardLayoutId, BoardState, DataBundle, QuantilePoint, Role, SlotColor, StatName } from '../domain/types.js';
 import { BOARD_LAYOUTS, LEGAL_STAT_POOLS } from '../domain/rules.js';
 import { createDefaultBoard } from '../data/defaultState.js';
 import { rankTeamsForRole } from './scoring.js';
@@ -20,11 +20,12 @@ function statStrength(role:Role,stat:StatName,data:DataBundle):number {
   const profileScores=data.players
     .filter(profile=>profile.role===role)
     .map(profile=>profile.statQuantiles[stat])
-    .filter((values):values is number[]=>Array.isArray(values)&&values.length>0)
-    .map(values=>{
-      const sorted=[...values].sort((a,b)=>a-b);
-      const at=(p:number)=>sorted[Math.min(sorted.length-1,Math.max(0,Math.round((sorted.length-1)*p)))]??0;
-      return .5*mean(sorted)+.25*at(.75)+.25*at(.9);
+    .filter((points):points is QuantilePoint[]=>Array.isArray(points)&&points.length>0)
+    .map(points=>{
+      const sorted=[...points].sort((a,b)=>a.q-b.q);
+      const values=sorted.map(point=>point.value);
+      const at=(p:number)=>sorted.reduce((best,point)=>Math.abs(point.q-p)<Math.abs(best.q-p)?point:best,sorted[0]!).value;
+      return .5*mean(values)+.25*at(.75)+.25*at(.9);
     })
     .sort((a,b)=>b-a)
     .slice(0,3);
