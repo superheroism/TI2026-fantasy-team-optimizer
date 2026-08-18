@@ -2,6 +2,7 @@ import { resolvedLayoutId } from '../data/defaultState.js';
 import { DEFAULT_STATISTICAL_DATASET_ID, STATISTICAL_DATASETS, loadStatisticalModel } from '../data/statisticalModel.js';
 import { displayTeamName, rosterForTeam } from '../data/ti2026Rosters.js';
 import { formatAction } from '../engine/actionUtils.js';
+import { createRecommendedDefaultBoard } from '../engine/recommendedDefaults.js';
 import { evaluateSelectedBoard } from '../engine/scoring.js';
 import { OptimizerRequestCancelledError, OptimizerWorkerClient } from './optimizerClient.js';
 import { ApplicationState } from './state.js';
@@ -18,6 +19,7 @@ const optimizerClient = new OptimizerWorkerClient();
 const actionTargetSelection = new Map();
 let data;
 let dataLoadSequence = 0;
+let recommendedDefaultsInitialized = false;
 let lastResult = null;
 let lastOptimizerState = null;
 function clearResultState(message) {
@@ -238,11 +240,11 @@ function advanceToNextRoll() {
 }
 function resetBoard() {
     discardScreenshotReviewState('Board reset. Screenshot review cleared.');
-    appState.resetBoard();
+    const recommended = data ? createRecommendedDefaultBoard(resolvedLayoutId(appState.board), data) : undefined;
+    appState.resetBoard(recommended);
     reflectTokens(appState.tokensRemaining);
     if (!data)
         return;
-    normalizeSelectedTeams();
     renderStructure();
     void runSelected();
 }
@@ -264,7 +266,12 @@ async function loadDataset(datasetId) {
         }
         catch { }
         reflectStatisticalDataset(datasetId);
-        normalizeSelectedTeams();
+        if (!recommendedDefaultsInitialized) {
+            appState.setBoard(createRecommendedDefaultBoard(resolvedLayoutId(appState.board), data));
+            recommendedDefaultsInitialized = true;
+        }
+        else
+            normalizeSelectedTeams();
         renderStructure();
         void runSelected();
     }
@@ -301,8 +308,11 @@ export function mount() {
         reset: resetBoard,
         layoutChanged: () => {
             discardScreenshotReviewState('Layout changed. Screenshot review cleared.');
-            if (data)
+            if (data) {
+                appState.setBoard(createRecommendedDefaultBoard(resolvedLayoutId(appState.board), data));
                 renderStructure();
+                void runSelected();
+            }
         },
         datasetChanged: datasetId => { void loadDataset(datasetId); },
         themeChanged: theme => applyTheme(theme, true),
