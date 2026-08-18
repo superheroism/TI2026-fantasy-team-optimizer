@@ -24,7 +24,7 @@ function dataFor(datasetId:StatisticalDatasetId):Promise<ReturnType<typeof conve
     const modelUrl=new URL(`../../${dataset.modelUrl.replace(/^\.\//,'')}`,import.meta.url);
     const modelResponse=await fetch(modelUrl,{cache:'no-store'});
     if(!modelResponse.ok)throw new Error(`Local statistical model failed to load: ${modelResponse.status} ${modelResponse.statusText}`);
-    return convertStatisticalModel(await modelResponse.json(),await titlePromise,datasetId,true);
+    return convertStatisticalModel(await modelResponse.json(),await titlePromise,datasetId,datasetId==='group-stage-correlations');
   })();
   dataPromises.set(datasetId,promise);
   void promise.catch(()=>{if(dataPromises.get(datasetId)===promise)dataPromises.delete(datasetId);});
