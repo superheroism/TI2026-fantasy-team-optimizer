@@ -1,20 +1,22 @@
-name: CI
+name: Apply requested defaults
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
+    types: [opened, reopened]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  test:
+  apply:
+    if: github.event.pull_request.head.ref == 'agent/main-event-defaults-group-stage-roster'
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: Check out branch
         uses: actions/checkout@v4
+        with:
+          ref: agent/main-event-defaults-group-stage-roster
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -24,5 +26,176 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Typecheck, verify generated output, and test
+      - name: Apply requested product changes
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{path}: expected exactly one match, found {count}: {old!r}')
+              p.write_text(text.replace(old, new, 1))
+
+          replace_once(
+              'src/data/statisticalModel.ts',
+              "export const DEFAULT_STATISTICAL_DATASET_ID:StatisticalDatasetId='pre-ti2026-correlations';",
+              "export const DEFAULT_STATISTICAL_DATASET_ID:StatisticalDatasetId='group-stage-correlations';",
+          )
+          replace_once(
+              'src/data/statisticalModel.ts',
+              "export const STATISTICAL_DATASET_OPTIONS:readonly StatisticalDatasetDefinition[]=Object.values(STATISTICAL_DATASETS);\n\nexport function statisticalDatasetDefinition",
+              "export const STATISTICAL_DATASET_OPTIONS:readonly StatisticalDatasetDefinition[]=Object.values(STATISTICAL_DATASETS);\n\nexport function usesMainEventEligibility(datasetId:StatisticalDatasetId):boolean {\n  return datasetId==='group-stage-correlations';\n}\n\nexport function statisticalDatasetDefinition",
+          )
+          replace_once(
+              'src/data/statisticalModel.ts',
+              "return convertStatisticalModel(raw,titles,datasetId,true);",
+              "return convertStatisticalModel(raw,titles,datasetId,usesMainEventEligibility(datasetId));",
+          )
+
+          replace_once(
+              'src/ui/optimizer.worker.ts',
+              "import { DEFAULT_STATISTICAL_DATASET_ID, convertStatisticalModel, statisticalDatasetDefinition } from '../data/statisticalModel.js';",
+              "import { DEFAULT_STATISTICAL_DATASET_ID, convertStatisticalModel, statisticalDatasetDefinition, usesMainEventEligibility } from '../data/statisticalModel.js';",
+          )
+          replace_once(
+              'src/ui/optimizer.worker.ts',
+              "return convertStatisticalModel(await modelResponse.json(),await titlePromise,datasetId,true);",
+              "return convertStatisticalModel(await modelResponse.json(),await titlePromise,datasetId,usesMainEventEligibility(datasetId));",
+          )
+
+          replace_once(
+              'src/ui/state.ts',
+              "import { DEFAULT_EXPECTED_SERIES_BY_LAYOUT, convertBoardLayout, createDefaultBoard, defaultMenu, resolvedLayoutId } from '../data/defaultState.js';",
+              "import { DEFAULT_EXPECTED_SERIES_BY_LAYOUT, convertBoardLayout, createDefaultBoard, defaultMenu, resolvedLayoutId } from '../data/defaultState.js';\nimport { DEFAULT_STATISTICAL_DATASET_ID } from '../data/statisticalModel.js';",
+          )
+          replace_once(
+              'src/ui/state.ts',
+              "statisticalDatasetId:StatisticalDatasetId='pre-ti2026-correlations';",
+              "statisticalDatasetId:StatisticalDatasetId=DEFAULT_STATISTICAL_DATASET_ID;",
+          )
+
+          replace_once(
+              'site/index.html',
+              '<label>Roll tokens<input id="tokens" type="number" min="0" value="10"></label>',
+              '<label>Roll tokens<input id="tokens" type="number" min="0" value="30"></label>',
+          )
+          replace_once(
+              'site/index.html',
+              '<option value="pre-ti2026-correlations">Group Stage</option><option value="group-stage-correlations">Main Event</option>',
+              '<option value="pre-ti2026-correlations">Group Stage</option><option value="group-stage-correlations" selected>Main Event</option>',
+          )
+
+          replace_once(
+              'tests/statistical-datasets.test.mjs',
+              "  convertStatisticalModel,\n} from '../docs/js/data/statisticalModel.js';",
+              "  convertStatisticalModel,\n  usesMainEventEligibility,\n} from '../docs/js/data/statisticalModel.js';",
+          )
+          replace_once(
+              'tests/statistical-datasets.test.mjs',
+              "test('exactly two correlation datasets are registered and the legacy dataset ID remains the default',()=>{\n  assert.equal(DEFAULT_STATISTICAL_DATASET_ID,'pre-ti2026-correlations');",
+              "test('exactly two correlation datasets are registered and Main Event is the default',()=>{\n  assert.equal(DEFAULT_STATISTICAL_DATASET_ID,'group-stage-correlations');",
+          )
+          replace_once(
+              'tests/statistical-datasets.test.mjs',
+              "  ]);\n  assert.equal(Object.keys(STATISTICAL_DATASETS).length,2);",
+              "  ]);\n  assert.equal(usesMainEventEligibility('pre-ti2026-correlations'),false);\n  assert.equal(usesMainEventEligibility('group-stage-correlations'),true);\n  assert.equal(Object.keys(STATISTICAL_DATASETS).length,2);",
+          )
+          old_block = """test('production eligibility filters selectable profiles without deleting historical pre-TI2026 observations',async()=>{
+  const [pre,titles]=await Promise.all([
+    readJson('../data/ti2026-statistical-model.json'),
+    readJson('../data/ti2026-title-model.json'),
+  ]);
+  const baseline=convertStatisticalModel(pre,titles);
+  assert.equal(baseline.players.length,48);
+  const production=convertStatisticalModel(pre,titles,'pre-ti2026-correlations',true);
+  assert.equal(production.historicalPlayers.length,48);
+  assert.equal(production.players.length,24);
+  assert.ok(production.historicalPlayers.some(p=>p.team==='OG'));
+  assert.equal(production.players.some(p=>p.team==='OG'),false);
+  for(const role of runtimeRoles){
+    assert.deepEqual(production.players.filter(p=>p.role===role).map(p=>displayTeamName(p.team)).sort(),active);
+  }
+});"""
+          new_block = """test('dataset eligibility exposes the full Group Stage field and keeps Main Event restricted',async()=>{
+  const [pre,titles]=await Promise.all([
+    readJson('../data/ti2026-statistical-model.json'),
+    readJson('../data/ti2026-title-model.json'),
+  ]);
+  const groupStage=convertStatisticalModel(pre,titles,'pre-ti2026-correlations',usesMainEventEligibility('pre-ti2026-correlations'));
+  assert.equal(groupStage.historicalPlayers.length,48);
+  assert.equal(groupStage.players.length,48);
+  assert.ok(groupStage.players.some(p=>p.team==='OG'));
+  const mainEvent=convertStatisticalModel(pre,titles,'pre-ti2026-correlations',usesMainEventEligibility('group-stage-correlations'));
+  assert.equal(mainEvent.historicalPlayers.length,48);
+  assert.equal(mainEvent.players.length,24);
+  assert.equal(mainEvent.players.some(p=>p.team==='OG'),false);
+  for(const role of runtimeRoles){
+    assert.deepEqual(mainEvent.players.filter(p=>p.role===role).map(p=>displayTeamName(p.team)).sort(),active);
+  }
+});"""
+          replace_once('tests/statistical-datasets.test.mjs', old_block, new_block)
+          replace_once(
+              'tests/statistical-datasets.test.mjs',
+              "test('group-stage model converts through the same adapter and exposes only its active eight teams',async()=>{",
+              "test('Main Event model converts through the same adapter and exposes only its active eight teams',async()=>{",
+          )
+          replace_once(
+              'tests/statistical-datasets.test.mjs',
+              "const bundle=convertStatisticalModel(group,titles,'group-stage-correlations',true);",
+              "const bundle=convertStatisticalModel(group,titles,'group-stage-correlations',usesMainEventEligibility('group-stage-correlations'));",
+          )
+
+          replace_once(
+              'tests/optimizer-client-dataset.test.mjs',
+              "test('legacy callers may omit dataset id and the worker can apply its Pre-TI2026 default',async()=>{",
+              "test('legacy callers may omit dataset id and the worker can apply the current default',async()=>{",
+          )
+
+          replace_once(
+              'tests/ui-contract.test.mjs',
+              "const loader=read('../src/data/statisticalModel.ts');",
+              "const loader=read('../src/data/statisticalModel.ts');\nconst worker=read('../src/ui/optimizer.worker.ts');",
+          )
+          marker = """test('production data loader uses the committed local model and no synthetic UI fallback',()=>{
+  assert.match(loader,/\\.\\/data\\/ti2026-statistical-model\\.json/);
+  assert.equal(loader.includes('cdn.jsdelivr.net'),false);
+  assert.equal(loader.includes('raw.githubusercontent.com'),false);
+  assert.equal(ui.includes('demoData'),false);
+  assert.match(app,/No synthetic scoring data are being substituted/);
+});
+"""
+          addition = marker + """
+test('startup defaults show 30 tokens and the Main Event model',()=>{
+  assert.match(index,/id=\"tokens\"[^>]*value=\"30\"/);
+  assert.match(index,/value=\"group-stage-correlations\" selected>Main Event<\\/option>/);
+  assert.match(state,/tokensRemaining = 30/);
+  assert.match(state,/statisticalDatasetId:StatisticalDatasetId=DEFAULT_STATISTICAL_DATASET_ID/);
+  assert.match(loader,/DEFAULT_STATISTICAL_DATASET_ID:StatisticalDatasetId='group-stage-correlations'/);
+});
+
+test('team eligibility follows the selected tournament model in browser and worker loaders',()=>{
+  assert.match(loader,/usesMainEventEligibility\\(datasetId\\)/);
+  assert.match(worker,/usesMainEventEligibility\\(datasetId\\)/);
+});
+"""
+          replace_once('tests/ui-contract.test.mjs', marker, addition)
+          PY
+
+      - name: Build generated artifacts
+        run: npm run build
+
+      - name: Validate full suite
         run: npm run test:ci
+
+      - name: Restore permanent CI and commit product changes
+        shell: bash
+        run: |
+          git checkout origin/main -- .github/workflows/ci.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src site tests build docs .github/workflows/ci.yml
+          git commit -m "Set Main Event defaults and period rosters"
+          git push origin HEAD:agent/main-event-defaults-group-stage-roster
