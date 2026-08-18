@@ -14,6 +14,8 @@ The optimizer models a range of plausible Fantasy outcomes instead of ranking pl
 6. Run the optimizer.
 7. Apply the recommendation in-game, then update the board and menu.
 
+Fresh boards also provide a model-backed starting point for each layout: Tier III emblems, legal high-value stats, a team selected for the completed banner, and a strong compatible trait setup. These defaults are a quick recommendation guide, not a substitute for matching your actual in-game board.
+
 Core uses positions 1 and 3, Mid uses position 2, and Support uses positions 4 and 5. For each emblem, enter its stat, quality tier, and trait. The tool calculates the resulting banner multiplier.
 
 ## What the model does
@@ -46,7 +48,7 @@ P10 and P90 values are modeled ranges, not guarantees. Recommendation confidence
 
 Screenshot import reads the board, teams, reroll actions, and token count when they are visible. Uncertain fields are highlighted for review instead of being silently accepted.
 
-Chromium is the certified screenshot-import browser for v1.1. Firefox screenshot import is not certified in this release. Manual board entry and optimizer behavior are not affected by that limitation.
+Chromium is the certified screenshot-import browser for v1.2. Firefox screenshot import is not certified in this release. Manual board entry and optimizer behavior are not affected by that limitation.
 
 ## Data and source files
 
@@ -82,5 +84,6 @@ Current documentation is grouped under `reference/`:
 - `reference/UI_APPLICATION_ARCHITECTURE.md` — browser module and worker boundaries.
 - `reference/BUILD_AND_SOURCE_POLICY.md` — editable sources and generated output.
 - `reference/ENGINEERING_ROADMAP.md` — longer-term engineering direction.
+- `reference/RELEASE_NOTES_1.2.0.md` — v1.2 release notes.
 - `reference/RELEASE_NOTES_1.1.0.md` — v1.1 release notes.
 - `engineering/history/` — archived milestone records for deeper engineering research.
