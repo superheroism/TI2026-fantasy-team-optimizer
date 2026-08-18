@@ -1,6 +1,6 @@
 # Screenshot Import Pipeline
 
-This document describes the production screenshot-import path used to populate the Fantasy board from a user-provided image. Local OCR is the primary path; a hosted vision endpoint is optional fallback behavior, not a requirement for screenshot import.
+This document describes the production screenshot-import path used to populate the Fantasy board from a user-provided image. Local OCR (optical character recognition) is the primary path; a hosted vision endpoint is optional fallback behavior, not a requirement for screenshot import.
 
 ## Goals
 
@@ -104,7 +104,7 @@ The retry derives the emblem rectangle from role/row geometry, crops from the or
 
 Each banner's visible selected-player text is compared against current model players for that role. The best supported player match maps to the optimizer's canonical team. Historical or otherwise unmappable text remains a review case rather than being converted to a guessed team.
 
-Selected teams are part of authoritative Production E2E correctness. They are not inferred as correct merely because visible player text was recognized.
+Selected teams are part of authoritative production end-to-end correctness. They are not inferred as correct merely because visible player text was recognized.
 
 ## 7. Reroll-action and token extraction
 
@@ -160,7 +160,7 @@ Screenshot import has two test layers with different authority.
 
 **Raw OCR/parser exactness is a diagnostic metric.**
 
-### Production E2E corpus
+### Production end-to-end (E2E) corpus
 
 `scripts/test-screenshot-e2e.mjs` serves the actual `docs/` artifact and drives the same user-facing path:
 
@@ -188,7 +188,9 @@ Before each import the harness creates a deterministic sentinel state so preserv
 
 **Production E2E exactness is the authoritative screenshot-import product metric.** Both application state and rendered UI must match expected final semantics.
 
-Permanent certification covers Chromium and Firefox, cold and warm worker behavior, selected teams, every emblem field, final applied actions, tokens, review highlighting, safety counters, source SHA-256, and deployment asset parity.
+The permanent certification harness exercises Chromium and Firefox, cold and warm worker behavior, selected teams, every emblem field, final applied actions, tokens, review highlighting, safety counters, source SHA-256, and deployment asset parity.
+
+**v1.1 release status:** Chromium is the certified screenshot-import browser. The release-candidate corpus completed 13/13 Chromium runs with zero hard failures, OCR timeouts, or false-high-confidence errors; 9/13 rendered fully exact and 13/13 rendered the expected review state. Firefox remains uncertified for screenshot import: 13/13 release-candidate runs failed before raw import because local OCR could not resolve layout. Firefox/Tesseract parity remains follow-up work rather than a hidden release claim.
 
 See `SCREENSHOT_OCR_CORPUS.md`, `SCREENSHOT_OCR_CORPUS_RESULTS.md`, and `P52E_PRODUCTION_E2E_CERTIFICATION.md`.
 

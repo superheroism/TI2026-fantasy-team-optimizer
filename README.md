@@ -1,10 +1,10 @@
 # Dota 2 Fantasy Optimizer 2026
 
-A browser tool for building a TI 2026 Fantasy board, comparing teams, and deciding how to spend the next reroll token.
+A browser tool for building or importing a TI 2026 Fantasy board, comparing teams, and deciding how to spend the next reroll token.
 
 Unlike a simple average-stat ranking, the optimizer models a distribution of plausible Fantasy outcomes and the game's best-game retention rules.
 
-## What v1.0 supports
+## What v1.1 supports
 
 The tool supports both **3 Emblems** (`legacy_3`) and **5 Emblems** (`expanded_5`) and two objectives:
 
@@ -24,7 +24,7 @@ For the five-emblem, two-spend route, the adaptive policy does less work when on
 
 ## How to use it
 
-1. Choose **3 Emblems** or **5 Emblems** and enter the Core, Mid, and Support banners.
+1. Either click **Import Screenshot** and review any highlighted fields, or choose **3 Emblems** / **5 Emblems** and enter the Core, Mid, and Support banners manually.
 2. Choose **Pre-TI2026-Correlations** or **GroupStage-Correlations** as the Data Source.
 3. Select a team for each role.
 4. Enter your remaining tokens and the three actions currently offered in-game.
@@ -54,7 +54,7 @@ The final score is:
 Core + Mid + Support retained scores
 ```
 
-Monte Carlo simulation estimates the selected board's expected score, median, P10, P90, and target probability when applicable. **P10/P90 are modeled ranges, not guarantees.**
+Monte Carlo simulation — repeated random sampling from the statistical model — estimates the selected board's expected score, median, P10, P90, and target probability when applicable. **P10/P90 are modeled ranges, not guarantees.**
 
 When comparing hypothetical boards, the optimizer reuses the same simulated underlying performances. This is a common-random-numbers design: competing actions are compared against the same modeled tournament worlds instead of unrelated random draws.
 
@@ -83,7 +83,7 @@ These are model inputs, not claims about hidden client RNG. See `CLIENT_RULES_20
 
 ## Current limitations
 
-v1.0 models role-specific stat distributions, within-banner stat correlation, quality and trait effects, retained-game scoring, legal rerolls, free team re-optimization, and a two-spend decision horizon.
+v1.1 models role-specific stat distributions, within-banner stat correlation, quality and trait effects, retained-game scoring, legal rerolls, free team re-optimization, and a two-spend decision horizon.
 
 It does not yet model exact game-level covariance between the two Core/Support players, opponent effects, game-duration effects, or one shared tournament-advancement path across selected roles. Search beyond two spends remains research-only. Title prefixes use modeled role boosts; the suffix is not given an invented expected value.
 
@@ -92,6 +92,12 @@ It does not yet model exact game-level covariance between the two Core/Support p
 **3 Emblems** is the backward-compatible default. Expected Series defaults to **5** for 3 Emblems and **3** for 5 Emblems. Switching layouts updates roles that are still using the automatic default; once a user manually edits a role's Expected Series value, that explicit override is preserved across later layout switches.
 
 Recommendation search runs in a Web Worker so heavier calculations do not freeze the page. Editing optimizer-relevant state cancels or invalidates stale work. Workers are also recycled periodically to bound long-session cache growth; this changes cache lifetime, not recommendation logic.
+
+### Screenshot-import browser support
+
+v1.1 release certification covers screenshot import in **Chromium**. On the six-board production end-to-end (E2E) corpus, Chromium completed all 13 cold/warm runs with zero hard failures, zero OCR (optical character recognition) timeouts, and zero false-high-confidence errors. Nine runs rendered the imported board exactly; all 13 rendered the expected review state, so uncertain fields remained visible for user review rather than being silently accepted.
+
+Firefox is **not certified for screenshot import in v1.1**. In the same release-candidate corpus, all 13 Firefox runs failed before producing a raw import because local OCR could not resolve the board layout. This limitation is specific to the screenshot-import OCR path; it does not change optimizer search or scoring semantics.
 
 ## Data and generated files
 
@@ -114,7 +120,7 @@ npm test
 npm run verify:generated
 ```
 
-Run `npm run benchmark` for the general performance suite and `npm run benchmark:m7b` for the v1.0 production-route baseline.
+Run `npm run benchmark` for the general performance suite and `npm run benchmark:v1` for the v1.1 production-route release check.
 
 ## Technical references
 
