@@ -51,6 +51,12 @@ export class ApplicationState {
     this.invalidate(preserveComparison);
   }
 
+  setBoard(board:BoardState):void {
+    this.board=structuredClone(board);
+    this.expectedSeriesAuto={core:true,mid:true,support:true};
+    this.invalidate(false);
+  }
+
   setExpectedSeries(role:Role,value:number):void {
     this.board[role].expectedSeries=Math.max(1,value||1);
     this.expectedSeriesAuto[role]=false;
@@ -104,9 +110,9 @@ export class ApplicationState {
     return true;
   }
 
-  resetBoard(): void {
+  resetBoard(recommendedBoard?:BoardState): void {
     const layoutId = resolvedLayoutId(this.board);
-    this.board = createDefaultBoard(layoutId);
+    this.board = structuredClone(recommendedBoard??createDefaultBoard(layoutId));
     this.expectedSeriesAuto={core:true,mid:true,support:true};
     this.menu = structuredClone(defaultMenu);
     this.tokensRemaining = 30;

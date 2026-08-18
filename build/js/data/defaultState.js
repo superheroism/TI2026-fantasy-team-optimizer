@@ -1,6 +1,6 @@
 import { BOARD_LAYOUTS, DEFAULT_LAYOUT_ID, isLegalStat } from '../domain/rules.js';
 import { ACTION_BY_ID, cloneAction } from './actionCatalog.js';
-/** Deterministic legal defaults for every canonical slot in both supported layouts. */
+/** Deterministic legal fallbacks for every canonical slot in both supported layouts. */
 export const DEFAULT_STATS_BY_ROLE = {
     core: ['Creep Score', 'Teamfight Participation', 'GPM', 'Stuns', 'Deaths'],
     mid: ['Creep Score', 'Runes', 'Teamfight Participation', 'GPM', 'Stuns'],

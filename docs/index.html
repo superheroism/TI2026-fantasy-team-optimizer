@@ -10,16 +10,23 @@
   <link rel="stylesheet" href="./screenshot-import.css">
   <style>
     /* UI readability refinements: uses existing theme variables in both modes. */
-    .series-control{width:132px;gap:2px;text-align:right}
-    .series-control>span{font-size:9px;font-weight:850;letter-spacing:.06em;color:var(--muted)}
-    .series-control small{font-size:8px;color:var(--complement);letter-spacing:.04em}
+    .control-strip{grid-template-columns:minmax(150px,1fr) 92px 150px minmax(190px,1.2fr) 118px auto;align-items:end}
+    .control-strip>label{min-width:0}.control-strip input,.control-strip select,.control-buttons>button{height:36px;padding-top:7px;padding-bottom:7px}
+    .control-tokens,.control-target{max-width:118px}.control-objective{min-width:190px}.control-objective select{padding-right:30px}
+    .control-buttons{height:36px;align-items:center}.theme-switch-wrap{align-self:center;padding:0 2px 0 0}.control-buttons button{align-self:center}
+    .board-section-title{display:flex;align-items:flex-end;gap:18px}.board-tools{display:flex;align-items:flex-end;gap:22px;margin-left:10px}.layout-control,.screenshot-control{display:grid;gap:4px}.layout-control>span,.screenshot-control>span{font-size:9px;font-weight:850;letter-spacing:.08em;color:var(--muted)}
+    .layout-segmented,.screenshot-buttons{display:flex;align-items:center;gap:4px}.layout-segmented button,#screenshot-import,#screenshot-ocr-diagnostic-copy{height:32px;padding:6px 10px}.screenshot-control{margin-left:8px}
+    .series-control{width:188px;gap:3px;text-align:right}.series-control>span{font-size:9px;font-weight:850;letter-spacing:.055em;color:var(--muted);white-space:nowrap}.series-control>span small{font-size:8px;color:var(--complement);letter-spacing:.035em;font-weight:750}.series-control input{padding:5px 7px;text-align:center;font-variant-numeric:tabular-nums}
+    .roster b.refresh-prompt{font-family:inherit;font-size:10px;line-height:1.2;font-weight:700;color:var(--muted);letter-spacing:0}
     .metrics .title b{font-size:17px;line-height:1.45}
     .title-prefix,.title-suffix{display:inline-block;padding:1px 5px;border-radius:3px;color:var(--text)!important;font-weight:900}
     .title-prefix{background:var(--purple-soft);border:1px solid var(--purple2)}
     .title-user{color:var(--muted)}
     .title-suffix{background:color-mix(in srgb,var(--gold) 16%,transparent);border:1px solid var(--gold2)}
     .team-chart-head{display:block}
-    @media(max-width:720px){.series-control{width:132px}}
+    .analytics-panel .panel-head>div,.secondary-panel .panel-head>div{display:grid;gap:1px;min-width:0}.analytics-panel .panel-head>div>small,.secondary-panel .panel-head>div>small{display:block;text-align:left;margin-top:2px;max-width:none}
+    @media(max-width:1100px){.control-strip{grid-template-columns:1fr 92px 150px minmax(190px,1fr) 118px}.control-buttons{grid-column:1/-1;justify-content:flex-end}.board-section-title{align-items:flex-start;flex-wrap:wrap}.board-tools{margin-left:0}}
+    @media(max-width:720px){.control-strip{grid-template-columns:1fr 1fr}.control-strip>label,.control-tokens,.control-target,.control-objective{max-width:none;min-width:0}.control-buttons{grid-column:1/-1}.board-tools{gap:12px;flex-wrap:wrap}.series-control{width:188px}}
   </style>
 </head>
 <body data-theme="dark">
@@ -32,10 +39,11 @@
 </header>
 <main>
   <section class="control-strip" aria-label="Optimizer controls">
-    <label>Username<input id="username" value="[Username]"></label>
-    <label>Reroll tokens<input id="tokens" type="number" min="0" value="30"></label>
-    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:9px"><label>Tournament stage<select id="data-source"><option value="pre-ti2026-correlations">Group Stage</option><option value="group-stage-correlations" selected>Main Event</option></select></label><label>Objective<select id="objective"><option value="expected_score">Expected final score</option><option value="target_probability">P(score ≥ target)</option></select></label></div>
-    <label>Target score<input id="target" type="number" min="0" placeholder="e.g. 50000"></label>
+    <label class="control-username">Username<input id="username" value="[Username]"></label>
+    <label class="control-tokens">Reroll tokens<input id="tokens" type="number" min="0" value="30"></label>
+    <label>Tournament stage<select id="data-source"><option value="pre-ti2026-correlations">Group Stage</option><option value="group-stage-correlations" selected>Main Event</option></select></label>
+    <label class="control-objective">Objective<select id="objective"><option value="expected_score">Expected final score</option><option value="target_probability">P(score ≥ target)</option></select></label>
+    <label class="control-target">Target score<input id="target" type="number" min="0" placeholder="e.g. 50000"></label>
     <div class="control-buttons">
       <label class="theme-switch-wrap" for="theme-toggle">
         <span class="theme-switch-label">Dark mode</span>
@@ -70,7 +78,7 @@
 
   <section id="action-console" class="panel action-console">
     <div class="panel-head console-head">
-      <div class="section-title"><div><p class="eyebrow">AVAILABLE ACTIONS</p><h2>Match Your Three Offers</h2><small>Run the optimizer to compare each offer. The best target appears first.</small></div></div>
+      <div class="section-title"><div><p class="eyebrow">AVAILABLE ACTIONS</p><h2>Match Your Three Offers</h2><small>Run the optimizer to compare each offer. The best target appears first. Expected changes forecast up to two token spends, starting from your first choice.</small></div></div>
       <div class="console-buttons">
         <button id="optimize" class="primary optimize" type="button">Optimize Board</button>
         <button id="next-roll" type="button" disabled>Next Reroll · 1 Token</button>
@@ -101,19 +109,19 @@
   </section>
 
   <section class="panel distribution-panel analytics-panel">
-    <div class="panel-head"><div><p class="eyebrow">SCORE OUTLOOK</p><h2>Expected Score Range</h2></div><small id="calc-status">20k simulations with statistical dataset · top 2 games / best 1 series</small></div>
+    <div class="panel-head"><div><p class="eyebrow">SCORE OUTLOOK</p><h2>Expected Score Range</h2><small id="calc-status">20,000 simulations · current tournament model · top 2 games per series · best 1 series</small></div></div>
     <canvas id="hist"></canvas>
     <div class="hist-legend"><span><i class="legend-swatch distribution"></i>Distribution</span><span><i class="legend-line expected"></i>Expected</span><span><i class="legend-line median"></i>Median</span><span><i class="legend-line quantile"></i>P10 / P90</span><span><i class="legend-swatch target"></i>At/above target</span></div>
   </section>
 
   <section class="panel analytics-panel">
-    <div class="panel-head"><div><p class="eyebrow">LIKELY RESULTS</p><h2>Compare Teams</h2></div><small>Core: positions 1 + 3 · Mid: position 2 · Support: positions 4 + 5</small></div>
+    <div class="panel-head"><div><p class="eyebrow">LIKELY RESULTS</p><h2>Compare Teams</h2><small>Core: positions 1 + 3 · Mid: position 2 · Support: positions 4 + 5</small></div></div>
     <div class="comparison-tabs" id="comparison-tabs"></div>
     <div id="team-comparisons" class="team-comparisons"></div>
   </section>
 
   <section class="panel secondary-panel">
-    <div class="panel-head"><div><p class="eyebrow">ALL OPTIONS</p><h2>Action Ranking</h2></div><small>Compare every available action, menu reroll, and keeping the board.</small></div>
+    <div class="panel-head"><div><p class="eyebrow">ALL OPTIONS</p><h2>Action Ranking</h2><small>Compare every available action, menu reroll, and keeping the board.</small></div></div>
     <div id="ranking"><div class="ranking-empty">Optimize the board to rank your current options.</div></div>
   </section>
 </main>
