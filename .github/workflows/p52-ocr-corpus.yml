@@ -5,14 +5,14 @@ on:
     branches: [main]
 
 concurrency:
-  group: p52f-firefox-output-matrix-${{ github.event.pull_request.number }}
+  group: p52f-firefox-app-integration-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  firefox-output-matrix:
+  firefox-app-integration:
     if: github.event.pull_request.head.ref == 'agent/p52f-fast-accurate-low-review'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -25,11 +25,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run build
       - name: Install Firefox diagnostic browser
         run: |
           npm install --no-save --package-lock=false playwright@1.62.0
           npx playwright install firefox
-      - name: Compare Firefox Tesseract output requests
+      - name: Compare direct and production OCR inside built app
         run: |
           mkdir -p artifacts
           node --input-type=module <<'NODE'
@@ -38,61 +39,84 @@ jobs:
           import path from 'node:path';
           import {firefox} from 'playwright';
 
-          const boardPath=path.resolve('tests/test_boards/TI2026 - Board 2.png');
+          const root=process.cwd();
+          const docs=path.join(root,'docs');
+          const boardPath=path.join(root,'tests/test_boards/TI2026 - Board 2.png');
           if(!fs.existsSync(boardPath)) throw new Error(`missing Board 2 image: ${boardPath}`);
+          const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml'};
           const server=http.createServer((req,res)=>{
-            if(req.url==='/board2.png'){
-              res.writeHead(200,{'content-type':'image/png','cache-control':'no-store'});
-              fs.createReadStream(boardPath).pipe(res);
-              return;
-            }
-            res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});
-            res.end('<!doctype html><meta charset="utf-8"><title>P52F Firefox OCR output matrix</title>');
+            try{
+              const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
+              if(pathname==='/__board2.png'){
+                res.writeHead(200,{'content-type':'image/png','cache-control':'no-store'});
+                fs.createReadStream(boardPath).pipe(res);return;
+              }
+              const rel=(pathname==='/'?'/index.html':pathname).replace(/^\/+/,''),file=path.resolve(docs,rel);
+              if(!file.startsWith(docs+path.sep)||!fs.existsSync(file)){res.writeHead(404).end();return;}
+              res.writeHead(200,{'content-type':types[path.extname(file).toLowerCase()]??'application/octet-stream','cache-control':'no-store'});
+              fs.createReadStream(file).pipe(res);
+            }catch(error){res.writeHead(500).end(String(error));}
           });
           await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
           const origin=`http://127.0.0.1:${server.address().port}`;
           const browser=await firefox.launch({headless:true});
-          const page=await browser.newPage();
-          const consoleLines=[];
-          page.on('console',msg=>consoleLines.push(`[${msg.type()}] ${msg.text()}`));
-          page.on('pageerror',err=>consoleLines.push(`[pageerror] ${String(err)}`));
-          await page.goto(`${origin}/`,{waitUntil:'domcontentloaded'});
-          await page.addScriptTag({url:'https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js'});
+          const results={browserVersion:browser.version(),origin,direct:null,production:null};
 
-          const outputs=[
-            {name:'tsv-only',output:{tsv:true}},
-            {name:'text-and-tsv',output:{text:true,tsv:true}},
-            {name:'text-only',output:{text:true}},
-            {name:'default-output',output:undefined},
-          ];
-          const results=[];
-          for(const spec of outputs){
-            const result=await page.evaluate(async ({spec,boardUrl})=>{
-              const started=performance.now();
-              let worker;
-              try{
-                worker=await window.Tesseract.createWorker('eng');
-                await worker.setParameters({tessedit_pageseg_mode:'3'});
-                const img=new Image();img.src=boardUrl;await img.decode();
-                const scale=Math.min(1,1100/Math.max(img.naturalWidth,img.naturalHeight));
-                const canvas=document.createElement('canvas');canvas.width=Math.round(img.naturalWidth*scale);canvas.height=Math.round(img.naturalHeight*scale);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
-                const args=[canvas,{}];if(spec.output!==undefined)args.push(spec.output);
-                const r=await Promise.race([worker.recognize(...args),new Promise((_,reject)=>setTimeout(()=>reject(new Error('recognize timeout')),45000))]);
-                const text=r?.data?.text??'',tsv=r?.data?.tsv??'';
-                return{name:spec.name,elapsedMs:performance.now()-started,textLength:text.length,tsvLength:tsv.length,sample:text.replace(/\s+/g,' ').trim().slice(0,160),dataKeys:Object.keys(r?.data??{})};
-              }catch(error){return{name:spec.name,elapsedMs:performance.now()-started,error:String(error),textLength:0,tsvLength:0};}
-              finally{try{await worker?.terminate();}catch{}}
-            },{spec,boardUrl:`${origin}/board2.png`});
-            results.push(result);
-            console.log(JSON.stringify(result));
+          async function open(){
+            const context=await browser.newContext(),page=await context.newPage(),consoleLines=[];
+            page.on('console',msg=>consoleLines.push(`[${msg.type()}] ${msg.text()}`));
+            page.on('pageerror',err=>consoleLines.push(`[pageerror] ${String(err)}`));
+            await page.goto(`${origin}/`,{waitUntil:'domcontentloaded'});
+            await page.waitForSelector('#screenshot-file',{state:'attached',timeout:30000});
+            await page.setInputFiles('#screenshot-file',boardPath);
+            return{context,page,consoleLines};
           }
-          fs.writeFileSync('artifacts/p52f-firefox-output-matrix.json',JSON.stringify({browserVersion:browser.version(),results,consoleLines},null,2));
+
+          {
+            const {context,page,consoleLines}=await open();
+            try{
+              await page.addScriptTag({url:'https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js'});
+              results.direct=await page.evaluate(async()=>{
+                const file=document.querySelector('#screenshot-file')?.files?.[0],started=performance.now();let worker;
+                if(!file)throw new Error('missing browser File');
+                try{
+                  const createStarted=performance.now();worker=await window.Tesseract.createWorker('eng');const createMs=performance.now()-createStarted;
+                  await worker.setParameters({tessedit_pageseg_mode:'3'});
+                  const recognizeStarted=performance.now(),r=await worker.recognize(file,{}, {tsv:true}),recognizeMs=performance.now()-recognizeStarted;
+                  const text=r?.data?.text??'',tsv=r?.data?.tsv??'';
+                  return{createMs,recognizeMs,totalMs:performance.now()-started,textLength:text.length,tsvLength:tsv.length,sample:text.replace(/\s+/g,' ').trim().slice(0,220)};
+                }catch(error){return{totalMs:performance.now()-started,error:String(error)};}
+                finally{try{await worker?.terminate();}catch{}}
+              });
+              results.direct.consoleLines=consoleLines;
+            }finally{await context.close();}
+          }
+
+          {
+            const {context,page,consoleLines}=await open();
+            try{
+              results.production=await page.evaluate(async()=>{
+                const file=document.querySelector('#screenshot-file')?.files?.[0],started=performance.now();
+                if(!file)throw new Error('missing browser File');
+                try{
+                  const module=await import('./js/import/localScreenshotOcr.js');
+                  const importMs=performance.now()-started,diagStarted=performance.now();
+                  const diagnostic=await module.diagnoseLocalScreenshotOcr(file);
+                  return{importMs,diagnoseMs:performance.now()-diagStarted,totalMs:performance.now()-started,diagnostic};
+                }catch(error){return{totalMs:performance.now()-started,error:String(error),stack:error?.stack??null};}
+              });
+              results.production.consoleLines=consoleLines;
+            }finally{await context.close();}
+          }
+
+          fs.writeFileSync('artifacts/p52f-firefox-app-integration.json',JSON.stringify(results,null,2));
+          console.log(JSON.stringify(results,null,2));
           await browser.close();
           await new Promise(resolve=>server.close(resolve));
           NODE
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: p52f-firefox-output-matrix
-          path: artifacts/p52f-firefox-output-matrix.json
+          name: p52f-firefox-app-integration
+          path: artifacts/p52f-firefox-app-integration.json
           if-no-files-found: error
