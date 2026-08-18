@@ -12,6 +12,7 @@ Current technical and product references live here. Start with the repository `R
 - `UI_APPLICATION_ARCHITECTURE.md` — browser module and worker boundaries.
 - `BUILD_AND_SOURCE_POLICY.md` — editable sources and generated output.
 - `RELEASE_NOTES_1.2.0.md` — v1.2 release notes.
+- `RELEASE_CHECKLIST_1.2.0.md` — v1.2 certification checklist.
 - `RELEASE_NOTES_1.1.0.md` — v1.1 release notes.
 
 Historical milestone records remain under `engineering/history/`.
