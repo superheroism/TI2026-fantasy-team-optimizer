@@ -13,8 +13,6 @@
     "test:performance-contracts": "npm run build && node --test tests/banner-mechanics-key.test.mjs tests/scenario-reuse.test.mjs tests/target-diagnostics.test.mjs tests/team-comparison-cache.test.mjs tests/production-readiness.test.mjs",
     "test:ocr-corpus": "npm run build && node scripts/test-ocr-corpus.mjs",
     "test:screenshot-e2e": "node scripts/test-screenshot-e2e.mjs",
-    "test:screenshot-e2e:chromium": "node scripts/test-screenshot-e2e.mjs --browser=chromium",
-    "test:screenshot-e2e:firefox": "node scripts/test-screenshot-e2e.mjs --browser=firefox",
     "benchmark": "npm run build && node scripts/benchmark.mjs",
     "benchmark:v1": "npm run test:ci && node scripts/benchmark-m7b-v1.mjs",
     "lint": "eslint src scripts tests",
