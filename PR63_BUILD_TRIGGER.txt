@@ -1,1 +1,2 @@
 Trigger disposable PR63 generated-artifact runner.
+Registered workflow trigger.
