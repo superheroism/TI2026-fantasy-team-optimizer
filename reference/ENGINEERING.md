@@ -127,4 +127,4 @@ Production therefore remains capped at two modeled spends. Deeper search is rese
 - `PERFORMANCE.md` — current runtime and memory baseline.
 - `PRODUCT_DECISIONS.md` — product and modeling choices.
 - `SCREENSHOT_IMPORT_PIPELINE.md` — screenshot-import architecture.
-- `engineering/history/` — milestone measurements, negative results, and experimental protocols.
+- `../engineering/history/` — milestone measurements, negative results, and experimental protocols.
