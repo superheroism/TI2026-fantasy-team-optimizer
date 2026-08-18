@@ -34,7 +34,7 @@ export function renderOperationEditors(menu: MenuState): string {
   return menu.map((operation, index) => {
     const selectedElsewhere = new Set(menu.filter((_, other) => other !== index).map(item => item.id));
     const options = groupedActionOptions(operation.id,selectedElsewhere);
-    return `<article class="op-card" data-op="${index}"><div class="op-card-head"><span class="op-number">${index + 1}</span><div><select class="op-select" data-opfield="action" aria-label="Action ${index + 1}">${options}</select></div><span class="op-recommended" aria-hidden="true">RECOMMENDED</span></div><div class="op-results" data-opresult="${index}"><div class="op-empty">Run the optimizer to compare legal targets and reroll outcomes.</div></div></article>`;
+    return `<article class="op-card" data-op="${index}"><div class="op-card-head"><span class="op-number">${index + 1}</span><div><select class="op-select" data-opfield="action" aria-label="Action ${index + 1}">${options}</select></div><span class="op-recommended" aria-hidden="true">RECOMMENDED</span></div><div class="op-results" data-opresult="${index}"><div class="op-empty">Optimize the board to compare targets and reroll outcomes.</div></div></article>`;
   }).join('');
 }
 
@@ -94,7 +94,7 @@ export function renderActionResults(options: ActionResultViewOptions): void {
     const rows = boardRowsForOperation(result, operation.id).sort((a, b) => b.expectedFinalUtility - a.expectedFinalUtility);
     card.classList.remove('recommended');
     if (!rows.length) {
-      resultElement.innerHTML = '<div class="op-empty">No legal banner target for this action on the current board.</div>';
+      resultElement.innerHTML = '<div class="op-empty">This action has no available banner target on the current board.</div>';
       return;
     }
     const best = rows[0]!;
@@ -121,8 +121,8 @@ export function renderActionResults(options: ActionResultViewOptions): void {
     const expectedLane = rangeLaneLabel('expected', expected, 'EXPECTED', utilityDeltaText(delta, targetMode));
     resultElement.innerHTML = `<div class="op-target-line"><span>BEST TARGET: <b>${bestRole.toUpperCase()}</b></span></div>
       <div class="target-tabs">${UI_ROLES.map(role => `<button data-action-target="${index}:${role}" ${legalRoles.includes(role) ? '' : 'disabled'} class="${role === selected ? 'active' : ''}">${role.toUpperCase()}</button>`).join('')}</div>
-      <div class="op-metrics"><div class="metric-final"><span>${targetMode ? 'TARGET PROB.' : 'EXPECTED FINAL'}</span><b>${utilityText(row.expectedFinalUtility, targetMode)}</b></div><div class="metric-delta"><span>Δ VS STOP</span><b class="${delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'zero'}">${utilityDeltaText(delta, targetMode)}</b></div><div class="metric-prob"><span>P(IMPROVE)</span><b>${row.pImprove === undefined ? '—' : `${(row.pImprove * 100).toFixed(0)}%`}</b></div></div>
-      <div class="op-range"><div class="op-range-head"><span>MODELED REROLL / CONTINUATION OUTCOME Δ VS STOP</span></div><div class="action-range-diagram" title="0 = current setup · P10 ${utilityDeltaText(p10, targetMode)} · Median ${utilityDeltaText(medianValue, targetMode)} · Expected ${utilityDeltaText(delta, targetMode)} · P90 ${utilityDeltaText(p90, targetMode)}"><div class="range-label-lanes"><div class="range-label-lane range-top-lane">${topLane}</div><div class="range-label-lane range-middle-lane">${medianLane}</div><div class="range-label-lane range-lower-lane">${expectedLane}</div></div><div class="action-range-track"><i class="action-zero" style="left:${zero.toFixed(2)}%"></i><i class="action-range" style="left:${Math.min(left, right).toFixed(2)}%;width:${Math.max(.8, Math.abs(right - left)).toFixed(2)}%"></i><i class="action-p10" style="left:${left.toFixed(2)}%"></i><i class="action-p90" style="left:${right.toFixed(2)}%"></i><i class="action-median" style="left:${median.toFixed(2)}%"></i><i class="action-expected" style="left:${expected.toFixed(2)}%"></i></div><div class="range-bottom"><span class="range-worse">WORSE</span><span class="range-zero" style="left:${zero.toFixed(2)}%">0</span><span class="range-better">BETTER</span></div></div></div>`;
+      <div class="op-metrics"><div class="metric-final"><span>${targetMode ? 'CHANCE TO HIT TARGET' : 'EXPECTED SCORE'}</span><b>${utilityText(row.expectedFinalUtility, targetMode)}</b></div><div class="metric-delta"><span>VS KEEPING BOARD</span><b class="${delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'zero'}">${utilityDeltaText(delta, targetMode)}</b></div><div class="metric-prob"><span>CHANCE TO IMPROVE</span><b>${row.pImprove === undefined ? '—' : `${(row.pImprove * 100).toFixed(0)}%`}</b></div></div>
+      <div class="op-range"><div class="op-range-head"><span>POSSIBLE SCORE CHANGE</span></div><div class="action-range-diagram" title="0 = keep board · P10 ${utilityDeltaText(p10, targetMode)} · Median ${utilityDeltaText(medianValue, targetMode)} · Expected ${utilityDeltaText(delta, targetMode)} · P90 ${utilityDeltaText(p90, targetMode)}"><div class="range-label-lanes"><div class="range-label-lane range-top-lane">${topLane}</div><div class="range-label-lane range-middle-lane">${medianLane}</div><div class="range-label-lane range-lower-lane">${expectedLane}</div></div><div class="action-range-track"><i class="action-zero" style="left:${zero.toFixed(2)}%"></i><i class="action-range" style="left:${Math.min(left, right).toFixed(2)}%;width:${Math.max(.8, Math.abs(right - left)).toFixed(2)}%"></i><i class="action-p10" style="left:${left.toFixed(2)}%"></i><i class="action-p90" style="left:${right.toFixed(2)}%"></i><i class="action-median" style="left:${median.toFixed(2)}%"></i><i class="action-expected" style="left:${expected.toFixed(2)}%"></i></div><div class="range-bottom"><span class="range-worse">WORSE</span><span class="range-zero" style="left:${zero.toFixed(2)}%">0</span><span class="range-better">BETTER</span></div></div></div>`;
   });
 
   document.querySelectorAll<HTMLButtonElement>('[data-action-target]').forEach(button => button.addEventListener('click', () => {
@@ -133,7 +133,7 @@ export function renderActionResults(options: ActionResultViewOptions): void {
   applyRecommendationHighlights(result, board);
 }
 
-export function clearActionResults(targetSelection: Map<number, Role>, message = 'Run the optimizer to compare legal targets and reroll outcomes.'): void {
+export function clearActionResults(targetSelection: Map<number, Role>, message = 'Optimize the board to compare targets and reroll outcomes.'): void {
   targetSelection.clear();
   document.querySelectorAll<HTMLElement>('.op-card').forEach(card => card.classList.remove('recommended'));
   document.querySelectorAll<HTMLElement>('.op-results').forEach(element => element.innerHTML = `<div class="op-empty">${escapeHtml(message)}</div>`);
