@@ -5,17 +5,17 @@ on:
     branches: [main]
 
 concurrency:
-  group: p52f-firefox-worker-matrix-${{ github.event.pull_request.number }}
+  group: p52f-firefox-output-matrix-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  firefox-worker-matrix:
+  firefox-output-matrix:
     if: github.event.pull_request.head.ref == 'agent/p52f-fast-accurate-low-review'
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,7 +29,7 @@ jobs:
         run: |
           npm install --no-save --package-lock=false playwright@1.62.0
           npx playwright install --with-deps firefox
-      - name: Run Firefox Tesseract worker matrix
+      - name: Compare Firefox Tesseract output requests
         run: |
           mkdir -p artifacts
           node --input-type=module <<'NODE'
@@ -40,7 +40,6 @@ jobs:
 
           const boardPath=path.resolve('tests/test_boards/TI2026 - Board 2.png');
           if(!fs.existsSync(boardPath)) throw new Error(`missing Board 2 image: ${boardPath}`);
-          const html='<!doctype html><meta charset="utf-8"><title>P52F Firefox OCR matrix</title>';
           const server=http.createServer((req,res)=>{
             if(req.url==='/board2.png'){
               res.writeHead(200,{'content-type':'image/png','cache-control':'no-store'});
@@ -48,82 +47,52 @@ jobs:
               return;
             }
             res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});
-            res.end(html);
+            res.end('<!doctype html><meta charset="utf-8"><title>P52F Firefox OCR output matrix</title>');
           });
           await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-          const url=`http://127.0.0.1:${server.address().port}/`;
+          const origin=`http://127.0.0.1:${server.address().port}`;
           const browser=await firefox.launch({headless:true});
           const page=await browser.newPage();
           const consoleLines=[];
           page.on('console',msg=>consoleLines.push(`[${msg.type()}] ${msg.text()}`));
           page.on('pageerror',err=>consoleLines.push(`[pageerror] ${String(err)}`));
-          await page.goto(url,{waitUntil:'domcontentloaded'});
+          await page.goto(`${origin}/`,{waitUntil:'domcontentloaded'});
           await page.addScriptTag({url:'https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js'});
 
-          const variants=[
-            {name:'default',options:{}},
-            {name:'workerBlobURL-false',options:{workerBlobURL:false}},
-            {name:'cache-none',options:{cacheMethod:'none'}},
-            {name:'no-blob-no-cache',options:{workerBlobURL:false,cacheMethod:'none'}},
-            {name:'core-v6-directory',options:{corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@6'}},
-            {name:'forced-nonsimd-core',options:{corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@6/tesseract-core.wasm.js'}},
-            {name:'forced-nonsimd-no-blob',options:{workerBlobURL:false,corePath:'https://cdn.jsdelivr.net/npm/tesseract.js-core@6/tesseract-core.wasm.js'}},
+          const outputs=[
+            {name:'tsv-only',output:{tsv:true}},
+            {name:'text-and-tsv',output:{text:true,tsv:true}},
+            {name:'text-only',output:{text:true}},
+            {name:'default-output',output:undefined},
           ];
-
           const results=[];
-          for(const variant of variants){
-            console.log(`=== ${variant.name} ===`);
-            const result=await page.evaluate(async ({variant,boardUrl})=>{
+          for(const spec of outputs){
+            const result=await page.evaluate(async ({spec,boardUrl})=>{
               const started=performance.now();
               let worker;
-              const out={name:variant.name,options:variant.options,createMs:null,synthetic:null,board:null,error:null};
-              const recognize=async (worker,image,label)=>{
-                const t=performance.now();
-                try{
-                  const r=await Promise.race([
-                    worker.recognize(image,{}, {text:true,tsv:true}),
-                    new Promise((_,reject)=>setTimeout(()=>reject(new Error(`${label} timeout`)),45000)),
-                  ]);
-                  const text=r?.data?.text??'',tsv=r?.data?.tsv??'';
-                  return {elapsedMs:performance.now()-t,textLength:text.length,tsvLength:tsv.length,sample:text.replace(/\s+/g,' ').trim().slice(0,240)};
-                }catch(error){return {elapsedMs:performance.now()-t,error:String(error),textLength:0,tsvLength:0,sample:''};}
-              };
               try{
-                const createStarted=performance.now();
-                worker=await Promise.race([
-                  window.Tesseract.createWorker('eng',1,variant.options),
-                  new Promise((_,reject)=>setTimeout(()=>reject(new Error('createWorker timeout')),60000)),
-                ]);
-                out.createMs=performance.now()-createStarted;
+                worker=await window.Tesseract.createWorker('eng');
                 await worker.setParameters({tessedit_pageseg_mode:'3'});
-
-                const synthetic=document.createElement('canvas');synthetic.width=1000;synthetic.height=240;
-                const sx=synthetic.getContext('2d');sx.fillStyle='white';sx.fillRect(0,0,synthetic.width,synthetic.height);sx.fillStyle='black';sx.font='64px sans-serif';sx.fillText('CORE  TIER III  GPM',60,100);sx.fillText('TEAMFIGHT PARTICIPATION',60,190);
-                out.synthetic=await recognize(worker,synthetic,'synthetic');
-
                 const img=new Image();img.src=boardUrl;await img.decode();
                 const scale=Math.min(1,1100/Math.max(img.naturalWidth,img.naturalHeight));
-                const board=document.createElement('canvas');board.width=Math.max(1,Math.round(img.naturalWidth*scale));board.height=Math.max(1,Math.round(img.naturalHeight*scale));
-                board.getContext('2d').drawImage(img,0,0,board.width,board.height);
-                out.boardCanvas={width:board.width,height:board.height};
-                out.board=await recognize(worker,board,'board2');
-              }catch(error){out.error=String(error);}
-              finally{try{await worker?.terminate();}catch{};out.totalMs=performance.now()-started;}
-              return out;
-            },{variant,boardUrl:`${url}board2.png`});
+                const canvas=document.createElement('canvas');canvas.width=Math.round(img.naturalWidth*scale);canvas.height=Math.round(img.naturalHeight*scale);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+                const args=[canvas,{}];if(spec.output!==undefined)args.push(spec.output);
+                const r=await Promise.race([worker.recognize(...args),new Promise((_,reject)=>setTimeout(()=>reject(new Error('recognize timeout')),45000))]);
+                const text=r?.data?.text??'',tsv=r?.data?.tsv??'';
+                return{name:spec.name,elapsedMs:performance.now()-started,textLength:text.length,tsvLength:tsv.length,sample:text.replace(/\s+/g,' ').trim().slice(0,160),dataKeys:Object.keys(r?.data??{})};
+              }catch(error){return{name:spec.name,elapsedMs:performance.now()-started,error:String(error),textLength:0,tsvLength:0};}
+              finally{try{await worker?.terminate();}catch{}}
+            },{spec,boardUrl:`${origin}/board2.png`});
             results.push(result);
             console.log(JSON.stringify(result));
           }
-          const report={browserVersion:browser.version(),results,consoleLines};
-          fs.writeFileSync('artifacts/p52f-firefox-worker-matrix.json',JSON.stringify(report,null,2));
-          console.log('\nSUMMARY');
-          for(const r of results) console.log(r.name,'synthetic',r.synthetic?.textLength??0,'/',r.synthetic?.tsvLength??0,'board',r.board?.textLength??0,'/',r.board?.tsvLength??0,'error',r.error??r.board?.error??r.synthetic?.error??'none','ms',Math.round(r.totalMs??0));
+          fs.writeFileSync('artifacts/p52f-firefox-output-matrix.json',JSON.stringify({browserVersion:browser.version(),results,consoleLines},null,2));
           await browser.close();
           await new Promise(resolve=>server.close(resolve));
           NODE
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: p52f-firefox-worker-matrix
-          path: artifacts/p52f-firefox-worker-matrix.json
+          name: p52f-firefox-output-matrix
+          path: artifacts/p52f-firefox-output-matrix.json
           if-no-files-found: error
