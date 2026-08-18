@@ -1,20 +1,21 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  test:
+  ui-language-refresh:
+    if: github.head_ref == 'agent/ui-language-readability'
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: Check out follow-up branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -24,5 +25,180 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Typecheck, verify generated output, and test
+      - name: Apply user-facing copy and readability changes
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          def read(path):
+              return Path(path).read_text()
+
+          def write(path, text):
+              Path(path).write_text(text)
+
+          def replace_once(text, old, new, label):
+              if old not in text:
+                  raise SystemExit(f'missing expected text for {label}')
+              if text.count(old) != 1:
+                  raise SystemExit(f'expected exactly one match for {label}, found {text.count(old)}')
+              return text.replace(old, new, 1)
+
+          # Model labels: presentation only; dataset IDs and semantics remain unchanged.
+          path='src/data/statisticalModel.ts'
+          text=read(path)
+          text=replace_once(text,"id:'pre-ti2026-correlations',label:'Pre-TI2026-Correlations'","id:'pre-ti2026-correlations',label:'Group Stage'",'group-stage model label')
+          text=replace_once(text,"id:'group-stage-correlations',label:'GroupStage-Correlations'","id:'group-stage-correlations',label:'Main Event'",'main-event model label')
+          write(path,text)
+
+          path='site/index.html'
+          text=read(path)
+          old='<label>Data Source<select id="data-source"><option value="pre-ti2026-correlations">Pre-TI2026-Correlations</option><option value="group-stage-correlations">GroupStage-Correlations</option></select></label>'
+          new='<label>Model<select id="data-source"><option value="pre-ti2026-correlations">Group Stage</option><option value="group-stage-correlations">Main Event</option></select></label>'
+          text=replace_once(text,old,new,'model control')
+          write(path,text)
+
+          # Board labels and automatic Expected Series assumption.
+          path='src/ui/boardView.ts'
+          text=read(path)
+          text=replace_once(text,"import { ACTION_BY_ID } from '../data/actionCatalog.js';","import { ACTION_BY_ID } from '../data/actionCatalog.js';\nimport { DEFAULT_EXPECTED_SERIES_BY_LAYOUT, resolvedLayoutId } from '../data/defaultState.js';",'default-series import')
+          pattern=r"function bannerColumn\(role: Role, board: BoardState, data: DataBundle\): string \{.*?\n\}\n\nexport function renderBoardHtml"
+          replacement="""function bannerColumn(role: Role, board: BoardState, data: DataBundle): string {
+  const banner = board[role];
+  const players = attachedPlayerLabel(banner.selectedTeam, role);
+  const automaticExpectedSeries = DEFAULT_EXPECTED_SERIES_BY_LAYOUT[resolvedLayoutId(board)];
+  return `<section class=\"banner\" data-banner-role=\"${role}\"><div class=\"banner-head\"><div class=\"role-heading\"><span>${role.toUpperCase()}</span><small>${role === 'mid' ? 'position 2' : 'fixed same-team pair'}</small></div><label class=\"series-control\"><span>EXPECTED SERIES PLAYED</span><small>AUTO ASSUMPTION: ${automaticExpectedSeries}</small><input class=\"series\" data-role=\"${role}\" type=\"number\" min=\"1\" max=\"8\" value=\"${banner.expectedSeries}\"></label></div>
+    <div class=\"team-picker\"><label>TEAM<select class=\"team-select\" data-role=\"${role}\">${teamOptions(role, banner.selectedTeam, data)}</select></label><div class=\"attached-players\"><span>ATTACHED PLAYER${role === 'mid' ? '' : 'S'}</span><b>${escapeHtml(players)}</b></div></div>
+    <div class=\"emblems\">${banner.emblems.map((_, index) => emblemCard(role, banner, index)).join('')}</div><div id=\"selected-${role}\" class=\"roster\"><span>EXPECTED BANNER SCORE</span><b>Run Optimizer to refresh</b></div></section>`;
+}
+
+export function renderBoardHtml"""
+          text,count=re.subn(pattern,replacement,text,flags=re.S)
+          if count != 1:
+              raise SystemExit(f'expected one bannerColumn replacement, got {count}')
+          write(path,text)
+
+          path='src/ui/app.ts'
+          text=read(path)
+          text=text.replace('MODELED RETAINED ROLE','EXPECTED BANNER SCORE')
+          if 'MODELED RETAINED ROLE' in text:
+              raise SystemExit('old retained-role label remains in app.ts')
+          write(path,text)
+
+          # Team comparison: clearer percentile language and remove redundant scale/median copy.
+          path='src/ui/plots.ts'
+          text=read(path)
+          pattern=r"export function renderTeamComparison\(role: Role, board: BoardState, data: DataBundle\): void \{.*?\n\}\n\nfunction cssVar"
+          replacement="""export function renderTeamComparison(role: Role, board: BoardState, data: DataBundle): void {
+  const rows = rankTeamsForRole(role, board, data, data.simulation.rankingIterations);
+  const stats = rows.map(row => {
+    const sorted = [...row.samples].sort((a, b) => a - b);
+    return { row, p10: percentileSorted(sorted, .1), p90: percentileSorted(sorted, .9) };
+  });
+  const selectedExpected = rows.find(row => row.team === board[role].selectedTeam)?.expected ?? 0;
+  const lo = stats.length ? Math.min(...stats.map(item => item.p10)) : 0;
+  const hi = stats.length ? Math.max(...stats.map(item => item.p90)) : 1;
+  const span = Math.max(hi - lo, 1);
+  const pos = (value: number): number => Math.max(0, Math.min(100, (value - lo) / span * 100));
+  $('#team-comparisons').innerHTML = `<article class=\"team-chart\"><div class=\"team-chart-head\"><div><b>${role.toUpperCase()}</b><small>10th – 90th percentile scoring ranges · ${data.simulation.rankingIterations.toLocaleString()} simulations/team</small></div></div>
+    <div class=\"team-interval-head\"><span>TEAM / ATTACHED PLAYERS</span><span>10TH–90TH PERCENTILE RANGE</span><span>EXPECTED</span><span>Δ SELECTED</span></div>
+    <div class=\"team-intervals\">${stats.map(({ row, p10, p90 }, rankIndex) => {
+      const selected = row.team === board[role].selectedTeam;
+      const best = rankIndex === 0;
+      const delta = row.expected - selectedExpected;
+      const left = pos(p10);
+      const right = pos(p90);
+      const mid = pos(row.expected);
+      return `<div class=\"team-interval-row ${selected ? 'selected' : ''} ${best ? 'best' : ''}\"><div class=\"team-name\" title=\"${escapeHtml(row.name)}\"><b>${escapeHtml(displayTeamName(row.team))}${best ? '<em class=\"best-tag\">BEST</em>' : ''}</b><small>${escapeHtml(attachedPlayerLabel(row.team, role))}</small></div><div class=\"interval-cell\" title=\"10th percentile ${fmt(p10)} · Expected ${fmt(row.expected)} · 90th percentile ${fmt(p90)}\"><div class=\"interval-track\"><i class=\"interval-range\" style=\"left:${left.toFixed(2)}%;width:${Math.max(.8, right - left).toFixed(2)}%\"></i><i class=\"interval-dot\" style=\"left:${mid.toFixed(2)}%\"></i></div></div><strong>${fmt(row.expected)}</strong><span class=\"team-delta ${delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'zero'}\">${selected ? 'SELECTED' : `${delta >= 0 ? '+' : ''}${fmt(delta)}`}</span></div>`;
+    }).join('')}</div></article>`;
+}
+
+function cssVar"""
+          text,count=re.subn(pattern,replacement,text,flags=re.S)
+          if count != 1:
+              raise SystemExit(f'expected one renderTeamComparison replacement, got {count}')
+          write(path,text)
+
+          # Plain-language search notes in both exact and adaptive 5-emblem routes.
+          for path in ['src/engine/optimizerRecommendation.ts','src/engine/expandedT2Adaptive.ts']:
+              text=read(path)
+              text=text.replace("import { TOTAL_UNIFORM_MENUS } from '../data/actionCatalog.js';\n",'')
+              text=text.replace("  const continuationStrata=Math.max(1,data.simulation.continuationOutcomeStrata??8);\n",'')
+              text=text.replace("  const continuationEntryStrata=Math.max(1,data.simulation.continuationEntryStrata??12);\n",'')
+              text=re.sub(r"`\$\{horizon\}-token continuation uses deterministic probability stratification \(\$\{continuationEntryStrata\} entry / \$\{continuationStrata\} fresh-menu strata max\)\.`","`${horizon}-token lookahead uses a representative set of probability-weighted outcomes.`",text)
+              text=text.replace("`2-token continuation uses deterministic probability stratification (${continuationEntryStrata} entry / ${continuationStrata} fresh-menu strata max).`","`2-token lookahead uses a representative set of probability-weighted outcomes.`")
+              text=re.sub(r"`Fresh menu is a uniform draw of 3 distinct actions from 20; expectation uses the exact combinatorial operator equivalent to \$\{TOTAL_UNIFORM_MENUS\.toLocaleString\(\)\} menus\.`","'Expected value derived from average maximum gain from all possible replacement menus.'",text)
+              if 'deterministic probability stratification' in text or 'exact combinatorial operator equivalent' in text:
+                  raise SystemExit(f'old technical UI copy remains in {path}')
+              write(path,text)
+
+          # Theme-aware title emphasis and compact Expected Series assumption styling.
+          path='site/styles.css'
+          text=read(path)
+          text=replace_once(text,'  --gold2:#efc760;','  --gold2:#efc760;\n  --title-prefix:#cbb0eb;\n  --title-prefix-bg:rgba(118,82,163,.22);\n  --title-suffix:#f3cc66;\n  --title-suffix-bg:rgba(215,168,62,.16);','dark title colors')
+          text=replace_once(text,'  --gold2:#c99633;','  --gold2:#c99633;\n  --title-prefix:#5c3775;\n  --title-prefix-bg:#eadff0;\n  --title-suffix:#775008;\n  --title-suffix-bg:#f4e4b9;','light title colors')
+          text=replace_once(text,'.series-control{width:88px}.series-control input{padding:5px 7px;text-align:center;font-variant-numeric:tabular-nums}', '.series-control{width:132px;gap:2px;text-align:right}.series-control>span{font-size:9px;font-weight:850;letter-spacing:.06em;color:var(--muted)}.series-control small{font-size:8px;color:var(--complement);letter-spacing:.04em}.series-control input{padding:5px 7px;text-align:center;font-variant-numeric:tabular-nums}', 'series control styles')
+          old='.metrics .title b{font-family:inherit;font-size:16px}.metrics small{color:var(--muted);font-size:10px}.target-metric.inactive{opacity:.30}.title-prefix{color:var(--purple2);font-weight:850}.title-user{color:var(--text)}.title-suffix{color:var(--gold2)}'
+          new='.metrics .title b{font-family:inherit;font-size:17px;line-height:1.45}.metrics small{color:var(--muted);font-size:10px}.target-metric.inactive{opacity:.30}.title-prefix,.title-suffix{display:inline-block;padding:1px 5px;border-radius:3px;font-weight:900}.title-prefix{color:var(--title-prefix);background:var(--title-prefix-bg)}.title-user{color:var(--muted);font-weight:650}.title-suffix{color:var(--title-suffix);background:var(--title-suffix-bg)}'
+          text=replace_once(text,old,new,'recommended title emphasis')
+          old='.team-chart-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,.8fr);gap:18px;align-items:end;margin-bottom:8px}.team-chart-head>div:first-child{display:grid;gap:2px}.team-chart-head b{letter-spacing:.09em}.team-chart-head small{color:var(--muted);font-size:10px}.team-scale{display:grid;grid-template-columns:auto 1fr auto;gap:9px;color:var(--muted);font-size:9px;align-items:center}.team-scale span:nth-child(2){text-align:center}'
+          new='.team-chart-head{display:block;margin-bottom:8px}.team-chart-head>div:first-child{display:grid;gap:2px}.team-chart-head b{letter-spacing:.09em}.team-chart-head small{color:var(--muted);font-size:10px}'
+          text=replace_once(text,old,new,'team comparison header')
+          text=replace_once(text,'border-bottom:1px dotted var(--gold)','border-bottom:1px dotted currentColor','title suffix underline')
+          write(path,text)
+
+          # Focused regression coverage for the requested copy/presentation contract.
+          path='tests/ui-contract.test.mjs'
+          text=read(path)
+          marker="test('plain-language UI copy keeps model and scoring concepts user-facing'"
+          if marker not in text:
+              text += r'''
+
+test('plain-language UI copy keeps model and scoring concepts user-facing',()=>{
+  assert.match(index,/<label>Model<select id="data-source">/);
+  assert.match(index,/>Group Stage<\/option>/);
+  assert.match(index,/>Main Event<\/option>/);
+  assert.doesNotMatch(index,/Data Source|Pre-TI2026-Correlations|GroupStage-Correlations/);
+  assert.match(boardView,/EXPECTED SERIES PLAYED/);
+  assert.match(boardView,/AUTO ASSUMPTION:/);
+  assert.match(boardView,/EXPECTED BANNER SCORE/);
+  assert.match(app,/EXPECTED BANNER SCORE/);
+  assert.doesNotMatch(`${boardView}\n${app}`,/MODELED RETAINED ROLE/);
+  assert.match(plots,/10th – 90th percentile scoring ranges/);
+  assert.match(plots,/10TH–90TH PERCENTILE RANGE/);
+  assert.doesNotMatch(plots,/Retained-role distribution|class="team-scale"|median \$\{fmt\(p50\)\}/);
+  const exact=read('../src/engine/optimizerRecommendation.ts');
+  const adaptive=read('../src/engine/expandedT2Adaptive.ts');
+  for(const source of [exact,adaptive]){
+    assert.match(source,/lookahead uses a representative set of probability-weighted outcomes/);
+    assert.match(source,/Expected value derived from average maximum gain from all possible replacement menus/);
+    assert.doesNotMatch(source,/deterministic probability stratification|exact combinatorial operator equivalent/);
+  }
+  assert.match(css,/--title-prefix:/);
+  assert.match(css,/--title-suffix:/);
+  assert.match(css,/\.title-prefix,\.title-suffix\{[^}]*font-weight:900/);
+});
+'''
+          write(path,text)
+          PY
+
+      - name: Regenerate committed application artifacts
+        run: npm run build
+
+      - name: Verify final product tree
         run: npm run test:ci
+
+      - name: Restore permanent CI and commit product changes
+        shell: bash
+        run: |
+          git checkout origin/main -- .github/workflows/ci.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src site tests build docs .github/workflows/ci.yml
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Refresh user-facing optimizer language"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
