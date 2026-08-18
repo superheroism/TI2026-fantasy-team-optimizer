@@ -20,9 +20,6 @@ jobs:
         with:
           node-version: 22
       - run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-      - run: npm install --no-audit --no-fund
-      - run: npm run test:ci
-      - run: node scripts/benchmark-m7b-v1.mjs
       - name: Commit synchronized lockfile
         run: |
           git config user.name "github-actions[bot]"
@@ -34,3 +31,6 @@ jobs:
             git commit -m "Sync v1.2.0 lockfile"
             git push origin HEAD:agent/release-1.2.0
           fi
+      - run: npm install --no-audit --no-fund
+      - run: npm run test:ci
+      - run: node scripts/benchmark-m7b-v1.mjs
