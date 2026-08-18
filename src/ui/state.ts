@@ -1,5 +1,5 @@
 import type { BoardLayoutId, BoardState, MenuState, OfferedOperation, OptimizerState, Role, StatisticalDatasetId } from '../domain/types.js';
-import { DEFAULT_EXPECTED_SERIES_BY_LAYOUT, convertBoardLayout, createDefaultBoard, defaultBoard, defaultMenu, resolvedLayoutId } from '../data/defaultState.js';
+import { DEFAULT_EXPECTED_SERIES_BY_LAYOUT, convertBoardLayout, createDefaultBoard, defaultMenu, resolvedLayoutId } from '../data/defaultState.js';
 
 export interface OptimizerStateInvalidation {
   preserveComparison: boolean;
@@ -18,9 +18,9 @@ export class ApplicationState {
   private invalidator: OptimizerStateInvalidator = () => {};
   private expectedSeriesAuto:Record<Role,boolean>={core:true,mid:true,support:true};
 
-  board: BoardState = structuredClone(defaultBoard);
+  board: BoardState = createDefaultBoard('expanded_5');
   menu: MenuState = structuredClone(defaultMenu);
-  tokensRemaining = 10;
+  tokensRemaining = 30;
   username = '[Username]';
   targetScore = 0;
   objective: OptimizerState['objective'] = 'expected_score';
@@ -109,7 +109,7 @@ export class ApplicationState {
     this.board = createDefaultBoard(layoutId);
     this.expectedSeriesAuto={core:true,mid:true,support:true};
     this.menu = structuredClone(defaultMenu);
-    this.tokensRemaining = 10;
+    this.tokensRemaining = 30;
     this.invalidate(false);
   }
 
