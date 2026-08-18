@@ -129,7 +129,7 @@ function runSelected(refreshComparison = true) {
             $('#title-note').textContent = `Expected prefix gain ≈ ${fmt(selected.title.expectedBonus)} · Core +${selected.title.roleBoostPct.core.toFixed(1)}% · Mid +${selected.title.roleBoostPct.mid.toFixed(1)}% · Support +${selected.title.roleBoostPct.support.toFixed(1)}%`;
             for (const role of UI_ROLES) {
                 const row = selected.roster[role][0];
-                $(`#selected-${role}`).innerHTML = row ? `<span>MODELED RETAINED ROLE</span><b>${fmt(row.expected)}</b><small>${escapeHtml(displayTeamName(row.team))} · ${escapeHtml(attachedPlayerLabel(row.team, role))}</small>` : '<b>—</b>';
+                $(`#selected-${role}`).innerHTML = row ? `<span>EXPECTED BANNER SCORE</span><b>${fmt(row.expected)}</b><small>${escapeHtml(displayTeamName(row.team))} · ${escapeHtml(attachedPlayerLabel(row.team, role))}</small>` : '<b>—</b>';
             }
             drawHistogram(selected.samples, appState.targetScore, selected.expected, selected.median, selected.p10, selected.p90);
             if (refreshComparison)

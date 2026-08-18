@@ -20,23 +20,23 @@ export function renderTeamComparison(role, board, data) {
     const rows = rankTeamsForRole(role, board, data, data.simulation.rankingIterations);
     const stats = rows.map(row => {
         const sorted = [...row.samples].sort((a, b) => a - b);
-        return { row, p10: percentileSorted(sorted, .1), p50: percentileSorted(sorted, .5), p90: percentileSorted(sorted, .9) };
+        return { row, p10: percentileSorted(sorted, .1), p90: percentileSorted(sorted, .9) };
     });
     const selectedExpected = rows.find(row => row.team === board[role].selectedTeam)?.expected ?? 0;
     const lo = stats.length ? Math.min(...stats.map(item => item.p10)) : 0;
     const hi = stats.length ? Math.max(...stats.map(item => item.p90)) : 1;
     const span = Math.max(hi - lo, 1);
     const pos = (value) => Math.max(0, Math.min(100, (value - lo) / span * 100));
-    $('#team-comparisons').innerHTML = `<article class="team-chart"><div class="team-chart-head"><div><b>${role.toUpperCase()}</b><small>Retained-role distribution · ${data.simulation.rankingIterations.toLocaleString()} simulations/team</small></div><div class="team-scale"><span>${fmt(lo)}</span><span>P10 — expected — P90</span><span>${fmt(hi)}</span></div></div>
-    <div class="team-interval-head"><span>TEAM / ATTACHED PLAYERS</span><span>LIKELY RANGE</span><span>EXPECTED</span><span>Δ SELECTED</span></div>
-    <div class="team-intervals">${stats.map(({ row, p10, p50, p90 }, rankIndex) => {
+    $('#team-comparisons').innerHTML = `<article class="team-chart"><div class="team-chart-head"><div><b>${role.toUpperCase()}</b><small>10th – 90th percentile scoring ranges · ${data.simulation.rankingIterations.toLocaleString()} simulations/team</small></div></div>
+    <div class="team-interval-head"><span>TEAM / ATTACHED PLAYERS</span><span>10TH–90TH PERCENTILE RANGE</span><span>EXPECTED</span><span>Δ SELECTED</span></div>
+    <div class="team-intervals">${stats.map(({ row, p10, p90 }, rankIndex) => {
         const selected = row.team === board[role].selectedTeam;
         const best = rankIndex === 0;
         const delta = row.expected - selectedExpected;
         const left = pos(p10);
         const right = pos(p90);
         const mid = pos(row.expected);
-        return `<div class="team-interval-row ${selected ? 'selected' : ''} ${best ? 'best' : ''}"><div class="team-name" title="${escapeHtml(row.name)}"><b>${escapeHtml(displayTeamName(row.team))}${best ? '<em class="best-tag">BEST</em>' : ''}</b><small>${escapeHtml(attachedPlayerLabel(row.team, role))} · median ${fmt(p50)}</small></div><div class="interval-cell" title="P10 ${fmt(p10)} · Expected ${fmt(row.expected)} · P90 ${fmt(p90)}"><div class="interval-track"><i class="interval-range" style="left:${left.toFixed(2)}%;width:${Math.max(.8, right - left).toFixed(2)}%"></i><i class="interval-dot" style="left:${mid.toFixed(2)}%"></i></div></div><strong>${fmt(row.expected)}</strong><span class="team-delta ${delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'zero'}">${selected ? 'SELECTED' : `${delta >= 0 ? '+' : ''}${fmt(delta)}`}</span></div>`;
+        return `<div class="team-interval-row ${selected ? 'selected' : ''} ${best ? 'best' : ''}"><div class="team-name" title="${escapeHtml(row.name)}"><b>${escapeHtml(displayTeamName(row.team))}${best ? '<em class="best-tag">BEST</em>' : ''}</b><small>${escapeHtml(attachedPlayerLabel(row.team, role))}</small></div><div class="interval-cell" title="10th percentile ${fmt(p10)} · Expected ${fmt(row.expected)} · 90th percentile ${fmt(p90)}"><div class="interval-track"><i class="interval-range" style="left:${left.toFixed(2)}%;width:${Math.max(.8, right - left).toFixed(2)}%"></i><i class="interval-dot" style="left:${mid.toFixed(2)}%"></i></div></div><strong>${fmt(row.expected)}</strong><span class="team-delta ${delta > 0 ? 'positive' : delta < 0 ? 'negative' : 'zero'}">${selected ? 'SELECTED' : `${delta >= 0 ? '+' : ''}${fmt(delta)}`}</span></div>`;
     }).join('')}</div></article>`;
 }
 function cssVar(name, fallback) {
