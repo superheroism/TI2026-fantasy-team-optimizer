@@ -26,6 +26,3 @@ jobs:
 
       - name: Typecheck, verify generated output, and test
         run: npm run test:ci
-
-      - name: Production-route release benchmark
-        run: node scripts/benchmark-m7b-v1.mjs
