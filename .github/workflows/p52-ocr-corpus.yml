@@ -5,33 +5,17 @@ on:
     branches: [main]
 
 concurrency:
-  group: p52f-firefox-parser-resolution-${{ github.event.pull_request.number }}
+  group: p52f-tier-broad-skip-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  firefox-parser-resolution:
+  corpus:
     if: github.event.pull_request.head.ref == 'agent/p52f-fast-accurate-low-review'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - id: l900-e1100
-            localize: 900
-            extract: 1100
-          - id: l900-e1000
-            localize: 900
-            extract: 1000
-          - id: l850-e1000
-            localize: 850
-            extract: 1000
-          - id: l800-e950
-            localize: 800
-            extract: 950
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -41,39 +25,51 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Patch diagnostic resolution pair and call trace
-        env:
-          LOCALIZE: ${{ matrix.localize }}
-          EXTRACT: ${{ matrix.extract }}
+      - name: Apply Tier-only broad-read skip
         run: |
           python - <<'PY'
           from pathlib import Path
-          import os
-          p=Path('src/import/localScreenshotOcr.ts');s=p.read_text();s=s.replace('const LOCALIZE_MAX = 1100;',f"const LOCALIZE_MAX = {os.environ['LOCALIZE']};").replace('const EXTRACT_MAX = 1440;',f"const EXTRACT_MAX = {os.environ['EXTRACT']};");p.write_text(s)
-          p=Path('src/import/ocrRecognition.ts');s=p.read_text();anchor='export const DEFAULT_OCR_CALL_TIMEOUT_MS=10_000;';helper="function recordOcrCall(budget:OcrExecutionBudget,call:OcrCallDiagnostic):void{Array.prototype.push.call(budget.calls,call);console.log('[P52F_OCR_CALL]',JSON.stringify(call));}\n\n";s=s.replace('budget.calls.push(','recordOcrCall(budget,').replace(anchor,helper+anchor,1);p.write_text(s)
+          p=Path('src/import/emblemOcrRefinement.ts')
+          s=p.read_text()
+          old="if(retryTier||retryTrait){const rr=extractionToSource({left:Math.max(0,d.roi.left-d.roi.width*.05),top:Math.max(0,d.roi.top-d.roi.height*.08),width:d.roi.width*1.08,height:d.roi.height*1.16},metrics),emblemCanvas=canvas(src,rr),rec=await recognize(w,emblemCanvas,budget,`emblem:${role}:${i+1}:psm6`,6,rr);words=parse(rec.data.tsv);ls=lines(words);retries++;emblemRetries++;}"
+          new="if(retryTrait){const rr=extractionToSource({left:Math.max(0,d.roi.left-d.roi.width*.05),top:Math.max(0,d.roi.top-d.roi.height*.08),width:d.roi.width*1.08,height:d.roi.height*1.16},metrics),emblemCanvas=canvas(src,rr),rec=await recognize(w,emblemCanvas,budget,`emblem:${role}:${i+1}:psm6`,6,rr);words=parse(rec.data.tsv);ls=lines(words);retries++;emblemRetries++;}"
+          if old not in s: raise SystemExit('missing broad retry anchor')
+          p.write_text(s.replace(old,new))
+          for f in ['tests/retry-consolidation-contract.test.mjs','tests/screenshot-refinement-contract.test.mjs']:
+            p=Path(f); t=p.read_text(); t=t.replace('if(retryTier||retryTrait)','if(retryTrait)'); p.write_text(t)
           PY
       - run: npm run build
-      - name: Install Firefox diagnostic browser
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - name: Run real-image regression gate
+        run: node scripts/test-ocr-corpus.mjs --report-only --output=artifacts/p52f-tier-broad-skip.json
+      - name: Enforce frozen readable-board safety
         run: |
-          npm install --no-save --package-lock=false playwright@1.62.0
-          npx playwright install firefox
-      - name: Run exact local parser on Board 2
-        env:
-          VARIANT: ${{ matrix.id }}
+          node - <<'NODE'
+          const fs=require('fs');
+          const report=JSON.parse(fs.readFileSync('artifacts/p52f-tier-broad-skip.json','utf8'));
+          const byName=new Map(report.results.map(r=>[r.sourceFile,r]));
+          for(const name of ['TI2026 - Board 1.png','TI2026 - Board 2.png','TI2026 - Board 3.png','Ti2026 - board 6.png']){
+            const r=byName.get(name);
+            if(!r?.comparison?.exact) throw new Error(`${name} lost exact raw recognition`);
+            if(r.comparison.falseHighConfidenceErrors!==0) throw new Error(`${name} introduced FHCE`);
+          }
+          const b5=byName.get('Ti2026 - board 5.webp');
+          if(!b5||b5.comparison.statsExact!=='8/9'||b5.comparison.tiersExact!=='9/9'||b5.comparison.traitsExact!=='9/9'||b5.comparison.actionsExact!=='3/3'||!b5.comparison.tokenExact) throw new Error('Board 5 regressed');
+          if(report.totals.falseHighConfidenceErrors!==0) throw new Error('Corpus introduced FHCE');
+          NODE
+      - name: Print timing summary
+        if: always()
         run: |
-          mkdir -p artifacts
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';import http from 'node:http';import path from 'node:path';import {firefox} from 'playwright';
-          const root=process.cwd(),docs=path.join(root,'docs'),boardPath=path.join(root,'tests/test_boards/TI2026 - Board 2.png'),variant=process.env.VARIANT;
-          const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml'};
-          const server=http.createServer((req,res)=>{try{const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);if(pathname==='/__board2.png'){res.writeHead(200,{'content-type':'image/png','cache-control':'no-store'});fs.createReadStream(boardPath).pipe(res);return;}const rel=(pathname==='/'?'/index.html':pathname).replace(/^\/+/,''),file=path.resolve(docs,rel);if(!file.startsWith(docs+path.sep)||!fs.existsSync(file)){res.writeHead(404).end();return;}res.writeHead(200,{'content-type':types[path.extname(file).toLowerCase()]??'application/octet-stream','cache-control':'no-store'});fs.createReadStream(file).pipe(res);}catch(error){res.writeHead(500).end(String(error));}});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-          const origin=`http://127.0.0.1:${server.address().port}`,browser=await firefox.launch({headless:true}),page=await browser.newPage(),consoleLines=[];page.on('console',msg=>{const t=msg.text();if(t.includes('[P52F_OCR_CALL]'))consoleLines.push(t);});await page.goto(`${origin}/`,{waitUntil:'domcontentloaded'});
-          const result=await page.evaluate(async()=>{const file=new File([await (await fetch('/__board2.png')).blob()],'TI2026 - Board 2.png',{type:'image/png'}),started=performance.now();try{const [{loadStatisticalModel},{parseScreenshotLocally}]=await Promise.all([import('./js/data/statisticalModel.js'),import('./js/import/localScreenshotOcr.js')]),data=await loadStatisticalModel(),parsed=await parseScreenshotLocally(file,data);return{ok:true,totalMs:performance.now()-started,result:parsed.result,metrics:parsed.metrics};}catch(error){return{ok:false,totalMs:performance.now()-started,error:String(error)};}});
-          const report={variant,browserVersion:browser.version(),result,consoleLines};fs.writeFileSync(`artifacts/${variant}.json`,JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));await browser.close();await new Promise(resolve=>server.close(resolve));
+          node - <<'NODE'
+          const fs=require('fs');const p='artifacts/p52f-tier-broad-skip.json';if(!fs.existsSync(p))process.exit(0);
+          const r=JSON.parse(fs.readFileSync(p,'utf8'));
+          for(const x of r.results) console.log(x.sourceFile,'exact=',x.comparison?.exact,'ms=',Math.round(x.elapsedMs??0),'calls=',x.ocrCalls,'FHCE=',x.comparison?.falseHighConfidenceErrors);
           NODE
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: p52f-firefox-parser-${{ matrix.id }}
-          path: artifacts/${{ matrix.id }}.json
-          if-no-files-found: error
+          name: p52f-tier-broad-skip
+          path: artifacts/p52f-tier-broad-skip.json
+          if-no-files-found: warn
