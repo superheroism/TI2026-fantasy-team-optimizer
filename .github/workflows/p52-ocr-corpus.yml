@@ -5,14 +5,14 @@ on:
     branches: [main]
 
 concurrency:
-  group: p52f-firefox-localization-timeout-${{ github.event.pull_request.number }}
+  group: p52f-firefox-parser-trace-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  firefox-localization-timeout:
+  firefox-parser-trace:
     if: github.event.pull_request.head.ref == 'agent/p52f-fast-accurate-low-review'
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -25,12 +25,24 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Inject diagnostic-only OCR call trace
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('src/import/ocrRecognition.ts')
+          s=p.read_text()
+          anchor='export const DEFAULT_OCR_CALL_TIMEOUT_MS=10_000;'
+          helper="function recordOcrCall(budget:OcrExecutionBudget,call:OcrCallDiagnostic):void{budget.calls.push(call);console.log('[P52F_OCR_CALL]',JSON.stringify(call));}\n\n"
+          if anchor not in s: raise SystemExit('missing OCR trace anchor')
+          s=s.replace(anchor,helper+anchor,1).replace('budget.calls.push(','recordOcrCall(budget,')
+          p.write_text(s)
+          PY
       - run: npm run build
       - name: Install Firefox diagnostic browser
         run: |
           npm install --no-save --package-lock=false playwright@1.62.0
           npx playwright install firefox
-      - name: Measure scaled localization with and without budget wrapper
+      - name: Run exact local parser on Board 2
         run: |
           mkdir -p artifacts
           node --input-type=module <<'NODE'
@@ -38,17 +50,13 @@ jobs:
           const root=process.cwd(),docs=path.join(root,'docs'),boardPath=path.join(root,'tests/test_boards/TI2026 - Board 2.png');
           const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.png':'image/png','.webp':'image/webp','.svg':'image/svg+xml'};
           const server=http.createServer((req,res)=>{try{const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);if(pathname==='/__board2.png'){res.writeHead(200,{'content-type':'image/png','cache-control':'no-store'});fs.createReadStream(boardPath).pipe(res);return;}const rel=(pathname==='/'?'/index.html':pathname).replace(/^\/+/,''),file=path.resolve(docs,rel);if(!file.startsWith(docs+path.sep)||!fs.existsSync(file)){res.writeHead(404).end();return;}res.writeHead(200,{'content-type':types[path.extname(file).toLowerCase()]??'application/octet-stream','cache-control':'no-store'});fs.createReadStream(file).pipe(res);}catch(error){res.writeHead(500).end(String(error));}});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-          const origin=`http://127.0.0.1:${server.address().port}`,browser=await firefox.launch({headless:true}),page=await browser.newPage();await page.goto(`${origin}/`,{waitUntil:'domcontentloaded'});await page.addScriptTag({url:'https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js'});
-          const report=await page.evaluate(async()=>{
-            const makeCanvas=async()=>{const blob=await (await fetch('/__board2.png')).blob(),url=URL.createObjectURL(blob),img=new Image();img.src=url;await img.decode();URL.revokeObjectURL(url);const k=Math.min(1,1100/Math.max(img.naturalWidth,img.naturalHeight)),canvas=document.createElement('canvas');canvas.width=Math.round(img.naturalWidth*k);canvas.height=Math.round(img.naturalHeight*k);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);return{canvas,sourceWidth:img.naturalWidth,sourceHeight:img.naturalHeight};};
-            const run=async(kind,perCallMs)=>{const {canvas,sourceWidth,sourceHeight}=await makeCanvas(),started=performance.now();let worker;try{worker=await window.Tesseract.createWorker('eng');await worker.setParameters({tessedit_pageseg_mode:'3'});const createdMs=performance.now()-started;if(kind==='direct'){const t=performance.now(),r=await worker.recognize(canvas,{}, {tsv:true});return{kind,createdMs,recognizeMs:performance.now()-t,totalMs:performance.now()-started,canvas:[canvas.width,canvas.height],textLength:(r.data.text??'').length,tsvLength:(r.data.tsv??'').length};}const mod=await import('./js/import/ocrRecognition.js'),budget=mod.createOcrExecutionBudget(30000,perCallMs),t=performance.now(),r=await mod.recognizeWithBudget(worker,canvas,budget,{stage:`scaled-${perCallMs}`,psm:3,crop:{left:0,top:0,width:sourceWidth,height:sourceHeight},canvasWidth:canvas.width,canvasHeight:canvas.height},{},{tsv:true});return{kind,perCallMs,createdMs,recognizeMs:performance.now()-t,totalMs:performance.now()-started,canvas:[canvas.width,canvas.height],textLength:(r.data.text??'').length,tsvLength:(r.data.tsv??'').length,calls:budget.calls};}catch(error){return{kind,perCallMs,totalMs:performance.now()-started,error:String(error)};}finally{try{await worker?.terminate();}catch{}}};
-            return{browser:navigator.userAgent,direct:await run('direct'),wrapped10:await run('wrapped',10000),wrapped15:await run('wrapped',15000),wrapped20:await run('wrapped',20000)};
-          });
-          fs.writeFileSync('artifacts/p52f-firefox-localization-timeout.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));await browser.close();await new Promise(resolve=>server.close(resolve));
+          const origin=`http://127.0.0.1:${server.address().port}`,browser=await firefox.launch({headless:true}),page=await browser.newPage(),consoleLines=[];page.on('console',msg=>consoleLines.push(`[${msg.type()}] ${msg.text()}`));page.on('pageerror',err=>consoleLines.push(`[pageerror] ${String(err)}`));await page.goto(`${origin}/`,{waitUntil:'domcontentloaded'});
+          const result=await page.evaluate(async()=>{const response=await fetch('/__board2.png'),file=new File([await response.blob()],'TI2026 - Board 2.png',{type:'image/png'}),started=performance.now();try{const [{loadStatisticalModel},{parseScreenshotLocally}]=await Promise.all([import('./js/data/statisticalModel.js'),import('./js/import/localScreenshotOcr.js')]),data=await loadStatisticalModel(),loadedMs=performance.now()-started,parsed=await parseScreenshotLocally(file,data);return{ok:true,loadedMs,totalMs:performance.now()-started,result:parsed.result,metrics:parsed.metrics};}catch(error){return{ok:false,totalMs:performance.now()-started,error:String(error),stack:error?.stack??null};}});
+          const report={browserVersion:browser.version(),result,consoleLines};fs.writeFileSync('artifacts/p52f-firefox-parser-trace.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));await browser.close();await new Promise(resolve=>server.close(resolve));
           NODE
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: p52f-firefox-localization-timeout
-          path: artifacts/p52f-firefox-localization-timeout.json
+          name: p52f-firefox-parser-trace
+          path: artifacts/p52f-firefox-parser-trace.json
           if-no-files-found: error
