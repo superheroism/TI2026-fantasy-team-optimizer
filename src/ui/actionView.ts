@@ -6,10 +6,34 @@ const $ = <T extends HTMLElement = HTMLElement>(selector: string): T => document
 const fmt = (value: number): string => Number.isFinite(value) ? Math.round(value).toLocaleString() : '—';
 const pct = (value: number | undefined): string => value === undefined ? '—' : `${(value * 100).toFixed(1)}%`;
 
+export const ACTION_DROPDOWN_GROUP_LABELS = ['Red','Blue','Green','Boosts'] as const;
+const COLOR_ACTION_GROUPS = [
+  {label:'Red',color:'red'},
+  {label:'Blue',color:'blue'},
+  {label:'Green',color:'green'},
+] as const;
+const ACTION_FAMILY_ORDER = ['stat_reroll','quality_reroll','trait_reroll'] as const;
+
+type CatalogAction = (typeof ACTION_CATALOG)[number];
+
+function actionOption(action:CatalogAction,selectedId:string,selectedElsewhere:ReadonlySet<string>):string {
+  return `<option value="${action.id}" ${action.id === selectedId ? 'selected' : ''} ${selectedElsewhere.has(action.id) ? 'disabled' : ''}>${escapeHtml(action.label)}</option>`;
+}
+
+export function groupedActionOptions(selectedId:string,selectedElsewhere:ReadonlySet<string>):string {
+  const colorGroups=COLOR_ACTION_GROUPS.map(group=>{
+    const actions=ACTION_FAMILY_ORDER.flatMap(kind=>ACTION_CATALOG.filter(action=>'color' in action&&action.color===group.color&&action.kind===kind));
+    return `<optgroup label="${group.label}">${actions.map(action=>actionOption(action,selectedId,selectedElsewhere)).join('')}</optgroup>`;
+  });
+  const boosts=ACTION_CATALOG.filter(action=>!('color' in action));
+  colorGroups.push(`<optgroup label="Boosts">${boosts.map(action=>actionOption(action,selectedId,selectedElsewhere)).join('')}</optgroup>`);
+  return colorGroups.join('');
+}
+
 export function renderOperationEditors(menu: MenuState): string {
   return menu.map((operation, index) => {
     const selectedElsewhere = new Set(menu.filter((_, other) => other !== index).map(item => item.id));
-    const options = ACTION_CATALOG.map(action => `<option value="${action.id}" ${action.id === operation.id ? 'selected' : ''} ${selectedElsewhere.has(action.id) ? 'disabled' : ''}>${escapeHtml(action.label)}</option>`).join('');
+    const options = groupedActionOptions(operation.id,selectedElsewhere);
     return `<article class="op-card" data-op="${index}"><div class="op-card-head"><span class="op-number">${index + 1}</span><div><select class="op-select" data-opfield="action" aria-label="Action ${index + 1}">${options}</select></div><span class="op-recommended" aria-hidden="true">RECOMMENDED</span></div><div class="op-results" data-opresult="${index}"><div class="op-empty">Run the optimizer to compare legal targets and reroll outcomes.</div></div></article>`;
   }).join('');
 }
@@ -33,12 +57,6 @@ function rangePosition(value: number, min: number, max: number): number {
 function rangeLaneLabel(key: string, position: number, label: string, value: string): string {
   const edge = position < 8 ? 'edge-left' : position > 92 ? 'edge-right' : '';
   return `<span class="range-marker-label ${key} ${edge}" style="left:${position.toFixed(2)}%"><small>${label}</small><b>${value}</b></span>`;
-}
-
-export function confidenceExplanation(level: 'high' | 'medium' | 'low'): string {
-  if (level === 'high') return 'High confidence means the modeled action advantage is robust within the available transition and score model. Normal uncertainty in future match performance still applies.';
-  if (level === 'low') return 'Low confidence means the recommendation is unusually sensitive to missing data, approximation, or model assumptions. Treat close alternatives as effectively tied.';
-  return 'Medium confidence reflects the V1 distribution-aware proxy: empirical team/role stat distributions and cross-stat correlations are modeled, while exact player-game covariance, tournament path, and long-horizon continuation beyond the browser lookahead remain approximations.';
 }
 
 export interface ActionResultViewOptions {
