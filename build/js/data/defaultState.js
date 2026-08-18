@@ -16,7 +16,7 @@ function defaultEmblem(role, position, color) {
     const stat = DEFAULT_STATS_BY_ROLE[role][position];
     if (!stat || !isLegalStat(color, stat))
         throw new Error(`Missing legal default for ${role} slot ${position + 1} (${color}).`);
-    return { id: `${role}-${position}`, position, color, stat, qualityTier: 3, trait: 'Friendly' };
+    return { id: `${role}-${position}`, position, color, stat, qualityTier: 3, trait: 'Fractal' };
 }
 export function resolvedLayoutId(board) {
     return board.layoutId ?? DEFAULT_LAYOUT_ID;

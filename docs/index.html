@@ -41,7 +41,7 @@
   <section class="control-strip" aria-label="Optimizer controls">
     <label class="control-username">Username<input id="username" value="[Username]"></label>
     <label class="control-tokens">Reroll tokens<input id="tokens" type="number" min="0" value="30"></label>
-    <label class="control-stage">Tournament stage<select id="data-source"><option value="pre-ti2026-correlations">Group Stage</option><option value="group-stage-correlations" selected>Main Event</option></select></label>
+    <label>Tournament stage<select id="data-source"><option value="pre-ti2026-correlations">Group Stage</option><option value="group-stage-correlations" selected>Main Event</option></select></label>
     <label class="control-objective">Objective<select id="objective"><option value="expected_score">Expected final score</option><option value="target_probability">P(score ≥ target)</option></select></label>
     <label class="control-target">Target score<input id="target" type="number" min="0" placeholder="e.g. 50000"></label>
     <div class="control-buttons">
@@ -78,7 +78,7 @@
 
   <section id="action-console" class="panel action-console">
     <div class="panel-head console-head">
-      <div class="section-title"><div><p class="eyebrow">AVAILABLE ACTIONS</p><h2>Match Your Three Offers</h2><small>Run the optimizer to compare each offer. Expected changes forecast up to two token spends, starting from your first choice.</small></div></div>
+      <div class="section-title"><div><p class="eyebrow">AVAILABLE ACTIONS</p><h2>Match Your Three Offers</h2><small>Run the optimizer to compare each offer. The best target appears first. Expected changes forecast up to two token spends, starting from your first choice.</small></div></div>
       <div class="console-buttons">
         <button id="optimize" class="primary optimize" type="button">Optimize Board</button>
         <button id="next-roll" type="button" disabled>Next Reroll · 1 Token</button>
