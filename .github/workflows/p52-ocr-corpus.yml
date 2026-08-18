@@ -5,14 +5,14 @@ on:
     branches: [main]
 
 concurrency:
-  group: p52f-firefox-worker-combined-${{ github.event.pull_request.number }}
+  group: p52f-firefox-worker-blob-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  firefox-worker-combined:
+  firefox-worker-blob:
     if: github.event.pull_request.head.ref == 'agent/p52f-fast-accurate-low-review'
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -25,7 +25,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Apply Firefox worker diagnostic variant
+      - name: Apply Firefox workerBlobURL diagnostic variant
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -35,7 +35,7 @@ jobs:
           if old not in s: raise SystemExit('missing Tess interface anchor')
           s=s.replace(old,new)
           old="const T=await runtime(),w=await T.createWorker('eng');"
-          new="const T=await runtime(),w=await T.createWorker('eng',undefined,{workerBlobURL:false,cacheMethod:'none'});"
+          new="const T=await runtime(),w=await T.createWorker('eng',undefined,{workerBlobURL:false});"
           if old not in s: raise SystemExit('missing createWorker anchor')
           p.write_text(s.replace(old,new))
           PY
@@ -47,17 +47,16 @@ jobs:
           npx playwright install --with-deps firefox
       - name: Firefox Board 2 canary
         env:
-          SCREENSHOT_E2E_OUT: artifacts/firefox-worker-combined
+          SCREENSHOT_E2E_OUT: artifacts/firefox-worker-blob
           P52E_GIT_SHA: ${{ github.event.pull_request.head.sha }}
         run: node scripts/test-screenshot-e2e.mjs --board2 --browser=firefox --report-only
       - name: Require exact Firefox Board 2
         run: |
           node - <<'NODE'
-          const fs=require('fs');
-          const r=JSON.parse(fs.readFileSync('artifacts/firefox-worker-combined/report.json','utf8'));
-          if(r.results.length!==3) throw new Error(`expected 3 Board 2 runs, got ${r.results.length}`);
+          const fs=require('fs');const r=JSON.parse(fs.readFileSync('artifacts/firefox-worker-blob/report.json','utf8'));
+          if(r.results.length!==3) throw new Error(`expected 3 runs, got ${r.results.length}`);
           for(const x of r.results){
-            if(x.stages.raw===null||x.stages.validated===null||x.stages.applied===null) throw new Error(`${x.mode}: pipeline did not reach raw/validated/applied`);
+            if(x.stages.raw===null||x.stages.validated===null||x.stages.applied===null) throw new Error(`${x.mode}: pipeline incomplete`);
             if(x.safety.timeout||x.safety.timeouts>0||x.safety.ocrErrors>0||x.safety.invalidGeometry>0||x.safety.budgetExhausted) throw new Error(`${x.mode}: OCR safety failure`);
             if(!x.comparison.rawExact||!x.comparison.validatedExact||!x.comparison.appliedExact||!x.comparison.renderExact) throw new Error(`${x.mode}: Board 2 not exact`);
             if(x.comparison.falseHighConfidenceErrors!==0) throw new Error(`${x.mode}: FHCE`);
@@ -66,6 +65,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: p52f-firefox-worker-combined
-          path: artifacts/firefox-worker-combined
+          name: p52f-firefox-worker-blob
+          path: artifacts/firefox-worker-blob
           if-no-files-found: warn
