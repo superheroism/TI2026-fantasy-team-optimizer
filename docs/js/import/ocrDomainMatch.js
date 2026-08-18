@@ -39,14 +39,23 @@ function phrases(s, maxWords = 4) {
 function bestPhraseSimilarity(s, target) {
     return Math.max(0, ...phrases(s, Math.max(2, target.trim().split(/\s+/).length + 1)).map(p => ocrSimilarity(p, target)));
 }
-export function matchStatText(s, legal) {
-    let best = { value: legal[0], score: -1 };
+export function matchStatTextWithMargin(s, legal) {
+    let best = { value: legal[0], score: -1 }, runnerUpScore = -1;
     for (const value of legal) {
         const score = Math.max(...ALIASES[value].map(alias => bestPhraseSimilarity(s, alias)));
-        if (score > best.score)
+        if (score > best.score) {
+            runnerUpScore = best.score;
             best = { value, score };
+        }
+        else if (score > runnerUpScore)
+            runnerUpScore = score;
     }
-    return best;
+    const runner = Math.max(0, runnerUpScore);
+    return { ...best, runnerUpScore: runner, margin: Math.max(0, best.score - runner) };
+}
+export function matchStatText(s, legal) {
+    const { value, score } = matchStatTextWithMargin(s, legal);
+    return { value, score };
 }
 function statLineText(s) { return tokens(s).filter(token => !/^\d+%$/.test(token)).join(' '); }
 /** Match a stat across OCR line breaks without treating the displayed percentage as part of the stat name. */
@@ -100,6 +109,9 @@ export function matchTierText(s) {
         const next = ts[i + 1];
         if (next && byRoman[next])
             return { value: byRoman[next], score: /^[1-5]$/.test(next) ? .72 : .86 };
+        const separated = ts.slice(i + 1, i + 6).filter(candidate => /^(II|III|IV|V)$/.test(candidate));
+        if (separated.length === 1)
+            return { value: byRoman[separated[0]], score: .84 };
     }
     return { value: 1, score: .2 };
 }
@@ -110,7 +122,7 @@ const KIND_WORDS = ['STAT', 'QUALITY', 'TRAIT'];
 function actionTokens(s) { return tokens(s).filter(t => !STOPWORDS.has(t)); }
 function observedMatch(ocr, target) {
     const fuzzy = Math.max(0, ...ocr.map(t => ocrSimilarity(t, target)));
-    const stems = { INCREASE: ['INC'], QUALITY: ['QUAL'], RANDOM: ['RANDOM'], GREEN: ['GRE'], RED: ['RED'], BLUE: ['BLU'], FIRST: ['FIR', 'RST'], LAST: ['LAS'], TRAIT: ['TRA', 'TRAT'], STAT: ['STA'] };
+    const stems = { INCREASE: ['INC'], QUALITY: ['QUAL', 'QUA', 'QU'], RANDOM: ['RANDOM'], GREEN: ['GRE'], RED: ['RED'], BLUE: ['BLU'], FIRST: ['FIR', 'RST'], LAST: ['LAS'], TRAIT: ['TRA', 'TRAT'], STAT: ['STA'] };
     const stemHit = (stems[target] ?? []).some(stem => ocr.some(token => token.startsWith(stem)));
     return stemHit ? Math.max(fuzzy, .78) : fuzzy;
 }
@@ -145,6 +157,10 @@ export function matchActionText(s) {
         }
         return { id: action.id, score: Math.max(0, Math.min(.99, score)) };
     }).sort((a, b) => b.score - a.score);
-    return ranked[0];
+    const best = ranked[0];
+    if (!best)
+        return undefined;
+    const runnerUpScore = ranked[1]?.score ?? 0;
+    return { ...best, runnerUpScore, margin: best.score - runnerUpScore };
 }
 //# sourceMappingURL=ocrDomainMatch.js.map

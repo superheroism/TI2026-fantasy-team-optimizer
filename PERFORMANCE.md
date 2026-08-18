@@ -88,7 +88,7 @@ A fixed reduced root budget was fast but failed on close decisions. The later `a
 
 ## Benchmarking
 
-Run the general suite:
+The supported performance surface is intentionally small. Run the broad hot-path/application suite:
 
 ```bash
 npm run benchmark
@@ -100,10 +100,16 @@ Write machine-readable output:
 npm run benchmark -- --json=benchmark.json
 ```
 
-Run the v1.0 route baseline:
+Run the eight-route v1.0 production baseline:
 
 ```bash
-npm run benchmark:m7b
+npm run benchmark:v1
+```
+
+Run the deterministic performance contracts used by CI tests:
+
+```bash
+npm run test:performance-contracts
 ```
 
 Timing thresholds are not enforced in shared-runner CI because machine variance would make them noisy. Compare before/after reports on the same runtime and hardware.

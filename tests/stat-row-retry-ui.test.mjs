@@ -19,8 +19,13 @@ test('low-confidence stat uses one bounded PSM6 retry aligned to localization ev
   assert.doesNotMatch(refinement,/stat:\$\{role\}:\$\{i\+1\}:raw/);
 });
 
-test('dedicated tier OCR runs only while the tier itself remains below review confidence',()=>{
-  assert.match(refinement,/!tier\.direct&&!strongSupplementalTier&&shouldRetryTier\(confidenceFor\(raw,qp\)\)/);
+test('dedicated tier OCR runs only while Tier evidence remains unresolved or ambiguous',()=>{
+  assert.match(refinement,/\(!tier\.direct\|\|tier\.match\.value===1\|\|tier\.match\.score<\.9\)&&!strongSupplementalTier&&shouldRetryTier\(confidenceFor\(raw,qp\)\)/);
+});
+
+test('team retries target the first-card roster band rather than the page header',()=>{
+  assert.match(refinement,/teamTop=Math\.max\(0,first-pitch\*\.65\)/);
+  assert.match(refinement,/teamHeight=Math\.min\(metrics\.extractionHeight-teamTop,pitch\*1\.45\)/);
 });
 
 test('successful stat retries synchronize final diagnostic stat values',()=>{

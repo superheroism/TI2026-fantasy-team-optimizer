@@ -1,5 +1,6 @@
 import { BOARD_LAYOUTS, isLegalStat } from '../domain/rules.js';
 import { ACTION_BY_ID, ACTION_CATALOG, cloneAction } from '../data/actionCatalog.js';
+import { matchActionText, ocrSimilarity } from './ocrDomainMatch.js';
 import { parseScreenshotLocally } from './localScreenshotOcr.js';
 import { refineUncertainScreenshotFields } from './emblemOcrRefinement.js';
 const ROLES = ['core', 'mid', 'support'];
@@ -87,39 +88,90 @@ function geometryConfidence(metrics) {
     const directTierRowCount = Object.values(metrics.diagnostic.tierRowsByColumn).reduce((sum, rows) => sum + rows.length, 0);
     if (directTierRowCount === 0)
         return { value: .84, reason: 'geometry-fallback' };
-    if (metrics.diagnostic.synthesizedRows)
-        return { value: .85, reason: 'synthesized-row' };
     if (metrics.diagnostic.extractionColumnMethod === 'fallback')
         return { value: .85, reason: 'geometry-fallback' };
-    if (metrics.diagnostic.columnLocalizationMethod === 'fallback')
-        return { value: .92, reason: 'geometry-fallback' };
     return { value: 1 };
 }
 function baseComponents(geometry, domainMatch) {
     return { geometry, domainMatch: clamp(domainMatch), structuredEvidence: 0, targetedRetry: 0, fieldConsistency: 1 };
 }
-/** Re-score already-recognized fields without changing any extracted value. */
-export function calibrateScreenshotImportConfidence(raw, metrics) {
+function phraseSimilarity(rawText, target) {
+    const rawTokens = rawText.toUpperCase().match(/[A-Z0-9]+/g) ?? [];
+    const targetWords = Math.max(1, target.trim().split(/\s+/).length);
+    let best = ocrSimilarity(rawText, target);
+    for (let words = Math.max(1, targetWords - 1); words <= Math.min(rawTokens.length, targetWords + 1); words++) {
+        for (let index = 0; index + words <= rawTokens.length; index++)
+            best = Math.max(best, ocrSimilarity(rawTokens.slice(index, index + words).join(' '), target));
+    }
+    return best;
+}
+function matchTeamEvidence(rawText, role, data) {
+    if (!rawText.trim())
+        return undefined;
+    const byTeam = new Map();
+    for (const profile of data.players.filter(player => player.role === role)) {
+        const current = byTeam.get(profile.team) ?? { direct: phraseSimilarity(rawText, profile.team), players: new Map() };
+        for (const name of profile.attachedPlayers.filter(playerName => normalized(playerName).length >= 4)) {
+            const score = phraseSimilarity(rawText, name);
+            current.players.set(name, Math.max(score, current.players.get(name) ?? 0));
+        }
+        current.direct = Math.max(current.direct, phraseSimilarity(rawText, profile.team));
+        byTeam.set(profile.team, current);
+    }
+    const ranked = [...byTeam.entries()].map(([team, evidence]) => {
+        const playerScores = [...evidence.players.values()].sort((a, b) => b - a), bestPlayerScore = playerScores[0] ?? 0, strongPlayerCount = playerScores.filter(score => score >= .82).length;
+        const pairScore = ((playerScores[0] ?? 0) + (playerScores[1] ?? 0)) / 2;
+        const singleAnchor = bestPlayerScore >= .94 ? bestPlayerScore * .98 : 0;
+        const rosterScore = role === 'mid' ? bestPlayerScore : Math.max(pairScore, singleAnchor);
+        return { team, score: Math.max(evidence.direct, rosterScore), strongPlayerCount, bestPlayerScore, directTeamScore: evidence.direct };
+    }).sort((a, b) => b.score - a.score);
+    const best = ranked[0];
+    if (!best)
+        return undefined;
+    const runnerUpScore = ranked[1]?.score ?? 0;
+    return { ...best, runnerUpScore, margin: best.score - runnerUpScore };
+}
+function trustedTeamEvidence(match, role) {
+    const direct = match.directTeamScore >= .9 && match.margin >= .1;
+    const singlePlayer = match.bestPlayerScore >= .82 && match.score >= .82 && match.margin >= .18;
+    const roster = role === 'mid'
+        ? match.bestPlayerScore >= .9 && match.score >= .9 && match.margin >= .1
+        : match.strongPlayerCount >= 2 && match.score >= .84 && match.margin >= .08;
+    return direct || singlePlayer || roster;
+}
+/** Re-score already-recognized fields from field-specific evidence. Strong evidence may also repair a team winner. */
+export function calibrateScreenshotImportConfidence(raw, metrics, data) {
     const geometry = geometryConfidence(metrics);
     const calibrated = [];
     const byEmblem = new Map(metrics.diagnostic.emblems.map(emblem => [`${emblem.role}:${emblem.rowIndex}`, emblem]));
     const layout = BOARD_LAYOUTS[raw.layoutId];
     for (const role of ROLES) {
-        const teamPath = `banners.${role}.selectedTeam`, team = metrics.diagnostic.teamEvidence[role], teamRaw = confidenceFor(raw, teamPath), teamComponents = baseComponents(geometry.value, team.matchScore);
-        let teamReason = 'fuzzy-team';
-        if (team.matchScore >= .9) {
-            teamComponents.structuredEvidence = .95;
+        const teamPath = `banners.${role}.selectedTeam`, team = metrics.diagnostic.teamEvidence[role], teamRaw = confidenceFor(raw, teamPath), teamCorpus = [team.rawText, ...metrics.diagnostic.emblems.filter(emblem => emblem.role === role && emblem.rowIndex === 0).map(emblem => emblem.rawText)].filter(Boolean).join(' '), teamMatch = matchTeamEvidence(teamCorpus, role, data);
+        const teamDomain = teamMatch?.score ?? team.matchScore, teamComponents = baseComponents(geometry.value, teamDomain);
+        let teamReason = 'fuzzy-team', teamResolved = Boolean(raw.banners[role].selectedTeam);
+        if (teamMatch && trustedTeamEvidence(teamMatch, role)) {
+            if (teamMatch.team !== raw.banners[role].selectedTeam) {
+                raw.banners[role].selectedTeam = teamMatch.team;
+                team.normalizedTeam = teamMatch.team;
+                team.matchScore = teamMatch.score;
+            }
+            teamComponents.structuredEvidence = .96;
             teamReason = 'roster-team';
+            teamResolved = true;
+        }
+        else if (teamMatch && teamMatch.team !== raw.banners[role].selectedTeam) {
+            teamComponents.fieldConsistency = .7;
+            teamReason = 'conflicting-retry';
         }
         if (geometry.reason)
             teamReason = geometry.reason;
-        calibrated.push(calibrateConfidenceEvidence(teamPath, { resolved: Boolean(raw.banners[role].selectedTeam), rawConfidence: teamRaw, reason: teamReason, components: teamComponents }));
+        calibrated.push(calibrateConfidenceEvidence(teamPath, { resolved: teamResolved, rawConfidence: teamRaw, reason: teamReason, components: teamComponents }));
         for (let index = 0; index < layout.roles[role].length; index++) {
             const emblem = raw.banners[role].emblems[index], diag = byEmblem.get(`${role}:${index}`), slot = layout.roles[role][index];
             if (!diag)
                 continue;
             const statPath = `banners.${role}.emblems.${index}.stat`, statRaw = confidenceFor(raw, statPath), statComponents = baseComponents(geometry.value, diag.statMatchScore), initialStat = Math.min(geometry.value, clamp(diag.statMatchScore * .72 + averageDiagnosticWordConfidence(diag.words) * .28));
-            const statChanged = diag.normalizedStat !== emblem.stat, statStrengthened = statRaw > initialStat + .03;
+            const statChanged = diag.normalizedStat !== emblem.stat, statStrengthened = statRaw > initialStat + .03, decisiveInitialStat = !statChanged && diag.statMatchScore >= .82 && diag.statMatchMargin >= .25 && statRaw >= .78;
             let statReason = 'fuzzy-stat';
             if (!isLegalStat(slot.color, emblem.stat)) {
                 statComponents.fieldConsistency = 0;
@@ -128,6 +180,10 @@ export function calibrateScreenshotImportConfidence(raw, metrics) {
             else if (!statChanged && diag.statMatchScore >= .99) {
                 statComponents.structuredEvidence = .97;
                 statReason = 'exact-domain-stat';
+            }
+            else if (decisiveInitialStat) {
+                statComponents.structuredEvidence = .95;
+                statReason = 'decisive-domain-stat';
             }
             else if (statRaw >= .9 && (statChanged || statStrengthened)) {
                 statComponents.targetedRetry = .95;
@@ -144,10 +200,19 @@ export function calibrateScreenshotImportConfidence(raw, metrics) {
             calibrated.push(calibrateConfidenceEvidence(statPath, { resolved: isLegalStat(slot.color, emblem.stat), rawConfidence: statRaw, reason: statReason, components: statComponents }));
             const tierPath = `banners.${role}.emblems.${index}.qualityTier`, tierRaw = confidenceFor(raw, tierPath), tierComponents = baseComponents(geometry.value, diag.tierMatchScore), tierSame = diag.normalizedTier === emblem.qualityTier;
             let tierReason = 'fuzzy-tier';
-            const tierDirect = tierSame && directTierText(diag.rawTierText, emblem.qualityTier);
-            if (tierDirect) {
-                tierComponents.structuredEvidence = tierRaw >= .98 ? .98 : .89;
+            const tierDirect = tierSame && directTierText(diag.rawTierText, emblem.qualityTier), separatedNonTierRoman = tierSame && emblem.qualityTier !== 1 && diag.tierMatchScore >= .84;
+            if (tierDirect || separatedNonTierRoman) {
+                const corroborated = diag.tierMatchScore >= .95 || tierRaw >= .98;
+                const unambiguousNonTierOne = emblem.qualityTier !== 1 && diag.tierMatchScore >= .84;
+                if (corroborated || unambiguousNonTierOne)
+                    tierComponents.structuredEvidence = corroborated ? .98 : .96;
+                else
+                    tierComponents.structuredEvidence = .89;
                 tierReason = 'direct-native-tier';
+            }
+            else if (tierSame && diag.tierMatchScore >= .95) {
+                tierComponents.targetedRetry = .97;
+                tierReason = 'targeted-native-tier';
             }
             else if (!tierSame) {
                 tierComponents.fieldConsistency = .7;
@@ -172,10 +237,16 @@ export function calibrateScreenshotImportConfidence(raw, metrics) {
         }
     }
     raw.operationIds.forEach((operationId, index) => {
-        const path = `operationIds.${index}`, rawConfidence = confidenceFor(raw, path), components = baseComponents(geometry.value, rawConfidence);
-        const actionResolved = operationId !== null && rawConfidence >= .9;
-        let reason = actionResolved ? 'dedicated-action-crop' : 'unresolved';
-        if (actionResolved)
+        const path = `operationIds.${index}`, rawConfidence = confidenceFor(raw, path), actionText = metrics.diagnostic.actionEvidence.cardTexts[index] ?? '', actionMatch = matchActionText(actionText), components = baseComponents(geometry.value, actionMatch?.score ?? rawConfidence);
+        const actionEvidence = metrics.diagnostic.actionEvidence;
+        const independentAgreement = actionEvidence.independentAgreement?.[index] === true;
+        const catalogAgreement = operationId !== null && actionMatch?.id === operationId && actionEvidence.resolved[index] === operationId;
+        const decisiveCatalogMatch = Boolean(catalogAgreement && actionMatch && ((actionMatch.score >= .65 && actionMatch.margin >= .05) || (independentAgreement && actionMatch.score >= .5)));
+        const actionResolved = operationId !== null && (decisiveCatalogMatch || rawConfidence >= .9);
+        let reason = decisiveCatalogMatch ? 'dedicated-action-crop' : (operationId !== null ? 'fuzzy-action' : 'unresolved');
+        if (decisiveCatalogMatch)
+            components.structuredEvidence = independentAgreement ? .98 : .96;
+        else if (operationId !== null && rawConfidence >= .9)
             components.structuredEvidence = .95;
         if (geometry.reason && operationId !== null)
             reason = geometry.reason;
@@ -198,7 +269,7 @@ export function calibrateScreenshotImportConfidence(raw, metrics) {
         emblem.reviewRequired = fieldRows.some(field => field.confidence < REVIEW_THRESHOLD);
     }
     const diagnostic = metrics.diagnostic;
-    diagnostic.confidenceModel = 'structured-evidence-v1';
+    diagnostic.confidenceModel = 'structured-evidence-v2';
     diagnostic.fieldConfidence = calibrated.map(field => ({ ...field, components: field.components ? { ...field.components } : undefined }));
 }
 export function screenshotImportRequest(imageDataUrl, data) {
@@ -299,10 +370,13 @@ async function visionFallback(file, data) {
 export async function requestScreenshotImport(file, data) {
     lastLocalOcrMetrics = undefined;
     try {
-        const local = await parseScreenshotLocally(file, data), refined = await refineUncertainScreenshotFields(file, data, local.result, local.metrics);
+        const local = await parseScreenshotLocally(file, data);
+        // Resolve fields from structured evidence before expensive targeted OCR. Refinement now runs only where it can change the decision.
+        calibrateScreenshotImportConfidence(local.result, local.metrics, data);
+        const refined = await refineUncertainScreenshotFields(file, data, local.result, local.metrics);
         local.metrics.targetedRetryMs += refined.elapsedMs;
         local.metrics.totalMs += refined.elapsedMs;
-        calibrateScreenshotImportConfidence(refined.result, local.metrics);
+        calibrateScreenshotImportConfidence(refined.result, local.metrics, data);
         lastLocalOcrMetrics = local.metrics;
         return refined.result;
     }
@@ -310,7 +384,16 @@ export async function requestScreenshotImport(file, data) {
         const endpoint = document.querySelector('meta[name="screenshot-import-endpoint"]')?.content;
         if (!endpoint)
             throw localError;
-        return await visionFallback(file, data);
+        try {
+            return await visionFallback(file, data);
+        }
+        catch (fallbackError) {
+            const localMessage = localError instanceof Error ? `${localError.name}: ${localError.message}` : String(localError);
+            const fallbackMessage = fallbackError instanceof Error ? `${fallbackError.name}: ${fallbackError.message}` : String(fallbackError);
+            const combined = new Error(`Local screenshot OCR failed (${localMessage}); hosted fallback also failed (${fallbackMessage}).`);
+            combined.cause = localError;
+            throw combined;
+        }
     }
 }
 //# sourceMappingURL=screenshotImport.js.map
